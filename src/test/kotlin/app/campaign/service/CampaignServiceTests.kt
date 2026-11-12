@@ -27,6 +27,7 @@ import app.campaign.port.Proposal
 import app.campaign.port.RefundDetails
 import app.campaign.port.RefundId
 import app.campaign.port.VoidDetails
+import app.campaign.rules.CapacityDecision
 import app.campaign.rules.OfferWarning
 import app.campaign.rules.PaymentAction
 import app.campaign.rules.idempotencyKey
@@ -62,6 +63,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -69,6 +71,7 @@ import kotlin.test.assertTrue
 @Import(CampaignServiceTests.PaymentTestConfiguration::class)
 class CampaignServiceTests @Autowired constructor(
     private val service: CampaignService,
+    private val queries: CampaignQueries,
     private val workspaces: WorkspaceRepository,
     private val options: OptionRepository,
     private val analyses: AnalysisRunRepository,
@@ -700,6 +703,160 @@ class CampaignServiceTests @Autowired constructor(
         captureSuccess(first)
         captureSuccess(second)
         assertEquals(CampaignState.FUNDED, success(service.confirmProduction(fixture.ref)).state)
+    }
+
+    @Test
+    fun `current campaign exposes offer terms and reconciles its deadline`() {
+        val fixture = fixture()
+        val view = assertNotNull(success(queries.currentCampaign(fixture.workspace.token)))
+        assertEquals(fixture.campaign.id, view.id)
+        assertEquals(fixture.offer.title, view.offer.title)
+        assertEquals(fixture.offer.specText, view.offer.specText)
+        assertEquals(fixture.offer.unitPrice, view.offer.unitPrice)
+        assertEquals(fixture.offer.deliveryTerms, view.offer.deliveryTerms)
+        assertEquals(fixture.offer.shipRegion, view.offer.shipRegion)
+        assertEquals(fixture.offer.minBatch, view.offer.minBatch)
+        assertEquals(fixture.offer.capacity, view.offer.capacity)
+        assertEquals(fixture.offer.maxQtyPerPledge, view.offer.maxQtyPerPledge)
+        assertEquals(fixture.campaign.closesAt, view.closesAt)
+        assertTrue(queries.isOpenForPledges(fixture.workspace.token))
+
+        clock.current = fixture.campaign.closesAt!!
+        assertFalse(queries.isOpenForPledges(fixture.workspace.token))
+        assertEquals(CampaignState.OPEN, campaigns.findById(fixture.campaign.id).orElseThrow().state)
+        assertEquals(CampaignState.NOT_FUNDED,
+            assertNotNull(success(queries.currentCampaign(fixture.workspace.token))).state)
+        assertTrue(gateway.fake.calls.isEmpty())
+    }
+
+    @Test
+    fun `current campaign selects confirmation and settlement states before terminal history`() {
+        listOf(CampaignState.AWAITING_CONFIRMATION, CampaignState.SETTLING).forEach { state ->
+            val fixture = fixture(state = state)
+            campaigns.saveAndFlush(Campaign(fixture.offer.id, CampaignState.FUNDED,
+                openedAt = start.plusSeconds(1), closesAt = start.plusSeconds(901),
+                confirmDeadline = start.plusSeconds(44_101)))
+            val current = assertNotNull(success(queries.currentCampaign(fixture.workspace.token)))
+            assertEquals(fixture.campaign.id, current.id)
+            assertEquals(if (state == CampaignState.SETTLING) CampaignState.NOT_FUNDED else state, current.state)
+            assertFalse(queries.isOpenForPledges(fixture.workspace.token))
+        }
+        assertTrue(gateway.fake.calls.isEmpty())
+    }
+
+    @Test
+    fun `current campaign excludes drafts and unknown workspaces`() {
+        val fixture = fixture(state = CampaignState.DRAFT)
+        assertNull(success(queries.currentCampaign(fixture.workspace.token)))
+        assertFalse(queries.isOpenForPledges(fixture.workspace.token))
+        assertEquals(Rejection.NOT_FOUND, rejected(queries.currentCampaign("missing-token")).reason)
+        assertFalse(queries.isOpenForPledges("missing-token"))
+        val empty = workspaces.saveAndFlush(Workspace("empty-${UUID.randomUUID()}", start))
+        ownedWorkspaces.add(empty.id)
+        assertNull(success(queries.currentCampaign(empty.token)))
+    }
+
+    @Test
+    fun `quotes compute exact totals and capacity decisions without creating anything`() {
+        val fixture = fixture(capacity = 5)
+        authorized(fixture, 3)
+        created(fixture)
+        val pledgeCount = pledges.count()
+        val eventCount = events.count()
+        val quote = success(queries.quote(fixture.workspace.token, 2))
+        assertEquals(fixture.campaign.id, quote.campaignId)
+        assertEquals(2, quote.quantity)
+        assertEquals(400L, quote.amount)
+        assertEquals("USD", quote.currency)
+        assertEquals(CapacityDecision.ALLOWED, quote.decision)
+        assertTrue(quote.allowed)
+        assertEquals(CapacityDecision.CAPACITY_EXCEEDED,
+            success(queries.quote(fixture.workspace.token, 3)).decision)
+        listOf(0, -1, 4).forEach { quantity ->
+            val invalid = success(queries.quote(fixture.workspace.token, quantity))
+            assertEquals(CapacityDecision.INVALID_QUANTITY, invalid.decision)
+            assertFalse(invalid.allowed)
+        }
+        assertEquals(pledgeCount, pledges.count())
+        assertEquals(eventCount, events.count())
+        assertTrue(gateway.fake.calls.isEmpty())
+        clock.current = fixture.campaign.closesAt!!
+        assertEquals(Rejection.INVALID_STATE, rejected(queries.quote(fixture.workspace.token, 1)).reason)
+        assertEquals(CampaignState.OPEN, campaigns.findById(fixture.campaign.id).orElseThrow().state)
+    }
+
+    @Test
+    fun `quotes reject totals that cannot fit minor units`() {
+        val fixture = fixture(state = CampaignState.DRAFT)
+        val draft = success(service.createDraft(fixture.workspace.id,
+            draft(fixture).copy(unitPrice = Long.MAX_VALUE / fixture.offer.capacity)))
+        success(service.publish(CampaignRef(fixture.workspace.id, draft.campaignId), Duration.ofMinutes(15)))
+        assertEquals(Rejection.AMOUNT_OVERFLOW,
+            rejected(queries.quote(fixture.workspace.token, Int.MAX_VALUE)).reason)
+        assertTrue(pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(draft.campaignId).isEmpty())
+        assertTrue(gateway.fake.calls.isEmpty())
+    }
+
+    @Test
+    fun `token queries isolate campaign quotes pledges and maker offers`() {
+        val fixture = fixture()
+        val other = fixture(state = CampaignState.DRAFT)
+        val pledge = created(fixture)
+        assertNull(success(queries.currentCampaign(other.workspace.token)))
+        assertFalse(queries.isOpenForPledges(other.workspace.token))
+        assertEquals(Rejection.INVALID_STATE, rejected(queries.quote(other.workspace.token, 1)).reason)
+        assertEquals(Rejection.NOT_FOUND, rejected(queries.quote("missing-token", 1)).reason)
+        assertEquals(Rejection.NOT_FOUND, rejected(queries.lookupPledge(other.workspace.token, pledge.id)).reason)
+        assertEquals(Rejection.NOT_FOUND, rejected(queries.lookupPledge("missing-token", pledge.id)).reason)
+        assertEquals(Rejection.NOT_FOUND,
+            rejected(queries.lookupPledge(fixture.workspace.token, UUID.randomUUID())).reason)
+        val maker = success(queries.makerOffers(other.workspace.token))
+        assertEquals(other.campaign.id, maker.draft?.id)
+        assertTrue(maker.history.isEmpty())
+        assertEquals(Rejection.NOT_FOUND, rejected(queries.makerOffers("missing-token")).reason)
+        assertTrue(gateway.fake.calls.isEmpty())
+    }
+
+    @Test
+    fun `pledge lookup includes timestamps amount and reconciled campaign`() {
+        val fixture = fixture()
+        val pledge = created(fixture)
+        val lookup = success(queries.lookupPledge(fixture.workspace.token, pledge.id))
+        assertEquals(pledge.id, lookup.pledge.id)
+        assertEquals(pledge.qty, lookup.pledge.quantity)
+        assertEquals(pledge.amount, lookup.pledge.amount)
+        assertEquals(pledge.currency, lookup.pledge.currency)
+        assertEquals(pledge.createdAt, lookup.createdAt)
+        assertEquals(pledge.authorizationExpiresAt, lookup.pledge.authorizationExpiresAt)
+        assertEquals(PledgeState.CREATED, lookup.pledge.state)
+        assertEquals(fixture.campaign.id, lookup.campaign.id)
+        clock.current = fixture.campaign.closesAt!!
+        val closed = success(queries.lookupPledge(fixture.workspace.token, pledge.id))
+        assertEquals(CampaignState.NOT_FUNDED, closed.campaign.state)
+        assertEquals(PledgeState.ABANDONED, closed.pledge.state)
+    }
+
+    @Test
+    fun `maker queries choose latest draft and order terminal history with active precedence`() {
+        val fixture = fixture(state = CampaignState.FUNDED)
+        clock.current = start.plusSeconds(1)
+        val second = success(service.createDraft(fixture.workspace.id, draft(fixture)))
+        val secondRef = CampaignRef(fixture.workspace.id, second.campaignId)
+        success(service.publish(secondRef, Duration.ofMinutes(15)))
+        assertEquals(second.campaignId, assertNotNull(success(queries.currentCampaign(fixture.workspace.token))).id)
+        success(service.cancel(secondRef))
+        assertEquals(second.campaignId, assertNotNull(success(queries.currentCampaign(fixture.workspace.token))).id)
+        clock.current = start.plusSeconds(2)
+        success(service.createDraft(fixture.workspace.id, draft(fixture)))
+        clock.current = start.plusSeconds(3)
+        val latestDraft = success(service.createDraft(fixture.workspace.id, draft(fixture)))
+        val maker = success(queries.makerOffers(fixture.workspace.token))
+        assertEquals(latestDraft.campaignId, maker.draft?.id)
+        assertEquals(second.campaignId, maker.latest?.id)
+        assertEquals(listOf(second.campaignId, fixture.campaign.id), maker.history.map { it.id })
+        assertEquals(CampaignReason.CANCELLED_BY_MAKER, maker.history.first().result.reason)
+        assertTrue(maker.history.last().result.productionReleased)
+        assertTrue(gateway.fake.calls.isEmpty())
     }
 
     private fun fixture(minimum: Int = 1, capacity: Int = 5, state: CampaignState = CampaignState.OPEN): Fixture {

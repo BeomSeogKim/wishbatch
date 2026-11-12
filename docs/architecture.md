@@ -194,6 +194,29 @@ payments; `CampaignReconciliationTick` also runs every minute. Only completed
 captures release production. A late completed capture on an unsuccessful
 campaign is refunded; unresolved captures are never treated as released holds.
 
+`CampaignQueries` resolves workspace tokens for screen reads. `currentCampaign`
+returns the active campaign (OPEN, AWAITING_CONFIRMATION, or SETTLING), otherwise
+the latest terminal campaign, or null for an empty or draft-only workspace.
+It reuses `readCampaign` reconciliation and the existing offer fields and
+window timestamps in `CampaignView`. `lookupPledge` verifies workspace ownership
+before reconciliation and returns the pledge view, its creation timestamp, and
+its campaign view; authorization expiry is available in the pledge view.
+Unknown tokens and foreign pledge IDs return `NOT_FOUND`.
+
+`isOpenForPledges` checks only OPEN state and an unexpired window, without payment
+calls or capacity guarantees. `quote` also avoids reconciliation and mutations:
+it returns an exact minor-unit amount and `CapacityDecision` using the same
+quantity and authorized-capacity rules as pledge creation. A closed or missing
+open campaign returns `INVALID_STATE`; arithmetic overflow returns
+`AMOUNT_OVERFLOW`. Quotes do not reserve capacity.
+
+`makerOffers` returns the newest draft, latest published campaign, and terminal
+history with results. Published campaigns sort by opening time descending,
+then ID; drafts sort by their creation event time, then ID (missing creation
+events sort oldest). Campaign views reuse lazy reconciliation, so newly expired
+campaigns appear in history. Multiple drafts remain permitted. These queries
+introduce no new state transitions.
+
 Workspace database locks serialize publication and capacity decisions. Local
 coordinators run serially to prevent connection-pool starvation. The lock and
 its independent durable checkpoints require at least two database connections.

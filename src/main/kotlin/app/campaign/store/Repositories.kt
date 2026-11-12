@@ -2,6 +2,7 @@ package app.campaign.store
 
 import app.campaign.model.AnalysisRun
 import app.campaign.model.Campaign
+import app.campaign.model.CampaignState
 import app.campaign.model.Event
 import app.campaign.model.Offer
 import app.campaign.model.Option
@@ -13,6 +14,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.time.Instant
 import java.util.UUID
 
 interface WorkspaceRepository : JpaRepository<Workspace, UUID> {
@@ -45,6 +47,18 @@ interface OfferRepository : JpaRepository<Offer, UUID> {
 }
 
 interface CampaignRepository : JpaRepository<Campaign, UUID> {
+    @Query("select c from Campaign c, Offer o where c.offerId = o.id and o.workspaceId = :workspaceId")
+    fun findByWorkspaceId(@Param("workspaceId") workspaceId: UUID): List<Campaign>
+
+    @Query("select count(c) > 0 from Campaign c, Offer o, Workspace w " +
+        "where c.offerId = o.id and o.workspaceId = w.id and w.token = :token " +
+        "and c.state = :state and c.closesAt > :now")
+    fun existsOpenByToken(
+        @Param("token") token: String,
+        @Param("state") state: CampaignState,
+        @Param("now") now: Instant,
+    ): Boolean
+
     fun findByOfferIdIn(offerIds: Collection<UUID>): List<Campaign>
 }
 
