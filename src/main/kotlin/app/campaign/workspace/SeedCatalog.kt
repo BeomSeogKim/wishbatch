@@ -22,7 +22,6 @@ data class SeedOption(
     val maxCapacity: Int,
     val leadTimeText: String,
     val shipRegion: String,
-    val listPrice: Long,
 )
 
 data class SeedOptions(val maker: SeedMaker, val defaultMaxQtyPerPledge: Int, val options: List<SeedOption>)
@@ -59,9 +58,6 @@ class SeedCatalog {
             )
         } ?: scenarios.first()
 
-    fun listPrice(option: app.campaign.model.Option): Long? = scenarios.flatMap { it.definition.options }
-        .singleOrNull { seedId(option.workspaceId, "option", it.key) == option.id }?.listPrice
-
     /** Stable keys resolve within one workspace; they never reuse an entity across workspaces. */
     fun optionId(workspaceId: UUID, key: String): UUID {
         require(scenarios.any { scenario -> scenario.definition.options.any { it.key == key } }) { "Unknown seed option key" }
@@ -97,8 +93,8 @@ class SeedCatalog {
                 require(listOf(option.name, option.format, option.leadTimeText, option.shipRegion).all { it.isNotBlank() }) {
                     "Seed option fields must not be blank"
                 }
-                require(option.unitCost > 0 && option.listPrice > option.unitCost && option.currency.matches(Regex("[A-Z]{3}"))) {
-                    "Invalid seed cost, list price, or currency"
+                require(option.unitCost > 0 && option.currency.matches(Regex("[A-Z]{3}"))) {
+                    "Invalid seed cost or currency"
                 }
                 require(option.listPrice > option.unitCost) { "Seed list price must exceed cost" }
                 require(option.minBatch > 0 && option.maxCapacity >= option.minBatch &&
