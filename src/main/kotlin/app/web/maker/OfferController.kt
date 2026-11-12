@@ -1,9 +1,11 @@
 package app.web.maker
 
 import app.campaign.model.AnalysisRun
+import app.campaign.model.NeedAttribute
 import app.campaign.model.Option
 import app.campaign.port.AnalysisOutput
 import app.campaign.rules.OfferViolation
+import app.campaign.rules.offerPriceCheck
 import app.campaign.service.CampaignRef
 import app.campaign.service.CampaignService
 import app.campaign.service.DraftOffer
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.ResponseBody
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import tools.jackson.databind.ObjectMapper
 import java.time.Duration
@@ -31,6 +35,7 @@ class OfferController(
     private val analyses: AnalysisRunRepository,
     private val mapper: ObjectMapper,
     private val campaigns: CampaignService,
+    private val display: MakerDisplay,
 ) {
     @GetMapping("/w/{token}/maker/offer")
     fun offer(@PathVariable token: String, @RequestParam(required = false) run: UUID?, model: Model): String {
@@ -46,7 +51,25 @@ class OfferController(
         if (option != null && !model.containsAttribute("fields")) {
             model.addAttribute("fields", defaults(option, output!!, analysis!!))
         }
+        if (option != null) {
+            @Suppress("UNCHECKED_CAST")
+            val fields = model.getAttribute("fields") as Map<String, String>
+            val price = fields["unitPrice"]?.toLongOrNull()?.takeIf { it > 0 }
+            model.addAttribute("priceCheck", price?.let { priceView(token, analysis!!, output!!, option, it) })
+        }
         return "maker/offer"
+    }
+
+    @GetMapping("/w/{token}/maker/offer/price-check")
+    @ResponseBody
+    fun priceCheck(@PathVariable token: String, @RequestParam run: UUID, @RequestParam unitPrice: Long): OfferPriceView {
+        val workspace = workspaces.findByToken(token) ?: throw WorkspaceNotFoundException()
+        val analysis = analyses.findByIdAndWorkspaceId(run, workspace.id) ?: throw WorkspaceNotFoundException()
+        val output = output(analysis) ?: throw WorkspaceNotFoundException()
+        val option = output.proposal?.let { proposal -> workspaces.listOptions(token).find { it.id == proposal.optionId } }
+            ?: throw WorkspaceNotFoundException()
+        if (unitPrice <= 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Enter a positive whole-number unit price.")
+        return priceView(token, analysis, output, option, unitPrice)
     }
 
     @PostMapping("/w/{token}/maker/offer")
@@ -65,13 +88,22 @@ class OfferController(
         if (option == null || output == null) {
             errors["offer"] = "This analysis has no available proposal. Review the evidence before creating an offer."
         } else {
+            val price = fields["unitPrice"]?.toLongOrNull()
+            if (price != null && price > 0) {
+                redirect.addFlashAttribute("priceCheck", priceView(token, analysis, output, option, price))
+            }
+            if (fields["action"] == "check-price") {
+                if (price == null || price <= 0) errors["unitPrice"] = "Enter a positive whole-number unit price."
+                redirect.addFlashAttribute("fields", fields)
+                if (errors.isNotEmpty()) redirect.addFlashAttribute("errors", errors)
+                return "redirect:/w/$token/maker/offer?run=$runId"
+            }
             if (fields["canDeliver"] != "true") errors["canDeliver"] = "Confirm that you can produce and deliver this specification."
             output.questionsForMaker.indices.forEach { index ->
                 if (fields["question.$index"] !in setOf("answered", "dismissed")) {
-                    errors["question.$index"] = "Answer this question in the specification or dismiss it."
+                    errors["question.$index"] = "Resolve this question: mark it answered in the specification or not applicable before publishing."
                 }
             }
-            val price = fields["unitPrice"]?.toLongOrNull()
             val minimum = fields["minBatch"]?.toIntOrNull()
             val capacity = fields["capacity"]?.toIntOrNull()
             val quantity = fields["maxQtyPerPledge"]?.toIntOrNull()
@@ -114,6 +146,15 @@ class OfferController(
         mapper.readValue(run.resultJson, AnalysisOutput::class.java)
     } catch (_: tools.jackson.core.JacksonException) { null }
 
+    private fun priceView(token: String, run: AnalysisRun, output: AnalysisOutput, option: Option, price: Long): OfferPriceView {
+        val check = offerPriceCheck(output, option, price)
+        return OfferPriceView(check.fit, check.compatible, check.depends, check.excludedByPrice.map { wish ->
+            val limit = wish.maxUnitPrice!!
+            ExcludedPriceWish(wish.wishId, wish.needs.filter { it.attribute == NeedAttribute.PRICE }.map { it.quote },
+                display.money(limit.minorUnits, limit.currency), "/w/$token/maker/proposal?run=${run.id}#wish-${wish.wishId}")
+        })
+    }
+
     private fun defaults(option: Option, output: AnalysisOutput, run: AnalysisRun): Map<String, String> = buildMap {
         put("run", run.id.toString())
         put("title", option.name)
@@ -152,3 +193,6 @@ class OfferController(
     @ResponseStatus(HttpStatus.NOT_FOUND)
     fun notFound(): String = "error/not-found"
 }
+
+data class OfferPriceView(val fit: Int, val compatible: Int, val depends: Int, val excludedByPrice: List<ExcludedPriceWish>)
+data class ExcludedPriceWish(val wishId: UUID, val quotes: List<String>, val limit: String, val sourceUrl: String)

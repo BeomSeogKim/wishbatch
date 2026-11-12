@@ -2,6 +2,9 @@ package app.web.maker
 
 import app.campaign.model.AnalysisRun
 import app.campaign.model.CampaignState
+import app.campaign.model.CompatibilityVerdict
+import app.campaign.model.NeedAttribute
+import app.campaign.model.NeedStrength
 import app.campaign.model.Money
 import app.campaign.model.Option
 import app.campaign.model.WishKind
@@ -22,6 +25,8 @@ import app.campaign.port.ProposalEvidence
 import app.campaign.port.RefundDetails
 import app.campaign.port.RefundId
 import app.campaign.port.VoidDetails
+import app.campaign.port.WishNeed
+import app.campaign.port.WishVerdict
 import app.campaign.service.CampaignRef
 import app.campaign.service.CampaignService
 import app.campaign.service.PledgeRef
@@ -153,6 +158,99 @@ class MakerMoneyControllerTests @Autowired constructor(
             }
         }
         assertTrue(offers.findByWorkspaceId(fixture.workspace.id).isEmpty())
+    }
+
+    @Test
+    fun `price endpoint rechecks limits without changing stored evidence or creating an offer`() {
+        val fixture = priceFixture()
+        val base = "/w/${fixture.workspace.token}/maker/offer/price-check?run=${fixture.run.id}"
+        val original = fixture.run.resultJson
+        val initialRuns = analyses.findByWorkspaceId(fixture.workspace.id).size
+        mvc.get("$base&unitPrice=1000").andExpect {
+            status { isOk() }
+            content { contentTypeCompatibleWith("application/json") }
+            jsonPath("$.fit") { value(3) }
+            jsonPath("$.compatible") { value(2) }
+            jsonPath("$.depends") { value(1) }
+            jsonPath("$.excludedByPrice.length()") { value(0) }
+        }
+        mvc.get("$base&unitPrice=1001").andExpect {
+            status { isOk() }
+            jsonPath("$.fit") { value(2) }
+            jsonPath("$.compatible") { value(1) }
+            jsonPath("$.depends") { value(1) }
+            jsonPath("$.excludedByPrice[0].wishId") { value(fixture.wishId.toString()) }
+            jsonPath("$.excludedByPrice[0].limit") { value("USD 10.00") }
+            jsonPath("$.excludedByPrice[0].quotes[0]") { value("At most USD 10.00 <please>") }
+            jsonPath("$.excludedByPrice[0].sourceUrl") {
+                value("/w/${fixture.workspace.token}/maker/proposal?run=${fixture.run.id}#wish-${fixture.wishId}")
+            }
+        }
+        mvc.get("$base&unitPrice=1201").andExpect {
+            status { isOk() }
+            jsonPath("$.fit") { value(1) }
+            jsonPath("$.excludedByPrice.length()") { value(2) }
+        }
+        assertTrue(offers.findByWorkspaceId(fixture.workspace.id).isEmpty())
+        assertEquals(original, analyses.findById(fixture.run.id).orElseThrow().resultJson)
+        assertEquals(initialRuns, analyses.findByWorkspaceId(fixture.workspace.id).size)
+    }
+
+    @Test
+    fun `price endpoint rejects invalid prices unknown workspaces foreign runs and missing proposals`() {
+        val fixture = priceFixture()
+        val base = "/w/${fixture.workspace.token}/maker/offer/price-check?run=${fixture.run.id}"
+        for (price in listOf("0", "-1", "1.5", "", "9223372036854775808")) {
+            mvc.get("$base&unitPrice=$price").andExpect { status { isBadRequest() } }
+        }
+        val other = fixture()
+        mvc.get("/w/missing/maker/offer/price-check?run=${fixture.run.id}&unitPrice=1000")
+            .andExpect { status { isNotFound() } }
+        mvc.get("/w/${other.workspace.token}/maker/offer/price-check?run=${fixture.run.id}&unitPrice=1000")
+            .andExpect { status { isNotFound() } }
+        val output = mapper.readValue(fixture.run.resultJson, AnalysisOutput::class.java)
+        val run = analyses.saveAndFlush(AnalysisRun(fixture.workspace.id, "test-model", "test-hash",
+            mapper.writeValueAsString(output.copy(proposal = null, noProposalReason = "No feasible option")),
+            createdAt = clock.instant()))
+        mvc.get("/w/${fixture.workspace.token}/maker/offer/price-check?run=${run.id}&unitPrice=1000")
+            .andExpect { status { isNotFound() } }
+    }
+
+    @Test
+    fun `form renders price results and refreshes without javascript or publishing`() {
+        val fixture = priceFixture()
+        assertContains(page(fixture.workspace.token, "offer?run=${fixture.run.id}"),
+            "3 wishes fit this price, 0 are excluded by their stated limit")
+        val response = postOffer(fixture, mapOf("action" to "check-price", "unitPrice" to "1001",
+            "specText" to "Keep these edited terms", "question.0" to "", "canDeliver" to "false")).andReturn()
+        assertFalse(response.flashMap.containsKey("errors"))
+        val html = mvc.get(response.response.redirectedUrl!!) {
+            response.flashMap.forEach { (key, item) -> flashAttr(key, item) }
+        }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "2 wishes fit this price, 1 are excluded by their stated limit")
+        assertContains(html, "At most USD 10.00 &lt;please&gt;")
+        assertContains(html, "Keep these edited terms")
+        assertContains(html, "value=\"1001\"")
+        assertContains(html, "Check this price")
+        assertContains(html, "/js/offer-price.js")
+        assertContains(html, "formnovalidate")
+        assertTrue(offers.findByWorkspaceId(fixture.workspace.id).isEmpty())
+    }
+
+    @Test
+    fun `every question needs a recognized resolution before publishing and rejected posts recheck price`() {
+        val fixture = priceFixture()
+        for (resolution in listOf("", "open", "forged")) {
+            val response = postOffer(fixture, mapOf("question.1" to resolution, "unitPrice" to "1001")).andReturn()
+            assertContains(response.flashMap["errors"].toString(), "Resolve this question")
+            val check = response.flashMap["priceCheck"] as OfferPriceView
+            assertEquals(2, check.fit)
+            assertEquals(1, check.excludedByPrice.size)
+            assertTrue(offers.findByWorkspaceId(fixture.workspace.id).isEmpty())
+        }
+        postOffer(fixture, mapOf("question.0" to "dismissed", "question.1" to "answered"))
+            .andExpect { redirectedUrl("/w/${fixture.workspace.token}/maker/campaign") }
+        assertEquals(1, offers.findByWorkspaceId(fixture.workspace.id).size)
     }
 
     @Test
@@ -328,6 +426,32 @@ class MakerMoneyControllerTests @Autowired constructor(
         assertContains(page(fixture.workspace.token, "offer?run=${run.id}"), "No proposal is available.")
         val result = postOffer(fixture, mapOf("run" to run.id.toString())).andReturn()
         assertContains(result.flashMap["errors"].toString(), "no available proposal")
+    }
+
+    private fun priceFixture(): MoneyFixture {
+        val base = fixture()
+        val otherWishes = workspaces.listWishes(base.workspace.token).take(3)
+        val wishes = listOf(
+            workspaces.addWish(base.workspace.token, "Postcards please. At most USD 10.00 <please>"),
+            workspaces.addWish(base.workspace.token, "Postcards if the designs fit. At most USD 12.00"),
+        ) + otherWishes
+        val output = AnalysisOutput(
+            wishes.mapIndexed { index, wish ->
+                val limit = when (index) { 0 -> 1000L; 1 -> 1200L; else -> null }
+                AnalyzedWish(wish.id, if (index == 4) WishKind.NOT_A_REQUEST else WishKind.REQUEST,
+                    if (limit == null) emptyList() else listOf(WishNeed(NeedStrength.HARD, NeedAttribute.PRICE,
+                        "Stated limit", if (index == 0) "At most USD 10.00 <please>" else "At most USD 12.00")),
+                    limit?.let { Money(it, "USD") })
+            },
+            wishes.take(4).mapIndexed { index, wish -> WishVerdict(wish.id, base.option.id,
+                when (index) { 1 -> CompatibilityVerdict.CONDITIONAL; 3 -> CompatibilityVerdict.INCOMPATIBLE
+                    else -> CompatibilityVerdict.COMPATIBLE }, "Format assessment") },
+            Proposal(base.option.id, mapOf("finish" to "glossy"), listOf(ProposalEvidence("Fan evidence", wishes[0].id, wishes[0].text))),
+            null, emptyList(), listOf(MakerQuestion("Which finish?", listOf(wishes[0].id)),
+                MakerQuestion("Which designs?", listOf(wishes[1].id))), emptyList(), listOf(base.option.id))
+        val run = analyses.saveAndFlush(AnalysisRun(base.workspace.id, "test-model", "test-hash",
+            mapper.writeValueAsString(output), createdAt = clock.instant()))
+        return base.copy(run = run, wishId = wishes[0].id)
     }
 
     private fun fixture(): MoneyFixture = createMoneyFixture(workspaces, analyses, mapper, clock).also { owned.add(it.workspace) }

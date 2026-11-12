@@ -62,6 +62,18 @@
                             <h2>Price and batch limits</h2>
                             <div th:replace="~{maker/settlement-fragments :: input('unitPrice', ${'Unit price (' + option.currency + ' minor units)'}, 'number', ${fields}, ${errors}, 'Use a positive whole number of minor units; for USD, 100 means USD 1.00.')} ">
                             </div>
+                            <div id="offer-price-check" role="status" aria-live="polite" th:attr="data-url=@{/w/{token}/maker/offer/price-check(token=${token},run=${analysis.id})}">
+                                <p id="price-check-summary" th:text="${priceCheck != null ? priceCheck.fit + ' wishes fit this price, ' + priceCheck.excludedByPrice.size() + ' are excluded by their stated limit' : 'Enter a positive whole-number price to check which wishes fit.'}"></p>
+                                <p id="price-check-categories" class="field-help" th:text="${priceCheck != null ? priceCheck.compatible + ' Compatible; ' + priceCheck.depends + ' Depends. Other conditions still need review. Wishes are stated interest, not orders.' : ''}"></p>
+                                <ul id="price-excluded">
+                                    <li th:each="wish : ${priceCheck != null ? priceCheck.excludedByPrice : null}">
+                                        <a th:href="${wish.sourceUrl}">View wish</a>
+                                        <span th:text="${' — stated limit: ' + wish.limit}"></span>
+                                        <q th:each="quote : ${wish.quotes}" th:text="${quote}"></q>
+                                    </li>
+                                </ul>
+                            </div>
+                            <button type="submit" name="action" value="check-price" formnovalidate class="button button-secondary">Check this price</button>
                             <p class="field-help">Unit cost: <strong th:text="${@makerDisplay.money(option.unitCost, option.currency)}">
                                 </strong>. A price below cost is allowed.</p>
                             <p id="price-warning" class="notice notice-warning" role="status" th:attr="data-cost=${option.unitCost}" hidden>The unit price is below the option's unit cost.</p>
@@ -87,19 +99,20 @@
                     </div>
                     <section class="card preview-section" aria-labelledby="questions">
                         <h2 id="questions">Questions from the analysis</h2>
-                        <p>Answer each question in the specification or explicitly dismiss it.</p>
+                        <p>Resolve every question before publishing: answer it in the specification or mark it not applicable.</p>
                         <p th:if="${output.questionsForMaker.isEmpty()}">No open questions in this analysis.</p>
-                        <div class="field" th:each="question, index : ${output.questionsForMaker}">
-                            <label th:for="${'question.' + index.index}" th:text="${question.text}">
+                        <fieldset class="field" th:each="question, index : ${output.questionsForMaker}" th:attr="aria-describedby=${'question-error-' + index.index}">
+                            <legend th:text="${question.text}"></legend>
+                            <label class="checkbox-field">
+                                <input type="radio" th:name="${'question.' + index.index}" value="answered" required th:checked="${fields['question.' + index.index] == 'answered'}" th:attr="aria-invalid=${errors != null and errors.containsKey('question.' + index.index)}">
+                                <span>Answered in the specification</span>
                             </label>
-                            <select th:id="${'question.' + index.index}" th:name="${'question.' + index.index}" required th:attr="aria-describedby=${'question-error-' + index.index},aria-invalid=${errors != null and errors.containsKey('question.' + index.index)}">
-                                <option value="">Choose how this was resolved</option>
-                                <option value="answered" th:selected="${fields['question.' + index.index] == 'answered'}">Answered in the specification</option>
-                                <option value="dismissed" th:selected="${fields['question.' + index.index] == 'dismissed'}">Dismissed for this offer</option>
-                            </select>
-                            <p class="field-error" th:id="${'question-error-' + index.index}" th:text="${errors != null ? errors['question.' + index.index] : ''}">
-                            </p>
-                        </div>
+                            <label class="checkbox-field">
+                                <input type="radio" th:name="${'question.' + index.index}" value="dismissed" required th:checked="${fields['question.' + index.index] == 'dismissed'}" th:attr="aria-invalid=${errors != null and errors.containsKey('question.' + index.index)}">
+                                <span>Not applicable</span>
+                            </label>
+                            <p class="field-error" th:id="${'question-error-' + index.index}" th:text="${errors != null ? errors['question.' + index.index] : ''}"></p>
+                        </fieldset>
                     </section>
                     <div class="preview-section">
                         <label class="checkbox-field">
@@ -112,6 +125,7 @@
                         <button class="button button-primary" type="submit">Publish offer and open campaign</button>
                     </div>
                 </form>
+                <script th:src="@{/js/offer-price.js}" defer></script>
                 <script>
                     const price = document.getElementById('unitPrice');
                     const warning = document.getElementById('price-warning');
