@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Wish workbench', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <h1>Review every wish</h1>
+    <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${workbench.stored?.run?.id})}">Back to proposal</a>
+    <div th:replace="~{workbench/table :: workbench}"></div>
+</main>
+</body>
+</html>

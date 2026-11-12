@@ -101,7 +101,9 @@ class WebSecurityFilter : OncePerRequestFilter() {
         internal val SAFE_METHODS = setOf("GET", "HEAD", "OPTIONS", "TRACE")
         // Inline scripts and styles are used by the server-rendered pages and PayPal SDK.
         internal const val CSP = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
-            "form-action 'self'; script-src 'self' 'unsafe-inline' https://*.paypal.com https://*.paypalobjects.com; " +
+            "form-action 'self'; script-src 'self' 'unsafe-inline' https://*.paypal.com https://*.paypalobjects.com " +
+            "https://cdn.jsdelivr.net/npm/ag-grid-community@36.3.0/dist/ag-grid-community.min.noStyle.js " +
+            "https://cdn.jsdelivr.net/npm/ag-charts-community@14.3.0/dist/umd/ag-charts-community.min.js; " +
             "style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.paypal.com https://*.paypalobjects.com; " +
             "connect-src 'self' https://*.paypal.com https://*.paypalobjects.com; " +
             "frame-src https://*.paypal.com https://*.paypalobjects.com"

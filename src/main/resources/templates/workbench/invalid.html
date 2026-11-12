@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Invalid selection', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <h1>Invalid wish selection</h1>
+    <p th:text="${message}">Return to the workbench and select wishes from this run.</p>
+</main>
+</body>
+</html>
