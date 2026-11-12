@@ -334,3 +334,10 @@ main > .notice + .two-column, main > .notice + .card { margin-top: var(--space-6
 
 .table-scroll + h3 { margin-top: var(--space-6); }
 #paypal-button-container { max-width: 750px; color-scheme: light; }
+
+.offer-interest { margin-top: var(--space-4); }
+.offer-interest strong { color: var(--ink); }
+.offer-evidence-quotes { display: grid; gap: var(--space-4); margin-top: var(--space-6); }
+@media (min-width: 800px) {
+    .offer-evidence-quotes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

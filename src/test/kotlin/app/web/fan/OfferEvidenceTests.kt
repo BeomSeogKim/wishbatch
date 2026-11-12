@@ -93,6 +93,7 @@ class OfferEvidenceTests @Autowired constructor(
             "AI grouped the wishes; the maker chose and confirmed this offer.", "Fan &lt;0&gt;")) {
             assertContains(html, text)
         }
+        assertEquals(3, Regex("<figure class=\"evidence\">").findAll(html).count())
         evidence.quotes.forEach { assertContains(html, it.quote) }
         assertFalse(html.contains("Fan <0>"))
         assertFalse(html.contains("Fan &lt;3&gt;"))

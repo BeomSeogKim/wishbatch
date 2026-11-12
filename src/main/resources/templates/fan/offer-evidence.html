@@ -3,12 +3,15 @@
 <body>
 <section th:fragment="why(evidence)" class="card" aria-labelledby="offer-evidence-title">
     <h2 id="offer-evidence-title">Why this offer</h2>
-    <p><strong>Compatible wishes:</strong> <span th:text="${evidence.compatibleWishCount}"></span> wishes matched this product option in the original analysis. The maker then set the exact offer terms. This is stated interest, not orders.</p>
+    <p class="offer-interest"><strong>Compatible wishes: <span th:text="${evidence.compatibleWishCount}"></span></strong> — stated interest, not orders.</p>
     <p>AI grouped the wishes; the maker chose and confirmed this offer.</p>
-    <figure th:each="quote : ${evidence.quotes}">
-        <blockquote><p th:text="${quote.quote}"></p></blockquote>
-        <figcaption th:text="${quote.displayName}"></figcaption>
-    </figure>
+    <div class="offer-evidence-quotes">
+        <figure th:each="quote : ${evidence.quotes}" class="evidence">
+            <span class="eyebrow">From a wish</span>
+            <blockquote><p th:text="${quote.quote}"></p></blockquote>
+            <figcaption th:text="${quote.displayName}"></figcaption>
+        </figure>
+    </div>
 </section>
 </body>
 </html>
