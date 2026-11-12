@@ -33,6 +33,7 @@ import app.campaign.store.PledgeRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
+import java.math.BigInteger
 import java.time.Clock
 import java.time.Duration
 import java.util.UUID
@@ -137,6 +138,32 @@ class CampaignService(
         if (context.campaign.state in terminalStates) compensate(context, refreshPending = false)
         updateAttention(context)
         outcome
+    }
+
+    fun withdrawPledge(ref: PledgeRef): ServiceResult<PledgeView> = withCampaign(ref.campaign) { context ->
+        val pledge = context.pledges.find { it.id == ref.pledgeId } ?: return@withCampaign rejected(Rejection.NOT_FOUND)
+        if (context.campaign.state != CampaignState.OPEN ||
+            context.campaign.closesAt?.isAfter(clock.instant()) != true) {
+            return@withCampaign ServiceResult.Rejected(Rejection.INVALID_STATE, pledgeView(pledge))
+        }
+        if (pledge.state == PledgeState.VOIDED) return@withCampaign ServiceResult.Success(pledgeView(pledge))
+        if (pledge.state != PledgeState.AUTHORIZED) {
+            return@withCampaign ServiceResult.Rejected(Rejection.INVALID_STATE, pledgeView(pledge))
+        }
+        payments.void(pledge)
+        updateAttention(context)
+        if (pledge.state == PledgeState.VOIDED) ServiceResult.Success(pledgeView(pledge))
+        else ServiceResult.Rejected(Rejection.PAYMENT_UNAVAILABLE, pledgeView(pledge))
+    }
+
+    fun fundedBatch(ref: CampaignRef): ServiceResult<FundedBatch> = withCampaign(ref) { context ->
+        if (context.campaign.state != CampaignState.FUNDED) return@withCampaign rejected(Rejection.INVALID_STATE)
+        val (paid, incomplete) = context.pledges.partition { it.state == PledgeState.CAPTURED }
+        fun row(pledge: Pledge) = BatchPledge(pledge.id, pledge.shippingAddress?.fullName, pledge.qty,
+            pledge.shippingAddress, pledge.state, pledge.payerEmailMasked)
+        ServiceResult.Success(FundedBatch(paid.map(::row), incomplete.map(::row),
+            paid.sumOf { it.qty.toLong() }, paid.fold(BigInteger.ZERO) { total, pledge -> total + BigInteger.valueOf(pledge.amount) },
+            context.offer.currency))
     }
 
     fun cancel(ref: CampaignRef): ServiceResult<CampaignView> = withCampaign(ref) { context ->

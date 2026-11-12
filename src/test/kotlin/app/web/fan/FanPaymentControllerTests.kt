@@ -405,6 +405,57 @@ class FanPaymentControllerTests @Autowired constructor(
             assertFalse(html.contains("example.test"))
             assertFalse(html.contains("authorization-${pledge.id}"))
             assertFalse(html.contains("??pledge."))
+            assertEquals(state == PledgeState.AUTHORIZED, html.contains("Withdraw my pledge"))
+        }
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+    }
+
+    @Test
+    fun `withdrawal requires confirmation and releases the hold only after a form post`() {
+        val fixture = fixture()
+        val pledge = pledge(fixture, PledgeState.AUTHORIZED, quantity = 2)
+        val path = "${fixture.path}/pledges/${pledge.id}"
+        val html = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "Withdraw my pledge")
+        assertContains(html, "name=\"confirmed\"")
+        assertContains(html, "When the amount reappears depends on your bank or card.")
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+        val unconfirmed = mvc.post(path) { param("action", "withdraw") }.andExpect {
+            status { is3xxRedirection() }; redirectedUrl(path)
+        }.andReturn()
+        assertContains(unconfirmed.flashMap["error"].toString(), "Confirm")
+        assertEquals(PledgeState.AUTHORIZED, pledges.findById(pledge.id).orElseThrow().state)
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+        gateway.voidAuthorizationResults.add(received(VoidDetails(AuthorizationId(pledge.authorizationId!!)), PaymentStatus.VOIDED))
+        val withdrawn = mvc.post(path) {
+            param("action", "withdraw"); param("confirmed", "true")
+        }.andExpect { status { is3xxRedirection() }; redirectedUrl(path) }.andReturn()
+        assertContains(withdrawn.flashMap["notice"].toString(), "Hold released by PayPal")
+        val released = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(released, "Hold released by PayPal")
+        assertFalse(released.contains("Withdraw my pledge"))
+        assertEquals(PledgeState.VOIDED, pledges.findById(pledge.id).orElseThrow().state)
+        mvc.post(path) { param("action", "withdraw"); param("confirmed", "true") }
+            .andExpect { status { is3xxRedirection() } }
+        assertEquals(1, gateway.calls.drop(firstCall).filterIsInstance<PaymentCall.VoidAuthorization>().size)
+    }
+
+    @Test
+    fun `closed and settling withdrawals give a plain refusal and foreign pledges stay hidden`() {
+        for (state in listOf(CampaignState.AWAITING_CONFIRMATION, CampaignState.SETTLING, CampaignState.FUNDED)) {
+            val fixture = fixture(state = state)
+            val pledge = pledge(fixture, PledgeState.AUTHORIZED)
+            val path = "${fixture.path}/pledges/${pledge.id}"
+            val rejected = mvc.post(path) { param("action", "withdraw"); param("confirmed", "true") }
+                .andExpect { status { is3xxRedirection() }; redirectedUrl(path) }.andReturn()
+            assertContains(rejected.flashMap["error"].toString(), "before settlement or closing")
+        }
+        val fixture = fixture()
+        val pledge = pledge(fixture, PledgeState.AUTHORIZED)
+        val other = fixture()
+        for (path in listOf("${other.path}/pledges/${pledge.id}", "${fixture.path}/pledges/invalid", "/w/missing/pledges/${pledge.id}")) {
+            mvc.post(path) { param("action", "withdraw"); param("confirmed", "true") }
+                .andExpect { status { isNotFound() }; view { name("error/not-found") } }
         }
         assertTrue(gateway.calls.drop(firstCall).isEmpty())
     }

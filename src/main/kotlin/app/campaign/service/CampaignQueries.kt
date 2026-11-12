@@ -2,6 +2,7 @@ package app.campaign.service
 
 import app.campaign.model.Campaign
 import app.campaign.model.CampaignState
+import app.campaign.model.PledgeState
 import app.campaign.rules.CapacityDecision
 import app.campaign.rules.authorizedUnits
 import app.campaign.rules.checkCapacity
@@ -25,7 +26,10 @@ data class PledgeQuote(
     val allowed: Boolean get() = decision == CapacityDecision.ALLOWED
 }
 
-data class PledgeLookup(val pledge: PledgeView, val createdAt: Instant, val campaign: CampaignView)
+data class PledgeLookup(val pledge: PledgeView, val createdAt: Instant, val campaign: CampaignView) {
+    val canWithdraw: Boolean get() = campaign.state == CampaignState.OPEN &&
+        !campaign.timeLeft.isZero && pledge.state == PledgeState.AUTHORIZED
+}
 data class MakerOffers(val draft: CampaignView?, val latest: CampaignView?, val history: List<CampaignView>)
 
 @Service

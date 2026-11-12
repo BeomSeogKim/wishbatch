@@ -82,6 +82,11 @@ class CampaignController(
             // Aggregate displayed completed rows exactly, including histories larger than a Long total.
             model.addAttribute("paidAmount", total(view, PledgeState.CAPTURED))
             model.addAttribute("refundedAmount", total(view, PledgeState.REFUNDED))
+            if (view.result.productionReleased) {
+                val workspace = workspaces.findByToken(token) ?: throw WorkspaceNotFoundException()
+                val batch = campaigns.fundedBatch(CampaignRef(workspace.id, view.id))
+                model.addAttribute("batch", (batch as? ServiceResult.Success)?.value)
+            }
         }
         return "maker/result"
     }

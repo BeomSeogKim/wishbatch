@@ -6,6 +6,8 @@ import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.NeedAttribute
 import app.campaign.model.NeedStrength
 import app.campaign.model.Money
+import app.campaign.model.PledgeState
+import app.campaign.model.ShippingAddress
 import app.campaign.model.Option
 import app.campaign.model.WishKind
 import app.campaign.model.Workspace
@@ -324,6 +326,42 @@ class MakerMoneyControllerTests @Autowired constructor(
         assertTrue(ref(fixture).campaignId != previous.campaignId)
         assertEquals(CampaignState.OPEN, campaignRows.findById(ref(fixture).campaignId).orElseThrow().state)
         assertContains(page(fixture.workspace.token, "campaign"), "Open")
+    }
+
+    @Test
+    fun `funded production list separates completed payments and keeps buyer details off fan pages`() {
+        val fixture = fixture()
+        publish(fixture)
+        authorize(fixture, "batch-paid", 3)
+        authorize(fixture, "batch-failed", 1)
+        val rows = pledgeRows.findByCampaignIdOrderByCreatedAtAscIdAsc(ref(fixture).campaignId)
+        rows[0].shippingAddress = ShippingAddress("Synthetic Buyer", "42 Sample Lane", "Unit 7", "CA", "Example City", "90001", "US")
+        rows[1].shippingAddress = ShippingAddress("Excluded Buyer", "99 Unpaid Road", countryCode = "US")
+        pledgeRows.saveAllAndFlush(rows)
+        assertFalse(page(fixture.workspace.token, "result").contains("Batch to produce"))
+        gateway.captureResults.add(PaymentResult.Received(CaptureDetails(CaptureId("cap-batch"), Money(3000, "USD")), PaymentStatus.COMPLETED))
+        gateway.captureResults.add(PaymentResult.Failed(PaymentStatus.DECLINED))
+        gateway.voidAuthorizationResults.add(PaymentResult.Received(VoidDetails(AuthorizationId("auth-batch-failed")), PaymentStatus.VOIDED))
+        action(fixture, "confirm", confirmation(2, 4, 4000))
+        val html = page(fixture.workspace.token, "result")
+        val production = html.substringAfter("<h2 id=\"batch-heading\">").substringBefore("<h2 id=\"pledges-heading\">")
+        for (text in listOf("Batch to produce", "3 units", "USD 30.00", "Synthetic Buyer", "42 Sample Lane", "Unit 7",
+            "Example City", "90001", "Captured", "m***@example.test")) assertContains(production, text)
+        val completed = production.substringBefore("<h3>Payments not completed</h3>")
+        val incomplete = production.substringAfter("<h3>Payments not completed</h3>")
+        assertFalse(completed.contains("Excluded Buyer"))
+        assertContains(incomplete, "Excluded Buyer")
+        assertContains(incomplete, "99 Unpaid Road")
+        assertContains(incomplete, "Voided")
+        assertFalse(html.contains("maker-fan@example.test"))
+        val path = "/w/${fixture.workspace.token}"
+        for (route in listOf("/result", "/offer", "/pledges/${rows[0].id}", "/pledges/${rows[1].id}")) {
+            val publicHtml = mvc.get(path + route).andExpect { status { isOk() } }.andReturn().response.contentAsString
+            for (detail in listOf("Synthetic Buyer", "Excluded Buyer", "42 Sample Lane", "99 Unpaid Road", "Unit 7", "90001",
+                "maker-fan@example.test", "m***@example.test", "Batch to produce")) assertFalse(publicHtml.contains(detail))
+        }
+        assertEquals(PledgeState.CAPTURED, pledgeRows.findById(rows[0].id).orElseThrow().state)
+        assertEquals(PledgeState.VOIDED, pledgeRows.findById(rows[1].id).orElseThrow().state)
     }
 
     @Test

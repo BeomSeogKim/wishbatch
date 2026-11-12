@@ -55,6 +55,9 @@
                     </div>
                 </section>
                 <p>Pending and failed refunds are not included in completed refund totals. When released or refunded money reappears depends on PayPal and the bank or card.</p>
+                <div th:if="${batch != null}">
+                    <div th:replace="~{maker/settlement-fragments :: batch(${batch})}"></div>
+                </div>
                 <div th:replace="~{maker/settlement-fragments :: pledges(${campaign})}">
                 </div>
                 <div th:replace="~{maker/settlement-fragments :: attention(${campaign})}">

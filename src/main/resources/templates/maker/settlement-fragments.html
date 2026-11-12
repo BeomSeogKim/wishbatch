@@ -58,6 +58,52 @@
                 </table>
             </div>
         </section>
+        <section th:fragment="batch(batch)" class="preview-section" aria-labelledby="batch-heading">
+            <h2 id="batch-heading">Batch to produce</h2>
+            <p><strong th:text="${batch.totalUnits + ' units'}"></strong> · Paid amount: <strong th:text="${@makerDisplay.money(batch.totalAmount, batch.currency)}"></strong></p>
+            <p>Only completed payments are included in this production list.</p>
+            <div th:replace="~{maker/settlement-fragments :: batchRows(${batch.paid}, 'Completed payments for production')}"></div>
+            <h3>Payments not completed</h3>
+            <p>These pledges are excluded from production units and the paid amount.</p>
+            <p th:if="${batch.incomplete.isEmpty()}">No excluded pledges.</p>
+            <div th:unless="${batch.incomplete.isEmpty()}">
+                <div th:replace="~{maker/settlement-fragments :: batchRows(${batch.incomplete}, 'Pledges excluded from production')}"></div>
+            </div>
+        </section>
+        <div th:fragment="batchRows(rows, caption)" class="table-scroll" tabindex="0" role="region" th:attr="aria-label=${caption}">
+            <table>
+                <caption th:text="${caption}"></caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Buyer name</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Shipping address</th>
+                        <th scope="col">Capture state</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="row : ${rows}">
+                        <th scope="row">
+                            <span th:text="${row.buyerName ?: 'Name not provided'}"></span><br>
+                            <small th:text="${row.payerEmailMasked ?: 'Payer unavailable'}"></small>
+                        </th>
+                        <td th:text="${row.quantity}"></td>
+                        <td>
+                            <span th:if="${row.shippingAddress == null}">Address not provided</span>
+                            <th:block th:if="${row.shippingAddress != null}" th:with="address=${row.shippingAddress}">
+                                <div th:if="${address.addressLine1 != null}" th:text="${address.addressLine1}"></div>
+                                <div th:if="${address.addressLine2 != null}" th:text="${address.addressLine2}"></div>
+                                <div th:if="${address.adminArea2 != null}" th:text="${address.adminArea2}"></div>
+                                <div th:if="${address.adminArea1 != null}" th:text="${address.adminArea1}"></div>
+                                <div th:if="${address.postalCode != null}" th:text="${address.postalCode}"></div>
+                                <div th:if="${address.countryCode != null}" th:text="${address.countryCode}"></div>
+                            </th:block>
+                        </td>
+                        <td th:text="${@makerDisplay.words(row.state)}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <section th:fragment="attention(campaign)" class="preview-section" aria-labelledby="attention-heading">
             <h2 id="attention-heading">Needs attention</h2>
             <p th:if="${campaign.needsAttention.isEmpty()}">No unresolved payments reported.</p>

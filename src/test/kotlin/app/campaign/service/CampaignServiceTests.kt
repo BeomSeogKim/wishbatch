@@ -9,6 +9,7 @@ import app.campaign.model.Offer
 import app.campaign.model.Option
 import app.campaign.model.Pledge
 import app.campaign.model.PledgeState
+import app.campaign.model.ShippingAddress
 import app.campaign.model.WishKind
 import app.campaign.model.Workspace
 import app.campaign.port.AnalysisOutput
@@ -859,6 +860,183 @@ class CampaignServiceTests @Autowired constructor(
         assertTrue(gateway.fake.calls.isEmpty())
     }
 
+    @Test
+    fun `withdrawal releases a hold once with durable events and reduces authorized units`() {
+        val fixture = fixture()
+        val pledge = authorized(fixture, 2)
+        val ref = PledgeRef(fixture.ref, pledge.id)
+        assertTrue(success(queries.lookupPledge(fixture.workspace.token, pledge.id)).canWithdraw)
+        voidSuccess(pledge)
+
+        assertEquals(PledgeState.VOIDED, success(service.withdrawPledge(ref)).state)
+        assertEquals(PledgeState.VOIDED, success(service.withdrawPledge(ref)).state)
+        val call = gateway.fake.calls.filterIsInstance<PaymentCall.VoidAuthorization>().single()
+        assertEquals(idempotencyKey(pledge.id, PaymentAction.VOID), call.idempotencyKey)
+        val view = success(service.readCampaign(fixture.ref))
+        assertEquals(0L, view.counts.authorizedHolds)
+        assertEquals(5L, view.capacityLeft)
+        assertTrue(view.timeline.any { it.pledgeId == pledge.id && it.type == "VOID_REQUEST" })
+        assertTrue(view.timeline.any { it.pledgeId == pledge.id && it.type == "VOID_RESPONSE" })
+        assertTrue(view.timeline.any { it.pledgeId == pledge.id && it.detail == "AUTHORIZED -> VOIDED" })
+        assertFalse(success(queries.lookupPledge(fixture.workspace.token, pledge.id)).canWithdraw)
+    }
+
+    @Test
+    fun `withdrawal refuses every non open campaign state without calling the provider`() {
+        CampaignState.entries.filter { it != CampaignState.OPEN }.forEach { state ->
+            val fixture = fixture(state = state)
+            val pledge = authorized(fixture, 1)
+            assertEquals(Rejection.INVALID_STATE,
+                rejected(service.withdrawPledge(PledgeRef(fixture.ref, pledge.id))).reason)
+            assertEquals(PledgeState.AUTHORIZED, pledges.findById(pledge.id).orElseThrow().state)
+        }
+        assertTrue(gateway.fake.calls.isEmpty())
+    }
+
+    @Test
+    fun `withdrawal refuses the exact closing instant and non authorized pledges`() {
+        val fixture = fixture()
+        val pledge = authorized(fixture, 1)
+        clock.current = fixture.campaign.closesAt!!
+        assertEquals(Rejection.INVALID_STATE,
+            rejected(service.withdrawPledge(PledgeRef(fixture.ref, pledge.id))).reason)
+        clock.current = start
+        PledgeState.entries.filter { it !in setOf(PledgeState.AUTHORIZED, PledgeState.VOIDED) }.forEach { state ->
+            pledge.state = state
+            pledges.saveAndFlush(pledge)
+            assertEquals(Rejection.INVALID_STATE,
+                rejected(service.withdrawPledge(PledgeRef(fixture.ref, pledge.id))).reason)
+        }
+        assertTrue(gateway.fake.calls.isEmpty())
+    }
+
+    @Test
+    fun `withdrawal and funded batch enforce workspace and pledge ownership`() {
+        val owner = fixture(state = CampaignState.FUNDED)
+        val other = fixture()
+        val pledge = authorized(owner, 1)
+        assertEquals(Rejection.NOT_FOUND,
+            rejected(service.withdrawPledge(PledgeRef(other.ref, pledge.id))).reason)
+        assertEquals(Rejection.NOT_FOUND,
+            rejected(service.fundedBatch(CampaignRef(other.workspace.id, owner.campaign.id))).reason)
+        assertEquals(Rejection.INVALID_STATE, rejected(service.fundedBatch(other.ref)).reason)
+        assertTrue(gateway.fake.calls.isEmpty())
+    }
+
+    @Test
+    fun `failed withdrawal stays visible without claiming a released hold`() {
+        val fixture = fixture()
+        val pledge = authorized(fixture, 1)
+        gateway.fake.voidAuthorizationResults.add(PaymentResult.Failed(PaymentStatus.FAILED))
+        val result = rejected(service.withdrawPledge(PledgeRef(fixture.ref, pledge.id)))
+        assertEquals(Rejection.PAYMENT_UNAVAILABLE, result.reason)
+        assertEquals(PledgeState.VOID_FAILED, result.pledge?.state)
+        val view = success(service.readCampaign(fixture.ref))
+        assertEquals(0L, view.counts.authorizedHolds)
+        assertEquals(PledgeState.VOID_FAILED, view.needsAttention.single().state)
+    }
+
+    @Test
+    fun `withdrawal and settlement serialize whichever starts first`() {
+        for (withdrawFirst in listOf(true, false)) {
+            gateway.reset()
+            val fixture = fixture()
+            val pledge = authorized(fixture, 1)
+            val enteredProvider = CountDownLatch(1)
+            val competingRequest = CountDownLatch(1)
+            val awaitCompetitor = {
+                enteredProvider.countDown()
+                assertTrue(competingRequest.await(5, TimeUnit.SECONDS))
+            }
+            if (withdrawFirst) {
+                voidSuccess(pledge)
+                gateway.beforeVoid = awaitCompetitor
+            } else {
+                captureSuccess(pledge)
+                gateway.beforeCapture = awaitCompetitor
+            }
+            val executor = Executors.newFixedThreadPool(2)
+            try {
+                val first = executor.submit<ServiceResult<*>> {
+                    if (withdrawFirst) service.withdrawPledge(PledgeRef(fixture.ref, pledge.id))
+                    else service.confirmProduction(fixture.ref)
+                }
+                assertTrue(enteredProvider.await(5, TimeUnit.SECONDS))
+                val second = executor.submit<ServiceResult<*>> {
+                    competingRequest.countDown()
+                    if (withdrawFirst) service.confirmProduction(fixture.ref)
+                    else service.withdrawPledge(PledgeRef(fixture.ref, pledge.id))
+                }
+                assertIs<ServiceResult.Success<*>>(first.get(10, TimeUnit.SECONDS))
+                assertEquals(if (withdrawFirst) Rejection.THRESHOLD_NOT_MET else Rejection.INVALID_STATE,
+                    rejected(second.get(10, TimeUnit.SECONDS)).reason)
+                assertEquals(if (withdrawFirst) PledgeState.VOIDED else PledgeState.CAPTURED,
+                    pledges.findById(pledge.id).orElseThrow().state)
+                assertEquals(if (withdrawFirst) 0 else 1,
+                    gateway.fake.calls.filterIsInstance<PaymentCall.Capture>().size)
+                assertEquals(if (withdrawFirst) 1 else 0,
+                    gateway.fake.calls.filterIsInstance<PaymentCall.VoidAuthorization>().size)
+            } finally {
+                competingRequest.countDown()
+                executor.shutdownNow()
+            }
+        }
+    }
+
+    @Test
+    fun `authorization stores shipping for the maker batch and excludes incomplete captures from totals`() {
+        val fixture = fixture()
+        val pledge = created(fixture)
+        val address = ShippingAddress("Sample Buyer", "123 Example Road", "Unit 4", "CA", "Example City", "90210", "US")
+        gateway.fake.authorizeOrderResults.add(received(AuthorizationDetails(
+            AuthorizationId("shipping-authorization"), Money(200, "USD"), start.plusSeconds(86_400),
+            orderId = OrderId(pledge.paypalOrderId!!), payerEmail = "buyer@example.test", shippingAddress = address,
+        ), PaymentStatus.CREATED))
+        success(service.completePledge(PledgeRef(fixture.ref, pledge.id)))
+        val saved = pledges.findById(pledge.id).orElseThrow()
+        assertEquals(address, saved.shippingAddress)
+        val second = authorized(fixture, 2)
+        val incomplete = authorized(fixture, 1).apply {
+            state = PledgeState.VOIDED
+            shippingAddress = ShippingAddress(fullName = "Unpaid Buyer")
+        }
+        pledges.saveAndFlush(incomplete)
+        captureSuccess(saved)
+        captureSuccess(second)
+        assertEquals(CampaignState.FUNDED, success(service.confirmProduction(fixture.ref)).state)
+
+        val batch = success(service.fundedBatch(fixture.ref))
+        assertEquals(3L, batch.totalUnits)
+        assertEquals(600L.toBigInteger(), batch.totalAmount)
+        assertEquals("USD", batch.currency)
+        assertEquals(listOf(pledge.id, second.id), batch.paid.map { it.id })
+        assertEquals(address, batch.paid.first().shippingAddress)
+        assertEquals("Sample Buyer", batch.paid.first().buyerName)
+        assertEquals("b***@example.test", batch.paid.first().payerEmailMasked)
+        assertNull(batch.paid.last().shippingAddress)
+        assertEquals(PledgeState.CAPTURED, batch.paid.first().state)
+        assertEquals(listOf(incomplete.id), batch.incomplete.map { it.id })
+        assertFalse(success(service.readCampaign(fixture.ref)).toString().contains("Sample Buyer"))
+        assertFalse(success(queries.lookupPledge(fixture.workspace.token, pledge.id)).toString().contains("Example Road"))
+    }
+
+    @Test
+    fun `batch snapshot leaves pending payments untouched and sums paid minor units exactly`() {
+        val fixture = fixture(state = CampaignState.FUNDED)
+        repeat(2) {
+            pledges.saveAndFlush(Pledge(fixture.campaign.id, 1, Long.MAX_VALUE, "USD",
+                PledgeState.CAPTURED, createdAt = start))
+        }
+        val pending = authorized(fixture, 1).apply { state = PledgeState.CAPTURE_PENDING }
+        pledges.saveAndFlush(pending)
+        val batch = success(service.fundedBatch(fixture.ref))
+        assertEquals(Long.MAX_VALUE.toBigInteger() * 2.toBigInteger(), batch.totalAmount)
+        assertEquals(2L, batch.totalUnits)
+        assertEquals(PledgeState.CAPTURE_PENDING, batch.incomplete.single().state)
+        assertEquals(pending.id, batch.incomplete.single().id)
+        assertTrue(gateway.fake.calls.isEmpty())
+    }
+
     private fun fixture(minimum: Int = 1, capacity: Int = 5, state: CampaignState = CampaignState.OPEN): Fixture {
         val workspace = workspaces.saveAndFlush(Workspace("test-${UUID.randomUUID()}", start))
         ownedWorkspaces.add(workspace.id)
@@ -952,6 +1130,8 @@ class CrashableGateway : PaymentGateway {
     var crashAfterCaptureNumber: Int? = null
     var crashAfterRefund = false
     var afterAuthorization: (() -> Unit)? = null
+    var beforeCapture: (() -> Unit)? = null
+    var beforeVoid: (() -> Unit)? = null
     private var captureNumber = 0
 
     fun reset() {
@@ -959,6 +1139,8 @@ class CrashableGateway : PaymentGateway {
         crashAfterCaptureNumber = null
         crashAfterRefund = false
         afterAuthorization = null
+        beforeCapture = null
+        beforeVoid = null
         captureNumber = 0
     }
 
@@ -970,12 +1152,16 @@ class CrashableGateway : PaymentGateway {
     }
     override fun readAuthorization(authorizationId: AuthorizationId, idempotencyKey: String) = fake.readAuthorization(authorizationId, idempotencyKey)
     override fun capture(authorizationId: AuthorizationId, idempotencyKey: String): PaymentResult<CaptureDetails> {
+        beforeCapture?.invoke()
         val result = fake.capture(authorizationId, idempotencyKey)
         captureNumber++
         if (captureNumber == crashAfterCaptureNumber) throw SimulatedProcessCrash()
         return result
     }
-    override fun voidAuthorization(authorizationId: AuthorizationId, idempotencyKey: String) = fake.voidAuthorization(authorizationId, idempotencyKey)
+    override fun voidAuthorization(authorizationId: AuthorizationId, idempotencyKey: String): PaymentResult<VoidDetails> {
+        beforeVoid?.invoke()
+        return fake.voidAuthorization(authorizationId, idempotencyKey)
+    }
     override fun refundCapture(captureId: CaptureId, idempotencyKey: String): PaymentResult<RefundDetails> {
         val result = fake.refundCapture(captureId, idempotencyKey)
         if (crashAfterRefund) {

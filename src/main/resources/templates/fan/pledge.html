@@ -4,6 +4,8 @@
 <body>
 <main id="main" class="shell">
     <h1>Pledge status</h1>
+    <p th:if="${error != null}" class="notice notice-error" role="alert" th:text="${error}"></p>
+    <p th:if="${notice != null}" class="notice notice-info" role="status" th:text="${notice}"></p>
     <section class="card" aria-label="Your pledge">
         <h2 th:text="${campaign.offer.title}"></h2>
         <p class="notice notice-info" th:text="${sentence}"></p>
@@ -16,6 +18,15 @@
         <h2>What happens next</h2>
         <p th:text="${next}"></p>
         <p>Delivery terms: <span th:text="${campaign.offer.deliveryTerms}"></span></p>
+        <form th:if="${canWithdraw}" method="post" th:action="@{/w/{token}/pledges/{id}(token=${token},id=${pledge.id})}">
+            <input type="hidden" name="action" value="withdraw">
+            <p id="withdraw-help">Withdrawing asks PayPal to release your hold. When the amount reappears depends on your bank or card.</p>
+            <label class="checkbox-field">
+                <input type="checkbox" name="confirmed" value="true" required aria-describedby="withdraw-help">
+                I confirm that I want to withdraw this pledge.
+            </label>
+            <button type="submit" class="button button-danger">Withdraw my pledge</button>
+        </form>
         <a th:href="@{/w/{token}/pledges/{id}(token=${token},id=${pledge.id})}">Refresh status</a>
     </section>
     <section th:if="${resultAvailable}" class="card" aria-label="Campaign result">
