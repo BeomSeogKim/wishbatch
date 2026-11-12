@@ -76,8 +76,8 @@
             <div class="proposal-summary" aria-label="Wish groups for this proposal">
                 <div th:each="group : ${groupSummaries}">
                     <strong th:text="${group.count}">0</strong>
-                    <a th:href="@{/w/{token}/maker/proposal/wishes(token=${token},run=${stored.run.id},optionId=${proposedOption.id},label=${group.key})}"
-                       th:attr="data-filter-label=${group.key},data-filter-option=${proposedOption.id}" th:text="${group.label}">Compatible</a>
+                    <a th:href="@{/w/{token}/maker/proposal/wishes(token=${token},run=${stored.run.id},optionId=${proposedOption.id},label=${group.key})} + '#wish-workbench'"
+                       data-workbench-label-link th:attr="data-label=${group.key},data-option-id=${proposedOption.id}" th:text="${group.label}">Compatible</a>
                     <blockquote th:if="${group.representative != null}"><p th:text="${group.representative.wish.text}">Source wish</p></blockquote>
                     <p th:if="${group.representative == null}">No wishes in this group.</p>
                 </div>
@@ -177,23 +177,6 @@
         </section>
     </th:block>
     <script>
-        document.querySelectorAll('[data-filter-label]').forEach(function (link) {
-            link.addEventListener('click', function (event) {
-                const filters = document.querySelector('[data-workbench-filters]');
-                const option = filters?.querySelector('[name="optionId"]');
-                const label = filters?.querySelector('[name="label"]');
-                if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ||
-                    !option || !label || !document.querySelector('[data-workbench-table]')?.hidden) return;
-                event.preventDefault();
-                option.value = link.dataset.filterOption;
-                label.value = link.dataset.filterLabel;
-                label.dispatchEvent(new Event('change', { bubbles: true }));
-                window.dispatchEvent(new CustomEvent('wishbatch:filter-label', {
-                    detail: { optionId: link.dataset.filterOption, label: link.dataset.filterLabel }
-                }));
-                document.getElementById('wish-workbench').scrollIntoView();
-            });
-        });
         function revealSourceWish() {
             const target = document.getElementById(window.location.hash.slice(1));
             if (!target) return;

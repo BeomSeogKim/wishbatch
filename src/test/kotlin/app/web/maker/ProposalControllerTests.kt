@@ -106,11 +106,12 @@ class ProposalControllerTests(
             "INCOMPATIBLE" to counts.notServed, "NOT_A_REQUEST" to counts.notARequest)) {
             assertContains(html, "<strong>$count</strong>")
             assertContains(html, "label=$label")
-            assertContains(html, "data-filter-label=\"$label\"")
+            assertContains(html, "data-label=\"$label\"")
         }
         assertContains(html, "Live analysis progress")
         assertContains(html, "Review follow-up questions for the latest analysis")
-        assertContains(html, "wishbatch:filter-label")
+        assertContains(html, "data-workbench-label-link")
+        assertContains(html, "#wish-workbench")
         for (wishId in stored.output.questionsForMaker.flatMap { it.wishIds }) {
             assertContains(html, "href=\"#wish-$wishId\"")
         }
@@ -339,7 +340,7 @@ class ProposalControllerTests(
             ))
             val html = page(token)
             val summary = html.substringAfter("aria-label=\"Wish groups for this proposal\"").substringBefore("Stated interest")
-            assertEquals(4, Regex("data-filter-label=").findAll(summary).count())
+            assertEquals(4, Regex("data-label=").findAll(summary).count())
             assertEquals(if (size == 0) 0 else 4, Regex("<blockquote>").findAll(summary).count())
             assertEquals(4, Regex("<strong>$size</strong>").findAll(summary).count())
             groups.keys.forEach { assertContains(summary, "label=$it") }
