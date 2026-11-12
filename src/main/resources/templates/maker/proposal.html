@@ -111,6 +111,7 @@
             <a th:if="${proposedOption != null}" href="#rationale">Quoted evidence</a>
             <a href="#option-counts">All options</a>
             <a href="#maker-questions">Open questions</a>
+            <a th:href="@{/w/{token}/maker/replies(token=${token},run=${stored.run.id})}">Review replies</a>
             <a th:if="${proposedOption != null}" href="#wish-groups">Wish groups</a>
             <a href="#run-details">Analysis details</a>
         </nav>

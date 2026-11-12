@@ -36,11 +36,12 @@ class ReplyService(
     private val clock: Clock,
     transactionManager: PlatformTransactionManager,
 ) {
+    private val readTransaction = TransactionTemplate(transactionManager)
     private val transaction = TransactionTemplate(transactionManager).apply {
         propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
     }
 
-    fun maker(token: String, runId: UUID): MakerReplies = within {
+    fun maker(token: String, runId: UUID): MakerReplies = within(readTransaction) {
         lock(token)
         view(snapshot(token, runId))
     }
@@ -107,7 +108,7 @@ class ReplyService(
     }
 
     /** Returns only this wish's approved body and its own source quote, never group drafts or other fans. */
-    fun approvedForWish(token: String, runId: UUID, wishId: UUID): ApprovedWishReply? = within {
+    fun approvedForWish(token: String, runId: UUID, wishId: UUID): ApprovedWishReply? = within(readTransaction) {
         lock(token)
         val snapshot = try {
             snapshot(token, runId)
@@ -121,6 +122,11 @@ class ReplyService(
             ?: return@within null
         if (!ReplySafety.validateBody(approval.body, group.reasons)) return@within null
         ApprovedWishReply(approval.body, group.sources.single { it.wishId == wishId }.quote, approval.approvedAt)
+    }
+
+    fun latestApprovedForWish(token: String, wishId: UUID): ApprovedWishReply? {
+        val runId = runs.latest(token)?.run?.id ?: return null
+        return approvedForWish(token, runId, wishId)
     }
 
     private data class Snapshot(val workspaceId: UUID, val runId: UUID, val hash: String, val groups: List<ReplyEvidenceGroup>)
@@ -181,5 +187,6 @@ class ReplyService(
     private fun hash(value: String): String = MessageDigest.getInstance("SHA-256").digest(value.toByteArray())
         .joinToString("") { "%02x".format(it) }
     private data class TransactionValue<T>(val value: T)
-    private fun <T> within(action: () -> T): T = transaction.execute { TransactionValue(action()) }!!.value
+    private fun <T> within(template: TransactionTemplate = transaction, action: () -> T): T =
+        template.execute { TransactionValue(action()) }!!.value
 }

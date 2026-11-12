@@ -1,5 +1,6 @@
 package app.analysis
 
+import app.analysis.replies.ReplyPrompt
 import app.campaign.port.AnalysisFailure
 import org.slf4j.LoggerFactory
 import tools.jackson.core.JacksonException
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 enum class AnalysisStage { CLASSIFY, PROPOSE }
+enum class AnalysisPurpose { ANALYSIS, REPLY }
 
 data class AnalysisRequest(
     val input: String,
@@ -24,6 +26,7 @@ data class AnalysisRequest(
     val retry: Boolean,
     val stage: AnalysisStage = AnalysisStage.CLASSIFY,
     val maxOutputTokens: Int = 4096,
+    val purpose: AnalysisPurpose = AnalysisPurpose.ANALYSIS,
 )
 
 sealed interface ProviderResult {
@@ -61,7 +64,8 @@ class OpenAiAnalysisProvider internal constructor(
             "store" to false,
             "max_output_tokens" to request.maxOutputTokens,
             "reasoning" to mapOf("effort" to properties.reasoningEffort),
-            "instructions" to AnalysisPrompt.instructions + "\n" + AnalysisStages.instructions(request.stage) + if (request.retry) {
+            "instructions" to if (request.purpose == AnalysisPurpose.REPLY) ReplyPrompt.instructions
+            else AnalysisPrompt.instructions + "\n" + AnalysisStages.instructions(request.stage) + if (request.retry) {
                 "\nThe previous output was invalid. Return one complete schema-shaped result with at most one proposal."
             } else "",
             "input" to listOf(mapOf("role" to "user", "content" to request.input)),

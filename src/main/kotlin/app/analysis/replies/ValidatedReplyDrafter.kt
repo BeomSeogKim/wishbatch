@@ -2,8 +2,8 @@ package app.analysis.replies
 
 import app.analysis.AnalysisProperties
 import app.analysis.AnalysisProvider
+import app.analysis.AnalysisPurpose
 import app.analysis.AnalysisRequest
-import app.analysis.AnalysisStage
 import app.analysis.OpenAiAnalysisProvider
 import app.analysis.ProviderResult
 import app.campaign.replies.ReplyDrafter
@@ -53,8 +53,8 @@ class ValidatedReplyDrafter(
         }
         val started = nanoTime()
         val result = try {
-            provider.generate(AnalysisRequest(input, schema(), retry = false,
-                stage = AnalysisStage.PROPOSE, maxOutputTokens = 2048), Duration.ofSeconds(15))
+            provider.generate(AnalysisRequest(input, ReplyPrompt.schema(), retry = false,
+                maxOutputTokens = 2048, purpose = AnalysisPurpose.REPLY), Duration.ofSeconds(15))
         } catch (_: RuntimeException) {
             return ReplyDraftResult.Failure("PROVIDER_FAILURE")
         }
@@ -90,19 +90,6 @@ class ValidatedReplyDrafter(
         } catch (_: JacksonException) {
             ReplyDraftResult.Failure("INVALID_JSON")
         }
-    }
-
-    private fun schema(): Map<String, Any> {
-        val string = mapOf("type" to "string")
-        val integer = mapOf("type" to "integer")
-        fun obj(vararg fields: Pair<String, Any>): Map<String, Any> = mapOf(
-            "type" to "object", "properties" to fields.toMap(), "required" to fields.map { it.first },
-            "additionalProperties" to false,
-        )
-        return obj("replies" to mapOf("type" to "array", "maxItems" to 8, "items" to obj(
-            "group_id" to string, "reason_index" to integer,
-            "source_indices" to mapOf("type" to "array", "maxItems" to 3, "items" to integer),
-        )))
     }
 }
 

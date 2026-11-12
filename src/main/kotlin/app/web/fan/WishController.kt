@@ -7,6 +7,7 @@ import app.campaign.model.Wish
 import app.campaign.model.WishKind
 import app.campaign.port.AnalysisResult
 import app.campaign.port.WishAnalyzer
+import app.campaign.replies.ReplyService
 import app.campaign.workspace.WishLimitReachedException
 import app.campaign.workspace.WorkspaceService
 import app.campaign.service.CampaignQueries
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
+import java.util.UUID
 
 fun interface WishCampaignAvailability {
     fun isOpen(token: String): Boolean
@@ -51,6 +53,7 @@ class WishController(
     private val workspaces: WorkspaceService,
     private val analyzer: WishAnalyzer,
     private val campaigns: WishCampaignAvailability? = null,
+    private val replies: ReplyService,
 ) {
     @GetMapping("/w/{token}")
     fun wish(@PathVariable token: String, model: Model, response: HttpServletResponse, session: HttpSession): String {
@@ -59,7 +62,9 @@ class WishController(
         model.addAttribute("maker", workspaces.scenario(token).definition.maker)
         model.addAttribute("recentWishes", workspaces.listWishes(token, includeHidden = false).asReversed().take(5))
         model.addAttribute("campaignOpen", campaigns?.isOpen(token) ?: false)
-        model.addAttribute("lastWishId", session.getAttribute("followup.wish.$token"))
+        val lastWishId = session.getAttribute("followup.wish.$token") as? UUID
+        model.addAttribute("lastWishId", lastWishId)
+        model.addAttribute("approvedReply", lastWishId?.let { replies.latestApprovedForWish(token, it) })
         if (!model.containsAttribute("wishForm")) model.addAttribute("wishForm", WishForm())
         return "fan/wish"
     }

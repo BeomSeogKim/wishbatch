@@ -16,7 +16,7 @@
           th:action="@{/w/{token}/maker/replies/generate(token=${token})}" data-reply-generation>
         <input type="hidden" name="run" th:value="${replies.runId}">
         <input type="hidden" name="evidenceHash" th:value="${replies.evidenceHash}">
-        <p>Generate once for this analysis. Unsafe reasons are rejected; no automatic retries are made.</p>
+        <p>Generate once for this analysis. Only supported exact analysis explanations can be used; other wording is rejected. No automatic retries are made.</p>
         <button class="button button-primary" type="submit">Draft replies</button>
         <p role="status" aria-live="polite" data-reply-loading hidden>Drafting replies. Please wait.</p>
     </form>

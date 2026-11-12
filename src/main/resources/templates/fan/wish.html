@@ -24,6 +24,10 @@
         <aside th:if="${lastWishId != null and wishSubmitted != true}" class="notice notice-info">
             <p><a th:href="@{/w/{token}/questions(token=${token},wish=${lastWishId})}">Check follow-up questions for your wish</a>. The maker may have approved a question since your last visit.</p>
         </aside>
+        <aside th:if="${approvedReply != null}" class="notice notice-info" aria-label="Approved maker reply">
+            <p>Your original wish: <q th:text="${approvedReply.quote}"></q></p>
+            <p>Maker-approved reply: <span th:text="${approvedReply.body}"></span></p>
+        </aside>
         <div class="two-column">
             <section class="card form-stack" aria-labelledby="wish-form-title">
                 <h2 id="wish-form-title">Leave a wish</h2>

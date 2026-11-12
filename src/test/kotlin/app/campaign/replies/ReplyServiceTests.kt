@@ -1,5 +1,10 @@
 package app.campaign.replies
 
+import app.analysis.AnalysisProperties
+import app.analysis.AnalysisTransport
+import app.analysis.OpenAiAnalysisProvider
+import app.analysis.ProviderHttpResponse
+import app.analysis.replies.ValidatedReplyDrafter
 import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.model.AnalysisRun
 import app.campaign.model.CompatibilityVerdict
@@ -23,14 +28,19 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
+import org.springframework.mock.web.MockHttpSession
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import tools.jackson.databind.json.JsonMapper
+import java.net.http.HttpRequest
+import java.nio.ByteBuffer
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Flow
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -56,7 +66,7 @@ class ReplyServiceTests(
     private val transaction = TransactionTemplate(transactionManager)
 
     @BeforeEach
-    fun reset() { drafter.calls = 0; drafter.failure = false; drafter.fabricate = false }
+    fun reset() { drafter.calls = 0; drafter.failure = false; drafter.fabricate = false; drafter.boundary = null }
 
     @Test
     fun `drafts are maker only and edited approvals are idempotent and restricted to relevant wishes`() {
@@ -221,12 +231,113 @@ class ReplyServiceTests(
             .andExpect { status { isOk() } }.andReturn().response.contentAsString, "No request groups need a reply")
     }
 
+    @Test
+    fun `intake real reply transport maker approval and fan page show only the fans approved reply`() {
+        val transport = replyTransport()
+        val sessions = List(3) { MockHttpSession() }
+        val fixture = fixture(sessions = sessions)
+        val makerPath = "/w/${fixture.token}/maker/replies"
+        val fanPath = "/w/${fixture.token}"
+        val proposal = mvc.get("/w/${fixture.token}/maker/proposal") { param("run", fixture.run.id.toString()) }
+            .andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(proposal, "href=\"$makerPath?run=${fixture.run.id}\"")
+        assertContains(proposal, "data-workbench-table")
+        assertContains(proposal, "demand-explorer")
+        val initial = replies.maker(fixture.token, fixture.run.id)
+        mvc.securePost("$makerPath/generate") {
+            param("run", fixture.run.id.toString()); param("evidenceHash", initial.evidenceHash)
+        }.andExpect { status { is3xxRedirection() } }
+        assertEquals(1, transport.size)
+        val drafted = replies.maker(fixture.token, fixture.run.id)
+        assertEquals("DRAFTED", drafted.status)
+        for (fanSession in sessions) {
+            val result = mvc.get(fanPath) { session = fanSession }.andExpect { status { isOk() } }.andReturn()
+            assertFalse(result.response.contentAsString.contains("Maker-approved reply"))
+            assertFalse(result.modelAndView!!.model.containsKey("replies"))
+            assertNull(result.modelAndView!!.model["approvedReply"])
+        }
+        val group = drafted.groups.single { fixture.wishes.first() in it.evidence.sources.map(ReplySource::wishId) }
+        approve(fixture, group, group.draft!!)
+        for (index in 0..1) {
+            val result = mvc.get(fanPath) { session = sessions[index] }.andExpect { status { isOk() } }.andReturn()
+            val reply = result.modelAndView!!.model["approvedReply"] as ApprovedWishReply
+            assertEquals(group.draft, reply.body)
+            assertEquals(group.evidence.sources.single { it.wishId == fixture.wishes[index] }.quote, reply.quote)
+            val block = result.response.contentAsString.substringAfter("aria-label=\"Approved maker reply\"").substringBefore("</aside>")
+            assertContains(block, "Maker-approved reply")
+            assertFalse(block.contains("Different group private phrase"))
+            if (index == 0) {
+                assertContains(block, "&lt;script&gt;fanMarker()&lt;/script&gt;")
+                assertFalse(block.contains("<script>fanMarker()"))
+                assertFalse(block.contains("Another fan private phrase"))
+            }
+            assertContains(result.response.contentAsString, "/questions?wish=${fixture.wishes[index]}")
+        }
+        for (fanSession in listOf(sessions.last(), MockHttpSession())) {
+            assertFalse(mvc.get(fanPath) { session = fanSession }.andExpect { status { isOk() } }
+                .andReturn().response.contentAsString.contains("Maker-approved reply"))
+        }
+        mvc.securePost("$makerPath/generate") {
+            param("run", fixture.run.id.toString()); param("evidenceHash", initial.evidenceHash)
+        }.andExpect { status { is3xxRedirection() } }
+        assertEquals(1, transport.size)
+        workspaces.setWishHidden(fixture.token, fixture.wishes.first(), true)
+        assertFalse(mvc.get(fanPath) { session = sessions.first() }.andExpect { status { isOk() } }
+            .andReturn().response.contentAsString.contains("Maker-approved reply"))
+    }
+
+    @Test
+    fun `exact subsequent batch commitment from effective override fails generation approval and fan reads`() {
+        val transport = replyTransport()
+        val sessions = List(3) { MockHttpSession() }
+        val fixture = fixture(sessions = sessions)
+        val unsupported = "Different format; we are going to make yours in a subsequent batch."
+        val option = runs.find(fixture.token, fixture.run.id)!!.output.proposal!!.optionId
+        reviews.decide(fixture.token, fixture.run.id, fixture.wishes.first(), option,
+            CompatibilityVerdict.INCOMPATIBLE, unsupported)
+        val view = replies.maker(fixture.token, fixture.run.id)
+        val group = view.groups.single { fixture.wishes.first() in it.evidence.sources.map(ReplySource::wishId) }
+        assertEquals(listOf(unsupported), group.evidence.reasons)
+        assertFalse(ReplySafety.isSafeReason(unsupported))
+        assertFalse(ReplySafety.isSafeReason("A harmless but unsupported paraphrase."))
+        assertFailsWith<IllegalArgumentException> { ReplySafety.body(unsupported) }
+        val unsafeBody = "Thank you for sharing your wish. $unsupported"
+        assertFalse(ReplySafety.validateBody(unsafeBody, group.evidence.reasons))
+        assertEquals("UNSAFE_REASON", replies.generate(fixture.token, fixture.run.id, view.evidenceHash).status)
+        assertTrue(transport.isEmpty())
+        transaction.executeWithoutResult {
+            val batch = em.find(ReplyBatch::class.java, fixture.run.id)
+            batch.status = "DRAFTED"
+            batch.draftsJson = mapper.writeValueAsString(mapOf(group.evidence.groupId to unsafeBody))
+        }
+        assertFailsWith<UnsafeReplyException> {
+            replies.approve(fixture.token, fixture.run.id, group.evidence.groupId, view.evidenceHash, unsafeBody)
+        }
+        transaction.executeWithoutResult {
+            em.persist(ReplyApproval(UUID.nameUUIDFromBytes("${fixture.run.id}:${group.evidence.groupId}".toByteArray()),
+                fixture.run.workspaceId, fixture.run.id, group.evidence.groupId, view.evidenceHash, unsafeBody, Instant.EPOCH))
+        }
+        assertNull(replies.approvedForWish(fixture.token, fixture.run.id, fixture.wishes.first()))
+        mvc.get("/w/${fixture.token}/wishes/${fixture.wishes.first()}/reply") { param("run", fixture.run.id.toString()) }
+            .andExpect { status { isNoContent() } }
+        val page = mvc.get("/w/${fixture.token}") { session = sessions.first() }
+            .andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertFalse(page.contains("Maker-approved reply"))
+        assertFalse(page.contains(unsupported))
+    }
+
     private data class Fixture(val token: String, val run: AnalysisRun, val wishes: List<UUID>)
-    private fun fixture(empty: Boolean = false): Fixture {
+    private fun fixture(empty: Boolean = false, sessions: List<MockHttpSession>? = null): Fixture {
         val workspace = workspaces.create()
         val added = listOf("I asked for a poster under $12 <script>fanMarker()</script>",
-            "Another fan private phrase: a poster please", "Different group private phrase: glossy finish").map {
-            workspaces.addWish(workspace.token, it).id
+            "Another fan private phrase: a poster please", "Different group private phrase: glossy finish").mapIndexed { index, text ->
+            if (sessions == null) workspaces.addWish(workspace.token, text).id
+            else {
+                mvc.securePost("/w/${workspace.token}", existingSession = sessions[index]) {
+                    param("text", text)
+                }.andExpect { status { is3xxRedirection() } }
+                sessions[index].getAttribute("followup.wish.${workspace.token}") as UUID
+            }
         }
         val seed = runs.latest(workspace.token)!!
         val wishes = workspaces.listWishes(workspace.token, false)
@@ -258,6 +369,37 @@ class ReplyServiceTests(
         }.andExpect { status { is3xxRedirection() } }
     }
 
+    private fun replyTransport(): MutableList<HttpRequest> {
+        val requests = mutableListOf<HttpRequest>()
+        val properties = AnalysisProperties("offline-test")
+        val provider = OpenAiAnalysisProvider(properties, mapper, AnalysisTransport { request ->
+            try {
+                requests += request
+                val bytes = java.io.ByteArrayOutputStream()
+                request.bodyPublisher().orElseThrow().subscribe(object : Flow.Subscriber<ByteBuffer> {
+                    override fun onSubscribe(subscription: Flow.Subscription) { subscription.request(Long.MAX_VALUE) }
+                    override fun onNext(item: ByteBuffer) { bytes.write(ByteArray(item.remaining()).also(item::get)) }
+                    override fun onError(throwable: Throwable) { throw throwable }
+                    override fun onComplete() = Unit
+                })
+                val body = mapper.readTree(bytes.toString(Charsets.UTF_8))
+                val groups = mapper.readTree(body["input"][0]["content"].asString())["groups"]
+                val output = mapOf("replies" to groups.toList().map { group ->
+                    mapOf("group_id" to group["group_id"].asString(),
+                        "reason_index" to 0, "source_indices" to group["sources"].toList().indices.toList())
+                })
+                val response = mapper.writeValueAsString(mapOf("status" to "completed", "model" to "offline-model", "error" to null,
+                    "output" to listOf(mapOf("type" to "message", "content" to listOf(mapOf("type" to "output_text",
+                        "text" to mapper.writeValueAsString(output)))))))
+                CompletableFuture.completedFuture(ProviderHttpResponse(200, response))
+            } catch (exception: RuntimeException) {
+                throw AssertionError("Invalid offline transport fixture", exception)
+            }
+        })
+        drafter.boundary = ValidatedReplyDrafter(properties, provider, mapper)
+        return requests
+    }
+
     @TestConfiguration
     class Configuration {
         @Bean @Primary fun fakeReplyDrafter() = FakeReplyDrafter()
@@ -266,8 +408,10 @@ class ReplyServiceTests(
         var calls = 0
         var failure = false
         var fabricate = false
+        var boundary: ReplyDrafter? = null
         override fun draft(groups: List<ReplyEvidenceGroup>): ReplyDraftResult {
             calls++
+            boundary?.let { return it.draft(groups) }
             if (failure) return ReplyDraftResult.Failure("PROVIDER_FAILURE")
             return ReplyDraftResult.Success(groups.associate { it.groupId to
                 if (fabricate) "Invented unsupported reason." else ReplySafety.body(it.reasons.single()) }, "offline-test")
