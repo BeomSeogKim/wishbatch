@@ -21,6 +21,7 @@ import app.campaign.port.WishNeed
 import app.campaign.port.WishVerdict
 import app.campaign.rules.analysisInputHash
 import app.campaign.service.OfferEvidenceQuery
+import app.web.security.securePost
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,7 +29,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
 import java.time.Instant
@@ -142,7 +142,7 @@ class WishReviewOfferTests(
     }
 
     private fun review(fixture: Fixture, wish: Wish, verdict: CompatibilityVerdict) {
-        mvc.post("/w/${fixture.workspace.token}/maker/proposal/review") {
+        mvc.securePost("/w/${fixture.workspace.token}/maker/proposal/review") {
             param("run", fixture.run.id.toString())
             param("wish", wish.id.toString())
             param("option", fixture.option.id.toString())

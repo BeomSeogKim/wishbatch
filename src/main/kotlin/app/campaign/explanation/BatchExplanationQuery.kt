@@ -1,5 +1,7 @@
 package app.campaign.explanation
 
+import app.campaign.model.CompatibilityVerdict
+import app.campaign.model.WishKind
 import app.campaign.port.AnalysisOutput
 import app.campaign.review.WishReviewService
 import app.campaign.review.reviewedAnalysis
@@ -30,9 +32,14 @@ class BatchExplanationQuery(
         val output = reviewedAnalysis(original, reviews.history(workspaceId, runId))
         val counts = optionWishCounts(output).singleOrNull { it.optionId == optionId } ?: return null
         val proposal = output.proposal?.takeIf { it.optionId == optionId }
+        val requests = output.wishes.filter { it.kind == WishKind.REQUEST }.map { it.wishId }.toSet()
+        val compatible = output.verdicts.filter {
+            it.optionId == optionId && it.verdict == CompatibilityVerdict.COMPATIBLE && it.wishId in requests
+        }.map { it.wishId }.toSet()
         val seedTexts = seed.scenarios.flatMap { it.wishes }.groupBy({ seed.wishId(workspaceId, it.key) }, { it.text })
         val visible = wishes.findByWorkspaceId(workspaceId).filterNot { it.hidden }.associateBy { it.id }
         val quotes = proposal?.rationale.orEmpty().mapNotNull { item ->
+            if (item.wishId !in compatible) return@mapNotNull null
             val wish = visible[item.wishId] ?: return@mapNotNull null
             val originals = seedTexts[item.wishId] ?: return@mapNotNull null
             if (wish.text !in originals || item.quote.isBlank() || !wish.text.contains(item.quote)) return@mapNotNull null

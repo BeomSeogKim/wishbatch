@@ -9,6 +9,7 @@ import app.campaign.port.SecondReading
 import app.campaign.port.WishReadingComparison
 import app.campaign.rules.optionWishCounts
 import app.campaign.workspace.WorkspaceService
+import app.web.security.securePost
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +17,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
 import java.time.Instant
@@ -136,13 +136,13 @@ class WishReviewTests(
             listOf(token, stored.run.id, UUID.randomUUID(), option),
             listOf(token, stored.run.id, wish, UUID.randomUUID()),
         )) {
-            mvc.post("/w/$requestToken/maker/proposal/review") {
+            mvc.securePost("/w/$requestToken/maker/proposal/review") {
                 param("run", run.toString()); param("wish", requestWish.toString()); param("option", requestOption.toString())
                 param("verdict", "COMPATIBLE"); param("reason", "Review decision.")
             }.andExpect { status { isNotFound() } }
         }
         for ((verdict, reason) in listOf("CONDITIONAL" to "Unresolved", "COMPATIBLE" to "  ", "INCOMPATIBLE" to "x".repeat(501))) {
-            mvc.post("/w/$token/maker/proposal/review") {
+            mvc.securePost("/w/$token/maker/proposal/review") {
                 param("run", stored.run.id.toString()); param("wish", wish.toString()); param("option", option.toString())
                 param("verdict", verdict); param("reason", reason)
             }.andExpect { status { isBadRequest() } }
@@ -168,7 +168,7 @@ class WishReviewTests(
     }.andExpect { status { isOk() } }.andReturn().response.contentAsString
 
     private fun post(token: String, run: UUID, wish: UUID, option: UUID, verdict: String, reason: String) {
-        mvc.post("/w/$token/maker/proposal/review") {
+        mvc.securePost("/w/$token/maker/proposal/review") {
             param("run", run.toString()); param("wish", wish.toString()); param("option", option.toString())
             param("verdict", verdict); param("reason", reason)
         }.andExpect {

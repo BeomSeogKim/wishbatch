@@ -13,6 +13,7 @@ import app.campaign.rules.optionWishCounts
 import app.campaign.workspace.WorkspaceService
 import app.testing.InMemoryPaymentGateway
 import app.testing.fixedClock
+import app.web.security.securePost
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,7 +25,6 @@ import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
 import org.springframework.web.util.HtmlUtils
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
@@ -53,11 +53,15 @@ class BatchExplanationTests @Autowired constructor(
     fun `public explanation counts follow maker reviews after publication without changing terms or the run`() {
         val workspace = workspaces.create()
         val stored = requireNotNull(runs.latest(workspace.token))
-        val option = requireNotNull(stored.output.proposal).optionId
+        val proposal = requireNotNull(stored.output.proposal)
+        val option = proposal.optionId
         val counts = optionWishCounts(stored.output).single { it.optionId == option }
-        val wish = stored.output.verdicts.first {
-            it.optionId == option && it.verdict == CompatibilityVerdict.COMPATIBLE
-        }.wishId
+        val evidence = proposal.rationale.first { item ->
+            stored.output.verdicts.any {
+                it.wishId == item.wishId && it.optionId == option && it.verdict == CompatibilityVerdict.COMPATIBLE
+            }
+        }
+        val wish = evidence.wishId
         val (offer, campaignId) = transactions.execute {
             val offer = Offer(workspace.id, option, stored.run.id, "Reviewed offer", "Printed cards", emptyMap(),
                 200, "USD", "Ships later", "US", 2, 10).also(entityManager::persist)
@@ -66,19 +70,27 @@ class BatchExplanationTests @Autowired constructor(
             offer to campaign.id
         }!!
         val originalTerms = mapper.writeValueAsString(offer)
+        val path = "/w/${workspace.token}/campaigns/$campaignId/how-this-batch-was-chosen"
+        val originalHtml = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(HtmlUtils.htmlUnescape(originalHtml), evidence.quote)
         for ((verdict, compatible, notServed) in listOf(
             Triple("INCOMPATIBLE", counts.compatible - 1, counts.notServed + 1),
             Triple("COMPATIBLE", counts.compatible, counts.notServed),
         )) {
-            mvc.post("/w/${workspace.token}/maker/proposal/review") {
+            mvc.securePost("/w/${workspace.token}/maker/proposal/review") {
                 param("run", stored.run.id.toString())
                 param("wish", wish.toString())
                 param("option", option.toString())
                 param("verdict", verdict)
                 param("reason", "The maker reviewed the requested format.")
             }.andExpect { status { is3xxRedirection() } }
-            val html = mvc.get("/w/${workspace.token}/campaigns/$campaignId/how-this-batch-was-chosen")
+            val html = mvc.get(path)
                 .andExpect { status { isOk() } }.andReturn().response.contentAsString
+            if (verdict == "INCOMPATIBLE") {
+                assertFalse(HtmlUtils.htmlUnescape(html).contains(evidence.quote))
+            } else {
+                assertContains(HtmlUtils.htmlUnescape(html), evidence.quote)
+            }
             assertContains(html, "<dt>Compatible</dt><dd>$compatible</dd>")
             assertContains(html, "<dt>Depends</dt><dd>${counts.depends}</dd>")
             assertContains(html, "<dt>Not served</dt><dd>$notServed</dd>")
