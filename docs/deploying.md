@@ -59,6 +59,14 @@ for the current limits and details.
 
 ## Keep-warm workflow
 
+Optionally set `KEEP_WARM_URL` to a trusted operator-controlled URL to have
+the running application request it every ten minutes, starting ten minutes
+after startup. It is disabled when unset or blank. Each request has a
+3-second connection timeout and a 5-second request timeout; one result is
+logged without the URL. Failures are not retried. This cannot wake an
+instance that has already spun down, guarantee uptime, or prevent free-hour
+usage. Configure the hosted URL in the deployment environment.
+
 The [Keep warm workflow](../.github/workflows/keep-warm.yml) requests the hosted
 landing page every ten minutes, at minutes 7, 17, 27, 37, 47, and 57 UTC, to
 keep the free instance awake during judging. Its single `curl` step has a
