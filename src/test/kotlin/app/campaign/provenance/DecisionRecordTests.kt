@@ -470,6 +470,28 @@ class DecisionRecordTests @Autowired constructor(
     }
 
     @Test
+    fun `verification links to scoped tampered copy simulation and back without changing stored records or payments`() {
+        val fixture = fixture(linkWish = true)
+        snapshot(fixture)
+        val before = document(fixture)
+        val paymentBefore = records.paymentPayload(fixture.pledge)
+        val verifyPath = "/w/${fixture.workspace.token}/maker/decision-record/verify"
+        val drillPath = "/w/${fixture.workspace.token}/maker/reliability-drills"
+        val html = mvc.get(verifyPath).andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "href=\"$drillPath#record-tampering\">Simulation - tampered copy</a>")
+        assertContains(html, "Only an in-memory copy is changed. The real record remains unchanged")
+        val drill = mvc.get(drillPath).andExpect { status { isOk() } }.andReturn().response.contentAsString
+            .substringAfter("id=\"record-tampering\"").substringBefore("</section>")
+        assertContains(drill, "Simulation — a tampered copy, never a change to the real record")
+        assertContains(drill, "href=\"$verifyPath\">Verify this record</a>")
+        assertContains(mvc.get(verifyPath).andExpect { status { isOk() } }.andReturn().response.contentAsString, "Chain intact.")
+        entities.flush()
+        entities.clear()
+        assertEquals(before, document(fixture))
+        assertEquals(paymentBefore, records.paymentPayload(entities.find(Pledge::class.java, fixture.pledge.id)))
+    }
+
+    @Test
     fun `verification action reports intact and first broken entry`() {
         val fixture = fixture()
         snapshot(fixture)
@@ -492,7 +514,7 @@ class DecisionRecordTests @Autowired constructor(
     private fun document(fixture: Fixture) = assertNotNull(query.findByToken(fixture.workspace.token))
 
     private fun fixture(linkWish: Boolean = false, wishKind: WishKind = WishKind.REQUEST): Fixture {
-        val workspace = Workspace(UUID.randomUUID().toString(), now).also(entities::persist)
+        val workspace = Workspace("${UUID.randomUUID()}-record", now).also(entities::persist)
         val wish = Wish(workspace.id, "Please make a matte <script>print</script>.", WishSource.ONSITE,
             "private-display", now).also(entities::persist)
         val optionId = UUID.randomUUID()
