@@ -1,0 +1,1106 @@
+{
+  "model": "synthetic-reference",
+  "validated": {
+    "output": {
+      "wishes": [
+        {
+          "wishId": "11603779-816a-3812-8526-235cae300b62",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "8e2c260f-46df-3217-a940-29694a650433",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf",
+          "kind": "NOT_A_REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+          "kind": "REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "5b6cb92c-fed5-3f54-9fd9-399ddb5ca0d2",
+          "kind": "NOT_A_REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        },
+        {
+          "wishId": "04da6e5a-b0f4-388d-b28e-853fd16e3d95",
+          "kind": "NOT_A_REQUEST",
+          "needs": [],
+          "maxUnitPrice": null,
+          "quantity": null,
+          "region": null
+        }
+      ],
+      "verdicts": [
+        {
+          "wishId": "11603779-816a-3812-8526-235cae300b62",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "11603779-816a-3812-8526-235cae300b62",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "11603779-816a-3812-8526-235cae300b62",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "8e2c260f-46df-3217-a940-29694a650433",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "8e2c260f-46df-3217-a940-29694a650433",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "8e2c260f-46df-3217-a940-29694a650433",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The stated requirement is outside this catalog."
+        },
+        {
+          "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The stated requirement is outside this catalog."
+        },
+        {
+          "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The stated requirement is outside this catalog."
+        },
+        {
+          "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The stated requirement is outside this catalog."
+        },
+        {
+          "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The stated requirement is outside this catalog."
+        },
+        {
+          "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The stated requirement is outside this catalog."
+        },
+        {
+          "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The stated requirement is outside this catalog."
+        },
+        {
+          "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The stated requirement is outside this catalog."
+        },
+        {
+          "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The stated requirement is outside this catalog."
+        },
+        {
+          "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "CONDITIONAL",
+          "reason": "The stated budget needs maker review."
+        },
+        {
+          "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "CONDITIONAL",
+          "reason": "The stated budget needs maker review."
+        },
+        {
+          "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "CONDITIONAL",
+          "reason": "The stated budget needs maker review."
+        },
+        {
+          "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "CONDITIONAL",
+          "reason": "The conflicting color requirements need clarification."
+        },
+        {
+          "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "CONDITIONAL",
+          "reason": "The conflicting color requirements need clarification."
+        },
+        {
+          "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "CONDITIONAL",
+          "reason": "The conflicting color requirements need clarification."
+        },
+        {
+          "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "verdict": "COMPATIBLE",
+          "reason": "The requested format is available."
+        },
+        {
+          "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        },
+        {
+          "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "verdict": "INCOMPATIBLE",
+          "reason": "The requested format differs."
+        }
+      ],
+      "proposal": {
+        "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+        "suggestedVariants": {},
+        "rationale": [
+          {
+            "text": "Fans requested this format.",
+            "wishId": "11603779-816a-3812-8526-235cae300b62",
+            "quote": "I would buy the cup."
+          }
+        ]
+      },
+      "noProposalReason": null,
+      "notServed": [
+        {
+          "label": "Not served",
+          "wishIds": [
+            "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
+            "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
+            "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
+            "adbf1472-fb73-31ce-9572-fe0a69a98839",
+            "1c28f360-ed92-30f8-b749-d739cea5c253",
+            "5abc0dd1-d005-3e88-9c15-c4466155f86e"
+          ],
+          "reason": "The requested format differs."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
+            "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+            "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5"
+          ],
+          "reason": "The stated requirement is outside this catalog."
+        }
+      ],
+      "questionsForMaker": [
+        {
+          "text": "Can the conflicting color request be clarified?",
+          "wishIds": [
+            "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0"
+          ]
+        }
+      ],
+      "alternatives": [
+        {
+          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+          "whyNotFirst": "Other wishes request this format."
+        },
+        {
+          "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+          "whyNotFirst": "Other wishes request this format."
+        }
+      ],
+      "optionIds": [
+        "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+        "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+        "8207af68-bb57-3d4a-bb8d-a27d9da2c339"
+      ]
+    },
+    "flags": []
+  },
+  "inputHash": "43192efe499e7d069d10dbae5c09dcac953e66b42d7b866ae13ea37ef3aea332",
+  "completedAt": "2026-11-12T00:00:00Z",
+  "seedWorkspaceId": "00000000-0000-0000-0000-000000000000",
+  "optionKeys": {
+    "bf2aa329-2967-3668-aa8a-6a99846a4c34": "ceramicist-cup",
+    "faed2a52-484e-3d86-bbd7-e4c4259dcd37": "ceramicist-bowl",
+    "8207af68-bb57-3d4a-bb8d-a27d9da2c339": "ceramicist-planter"
+  },
+  "wishKeys": {
+    "11603779-816a-3812-8526-235cae300b62": "w01",
+    "aad5c5fe-e500-3737-8ac3-3c83199171f8": "w02",
+    "70314079-42f2-3277-abfe-d409ce16b75d": "w03",
+    "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af": "w04",
+    "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2": "w05",
+    "8e2c260f-46df-3217-a940-29694a650433": "w06",
+    "018ea386-c1c9-3dad-8d10-0bbb835bc3d9": "w07",
+    "6c0c2aaf-34aa-3665-a661-67223f814531": "w08",
+    "b8dd007a-584e-36d7-8f79-247b8d49d5df": "w09",
+    "0f192565-8720-38ff-88cd-8dbe15e901c9": "w10",
+    "1a7e5e31-3af0-3937-a501-e3e83b728165": "w11",
+    "0647dede-8f9f-39c0-a1b6-c623b8439eca": "w12",
+    "409367dc-de96-3569-94fd-36b68bc13f5e": "w13",
+    "e7687de1-c4c8-339f-a253-c6ab5a78c3b6": "w14",
+    "52394f11-6791-3ea3-86a1-7f4c2f5935de": "w15",
+    "bb0f8075-32f6-3fd6-9af9-e14c08a7f634": "w16",
+    "52893dbe-d439-3ce1-8b94-ceb5b13c91ea": "w17",
+    "972dc94d-ee99-379a-bdac-d66a32fda61c": "w18",
+    "dae2845e-f050-3572-bdc5-4e0d3330e912": "w19",
+    "dd96f232-1c5c-3f13-ba70-f073cd71006b": "w20",
+    "5deecfde-f2d1-3917-a9c0-f5d577076f3c": "w21",
+    "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18": "w22",
+    "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a": "w23",
+    "adbf1472-fb73-31ce-9572-fe0a69a98839": "w24",
+    "1c28f360-ed92-30f8-b749-d739cea5c253": "w25",
+    "5abc0dd1-d005-3e88-9c15-c4466155f86e": "w26",
+    "d2219835-9d5b-3475-b768-0d3e9fc2bf79": "w27",
+    "3a5b8979-d8e3-3230-8267-f3d05c1ff954": "w28",
+    "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5": "w29",
+    "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e": "w30",
+    "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0": "w31",
+    "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba": "w32",
+    "23b9ed3e-0293-376b-aeb0-e4bf5e72750a": "w33",
+    "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9": "w34",
+    "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c": "w35",
+    "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13": "w36",
+    "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf": "w37",
+    "7559d536-b3dd-3456-a143-e591810abb08": "w38",
+    "5b6cb92c-fed5-3f54-9fd9-399ddb5ca0d2": "w39",
+    "04da6e5a-b0f4-388d-b28e-853fd16e3d95": "w40"
+  }
+}

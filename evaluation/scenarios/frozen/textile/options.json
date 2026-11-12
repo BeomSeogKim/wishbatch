@@ -1,0 +1,72 @@
+{
+  "maker": {
+    "name": "Thread & Tide",
+    "description": "A textile studio sewing useful fabric goods.",
+    "characters": {
+      "Studio": "A fictional independent maker"
+    }
+  },
+  "defaultMaxQtyPerPledge": 3,
+  "options": [
+    {
+      "key": "textile-pouch",
+      "name": "Canvas pouch",
+      "format": "pouch",
+      "fixedAttributes": {
+        "material": "canvas"
+      },
+      "allowedVariants": {
+        "color": [
+          "natural",
+          "blue"
+        ]
+      },
+      "unitCost": 900,
+      "currency": "USD",
+      "minBatch": 3,
+      "maxCapacity": 20,
+      "leadTimeText": "3 weeks",
+      "shipRegion": "US"
+    },
+    {
+      "key": "textile-tote",
+      "name": "Canvas tote",
+      "format": "tote",
+      "fixedAttributes": {
+        "material": "canvas"
+      },
+      "allowedVariants": {
+        "color": [
+          "natural",
+          "blue"
+        ]
+      },
+      "unitCost": 1200,
+      "currency": "USD",
+      "minBatch": 3,
+      "maxCapacity": 20,
+      "leadTimeText": "3 weeks",
+      "shipRegion": "US"
+    },
+    {
+      "key": "textile-apron",
+      "name": "Cotton apron",
+      "format": "apron",
+      "fixedAttributes": {
+        "material": "cotton"
+      },
+      "allowedVariants": {
+        "color": [
+          "natural",
+          "blue"
+        ]
+      },
+      "unitCost": 1500,
+      "currency": "USD",
+      "minBatch": 3,
+      "maxCapacity": 20,
+      "leadTimeText": "3 weeks",
+      "shipRegion": "US"
+    }
+  ]
+}

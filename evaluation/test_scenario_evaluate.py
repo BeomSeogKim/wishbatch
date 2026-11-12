@@ -287,6 +287,31 @@ class ScenarioTests(unittest.TestCase):
                 with self.assertRaises(FileExistsError):
                     export_snapshot(key, destination)
 
+    def test_snapshot_export_ignores_catalog_list_price_metadata(self):
+        source = ROOT / self.scenario['sourceDirectory'] / 'options.json'
+        metadata = copy.deepcopy(read(source))
+        for option in metadata['options']:
+            option['listPrice'] = 12345
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / 'export'
+            with patch('export_scenario.read', side_effect=lambda path: metadata if path == source else read(path)):
+                export_snapshot('illustrator', destination)
+            options = read(destination / 'options.json')
+            self.assertTrue(all('listPrice' not in option for option in options))
+            self.assertEqual([option['unitCost'] for option in options],
+                             [option['unitCost'] for option in metadata['options']])
+
+    def test_snapshot_export_does_not_read_current_seed_sources(self):
+        def frozen_read(path):
+            if Path(path).is_relative_to(ROOT / 'src/main/resources/seed'):
+                raise AssertionError('Historical export must not read current seeds')
+            return read(path)
+
+        with tempfile.TemporaryDirectory() as directory:
+            with patch('scenario_evaluate.read', side_effect=frozen_read), patch('export_scenario.read', side_effect=frozen_read):
+                for key in ('illustrator', 'ceramicist', 'textile'):
+                    export_snapshot(key, Path(directory) / key)
+
     def test_historical_cli_uses_frozen_sources_and_leaves_runs_unchanged(self):
         paths = [ROOT / f'evaluation/runs/live-{index}.json' for index in (1, 2, 3)]
         original = [sha256(path) for path in paths]

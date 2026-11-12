@@ -15,7 +15,7 @@ def export_snapshot(key, destination):
     wish_ids = {value: key for key, value in scenario['wishKeys'].items()}
     options = []
     for seed in read(source / 'options.json')['options']:
-        option = {field: value for field, value in seed.items() if field != 'key'}
+        option = {field: value for field, value in seed.items() if field not in ('key', 'listPrice')}
         option.update(id=option_ids[seed['key']], workspaceId=scenario['seedWorkspaceId'])
         options.append(option)
     wishes = [{'id': wish_ids[seed['key']], 'workspaceId': scenario['seedWorkspaceId'],

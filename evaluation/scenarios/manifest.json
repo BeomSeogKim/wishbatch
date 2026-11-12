@@ -10,7 +10,7 @@
   "scenarios": [
     {
       "key": "illustrator",
-      "sourceDirectory": "src/main/resources/seed",
+      "sourceDirectory": "evaluation/scenarios/frozen/illustrator",
       "sourceSha256": {
         "options.json": "b81e2cd52cefbb0db29ed329260657fae2449a118754cecc233b9ecfdfd32df8",
         "wishes.json": "cbda4737edb93aa09db6a8cc117d57bb005dbd47ae9717b05a32da7519bcd02f",
@@ -91,7 +91,7 @@
     },
     {
       "key": "ceramicist",
-      "sourceDirectory": "src/main/resources/seed/ceramicist",
+      "sourceDirectory": "evaluation/scenarios/frozen/ceramicist",
       "sourceSha256": {
         "options.json": "ced0a2b31c6c018f93d549f86254d912e89559784080ad7882675451b67b775f",
         "wishes.json": "c58545406e8fa793428391d9b51a97eb3592d3bbb5fa2af4b67851c94b3330ab",
@@ -172,7 +172,7 @@
     },
     {
       "key": "textile",
-      "sourceDirectory": "src/main/resources/seed/textile",
+      "sourceDirectory": "evaluation/scenarios/frozen/textile",
       "sourceSha256": {
         "options.json": "f21b24adb0e8aa02b6317f0519a09c82ed1c94a29ac97ccc3e373bcebc72ef12",
         "wishes.json": "108f33701213a6273f193edd534d6e09e3cac54a4c5b629994d3a216979ee280",

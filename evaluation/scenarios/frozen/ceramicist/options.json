@@ -1,0 +1,72 @@
+{
+  "maker": {
+    "name": "Kiln & Current",
+    "description": "A ceramics studio making small functional pieces.",
+    "characters": {
+      "Studio": "A fictional independent maker"
+    }
+  },
+  "defaultMaxQtyPerPledge": 3,
+  "options": [
+    {
+      "key": "ceramicist-cup",
+      "name": "Stoneware cup",
+      "format": "cup",
+      "fixedAttributes": {
+        "material": "stoneware"
+      },
+      "allowedVariants": {
+        "color": [
+          "natural",
+          "blue"
+        ]
+      },
+      "unitCost": 900,
+      "currency": "USD",
+      "minBatch": 3,
+      "maxCapacity": 20,
+      "leadTimeText": "3 weeks",
+      "shipRegion": "US"
+    },
+    {
+      "key": "ceramicist-bowl",
+      "name": "Stoneware bowl",
+      "format": "bowl",
+      "fixedAttributes": {
+        "material": "stoneware"
+      },
+      "allowedVariants": {
+        "color": [
+          "natural",
+          "blue"
+        ]
+      },
+      "unitCost": 1200,
+      "currency": "USD",
+      "minBatch": 3,
+      "maxCapacity": 20,
+      "leadTimeText": "3 weeks",
+      "shipRegion": "US"
+    },
+    {
+      "key": "ceramicist-planter",
+      "name": "Stoneware planter",
+      "format": "planter",
+      "fixedAttributes": {
+        "material": "stoneware"
+      },
+      "allowedVariants": {
+        "color": [
+          "natural",
+          "blue"
+        ]
+      },
+      "unitCost": 1500,
+      "currency": "USD",
+      "minBatch": 3,
+      "maxCapacity": 20,
+      "leadTimeText": "3 weeks",
+      "shipRegion": "US"
+    }
+  ]
+}
