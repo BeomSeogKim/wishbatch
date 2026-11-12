@@ -100,7 +100,7 @@ class BatchExplanationTests @Autowired constructor(
             assertContains(html, "<dt>Compatible</dt><dd>$compatible</dd>")
             assertContains(html, "<dt>Depends</dt><dd>${counts.depends}</dd>")
             assertContains(html, "<dt>Not served</dt><dd>$notServed</dd>")
-            assertContains(html, "This stored synthetic reference illustrates the validated analysis format")
+            assertContains(html, "Precomputed for this sample by the same analysis pipeline")
             assertEquals(compatible, optionWishCounts(runs.find(workspace.token, stored.run.id)!!.output)
                 .single { it.optionId == option }.compatible)
         }
@@ -157,7 +157,7 @@ class BatchExplanationTests @Autowired constructor(
             .andExpect { status { isOk() } }.andReturn().response.contentAsString
         assertContains(HtmlUtils.htmlUnescape(html), validQuote)
         assertContains(html, "AI grouped wishes against the maker's feasible options")
-        assertFalse(html.contains("This stored synthetic reference illustrates"))
+        assertFalse(html.contains("Precomputed for this sample"))
         assertContains(html, "Production and delivery are the maker's responsibility.")
         listOf("How this batch was chosen", "Example offer", "Printed cards", "<dt>Compatible</dt><dd>16</dd>",
             "<dt>Depends</dt><dd>10</dd>", "<dt>Not served</dt><dd>9</dd>", "Authorized holds", ">2</span>",
@@ -206,6 +206,47 @@ class BatchExplanationTests @Autowired constructor(
     }
 
     @Test
+    fun `sample timestamps follow the attached run on current and historical routes`() {
+        val workspace = workspaces.create()
+        val stored = requireNotNull(runs.latest(workspace.token))
+        val option = requireNotNull(stored.output.proposal).optionId
+        val attachedAt = Instant.parse("2025-12-01T12:34:00Z")
+        val historicalId = transactions.execute {
+            val historicalRun = AnalysisRun(workspace.id, stored.run.model, stored.run.inputHash,
+                stored.run.resultJson, isSeed = true, createdAt = attachedAt)
+            entityManager.persist(historicalRun)
+            fun campaign(runId: UUID, title: String, opened: Instant): UUID {
+                val offer = Offer(workspace.id, option, runId, title, "Cards", emptyMap(),
+                    200, "USD", "Ships later", "US", 2, 10)
+                entityManager.persist(offer)
+                return Campaign(offer.id, CampaignState.NOT_FUNDED, openedAt = opened,
+                    closesAt = opened.plusSeconds(900), confirmDeadline = opened.plusSeconds(44100))
+                    .also(entityManager::persist).id
+            }
+            val historical = campaign(historicalRun.id, "Historical sample", now.minusSeconds(3600))
+            campaign(stored.run.id, "Current sample", now)
+            historical
+        }!!
+        for ((path, recordedAt) in listOf(
+            "/w/${workspace.token}/how-this-batch-was-chosen" to stored.run.createdAt,
+            "/w/${workspace.token}/campaigns/$historicalId/how-this-batch-was-chosen" to attachedAt,
+        )) {
+            val html = mvc.get(path).andExpect {
+                status { isOk() }
+                model { attribute("analysisRecordedAt", recordedAt) }
+            }.andReturn().response.contentAsString
+            assertContains(html, "datetime=\"$recordedAt\"")
+            assertContains(html, app.web.layout.HumanDisplay().time(recordedAt))
+            assertContains(html, "Precomputed for this sample by the same analysis pipeline")
+            assertContains(html, "Creating a workspace does not run a new analysis.")
+            assertContains(html, "href=\"/w/${workspace.token}/maker/proposal\"")
+            assertContains(html, "Run live analysis in the maker workspace")
+            assertFalse(html.contains("not a live analysis of these wishes"))
+            assertFalse(html.contains("seconds"))
+        }
+    }
+
+    @Test
     fun `funded result with current paid shortfall reports attention without asserting production`() {
         val workspace = workspaces.create()
         val stored = runs.latest(workspace.token)!!
@@ -248,7 +289,7 @@ class BatchExplanationTests @Autowired constructor(
             assertContains(HtmlUtils.htmlUnescape(html), quote)
             assertContains(html, "Anonymous synthetic wish")
             assertContains(html, "stored analysis of synthetic demo wishes")
-            assertContains(html, "This stored synthetic reference illustrates the validated analysis format")
+            assertContains(html, "Precomputed for this sample by the same analysis pipeline")
             assertFalse(html.contains("AI grouped wishes against the maker's feasible options"))
             assertContains(html, "Production and delivery are the maker's responsibility.")
         }

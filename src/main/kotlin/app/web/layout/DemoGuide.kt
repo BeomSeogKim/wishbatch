@@ -25,6 +25,7 @@ internal data class DemoGuide(
     val switchUrl: String,
     val explanationUrl: String?,
     val decisionRecordUrl: String?,
+    val makerView: Boolean,
 )
 
 @Configuration
@@ -56,7 +57,8 @@ class DemoGuideConfiguration(
                 val holds = pledges.ifAvailable?.findByCampaignIdOrderByCreatedAtAscIdAsc(it.id)
                 offer != null && holds != null && authorizedUnits(holds) >= offer.minBatch
             } ?: false
-            modelAndView.addObject("demoGuide", guideFor(token, path, campaign?.state, minimumMet, modelAndView.model["proposalUnavailable"] == true))
+            modelAndView.addObject("demoGuide", guideFor(token, path, campaign?.state, minimumMet,
+                modelAndView.model["proposalUnavailable"] == true, modelAndView.model["makerStep"] as? Int))
         }
     }
 }
@@ -66,6 +68,7 @@ private val terminalStates = setOf(CampaignState.FUNDED, CampaignState.NOT_FUNDE
 
 internal fun guideFor(
     token: String, path: String, state: CampaignState?, minimumMet: Boolean, proposalUnavailable: Boolean = false,
+    makerStep: Int? = null,
 ): DemoGuide {
     val base = "/w/$token"
     val maker = path == "maker" || path.startsWith("maker/")
@@ -87,7 +90,14 @@ internal fun guideFor(
         maker -> "Maker workspace"
         else -> "Workspace"
     }
-    val next = if (maker) {
+    val next = if (path == "maker" && makerStep != null) {
+        when (makerStep) {
+            6 -> "View settlement result" to "$base/maker/result"
+            5 -> "Open campaign dashboard" to "$base/maker/campaign"
+            3 -> "Review proposal" to "$base/maker/proposal"
+            else -> "Review options" to "$base/maker/options"
+        }
+    } else if (maker) {
         when (state) {
             CampaignState.OPEN -> if (minimumMet) "Review the holds and confirm production on the campaign dashboard" to "$base/maker/campaign"
                 else "Switch to the fan view and authorize a sandbox pledge" to "$base/offer"
@@ -124,5 +134,5 @@ internal fun guideFor(
             }
         } else "$base/maker",
         if (state != null && state != CampaignState.DRAFT) "$base/how-this-batch-was-chosen" else null,
-        if (maker) "$base/maker/decision-record" else null)
+        if (maker) "$base/maker/decision-record" else null, maker)
 }

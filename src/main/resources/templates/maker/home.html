@@ -5,7 +5,11 @@
     <header class="page-heading">
         <p class="eyebrow">Maker workspace</p>
         <h1>Your next batch starts here.</h1>
-        <p class="lead">Your demo already has product options and fan wishes. Review the options, then listen to the wishes before shaping an offer.</p>
+        <p th:if="${maker != null}"><strong th:text="${maker.name}"></strong></p>
+        <p class="lead" th:if="${makerStep == 1}">Your demo already has product options and fan wishes. Review the options to see what you can make.</p>
+        <p class="lead" th:if="${makerStep == 3}">Your sample proposal is ready to review. Check the proposed batch and its wish evidence before shaping an offer.</p>
+        <p class="lead" th:if="${makerStep == 5}">Your offer is published. Open the campaign dashboard to review holds, completed payments, and the next available action.</p>
+        <p class="lead" th:if="${makerStep == 6}">Your campaign has ended. View the settlement result and check whether any payment actions need attention.</p>
         <p class="sample-label">Costs and production limits are demo-scale.</p>
     </header>
     <p><a th:href="@{/w/{token}/maker/overview(token=${token})}">Open campaign overview</a></p>
@@ -22,7 +26,7 @@
         <div class="card">
             <h2 id="current-step" th:text="${makerStep == 6 ? 'Review the settlement.' : (makerStep == 5 ? 'Follow the campaign.' : 'Review your proposal.')} "></h2>
             <p th:if="${makerStep == 3}">See the proposed batch, quoted evidence, wish groups, and questions to settle before making an offer.</p>
-            <p th:if="${makerCampaign != null}" th:text="${@makerDisplay.words(makerCampaign.state)}"></p>
+            <p th:if="${makerCampaign != null}" th:text="${@humanDisplay.state(makerCampaign.state)}"></p>
             <a th:if="${makerStep == 3}" class="button button-primary" th:href="@{/w/{token}/maker/proposal(token=${token},run=${offerRun})}">Review proposal</a>
             <a th:if="${makerStep == 5}" class="button button-primary" th:href="@{/w/{token}/maker/campaign(token=${token})}">Open campaign dashboard</a>
             <a th:if="${makerStep == 6}" class="button button-primary" th:href="@{/w/{token}/maker/result(token=${token})}">View settlement result</a>

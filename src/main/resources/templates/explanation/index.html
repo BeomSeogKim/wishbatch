@@ -26,7 +26,11 @@
     </section>
     <section class="card">
         <h2>What AI did</h2>
-        <p th:if="${evidence != null and evidence.isSeed}">This stored synthetic reference illustrates the validated analysis format; it is an example, not a live analysis of these wishes.</p>
+        <th:block th:if="${evidence != null and evidence.isSeed}">
+            <p>Precomputed for this sample by the same analysis pipeline<span th:if="${analysisRecordedAt != null}"> on <time th:datetime="${analysisRecordedAt}" th:text="${@humanDisplay.time(analysisRecordedAt)}"></time></span>. Creating a workspace does not run a new analysis.</p>
+            <p th:if="${analysisRecordedAt == null}">The recorded analysis time is unavailable.</p>
+            <p><a class="button button-secondary" th:href="@{/w/{token}/maker/proposal(token=${token})}">Run live analysis in the maker workspace</a></p>
+        </th:block>
         <p th:if="${evidence != null and !evidence.isSeed}">AI grouped wishes against the maker's feasible options and suggested a batch. Software checked references, source quotes and permitted variants, and calculated the counts. Classification can still be wrong.</p>
         <p th:if="${evidence == null}">The analysis used for this offer is unavailable.</p>
         <p>AI could not set the offer price, cost, payment amount, minimum, capacity or dates. The maker decided the offer.</p>

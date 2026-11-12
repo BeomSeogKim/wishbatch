@@ -1,5 +1,6 @@
 package app.web.explanation
 
+import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.explanation.BatchExplanationQuery
 import app.campaign.model.CampaignState
 import app.campaign.service.CampaignQueries
@@ -19,6 +20,7 @@ class BatchExplanationController(
     private val workspaces: WorkspaceService,
     private val campaigns: CampaignQueries,
     private val evidence: BatchExplanationQuery,
+    private val analyses: AnalysisRunService,
 ) {
     @GetMapping("/w/{token}/how-this-batch-was-chosen")
     fun show(@PathVariable token: String, model: Model, response: HttpServletResponse): String {
@@ -66,6 +68,7 @@ class BatchExplanationController(
         model.addAttribute("paidShortfall", campaign.state == CampaignState.FUNDED && campaign.counts.paid < offer.minBatch)
         model.addAttribute("paymentAttention", campaign.needsAttention.isNotEmpty())
         model.addAttribute("evidence", evidence.evidence(workspaceId, offer.analysisRunId, offer.optionId))
+        model.addAttribute("analysisRecordedAt", analyses.find(token, offer.analysisRunId)?.run?.createdAt)
         return "explanation/index"
     }
 

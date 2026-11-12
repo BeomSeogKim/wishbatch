@@ -10,6 +10,7 @@
     <title th:text="${title} + ' | ' + ${productName}">Wishbatch</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
     <link rel="stylesheet" th:href="@{/css/product.css}">
+    <link rel="stylesheet" th:href="@{/css/ux-navigation.css}">
     <script th:src="@{/js/human-display.js}"></script>
 </head>
 <body>
@@ -34,7 +35,7 @@
 <main th:replace="${content}"></main>
 <footer class="site-footer shell">
     <div><strong th:text="${productName}">Wishbatch</strong><span> A little clarity before you create.</span></div>
-    <nav aria-label="Footer navigation"><a th:href="@{/styleguide}">Design system</a><a th:href="@{/guide}">Testing guide</a></nav>
+    <nav aria-label="Footer navigation"><a th:if="${demoGuide == null or demoGuide.makerView}" th:href="@{/styleguide}">Design system</a><a th:href="@{/guide}">Testing guide</a></nav>
 </footer>
 </body>
 </html>
