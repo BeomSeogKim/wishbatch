@@ -64,6 +64,16 @@ class NavigationPresentationTests @Autowired constructor(
     }
 
     @Test
+    fun `completed guide renders done status without a next button`() {
+        val token = workspaces.create().token
+        val done = guideFor(token, "pledges/example/trace", CampaignState.FUNDED, false)
+        val html = mvc.get("/guide") { flashAttr("demoGuide", done) }
+            .andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "Done: the funded demo flow is complete")
+        assertFalse(html.contains("<a class=\"button button-secondary demo-guide-next\""))
+    }
+
+    @Test
     fun `overview help explains each action and preserves payment cautions`() {
         val expected = listOf(
             Triple("Review payment attention", "campaign", "affected pledges and pending payment actions"),

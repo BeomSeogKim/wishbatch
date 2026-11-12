@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @WebMvcTest(GuideController::class)
@@ -39,7 +40,7 @@ class GuideControllerTests(@Autowired private val mvc: MockMvc) {
 
         val steps = Regex("<ol class=\"testing-list\">(.*?)</ol>", RegexOption.DOT_MATCHES_ALL)
             .find(html)!!.groupValues[1]
-        assertEquals(8, Regex("<li>").findAll(steps).count())
+        assertEquals(13, Regex("<li>").findAll(steps).count())
         val actions = listOf(
             "Start a demo.",
             "Look at the wishes.",
@@ -49,6 +50,11 @@ class GuideControllerTests(@Autowired private val mvc: MockMvc) {
             "Authorize with PayPal: choose quantity 3.",
             "Confirm production as the maker.",
             "See the result.",
+            "Check against PayPal.",
+            "Verify the decision record.",
+            "Trace the fan's pledge.",
+            "Read the public batch explanation.",
+            "Try the reliability drills.",
         )
         val positions = actions.map { steps.indexOf(it) }
         assertTrue(positions.all { it >= 0 })
@@ -57,7 +63,15 @@ class GuideControllerTests(@Autowired private val mvc: MockMvc) {
         assertContains(steps, "in a new tab")
         assertContains(steps, "capture can still fail")
         assertContains(steps, "review the capture summary, select the acknowledgment checkbox")
-        assertContains(steps, "Update total")
+        assertFalse(steps.contains("Update total"))
+        assertFalse(steps.contains("refresh to see the authorized units"))
+        assertContains(steps, "Authorized units update automatically")
+        assertContains(steps, "reply drafts and proposal counts still refer to the stored analysis until you run analysis again")
+        assertContains(steps, "Verify this record")
+        assertContains(steps, "Simulation - tampered copy")
+        assertContains(steps, "Trace my pledge")
+        assertContains(steps, "How this batch was chosen")
+        assertContains(steps, "without changing a real campaign or calling PayPal")
         assertContains(steps, "15 minutes")
         assertContains(html, "Stated interest counts wishes classified as requests")
         assertContains(html, "Authorized holds count offer units with payment authorization")

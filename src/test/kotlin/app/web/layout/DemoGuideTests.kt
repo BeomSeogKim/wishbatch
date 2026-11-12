@@ -27,6 +27,8 @@ import java.time.Instant
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -163,6 +165,74 @@ class DemoGuideTests @Autowired constructor(
         assertContains(html, "Switch to the maker view to review the wishes")
         assertContains(html, "href=\"/w/$token/maker/wishes\"")
         assertFalse(html.contains("Next: Leave a wish"))
+    }
+
+    @Test
+    fun `funded guide advances through scoped evidence pages and finishes without a next link`() {
+        val workspace = workspaces.create()
+        val foreign = workspaces.create()
+        fun fundedCampaign(token: String): Campaign {
+            val owner = workspaces.findByToken(token)!!
+            val option = workspaces.listOptions(token).first()
+            val run = analyses.findByWorkspaceId(owner.id).first()
+            val offer = offers.save(Offer(owner.id, option.id, run.id, "Example", "Example", emptyMap(),
+                500, "USD", "Example", "US", 2, 10))
+            return campaigns.saveAndFlush(Campaign(offer.id, CampaignState.FUNDED,
+                openedAt = Instant.parse("2030-01-01T00:00:00Z")))
+        }
+        val campaign = fundedCampaign(workspace.token)
+        val foreignCampaign = fundedCampaign(foreign.token)
+        val pledge = pledges.saveAndFlush(Pledge(campaign.id, 2, 1000, "USD", PledgeState.CAPTURED,
+            createdAt = Instant.parse("2030-01-01T00:00:00Z")))
+        val foreignPledge = pledges.saveAndFlush(Pledge(foreignCampaign.id, 2, 1000, "USD", PledgeState.CAPTURED,
+            createdAt = Instant.parse("2030-01-02T00:00:00Z")))
+        val base = "/w/${workspace.token}"
+        val interceptor = guideConfiguration.guideInterceptor()
+        fun guide(path: String): DemoGuide {
+            val view = ModelAndView("example")
+            interceptor.postHandle(MockHttpServletRequest("GET", "$base/$path"),
+                MockHttpServletResponse(), Any(), view)
+            return view.model["demoGuide"] as DemoGuide
+        }
+        val routes = listOf(
+            "maker/result" to "$base/maker/books?campaignId=${campaign.id}",
+            "maker/books" to "$base/maker/decision-record",
+            "maker/decision-record" to "$base/maker/decision-record/verify",
+            "maker/decision-record/verify" to "$base/pledges/${pledge.id}/trace",
+        )
+        for ((path, next) in routes) {
+            val actual = guide(path)
+            assertEquals(next, actual.nextUrl)
+            assertFalse(actual.nextUrl!!.contains(foreignCampaign.id.toString()))
+            assertFalse(actual.nextUrl!!.contains(foreignPledge.id.toString()))
+        }
+        assertEquals("Maker: books check", guide("maker/books").location)
+        assertEquals("Maker: reliability drills", guide("maker/reliability-drills").location)
+        assertEquals("$base/maker/decision-record/verify", guide("maker/reliability-drills").nextUrl)
+        val done = guide("pledges/${pledge.id}/trace")
+        assertNull(done.nextUrl)
+        assertTrue(done.next.startsWith("Done:"))
+        assertEquals("Fan: payment trail", done.location)
+        assertEquals(CampaignState.FUNDED, campaigns.findById(campaign.id).orElseThrow().state)
+        assertEquals(PledgeState.CAPTURED, pledges.findById(pledge.id).orElseThrow().state)
+
+        pledges.delete(pledge)
+        pledges.flush()
+        val missing = guide("maker/decision-record/verify")
+        assertContains(missing.next, "No pledge trail is available")
+        assertEquals("$base/how-this-batch-was-chosen", missing.nextUrl)
+        assertNull(guide("how-this-batch-was-chosen").nextUrl)
+    }
+
+    @Test
+    fun `open offer takes priority over submitted wish guidance`() {
+        for (submitted in listOf(false, true)) {
+            val guide = guideFor("token", "", CampaignState.OPEN, false, wishSubmitted = submitted)
+            assertEquals("/w/token/offer", guide.nextUrl)
+            assertContains(guide.next, "Review the offer")
+        }
+        assertEquals("/w/token/maker/wishes",
+            guideFor("token", "", null, false, wishSubmitted = true).nextUrl)
     }
 
     @Test

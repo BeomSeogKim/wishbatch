@@ -16,11 +16,12 @@ import org.springframework.web.servlet.ModelAndView
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import java.time.Instant
+import java.util.UUID
 
 internal data class DemoGuide(
     val location: String,
     val next: String,
-    val nextUrl: String,
+    val nextUrl: String?,
     val switchLabel: String,
     val switchUrl: String,
     val explanationUrl: String?,
@@ -52,14 +53,15 @@ class DemoGuideConfiguration(
             val order = compareByDescending<Campaign> { it.openedAt ?: Instant.MIN }.thenByDescending { it.id }
             val campaign = records.filter { it.state in activeStates }.sortedWith(order).firstOrNull()
                 ?: records.filter { it.state in terminalStates }.sortedWith(order).firstOrNull()
-            val minimumMet = campaign?.let {
-                val offer = offers.ifAvailable?.findByIdAndWorkspaceId(it.offerId, workspace.id)
-                val holds = pledges.ifAvailable?.findByCampaignIdOrderByCreatedAtAscIdAsc(it.id)
-                offer != null && holds != null && authorizedUnits(holds) >= offer.minBatch
-            } ?: false
+            val offer = campaign?.let { offers.ifAvailable?.findByIdAndWorkspaceId(it.offerId, workspace.id) }
+            val campaignPledges = campaign?.takeIf { offer != null }?.let {
+                pledges.ifAvailable?.findByCampaignIdOrderByCreatedAtAscIdAsc(it.id)
+            }.orEmpty()
+            val minimumMet = offer?.let { authorizedUnits(campaignPledges) >= it.minBatch } ?: false
             modelAndView.addObject("demoGuide", guideFor(token, path, campaign?.state, minimumMet,
                 modelAndView.model["proposalUnavailable"] == true, modelAndView.model["makerStep"] as? Int,
-                modelAndView.model["wishSubmitted"] == true || modelAndView.model["lastWishId"] != null))
+                modelAndView.model["wishSubmitted"] == true || modelAndView.model["lastWishId"] != null,
+                campaign?.id, campaignPledges.lastOrNull()?.id))
         }
     }
 }
@@ -70,6 +72,7 @@ private val terminalStates = setOf(CampaignState.FUNDED, CampaignState.NOT_FUNDE
 internal fun guideFor(
     token: String, path: String, state: CampaignState?, minimumMet: Boolean, proposalUnavailable: Boolean = false,
     makerStep: Int? = null, wishSubmitted: Boolean = false,
+    campaignId: UUID? = null, pledgeId: UUID? = null,
 ): DemoGuide {
     val base = "/w/$token"
     val maker = path == "maker" || path.startsWith("maker/")
@@ -81,6 +84,8 @@ internal fun guideFor(
         path == "maker/offer" -> "Maker: offer"
         path == "maker/campaign" -> "Maker: campaign"
         path == "maker/result" -> "Maker: result"
+        path == "maker/books" -> "Maker: books check"
+        path == "maker/reliability-drills" -> "Maker: reliability drills"
         path == "maker/decision-record" -> "Maker: decision record"
         path == "maker/decision-record/verify" -> "Maker: record verification"
         path == "maker/questions" -> "Maker: questions to ask fans"
@@ -113,8 +118,24 @@ internal fun guideFor(
         "Review and approve questions to ask fans" to "#main"
     } else if (path == "questions") {
         "Review the questions about your wish" to "#main"
-    } else if (path.isEmpty() && wishSubmitted) {
+    } else if (path.isEmpty() && wishSubmitted && state != CampaignState.OPEN) {
         "Switch to the maker view to review the wishes" to "$base/maker/wishes"
+    } else if (state == CampaignState.FUNDED) {
+        when {
+            path == "maker/result" || path == "result" -> "Check against PayPal in the maker view" to
+                ("$base/maker/books" + (campaignId?.let { "?campaignId=$it" } ?: ""))
+            path == "maker/books" -> "Review the decision record" to "$base/maker/decision-record"
+            path == "maker/decision-record" || path == "maker/reliability-drills" ->
+                "Verify this record" to "$base/maker/decision-record/verify"
+            path == "maker/decision-record/verify" -> if (pledgeId != null)
+                "Review a pledge's payment trail" to "$base/pledges/$pledgeId/trace"
+                else "No pledge trail is available; review the public batch explanation" to "$base/how-this-batch-was-chosen"
+            (path.startsWith("pledges/") && path.endsWith("/trace")) || path == "how-this-batch-was-chosen" ||
+                (path.startsWith("campaigns/") && path.endsWith("/how-this-batch-was-chosen")) ->
+                "Done: the funded demo flow is complete. Review any payment attention before production." to null
+            else -> if (maker) "Review the settlement result" to "$base/maker/result"
+                else "Review the campaign result" to "$base/result"
+        }
     } else if (maker) {
         when (state) {
             CampaignState.OPEN -> if (minimumMet) "Review the holds and confirm production on the campaign dashboard" to "$base/maker/campaign"

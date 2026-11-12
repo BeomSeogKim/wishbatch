@@ -1,6 +1,7 @@
 <section th:fragment="guide(guide)" class="shell notice notice-info demo-guide" aria-label="Demo guide">
     <span><strong>Demo guide</strong> · <span th:text="${guide.location}">Maker home</span></span>
-    <a class="button button-secondary demo-guide-next" th:href="${guide.nextUrl}" th:text="${'Next: ' + guide.next}">Next: Review the options</a>
+    <a th:if="${guide.nextUrl != null}" class="button button-secondary demo-guide-next" th:href="${guide.nextUrl}" th:text="${'Next: ' + guide.next}">Next: Review the options</a>
+    <span th:if="${guide.nextUrl == null}" class="demo-guide-next" role="status" th:text="${guide.next}">Done: the demo flow is complete.</span>
     <details class="demo-guide-more">
         <summary>More demo links</summary>
         <nav aria-label="More demo links">
