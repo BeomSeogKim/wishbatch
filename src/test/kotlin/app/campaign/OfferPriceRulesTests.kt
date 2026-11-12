@@ -112,6 +112,29 @@ class OfferPriceRulesTests {
     }
 
     @Test
+    fun `ordinary card requests retain exact caps alongside unresolved design conditions`() {
+        val compatible = wish(3, 1000).copy(maxUnitPrice = Money(1, "USD"))
+        val conditional = wish(4, 1200).let { it.copy(needs = it.needs +
+            WishNeed(NeedStrength.UNKNOWN, NeedAttribute.OTHER, "Designs must fit", "if the designs fit")) }
+        val output = output(compatible to CompatibilityVerdict.COMPATIBLE, conditional to CompatibilityVerdict.CONDITIONAL)
+        val sources = listOf(
+            Wish(option.workspaceId, "Matte cards please. At most USD 10.00", WishSource.ONSITE,
+                createdAt = Instant.EPOCH, id = compatible.wishId),
+            Wish(option.workspaceId, "Postcards if the designs fit. At most USD 12.00", WishSource.ONSITE,
+                createdAt = Instant.EPOCH, id = conditional.wishId),
+        )
+        val atCap = offerInterest(output, option, sources, 1000)
+        assertEquals(listOf(compatible.wishId), atCap.interestWishIds)
+        assertEquals(listOf(conditional.wishId), atCap.conditionalWishIds)
+        val aboveFirst = offerInterest(output, option, sources, 1001)
+        assertEquals(listOf(compatible.wishId), aboveFirst.excludedByPriceWishIds)
+        assertEquals(listOf(conditional.wishId), aboveFirst.conditionalWishIds)
+        val aboveBoth = offerInterest(output, option, sources, 1201)
+        assertEquals(listOf(compatible.wishId, conditional.wishId), aboveBoth.excludedByPriceWishIds)
+        assertEquals(0, aboveBoth.conditional)
+    }
+
+    @Test
     fun `unsupported aggregate shipping and foreign price quotes remain unknown`() {
         for (quote in listOf("Up to EUR 10", "Up to USD 10 including shipping", "Up to USD 10 for two", "Roughly USD 10")) {
             val request = wish(3, 1).let { it.copy(needs = it.needs.map { need -> need.copy(quote = quote) }) }

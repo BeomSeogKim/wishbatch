@@ -74,7 +74,7 @@ private fun supportedPriceSource(wish: AnalyzedWish, source: String): Boolean {
         .distinct().sortedByDescending { it.length }.forEach { quote ->
             remainder = remainder.replace(quote.replace('\u2019', '\'').lowercase(), " ")
         }
-    val request = Regex("(?:i|we)(?:'d| would| will)? (?:get|buy|order|like|want|take|can pay|can spend)|i(?:'m| am) in(?: for)?|(?:cards|postcards|a postcard set) please")
+    val request = Regex("(?:i|we)(?:'d| would| will)? (?:get|buy|order|like|want|take|can pay|can spend)|i(?:'m| am) in(?: for)?|(?:(?:matte|glossy) )?(?:cards|postcards|a postcard set)(?: please)?")
     val budget = Regex("that's my (?:firm )?(?:treat )?budget(?: this month)?|trying to leave myself some grocery money")
     return remainder.split(Regex("[.!?;]+"))
         .map { it.trim().trim(',').replace(Regex("\\s+"), " ") }
