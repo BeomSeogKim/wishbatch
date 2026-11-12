@@ -1,0 +1,39 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${SERVER_PORT:-8200}:${SERVER_PORT:-8200}"
+    environment:
+      SERVER_PORT: ${SERVER_PORT:-8200}
+      DATABASE_URL: jdbc:postgresql://db:5432/wishbatch
+      DB_USERNAME: wishbatch
+      DB_PASSWORD: wishbatch
+      APP_BASE_URL:
+      PRODUCT_NAME:
+      DB_SCHEMA:
+      PAYPAL_BASE_URL:
+      PAYPAL_CLIENT_ID:
+      PAYPAL_CLIENT_SECRET:
+      PAYPAL_WEBHOOK_ID:
+      LLM_API_KEY:
+      LLM_MODEL:
+      LLM_DAILY_RUN_CAP:
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16
+    # Local-only credentials for this disposable development database.
+    environment:
+      POSTGRES_DB: wishbatch
+      POSTGRES_USER: wishbatch
+      POSTGRES_PASSWORD: wishbatch
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wishbatch -d wishbatch"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  postgres_data:
