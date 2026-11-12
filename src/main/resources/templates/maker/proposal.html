@@ -124,7 +124,8 @@
         <div th:replace="~{nextbatch/link :: link(${token}, ${stored.run.id})}"></div>
         <p><a th:href="@{/w/{token}/maker/replies(token=${token},run=${stored.run.id})}">Review replies</a> ·
             <a th:href="@{/w/{token}/maker/glosses(token=${token},run=${stored.run.id})}">English reading aids</a></p>
-        <section th:if="${proposedOption != null}" class="preview-section" aria-labelledby="rationale">
+        <details th:if="${proposedOption != null}" class="preview-section">
+            <summary>Why this batch: review the supporting claims</summary>
             <div class="section-heading"><p class="eyebrow">Why this batch</p><h2 id="rationale">A claim needs a fan's words.</h2>
                 <p>Each quote is checked against its source. The interpretation is still yours to judge.</p></div>
             <p th:if="${stored.output.proposal.rationale.isEmpty()}">No supporting claims passed the evidence checks. Review the source wishes before proceeding.</p>
@@ -134,7 +135,7 @@
                     <figure th:replace="~{fragments/components :: evidence(${evidence.quote}, ${'Read full wish from ' + (sourceWishes[evidence.wishId].displayName ?: 'Anonymous fan')}, ${'#wish-' + evidence.wishId})}"></figure>
                 </article>
             </div>
-        </section>
+        </details>
         <details class="preview-section" aria-labelledby="option-counts">
             <summary id="option-counts">How every option compares.</summary>
             <div class="section-heading">

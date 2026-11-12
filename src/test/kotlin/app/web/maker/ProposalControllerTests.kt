@@ -97,6 +97,10 @@ class ProposalControllerTests(
         assertEquals(1, Regex("<h1\\b").findAll(html).count())
         assertEquals(1, Regex("button button-primary").findAll(html).count())
         assertFalse(html.contains("<progress"))
+        val evidenceSection = html.substringBefore("<summary>Why this batch: review the supporting claims</summary>")
+            .substringAfterLast("<details")
+        assertFalse(evidenceSection.substringBefore('>').contains("open"))
+        assertContains(html, "<summary>Why this batch: review the supporting claims</summary>")
         for (evidence in stored.output.proposal!!.rationale) {
             assertContains(html, "href=\"#wish-${evidence.wishId}\"")
             assertContains(html, "id=\"wish-${evidence.wishId}\"")
