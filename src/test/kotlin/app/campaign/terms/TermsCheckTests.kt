@@ -64,6 +64,40 @@ class TermsCheckTests @Autowired constructor(
         } }
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = ["long-title", "blank-title", "missing-seal", "changed-title", "changed-price", "missing-time"])
+    fun `incompatible published metadata rejects new pledge without creating an order`(kind: String) {
+        val title = when (kind) {
+            "long-title" -> "x".repeat(126) + "\uD83D\uDE00\uD83D\uDE00"
+            "blank-title" -> " "
+            else -> "Print"
+        }
+        val f = fixture(sealed = kind != "missing-seal", title = title)
+        val originalSeal = records.sealedOffer(f.workspace.id, f.offer.id)
+        persistence.checkpoint {
+            when (kind) {
+                "changed-title" -> entities.createNativeQuery("update offers set title = 'Changed' where id = :id")
+                    .setParameter("id", f.offer.id).executeUpdate()
+                "changed-price" -> entities.createNativeQuery("update offers set unit_price = 201 where id = :id")
+                    .setParameter("id", f.offer.id).executeUpdate()
+                "missing-time" -> campaigns.saveAndFlush(f.campaign.apply { openedAt = null })
+            }
+        }
+        val before = pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(f.campaign.id).map { it.id }
+        val rejection = assertIs<ServiceResult.Rejected>(service.startPledge(f.ref, 1))
+        assertEquals(when (kind) {
+            "long-title", "blank-title" -> Rejection.INVALID_OFFER
+            "changed-title", "changed-price" -> Rejection.PAYMENT_MISMATCH
+            else -> Rejection.PAYMENT_UNAVAILABLE
+        }, rejection.reason)
+        assertNull(rejection.pledge)
+        assertEquals(before, pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(f.campaign.id).map { it.id })
+        assertEquals(CampaignState.OPEN, campaigns.findById(f.campaign.id).orElseThrow().state)
+        if (!kind.startsWith("changed")) assertEquals(originalSeal, records.sealedOffer(f.workspace.id, f.offer.id))
+        assertTrue(gateway.fake.calls.isEmpty())
+        assertTrue(gateway.orderReads.isEmpty())
+    }
+
     @Test
     fun `two units use persisted quantity source hash and dated order evidence`() {
         val f = fixture()
@@ -297,9 +331,9 @@ class TermsCheckTests @Autowired constructor(
         assertEquals(2, gateway.fake.calls.filterIsInstance<PaymentCall.Capture>().size)
     }
 
-    private fun fixture(sealed: Boolean = true, price: Long = 200): Fixture {
+    private fun fixture(sealed: Boolean = true, price: Long = 200, title: String = "Print"): Fixture {
         val workspace = workspaces.saveAndFlush(Workspace("terms-${UUID.randomUUID()}", start)).also { owned.add(it.id) }
-        val offer = offers.saveAndFlush(Offer(workspace.id, UUID.randomUUID(), UUID.randomUUID(), "Print", "A5 print",
+        val offer = offers.saveAndFlush(Offer(workspace.id, UUID.randomUUID(), UUID.randomUUID(), title, "A5 print",
             emptyMap(), price, "USD", "Shipping included", "US", 1, 5, 3))
         val campaign = campaigns.saveAndFlush(Campaign(offer.id, CampaignState.OPEN, openedAt = start,
             closesAt = start.plusSeconds(900), confirmDeadline = start.plusSeconds(44100)))

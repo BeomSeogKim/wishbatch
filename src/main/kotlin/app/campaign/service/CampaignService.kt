@@ -33,6 +33,7 @@ import app.campaign.store.OfferRepository
 import app.campaign.store.OptionRepository
 import app.campaign.store.PledgeRepository
 import app.campaign.store.WishRepository
+import app.campaign.terms.SealedOfferChanged
 import app.campaign.terms.TermsCheckOutcome
 import app.campaign.terms.TermsCheckService
 import app.campaign.terms.TermsCheckStage
@@ -118,17 +119,26 @@ class CampaignService(
         reconcileLocked(context)
         if (context.campaign.state != CampaignState.OPEN) return@withCampaign rejected(Rejection.INVALID_STATE)
         capacityRejection(context, quantity)?.let { return@withCampaign rejected(it) }
-        val amount = try { Math.multiplyExact(context.offer.unitPrice, quantity.toLong()) } catch (_: ArithmeticException) {
+        if (context.offer.title.isBlank() || context.offer.title.codePointCount(0, context.offer.title.length) > 127) {
+            return@withCampaign rejected(Rejection.INVALID_OFFER)
+        }
+        val seal = try {
+            persistence.checkpoint { records.sealedOffer(ref.workspaceId, context.offer.id) }
+        } catch (_: SealedOfferChanged) {
+            return@withCampaign rejected(Rejection.PAYMENT_MISMATCH)
+        } ?: return@withCampaign rejected(Rejection.PAYMENT_UNAVAILABLE)
+        if (context.campaign.openedAt == null) return@withCampaign rejected(Rejection.PAYMENT_UNAVAILABLE)
+        val amount = try { Math.multiplyExact(seal.unitPriceMinor, quantity.toLong()) } catch (_: ArithmeticException) {
             return@withCampaign rejected(Rejection.AMOUNT_OVERFLOW)
         }
-        val pledge = Pledge(context.campaign.id, quantity, amount, context.offer.currency,
+        val pledge = Pledge(context.campaign.id, quantity, amount, seal.currency,
             createdAt = clock.instant(), wishId = wishId)
         persistence.checkpoint {
             pledges.saveAndFlush(pledge)
             events.save(Event(context.campaign.id, "PLEDGE_CREATED", pledge.id, detail = "CREATED", createdAt = clock.instant()))
         }
         provenance.record(pledge)
-        val result = payments.createOrder(pledge)
+        val result = payments.createOrder(pledge, context.offer.title, seal)
         if (result is PaymentResult.Received && result.status in setOf(PaymentStatus.CREATED, PaymentStatus.APPROVED)) {
             pledge.paypalOrderId = result.resource.orderId.value
             payments.save(pledge)

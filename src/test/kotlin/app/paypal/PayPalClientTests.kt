@@ -42,13 +42,65 @@ class PayPalClientTests {
             .andExpect(header("Authorization", "Bearer synthetic-token"))
             .andExpect(content().json("""{
                 "intent":"AUTHORIZE",
-                "purchase_units":[{"custom_id":"$pledgeId","amount":{"currency_code":"USD","value":"12.34"}}],
+                "purchase_units":[{"custom_id":"$pledgeId","description":"Terms seal: ${"a".repeat(64)}",
+                    "amount":{"currency_code":"USD","value":"18.51",
+                        "breakdown":{"item_total":{"currency_code":"USD","value":"18.51"}}},
+                    "items":[{"name":"Published print batch","quantity":"3",
+                        "unit_amount":{"currency_code":"USD","value":"6.17"}}]}],
                 "payment_source":{"paypal":{"experience_context":{"shipping_preference":"GET_FROM_FILE"}}}
             }"""))
             .andRespond(withSuccess("""{"id":"ORDER1","status":"CREATED"}""", MediaType.APPLICATION_JSON)
                 .header("PayPal-Debug-Id", "create-debug"))
-        val result = client.createAuthorizeOrder(CreateAuthorizeOrder(pledgeId, Money(1234, "USD")), "create-key")
+        val result = client.createAuthorizeOrder(orderRequest(pledgeId = pledgeId, quantity = 3, unitAmount = Money(617, "USD"), amount = Money(1851, "USD")), "create-key")
         assertEquals(PaymentResult.Received(OrderDetails(OrderId("ORDER1")), PaymentStatus.CREATED, "create-debug"), result)
+        server.verify()
+    }
+
+    private fun orderRequest(
+        pledgeId: UUID = UUID.randomUUID(), amount: Money = Money(1234, "USD"),
+        title: String = "Published print batch", quantity: Int = 1,
+        unitAmount: Money = Money(1234, "USD"),
+    ) = CreateAuthorizeOrder(pledgeId, amount, title, quantity, unitAmount, "a".repeat(64))
+
+    @Test
+    fun `create preserves exact Unicode title at provider limit on retry`() {
+        token()
+        val title = "x".repeat(125) + "\uD83D\uDE00\uD83D\uDE00"
+        val request = orderRequest(title = title)
+        repeat(2) { attempt ->
+            val response = server.expect(requestTo(url("/v2/checkout/orders")))
+                .andExpect(header("PayPal-Request-Id", "same-create-key"))
+                .andExpect(content().json("""{"intent":"AUTHORIZE","purchase_units":[{
+                    "custom_id":"${request.pledgeId}","description":"Terms seal: ${request.termsHash}",
+                    "items":[{"name":"$title","quantity":"1","unit_amount":{"currency_code":"USD","value":"12.34"}}],
+                    "amount":{"currency_code":"USD","value":"12.34",
+                        "breakdown":{"item_total":{"currency_code":"USD","value":"12.34"}}}
+                }]}"""))
+            if (attempt == 0) response.andRespond(withServerError())
+            else response.andRespond(withSuccess("""{"id":"ORDER1","status":"CREATED"}""", MediaType.APPLICATION_JSON))
+        }
+        assertEquals(PaymentStatus.CREATED, client.createAuthorizeOrder(request, "same-create-key").status)
+        server.verify()
+    }
+
+    @Test
+    fun `invalid metadata and inconsistent arithmetic fail before OAuth or order request`() {
+        val valid = orderRequest()
+        val invalid = listOf(
+            valid.copy(offerTitle = ""), valid.copy(offerTitle = " "),
+            valid.copy(offerTitle = "x".repeat(128)),
+            valid.copy(offerTitle = "x".repeat(126) + "\uD83D\uDE00\uD83D\uDE00"),
+            valid.copy(quantity = 0), valid.copy(quantity = -1),
+            valid.copy(amount = Money(1235, "USD")), valid.copy(unitAmount = Money(0, "USD")),
+            valid.copy(unitAmount = Money(1234, "EUR")),
+            valid.copy(quantity = 2, unitAmount = Money(Long.MAX_VALUE, "USD")),
+            valid.copy(termsHash = ""), valid.copy(termsHash = "a".repeat(65)),
+            valid.copy(amount = Money(1234, "invalid")),
+        )
+        invalid.forEach { request ->
+            assertEquals(PaymentResult.Failed(PaymentStatus.FAILED, errorCode = "INVALID_ORDER"),
+                client.createAuthorizeOrder(request, "key"))
+        }
         server.verify()
     }
 
@@ -68,7 +120,7 @@ class PayPalClientTests {
         }
         for ((providerStatus, status) in statuses) {
             assertEquals(PaymentResult.Received(OrderDetails(OrderId("ORDER1")), status, "response-debug"),
-                client.createAuthorizeOrder(CreateAuthorizeOrder(UUID.randomUUID(), Money(1234, "USD")), "create-key"), providerStatus)
+                client.createAuthorizeOrder(orderRequest(), "create-key"), providerStatus)
         }
         server.verify()
     }
@@ -379,7 +431,7 @@ class PayPalClientTests {
                 """{"id":"CAP1","status":"COMPLETED","amount":{"currency_code":"${money.currency}","value":"$value"}}""")
         }
         for ((money, _) in cases) {
-            assertEquals(PaymentStatus.CREATED, client.createAuthorizeOrder(CreateAuthorizeOrder(UUID.randomUUID(), money), "key").status)
+            assertEquals(PaymentStatus.CREATED, client.createAuthorizeOrder(orderRequest(amount = money, unitAmount = money), "key").status)
             assertEquals(money, received(client.readCapture(CaptureId("CAP1"), "key")).resource.amount)
         }
         server.verify()
@@ -420,7 +472,7 @@ class PayPalClientTests {
     fun `unknown and cross resource statuses fail every response mapping`() {
         token()
         val calls = listOf<() -> PaymentResult<*>>(
-            { client.createAuthorizeOrder(CreateAuthorizeOrder(UUID.randomUUID(), Money(1234, "USD")), "key") },
+            { client.createAuthorizeOrder(orderRequest(), "key") },
             { client.authorizeOrder(OrderId("ORDER1"), "key") },
             { client.readAuthorization(AuthorizationId("AUTH1"), "key") },
             { client.capture(AuthorizationId("AUTH1"), "key") },
@@ -460,7 +512,7 @@ class PayPalClientTests {
         for ((id, secret) in listOf("" to "", "synthetic-client" to "", "" to "synthetic-secret")) {
             val unconfigured = PayPalClient(PayPalProperties(PayPalProperties.SANDBOX_URL, id, secret), builder, clock)
             val results = listOf(
-                unconfigured.createAuthorizeOrder(CreateAuthorizeOrder(UUID.randomUUID(), Money(100, "USD")), "key"),
+                unconfigured.createAuthorizeOrder(orderRequest(amount = Money(100, "USD"), unitAmount = Money(100, "USD")), "key"),
                 unconfigured.authorizeOrder(OrderId("ORDER1"), "key"),
                 unconfigured.readAuthorization(AuthorizationId("AUTH1"), "key"),
                 unconfigured.capture(AuthorizationId("AUTH1"), "key"),

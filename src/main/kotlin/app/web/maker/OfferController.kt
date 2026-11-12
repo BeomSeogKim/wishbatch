@@ -233,6 +233,7 @@ class OfferController(
         }
         result.validation?.violations?.forEach { violation ->
             val (field, text) = when (violation) {
+                OfferViolation.INVALID_TITLE -> "title" to "Use a title from 1 to 127 characters."
                 OfferViolation.MINIMUM_BELOW_OPTION -> "minBatch" to "Use at least the option's minimum batch."
                 OfferViolation.MINIMUM_EXCEEDS_CAPACITY -> "minBatch" to "The minimum cannot exceed capacity."
                 OfferViolation.NON_POSITIVE_CAPACITY, OfferViolation.CAPACITY_ABOVE_OPTION -> "capacity" to "Use a positive capacity no greater than the option's limit."

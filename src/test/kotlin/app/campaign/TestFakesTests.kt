@@ -49,7 +49,7 @@ class TestFakesTests {
     @Test
     fun `every payment operation returns its script and records typed arguments and key`() {
         val gateway = InMemoryPaymentGateway()
-        val request = CreateAuthorizeOrder(UUID.randomUUID(), amount)
+        val request = CreateAuthorizeOrder(UUID.randomUUID(), amount, "Print", 1, amount, "a".repeat(64))
         val order = PaymentResult.Received(OrderDetails(orderId), PaymentStatus.CREATED)
         val authorization = PaymentResult.Received(
             AuthorizationDetails(authorizationId, amount, instant, orderId), PaymentStatus.CREATED,
@@ -191,7 +191,7 @@ class TestFakesTests {
     fun `unscripted payment operations fail clearly and still record attempts`() {
         val gateway = InMemoryPaymentGateway()
         val operations = listOf<() -> Unit>(
-            { gateway.createAuthorizeOrder(CreateAuthorizeOrder(UUID.randomUUID(), amount), "key") },
+            { gateway.createAuthorizeOrder(CreateAuthorizeOrder(UUID.randomUUID(), amount, "Print", 1, amount, "a".repeat(64)), "key") },
             { gateway.authorizeOrder(orderId, "key") },
             { gateway.readAuthorization(authorizationId, "key") },
             { gateway.capture(authorizationId, "key") },

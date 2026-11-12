@@ -160,6 +160,21 @@ class CampaignServiceTests @Autowired constructor(
     }
 
     @Test
+    fun `draft and publication reject overlong titles and preserve exact valid title`() {
+        val invalid = fixture(state = CampaignState.DRAFT, title = "x".repeat(126) + "\uD83D\uDE00\uD83D\uDE00")
+        assertEquals(Rejection.INVALID_OFFER,
+            rejected(service.createDraft(invalid.workspace.id, draft(invalid).copy(title = invalid.offer.title))).reason)
+        assertEquals(Rejection.INVALID_OFFER, rejected(service.publish(invalid.ref, Duration.ofHours(2))).reason)
+        assertEquals(CampaignState.DRAFT, campaigns.findById(invalid.campaign.id).orElseThrow().state)
+        assertNull(records.sealedOffer(invalid.workspace.id, invalid.offer.id))
+        val title = "x".repeat(125) + "\uD83D\uDE00\uD83D\uDE00"
+        val created = success(service.createDraft(invalid.workspace.id, draft(invalid).copy(title = title)))
+        val published = success(service.publish(CampaignRef(invalid.workspace.id, created.campaignId), Duration.ofHours(2)))
+        assertEquals(title, published.offer.title)
+        assertTrue(gateway.fake.calls.isEmpty())
+    }
+
+    @Test
     fun `workspace scope protects campaign pledge and evidence access`() {
         val fixture = fixture()
         val other = fixture()
@@ -176,7 +191,7 @@ class CampaignServiceTests @Autowired constructor(
 
     @Test
     fun `order amount and reference come from offer and unapproved orders never count`() {
-        val fixture = fixture(minimum = 2, capacity = 5)
+        val fixture = fixture(minimum = 2, capacity = 5, title = "Maker-confirmed print batch")
         gateway.fake.createOrderResults.add(received(OrderDetails(OrderId("order-1")), PaymentStatus.CREATED))
         val created = success(service.startPledge(fixture.ref, 2))
         assertEquals(400L, created.amount)
@@ -184,6 +199,11 @@ class CampaignServiceTests @Autowired constructor(
         val call = assertIs<PaymentCall.CreateOrder>(gateway.fake.calls.single())
         assertEquals(created.id, call.request.pledgeId)
         assertEquals(Money(400, "USD"), call.request.amount)
+        assertEquals(fixture.offer.title, call.request.offerTitle)
+        assertEquals(2, call.request.quantity)
+        assertEquals(Money(200, "USD"), call.request.unitAmount)
+        assertEquals(assertNotNull(records.sealedOffer(fixture.workspace.id, fixture.offer.id)).termsHash,
+            call.request.termsHash)
         assertEquals(idempotencyKey(created.id, PaymentAction.CREATE_ORDER), call.idempotencyKey)
         val before = success(service.readCampaign(fixture.ref))
         assertEquals(CampaignCounts(0, 0, 0), before.counts)
@@ -1064,7 +1084,7 @@ class CampaignServiceTests @Autowired constructor(
         assertTrue(gateway.fake.calls.isEmpty())
     }
 
-    private fun fixture(minimum: Int = 1, capacity: Int = 5, state: CampaignState = CampaignState.OPEN): Fixture {
+    private fun fixture(minimum: Int = 1, capacity: Int = 5, state: CampaignState = CampaignState.OPEN, title: String = "Print"): Fixture {
         val workspace = workspaces.saveAndFlush(Workspace("test-${UUID.randomUUID()}", start))
         ownedWorkspaces.add(workspace.id)
         val option = options.saveAndFlush(Option(workspace.id, "Print", "print", emptyMap(), emptyMap(),
@@ -1076,7 +1096,7 @@ class CampaignServiceTests @Autowired constructor(
             notServed = emptyList(), questionsForMaker = emptyList(), alternatives = emptyList(), optionIds = listOf(option.id),
         )
         val analysis = analyses.saveAndFlush(AnalysisRun(workspace.id, "synthetic", "hash", mapper.writeValueAsString(output), createdAt = start))
-        val offer = offers.saveAndFlush(Offer(workspace.id, option.id, analysis.id, "Print", "A5 print", emptyMap(),
+        val offer = offers.saveAndFlush(Offer(workspace.id, option.id, analysis.id, title, "A5 print", emptyMap(),
             200, "USD", "Shipping included", "US", minimum, capacity, minOf(3, capacity), listOf(wishId)))
         val campaign = campaigns.saveAndFlush(Campaign(offer.id, state,
             openedAt = if (state == CampaignState.DRAFT) null else start,

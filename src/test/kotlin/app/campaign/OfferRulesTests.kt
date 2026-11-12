@@ -60,6 +60,19 @@ class OfferRulesTests {
     }
 
     @Test
+    fun `offer title uses Unicode code point boundaries without truncation`() {
+        for (title in listOf("P", "x".repeat(127), "x".repeat(125) + "\uD83D\uDE00\uD83D\uDE00")) {
+            val exact = offer(title = title)
+            assertTrue(validateOffer(exact, option, Duration.ofHours(2)).valid)
+            assertEquals(title, exact.title)
+        }
+        for (title in listOf("", " ", "x".repeat(128), "x".repeat(126) + "\uD83D\uDE00\uD83D\uDE00")) {
+            assertEquals(setOf(OfferViolation.INVALID_TITLE),
+                validateOffer(offer(title = title), option, Duration.ofHours(2)).violations)
+        }
+    }
+
+    @Test
     fun `below cost warns without blocking and never compares different currencies`() {
         val below = validateOffer(offer(price = 649), option, Duration.ofHours(2))
         assertTrue(below.valid)
@@ -103,9 +116,9 @@ class OfferRulesTests {
 
     private fun offer(
         minBatch: Int = 3, capacity: Int = 10, price: Long = 1_500, maxQty: Int = 3, currency: String = "USD",
-        optionId: UUID = option.id, workspaceId: UUID = option.workspaceId,
+        optionId: UUID = option.id, workspaceId: UUID = option.workspaceId, title: String = "Print batch",
     ) = Offer(
-        workspaceId = workspaceId, optionId = optionId, analysisRunId = UUID.randomUUID(), title = "Print batch",
+        workspaceId = workspaceId, optionId = optionId, analysisRunId = UUID.randomUUID(), title = title,
         specText = "One A5 print", chosenVariants = mapOf("finish" to "matte"), unitPrice = price, currency = currency,
         deliveryTerms = "Ships in two weeks", shipRegion = "US", minBatch = minBatch, capacity = capacity, maxQtyPerPledge = maxQty,
     )

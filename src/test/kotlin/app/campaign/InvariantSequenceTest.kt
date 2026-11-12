@@ -192,7 +192,7 @@ class InvariantSequenceTest @Autowired constructor(
     fun `provider fake deduplicates replays and counts effects by resource`() {
         val provider = SequenceGateway()
         val order = assertIs<PaymentResult.Received<OrderDetails>>(
-            provider.createAuthorizeOrder(CreateAuthorizeOrder(UUID.randomUUID(), Money(200, "USD")), "create"),
+            provider.createAuthorizeOrder(CreateAuthorizeOrder(UUID.randomUUID(), Money(200, "USD"), "Print", 1, Money(200, "USD"), "a".repeat(64)), "create"),
         ).resource.orderId
         val authorization = assertIs<PaymentResult.Received<AuthorizationDetails>>(
             provider.authorizeOrder(order, "authorize"),

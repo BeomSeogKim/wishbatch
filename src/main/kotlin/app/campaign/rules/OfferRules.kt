@@ -6,7 +6,7 @@ import java.time.Duration
 
 enum class OfferViolation {
     MINIMUM_BELOW_OPTION, MINIMUM_EXCEEDS_CAPACITY, NON_POSITIVE_CAPACITY,
-    CAPACITY_ABOVE_OPTION, INVALID_DURATION, NON_POSITIVE_PRICE, QUANTITY_OUT_OF_RANGE, CURRENCY_MISMATCH,
+    CAPACITY_ABOVE_OPTION, INVALID_DURATION, NON_POSITIVE_PRICE, QUANTITY_OUT_OF_RANGE, CURRENCY_MISMATCH, INVALID_TITLE,
 }
 
 enum class OfferWarning { PRICE_BELOW_COST }
@@ -22,6 +22,7 @@ data class OfferValidation(val violations: Set<OfferViolation>, val warnings: Se
 fun validateOffer(offer: Offer, option: Option, duration: Duration): OfferValidation {
     require(offer.optionId == option.id && offer.workspaceId == option.workspaceId) { "Offer must reference the supplied workspace option" }
     val violations = buildSet {
+        if (offer.title.isBlank() || offer.title.codePointCount(0, offer.title.length) > 127) add(OfferViolation.INVALID_TITLE)
         if (offer.minBatch < option.minBatch || offer.minBatch < 1) add(OfferViolation.MINIMUM_BELOW_OPTION)
         if (offer.minBatch > offer.capacity) add(OfferViolation.MINIMUM_EXCEEDS_CAPACITY)
         if (offer.capacity < 1) add(OfferViolation.NON_POSITIVE_CAPACITY)

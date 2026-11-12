@@ -41,15 +41,32 @@ class PayPalClient internal constructor(
     private var token: String? = null
     private var refreshAt: Instant = Instant.MIN
 
-    override fun createAuthorizeOrder(request: CreateAuthorizeOrder, idempotencyKey: String) =
-        call(HttpMethod.POST, "/v2/checkout/orders", idempotencyKey, mapOf(
+    override fun createAuthorizeOrder(request: CreateAuthorizeOrder, idempotencyKey: String): PaymentResult<OrderDetails> {
+        val fractionDigits = try { scale(request.amount.currency) } catch (_: IllegalArgumentException) { -1 }
+        val total = try { Math.multiplyExact(request.unitAmount.minorUnits, request.quantity.toLong()) }
+            catch (_: ArithmeticException) { null }
+        if (request.offerTitle.isBlank() || request.offerTitle.codePointCount(0, request.offerTitle.length) > 127 ||
+            request.quantity <= 0 || request.unitAmount.minorUnits <= 0 || total != request.amount.minorUnits ||
+            request.unitAmount.currency != request.amount.currency || fractionDigits !in setOf(0, 2) ||
+            !request.termsHash.matches(Regex("[a-f0-9]{64}"))) {
+            return PaymentResult.Failed(PaymentStatus.FAILED, errorCode = "INVALID_ORDER")
+        }
+        val amount = mapOf("currency_code" to request.amount.currency,
+            "value" to BigDecimal.valueOf(request.amount.minorUnits, fractionDigits).toPlainString())
+        val unitAmount = mapOf("currency_code" to request.unitAmount.currency,
+            "value" to BigDecimal.valueOf(request.unitAmount.minorUnits, fractionDigits).toPlainString())
+        return call(HttpMethod.POST, "/v2/checkout/orders", idempotencyKey, mapOf(
             "intent" to "AUTHORIZE",
-            "purchase_units" to listOf(mapOf("custom_id" to request.pledgeId.toString(), "amount" to mapOf(
-                "currency_code" to request.amount.currency,
-                "value" to BigDecimal.valueOf(request.amount.minorUnits, scale(request.amount.currency)).toPlainString(),
-            ))),
+            "purchase_units" to listOf(mapOf(
+                "custom_id" to request.pledgeId.toString(),
+                "description" to "Terms seal: ${request.termsHash}",
+                "amount" to amount + ("breakdown" to mapOf("item_total" to amount)),
+                "items" to listOf(mapOf("name" to request.offerTitle, "quantity" to request.quantity.toString(),
+                    "unit_amount" to unitAmount)),
+            )),
             "payment_source" to mapOf("paypal" to mapOf("experience_context" to mapOf("shipping_preference" to "GET_FROM_FILE"))),
         )) { body -> OrderDetails(OrderId(body.requiredText("id"))) to orderStatus(body) }
+    }
 
     override fun readOrder(orderId: OrderId, idempotencyKey: String) =
         call(HttpMethod.GET, "/v2/checkout/orders/${segment(orderId.value)}", idempotencyKey) { body ->

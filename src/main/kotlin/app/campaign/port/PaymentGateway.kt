@@ -83,8 +83,15 @@ data class RefundDetails(
     val captureId: CaptureId? = null,
 )
 
-/** The server supplies amount; pledgeId becomes the provider's custom reference. */
-data class CreateAuthorizeOrder(val pledgeId: UUID, val amount: Money)
+/** Exact sealed offer terms and server pledge values; pledgeId is the provider's custom reference. */
+data class CreateAuthorizeOrder(
+    val pledgeId: UUID,
+    val amount: Money,
+    val offerTitle: String,
+    val quantity: Int,
+    val unitAmount: Money,
+    val termsHash: String,
+)
 
 enum class WebhookVerification { VERIFIED, INVALID, UNAVAILABLE }
 

@@ -23,6 +23,7 @@ import app.campaign.rules.idempotencyKey
 import app.campaign.rules.requirePledgeTransition
 import app.campaign.store.EventRepository
 import app.campaign.store.PledgeRepository
+import app.campaign.terms.SealedOfferTerms
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
 import java.time.Clock
@@ -145,9 +146,10 @@ class CampaignPayments(
             .any { it.pledgeId == pledge.id && it.type == "${action.name}_REQUEST" }
     }
 
-    fun createOrder(pledge: Pledge): PaymentResult<OrderDetails> = call(
+    fun createOrder(pledge: Pledge, offerTitle: String, seal: SealedOfferTerms): PaymentResult<OrderDetails> = call(
         pledge, PaymentAction.CREATE_ORDER, "POST /v2/checkout/orders", pledge.paypalOrderId,
-    ) { gateway, key -> gateway.createAuthorizeOrder(CreateAuthorizeOrder(pledge.id, money(pledge)), key) }
+    ) { gateway, key -> gateway.createAuthorizeOrder(CreateAuthorizeOrder(pledge.id, money(pledge), offerTitle,
+        pledge.qty, Money(seal.unitPriceMinor, seal.currency), seal.termsHash), key) }
 
     fun authorize(pledge: Pledge): PaymentResult<AuthorizationDetails> = call(
         pledge, PaymentAction.AUTHORIZE, "POST /v2/checkout/orders/${pledge.paypalOrderId}/authorize", pledge.paypalOrderId,
