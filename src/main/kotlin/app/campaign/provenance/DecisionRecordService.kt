@@ -6,6 +6,8 @@ import app.campaign.model.Offer
 import app.campaign.model.Pledge
 import app.campaign.model.Wish
 import app.campaign.port.AnalysisOutput
+import app.campaign.terms.SealedOfferChanged
+import app.campaign.terms.SealedOfferTerms
 import jakarta.persistence.EntityManager
 import jakarta.persistence.LockModeType
 import org.springframework.stereotype.Service
@@ -48,6 +50,22 @@ class DecisionRecordService(private val entities: EntityManager, private val map
         val saved = requireNotNull(entities.find(Offer::class.java, offer.id, LockModeType.PESSIMISTIC_WRITE))
         require(saved.workspaceId == offer.workspaceId && offerPayload(saved) == offerPayload(offer))
         storeSource(offer.workspaceId, "OFFER", offer.id, offerPayload(offer))
+    }
+
+    /** Missing snapshots return null; changed seals have no usable terms and never get repaired. */
+    @Transactional(readOnly = true, noRollbackFor = [SealedOfferChanged::class])
+    fun sealedOffer(workspaceId: UUID, offerId: UUID): SealedOfferTerms? {
+        val offer = entities.find(Offer::class.java, offerId) ?: return null
+        if (offer.workspaceId != workspaceId) return null
+        val snapshot = entities.createQuery(
+            "select s from DecisionSourceSnapshot s where s.sourceType = 'OFFER' and s.sourceId = :id",
+            DecisionSourceSnapshot::class.java,
+        ).setParameter("id", offerId).resultList.singleOrNull() ?: return null
+        if (snapshot.workspaceId != workspaceId || snapshot.sourceId != offer.id ||
+            hashing.sha256(snapshot.payload) != snapshot.hash || snapshot.payload != offerPayload(offer)) {
+            throw SealedOfferChanged()
+        }
+        return SealedOfferTerms(offer.id, snapshot.hash, offer.unitPrice, offer.currency)
     }
 
     /**

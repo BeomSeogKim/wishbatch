@@ -19,6 +19,7 @@ import app.campaign.port.RefundDetails
 import app.campaign.port.RefundId
 import app.campaign.port.VoidDetails
 import app.campaign.provenance.PledgeProvenanceCheckpoint
+import app.campaign.provenance.DecisionRecordService
 import app.campaign.rules.PaymentAction
 import app.campaign.rules.idempotencyKey
 import app.campaign.store.CampaignRepository
@@ -55,6 +56,7 @@ class CampaignSettlementRetryTests @Autowired constructor(
     private val gateways: ObjectProvider<PaymentGateway>,
     private val clock: MutableClock,
     private val provenance: PledgeProvenanceCheckpoint,
+    private val records: DecisionRecordService,
 ) {
     private val start = Instant.parse("2026-01-01T00:00:00Z")
     private val owned = mutableListOf<UUID>()
@@ -198,7 +200,10 @@ class CampaignSettlementRetryTests @Autowired constructor(
         fixture.pledge.captureId = null
         pledges.saveAndFlush(fixture.pledge)
         val approved = pledges.saveAndFlush(Pledge(fixture.ref.campaignId, 1, 200, "USD", PledgeState.AUTHORIZED,
-            authorizationId = "approved-hold", createdAt = start.plusSeconds(1)))
+            paypalOrderId = "approved-order", authorizationId = "approved-hold", createdAt = start.plusSeconds(1)))
+        val campaign = campaigns.findById(fixture.ref.campaignId).orElseThrow()
+        persistence.checkpoint { records.recordOffer(offers.findById(campaign.offerId).orElseThrow()) }
+        gateway.registerOrder(approved)
         gateway.fake.readAuthorizationResults.add(PaymentResult.Received(AuthorizationDetails(
             AuthorizationId(fixture.pledge.authorizationId!!), Money(200, "USD"), null,
         ), PaymentStatus.CAPTURED))

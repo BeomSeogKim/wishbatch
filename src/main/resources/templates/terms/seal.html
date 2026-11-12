@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="seal(termsSeal)" class="card stack" aria-labelledby="terms-seal-title">
+    <h2 id="terms-seal-title">Published terms</h2>
+    <p th:if="${termsSeal == null || termsSeal.availability == 'UNAVAILABLE'}">Terms hash unavailable: no usable publication snapshot was recorded.</p>
+    <p th:if="${termsSeal != null && termsSeal.availability == 'MISMATCH'}">Terms hash unavailable: the offer differs from its publication snapshot.</p>
+    <p th:if="${termsSeal != null && termsSeal.termsHash != null}">Terms SHA-256: <code th:text="${termsSeal.termsHash}"></code></p>
+    <p>Published at <time th:text="${termsSeal != null && termsSeal.publishedAt != null ? termsSeal.publishedAt : 'Unavailable'}"></time></p>
+    <p>This hash detects changes to recorded terms. It is not a financial guarantee or digital signature.</p>
+</section>
+</body>
+</html>

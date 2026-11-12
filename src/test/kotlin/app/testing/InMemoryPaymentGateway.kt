@@ -1,5 +1,7 @@
 package app.testing
 
+import app.campaign.model.Money
+import app.campaign.model.Pledge
 import app.campaign.port.AuthorizationDetails
 import app.campaign.port.AuthorizationId
 import app.campaign.port.CaptureDetails
@@ -28,7 +30,8 @@ sealed interface PaymentCall {
 }
 
 /**
- * Add results to each operation's FIFO queue before calling it. Unscripted calls fail the test.
+ * Add results to each operation's FIFO queue before calling it. Order reads may reuse explicit
+ * registered or create-request facts and have a separate trace. Other unscripted calls fail.
  * After N calls, failAfterCalls returns failure for every operation without consuming a script.
  * All attempts are recorded, including repeated keys; this fake does not deduplicate requests.
  */
@@ -36,11 +39,15 @@ class InMemoryPaymentGateway(
     private val failAfterCalls: Int? = null,
     private val failure: PaymentResult.Failed = PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE),
 ) : PaymentGateway {
+    data class OrderRead(val orderId: OrderId, val idempotencyKey: String)
     init {
         require(failAfterCalls == null || failAfterCalls >= 0) { "failAfterCalls must be non-negative" }
     }
 
     val createOrderResults = ArrayDeque<PaymentResult<OrderDetails>>()
+    val readOrderResults = ArrayDeque<PaymentResult<OrderDetails>>()
+    val orderReads = mutableListOf<OrderRead>()
+    private val orders = mutableMapOf<OrderId, OrderDetails>()
     val authorizeOrderResults = ArrayDeque<PaymentResult<AuthorizationDetails>>()
     val readAuthorizationResults = ArrayDeque<PaymentResult<AuthorizationDetails>>()
     val captureResults = ArrayDeque<PaymentResult<CaptureDetails>>()
@@ -52,8 +59,24 @@ class InMemoryPaymentGateway(
     private val recordedCalls = mutableListOf<PaymentCall>()
     val calls: List<PaymentCall> get() = recordedCalls.toList()
 
-    override fun createAuthorizeOrder(request: CreateAuthorizeOrder, idempotencyKey: String): PaymentResult<OrderDetails> =
-        next(PaymentCall.CreateOrder(request, idempotencyKey), createOrderResults)
+    override fun createAuthorizeOrder(request: CreateAuthorizeOrder, idempotencyKey: String): PaymentResult<OrderDetails> {
+        val result = next(PaymentCall.CreateOrder(request, idempotencyKey), createOrderResults)
+        if (result is PaymentResult.Received) orders[result.resource.orderId] = result.resource.copy(amount = request.amount)
+        return result
+    }
+
+    fun registerOrder(pledge: Pledge) {
+        val id = OrderId(requireNotNull(pledge.paypalOrderId))
+        orders[id] = OrderDetails(id, amount = Money(pledge.amount, pledge.currency))
+    }
+
+    override fun readOrder(orderId: OrderId, idempotencyKey: String): PaymentResult<OrderDetails> {
+        orderReads.add(OrderRead(orderId, idempotencyKey))
+        if (failAfterCalls != null && recordedCalls.size + orderReads.size > failAfterCalls) return failure
+        return readOrderResults.removeFirstOrNull() ?: PaymentResult.Received(
+            orders[orderId] ?: throw AssertionError("No scripted order evidence for $orderId"), PaymentStatus.APPROVED,
+        )
+    }
 
     override fun authorizeOrder(orderId: OrderId, idempotencyKey: String): PaymentResult<AuthorizationDetails> =
         next(PaymentCall.AuthorizeOrder(orderId, idempotencyKey), authorizeOrderResults)
@@ -78,7 +101,7 @@ class InMemoryPaymentGateway(
 
     private fun <T> next(call: PaymentCall, results: ArrayDeque<PaymentResult<T>>): PaymentResult<T> {
         recordedCalls.add(call)
-        if (failAfterCalls != null && recordedCalls.size > failAfterCalls) return failure
+        if (failAfterCalls != null && recordedCalls.size + orderReads.size > failAfterCalls) return failure
         return results.removeFirstOrNull()
             ?: throw AssertionError("No scripted payment result for ${call.javaClass.simpleName}")
     }

@@ -153,6 +153,10 @@ class CampaignPayments(
         pledge, PaymentAction.AUTHORIZE, "POST /v2/checkout/orders/${pledge.paypalOrderId}/authorize", pledge.paypalOrderId,
     ) { gateway, key -> gateway.authorizeOrder(OrderId(requireNotNull(pledge.paypalOrderId)), key) }
 
+    fun readOrder(pledge: Pledge): PaymentResult<OrderDetails> = call(
+        pledge, PaymentAction.READ_ORDER, "GET /v2/checkout/orders/${pledge.paypalOrderId}", pledge.paypalOrderId,
+    ) { gateway, key -> gateway.readOrder(OrderId(requireNotNull(pledge.paypalOrderId)), key) }
+
     fun readAuthorization(pledge: Pledge): PaymentResult<AuthorizationDetails> = call(
         pledge, PaymentAction.READ_AUTHORIZATION,
         "GET /v2/payments/authorizations/${pledge.authorizationId}", pledge.authorizationId,

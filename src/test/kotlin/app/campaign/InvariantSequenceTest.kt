@@ -2,6 +2,7 @@ package app.campaign
 
 import app.campaign.fuzz.SequenceCrash
 import app.campaign.fuzz.SequenceGateway
+import app.campaign.provenance.DecisionRecordService
 import app.campaign.model.*
 import app.campaign.port.*
 import app.campaign.rules.authorizedUnits
@@ -44,6 +45,7 @@ class InvariantSequenceTest @Autowired constructor(
     private val gateway: SequenceGateway,
     private val clock: SequenceClock,
     private val mapper: ObjectMapper,
+    private val records: DecisionRecordService,
 ) {
     private val now = Instant.parse("2026-01-01T00:00:00Z")
 
@@ -61,6 +63,7 @@ class InvariantSequenceTest @Autowired constructor(
             val analysis = analyses.saveAndFlush(AnalysisRun(workspace.id, "synthetic", "hash", mapper.writeValueAsString(output), createdAt = now))
             val offer = offers.saveAndFlush(Offer(workspace.id, option.id, analysis.id, "Print", "A5 print", emptyMap(),
                 200, "USD", "Shipping included", "US", 1, 20, 3, listOf(wish)))
+            records.recordOffer(offer)
             val campaign = campaigns.saveAndFlush(Campaign(offer.id, CampaignState.OPEN, openedAt = now,
                 closesAt = now.plusSeconds(900), confirmDeadline = now.plusSeconds(44100)))
             val ref = CampaignRef(workspace.id, campaign.id)

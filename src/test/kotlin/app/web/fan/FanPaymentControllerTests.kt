@@ -22,6 +22,8 @@ import app.campaign.port.PaymentResult
 import app.campaign.port.PaymentStatus
 import app.campaign.port.Proposal
 import app.campaign.port.VoidDetails
+import app.campaign.provenance.DecisionRecordService
+import app.campaign.service.CampaignPersistence
 import app.campaign.service.CampaignRef
 import app.campaign.service.CampaignQueries
 import app.campaign.service.OfferEvidenceQuery
@@ -36,11 +38,13 @@ import app.campaign.store.OfferRepository
 import app.campaign.store.OptionRepository
 import app.campaign.store.PledgeRepository
 import app.campaign.store.WorkspaceRepository
+import app.campaign.terms.TermsSealQuery
 import app.campaign.workspace.WorkspaceService
 import app.paypal.PayPalProperties
 import app.testing.InMemoryPaymentGateway
 import app.testing.PaymentCall
 import app.web.security.securePost
+import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -91,6 +95,10 @@ class FanPaymentControllerTests @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val queries: CampaignQueries,
     private val evidence: OfferEvidenceQuery,
+    private val terms: TermsSealQuery,
+    private val records: DecisionRecordService,
+    private val persistence: CampaignPersistence,
+    private val entities: EntityManager,
 ) {
     private val start = Instant.parse("2026-01-01T00:00:00Z")
     private val ownedWorkspaces = mutableListOf<UUID>()
@@ -109,6 +117,10 @@ class FanPaymentControllerTests @Autowired constructor(
     @AfterEach
     fun removeFixtures() {
         ownedWorkspaces.forEach { workspaceId ->
+            persistence.checkpoint {
+                entities.createQuery("delete from DecisionSourceSnapshot s where s.workspaceId = :id and s.sourceType = 'OFFER'")
+                    .setParameter("id", workspaceId).executeUpdate()
+            }
             val workspaceOffers = offers.findByWorkspaceId(workspaceId)
             campaigns.findByOfferIdIn(workspaceOffers.map { it.id }).forEach { campaign ->
                 events.deleteAll(events.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id))
@@ -373,7 +385,7 @@ class FanPaymentControllerTests @Autowired constructor(
         val fixture = fixture()
         for (clientId in listOf("", "synthetic-client")) {
             val controller = OfferController(workspaceService, queries,
-                PayPalProperties(PayPalProperties.SANDBOX_URL, clientId, ""), evidence)
+                PayPalProperties(PayPalProperties.SANDBOX_URL, clientId, ""), evidence, terms)
             val model = ExtendedModelMap()
             assertEquals("fan/offer", controller.offer(fixture.workspace.token, 1, model, MockHttpServletResponse()))
             assertEquals(false, model["paypalReady"])
@@ -557,6 +569,7 @@ class FanPaymentControllerTests @Autowired constructor(
             openedAt = if (state == CampaignState.DRAFT) null else start,
             closesAt = if (state == CampaignState.DRAFT) null else start.plusSeconds(900),
             confirmDeadline = if (state == CampaignState.DRAFT) null else start.plusSeconds(44_100)))
+        if (state != CampaignState.DRAFT) persistence.checkpoint { records.recordOffer(offer) }
         return Fixture(workspace, campaign)
     }
 
@@ -565,7 +578,7 @@ class FanPaymentControllerTests @Autowired constructor(
         return pledges.saveAndFlush(Pledge(fixture.campaign.id, quantity, quantity * 200L, "USD", state,
             paypalOrderId = "order-$id", authorizationId = if (state == PledgeState.CREATED) null else "authorization-$id",
             authorizationExpiresAt = start.plusSeconds(86_400), payerEmailMasked = "private-buyer@example.test",
-            createdAt = start, id = id))
+            createdAt = start, id = id)).also(gateway::registerOrder)
     }
 
     private fun scriptHoldRead(pledge: Pledge) {

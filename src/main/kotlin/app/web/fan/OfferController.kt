@@ -5,6 +5,7 @@ import app.campaign.service.CampaignQueries
 import app.campaign.service.OfferEvidenceQuery
 import app.campaign.service.ServiceResult
 import app.campaign.workspace.WorkspaceService
+import app.campaign.terms.TermsSealQuery
 import app.paypal.PayPalProperties
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.stereotype.Controller
@@ -20,6 +21,7 @@ class OfferController(
     private val campaigns: CampaignQueries,
     private val paypal: PayPalProperties,
     private val evidence: OfferEvidenceQuery,
+    private val terms: TermsSealQuery,
 ) {
     @GetMapping("/w/{token}/offer")
     fun offer(
@@ -41,6 +43,7 @@ class OfferController(
         model.addAttribute("paypalReady", paypal.configured)
         model.addAttribute("paypalClientId", if (paypal.configured) paypal.clientId else "")
         campaign?.let { model.addAttribute("unitPrice", displayMoney(it.offer.unitPrice, it.offer.currency)) }
+        model.addAttribute("termsSeal", campaign?.let { terms.findByOffer(workspace.id, it.offer.id) })
         model.addAttribute("offerEvidence", campaign?.let {
             evidence.findByOffer(workspace.id, it.offer.id)?.let(OfferEvidenceView::from)
         })

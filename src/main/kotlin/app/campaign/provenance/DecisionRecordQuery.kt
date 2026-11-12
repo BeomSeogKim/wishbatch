@@ -2,6 +2,7 @@ package app.campaign.provenance
 
 import app.campaign.model.Pledge
 import app.campaign.store.CampaignRepository
+import app.campaign.store.EventRepository
 import app.campaign.store.OfferRepository
 import app.campaign.store.PledgeRepository
 import app.campaign.store.WorkspaceRepository
@@ -10,16 +11,21 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
+import java.time.Instant
 import java.util.UUID
 
 data class DecisionSourceView(val sourceType: String, val sourceId: UUID, val hash: String, val payload: JsonNode, val intact: Boolean)
 data class DecisionEntryView(
     val position: Int, val kind: String, val payload: JsonNode, val previousHash: String?, val hash: String,
 )
+data class RecordedTermsCheckView(val checkedAt: Instant, val observation: JsonNode)
 data class PledgeDecisionView(
     val pledgeId: UUID, val campaignId: UUID, val offerId: UUID?, val integrity: String, val issues: List<String>,
     val entryCount: Int, val lastHash: String?, val entries: List<DecisionEntryView>,
-)
+    val termsChecks: List<RecordedTermsCheckView> = emptyList(),
+) {
+    val termsChecksAvailability: String get() = if (termsChecks.isEmpty()) "UNAVAILABLE" else "RECORDED"
+}
 data class DecisionRecordDocument(
     val version: Int = 1,
     val hashAlgorithm: String = "SHA-256; sorted object keys, ordered arrays, UTF-8 JSON",
@@ -38,6 +44,7 @@ class DecisionRecordQuery(
     private val pledges: PledgeRepository,
     private val records: DecisionRecordService,
     private val mapper: JsonMapper,
+    private val events: EventRepository,
 ) {
     /** Ownership is resolved before loading records; this read does not reconcile or write. */
     fun findByToken(token: String): DecisionRecordDocument? {
@@ -59,10 +66,13 @@ class DecisionRecordQuery(
         val views = (current.keys + heads.keys).sortedBy { it.toString() }.map { id ->
             val head = heads[id]
             val pledge = current[id]
+            val checks = events.findByCampaignIdOrderByCreatedAtAscIdAsc(head?.campaignId ?: requireNotNull(pledge).campaignId)
+                .filter { it.pledgeId == id && it.type == "TERMS_CHECK" }
+                .map { RecordedTermsCheckView(it.createdAt, parse(it.detail ?: "null")) }
             if (head == null) {
                 PledgeDecisionView(id, requireNotNull(pledge).campaignId, null, "UNAVAILABLE",
-                    listOf("No lifecycle snapshot was recorded. Wish association and verdict are unavailable."), 0, null, emptyList())
-            } else view(head, pledge)
+                    listOf("No lifecycle snapshot was recorded. Wish association and verdict are unavailable."), 0, null, emptyList(), checks)
+            } else view(head, pledge).copy(termsChecks = checks)
         }
         return DecisionRecordDocument(workspaceId = workspace.id, sources = sources, pledges = views)
     }

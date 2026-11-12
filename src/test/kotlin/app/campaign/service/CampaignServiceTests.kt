@@ -30,6 +30,7 @@ import app.campaign.port.RefundId
 import app.campaign.port.VoidDetails
 import app.campaign.provenance.DecisionRecordService
 import app.campaign.provenance.PledgeProvenanceCheckpoint
+import app.campaign.terms.TermsCheckService
 import app.campaign.rules.CapacityDecision
 import app.campaign.rules.OfferWarning
 import app.campaign.rules.PaymentAction
@@ -90,6 +91,7 @@ class CampaignServiceTests @Autowired constructor(
     private val tick: CampaignReconciliationTick,
     private val records: DecisionRecordService,
     private val provenance: PledgeProvenanceCheckpoint,
+    private val terms: TermsCheckService,
 ) {
     private val start = Instant.parse("2026-01-01T00:00:00Z")
     private val ownedWorkspaces = mutableListOf<UUID>()
@@ -614,7 +616,7 @@ class CampaignServiceTests @Autowired constructor(
     @Test
     fun `enabled demo simulation fails only the next capture and records its synthetic source`() {
         val simulationService = CampaignService(persistence, offers, options, analyses, campaigns,
-            pledges, events, payments, mapper, clock, true, records, provenance)
+            pledges, events, payments, mapper, clock, true, records, provenance, terms)
         val fixture = fixture(minimum = 2)
         val simulated = authorized(fixture, 1)
         val captured = authorized(fixture, 1)
@@ -1075,6 +1077,7 @@ class CampaignServiceTests @Autowired constructor(
             openedAt = if (state == CampaignState.DRAFT) null else start,
             closesAt = if (state == CampaignState.DRAFT) null else start.plusSeconds(900),
             confirmDeadline = if (state == CampaignState.DRAFT) null else start.plusSeconds(44_100)))
+        if (state != CampaignState.DRAFT) persistence.checkpoint { records.recordOffer(offer) }
         return Fixture(workspace, option, analysis, offer, campaign, wishId)
     }
 
@@ -1087,7 +1090,7 @@ class CampaignServiceTests @Autowired constructor(
     private fun created(fixture: Fixture): Pledge {
         val id = UUID.randomUUID()
         return pledges.saveAndFlush(Pledge(fixture.campaign.id, 1, 200, "USD",
-            paypalOrderId = "order-$id", createdAt = start, id = id))
+            paypalOrderId = "order-$id", createdAt = start, id = id)).also(gateway::registerOrder)
     }
 
     private fun authorized(fixture: Fixture, qty: Int): Pledge {
@@ -1095,7 +1098,7 @@ class CampaignServiceTests @Autowired constructor(
         val sequence = pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(fixture.campaign.id).size
         return pledges.saveAndFlush(Pledge(fixture.campaign.id, qty, 200L * qty, "USD", PledgeState.AUTHORIZED,
             paypalOrderId = "order-$id", authorizationId = "authorization-$id", authorizationExpiresAt = start.plusSeconds(86_400),
-            createdAt = start.plusSeconds(sequence.toLong()), id = id))
+            createdAt = start.plusSeconds(sequence.toLong()), id = id)).also(gateway::registerOrder)
     }
 
     private fun captureDetails(pledge: Pledge) = CaptureDetails(CaptureId("capture-${pledge.id}"),
@@ -1153,8 +1156,13 @@ class MutableClock : Clock() {
 class SimulatedProcessCrash : RuntimeException("Synthetic process interruption")
 
 class CrashableGateway : PaymentGateway {
+    data class OrderRead(val orderId: OrderId, val idempotencyKey: String)
+
     var fake = InMemoryPaymentGateway()
         private set
+    val readOrderResults = ArrayDeque<PaymentResult<OrderDetails>>()
+    val orderReads = mutableListOf<OrderRead>()
+    private val orders = mutableMapOf<OrderId, OrderDetails>()
     var crashAfterCaptureNumber: Int? = null
     var crashAfterRefund = false
     var afterAuthorization: (() -> Unit)? = null
@@ -1164,6 +1172,9 @@ class CrashableGateway : PaymentGateway {
 
     fun reset() {
         fake = InMemoryPaymentGateway()
+        readOrderResults.clear()
+        orderReads.clear()
+        orders.clear()
         crashAfterCaptureNumber = null
         crashAfterRefund = false
         afterAuthorization = null
@@ -1172,7 +1183,25 @@ class CrashableGateway : PaymentGateway {
         captureNumber = 0
     }
 
-    override fun createAuthorizeOrder(request: CreateAuthorizeOrder, idempotencyKey: String) = fake.createAuthorizeOrder(request, idempotencyKey)
+    fun registerOrder(pledge: Pledge) {
+        val id = OrderId(requireNotNull(pledge.paypalOrderId))
+        orders[id] = OrderDetails(id, providerStatus = "APPROVED", amount = Money(pledge.amount, pledge.currency))
+    }
+
+    override fun createAuthorizeOrder(request: CreateAuthorizeOrder, idempotencyKey: String): PaymentResult<OrderDetails> {
+        val result = fake.createAuthorizeOrder(request, idempotencyKey)
+        if (result is PaymentResult.Received) {
+            orders[result.resource.orderId] = result.resource.copy(providerStatus = "APPROVED", amount = request.amount)
+        }
+        return result
+    }
+
+    override fun readOrder(orderId: OrderId, idempotencyKey: String): PaymentResult<OrderDetails> {
+        orderReads.add(OrderRead(orderId, idempotencyKey))
+        return readOrderResults.removeFirstOrNull() ?: PaymentResult.Received(
+            orders[orderId] ?: throw AssertionError("No scripted order evidence for $orderId"), PaymentStatus.APPROVED,
+        )
+    }
     override fun authorizeOrder(orderId: OrderId, idempotencyKey: String): PaymentResult<AuthorizationDetails> {
         val result = fake.authorizeOrder(orderId, idempotencyKey)
         afterAuthorization?.invoke()

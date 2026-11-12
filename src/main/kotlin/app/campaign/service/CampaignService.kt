@@ -32,6 +32,9 @@ import app.campaign.store.EventRepository
 import app.campaign.store.OfferRepository
 import app.campaign.store.OptionRepository
 import app.campaign.store.PledgeRepository
+import app.campaign.terms.TermsCheckOutcome
+import app.campaign.terms.TermsCheckService
+import app.campaign.terms.TermsCheckStage
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
@@ -55,6 +58,7 @@ class CampaignService(
     @Value("\${app.campaign.demo-simulation-enabled:false}") private val demoSimulationEnabled: Boolean,
     private val records: DecisionRecordService,
     private val provenance: PledgeProvenanceCheckpoint,
+    private val terms: TermsCheckService,
 ) {
     fun createDraft(workspaceId: UUID, command: DraftOffer): ServiceResult<DraftCreated> = persistence.locked(workspaceId) {
         val option = persistence.checkpoint { options.findByIdAndWorkspaceId(command.optionId, workspaceId) }
@@ -222,6 +226,17 @@ class CampaignService(
 
     private fun authorizeAndCheck(context: Context, pledge: Pledge): ServiceResult<PledgeView> {
         if (pledge.paypalOrderId == null) return ServiceResult.Rejected(Rejection.PAYMENT_UNAVAILABLE, pledgeView(pledge))
+        val termsCheck = terms.check(pledge, TermsCheckStage.AUTHORIZATION)
+        val termsRejection = when (termsCheck.outcome) {
+            TermsCheckOutcome.MATCH -> null
+            TermsCheckOutcome.MISMATCH -> Rejection.PAYMENT_MISMATCH
+            TermsCheckOutcome.UNAVAILABLE -> Rejection.PAYMENT_UNAVAILABLE
+        }
+        if (termsRejection != null && pledge.authorizationId == null && !payments.attempted(pledge, PaymentAction.AUTHORIZE)) {
+            pledge.lastError = "TERMS_CHECK_${termsCheck.outcome}"
+            payments.save(pledge)
+            return ServiceResult.Rejected(termsRejection, pledgeView(pledge))
+        }
         val result = if (pledge.authorizationId == null) payments.authorize(pledge) else payments.readAuthorization(pledge)
         if (result !is PaymentResult.Received) {
             pledge.lastError = "AUTHORIZATION_UNCONFIRMED"
@@ -244,6 +259,7 @@ class CampaignService(
         payments.save(pledge)
         applyDeadlines(context)
         val rejection = when {
+            termsRejection != null -> termsRejection
             authorization.amount != Money(pledge.amount, pledge.currency) -> Rejection.PAYMENT_MISMATCH
             authorization.orderId != null && authorization.orderId.value != pledge.paypalOrderId -> Rejection.PAYMENT_MISMATCH
             result.status != PaymentStatus.CREATED -> Rejection.PAYMENT_REJECTED
@@ -320,8 +336,18 @@ class CampaignService(
         for (pledge in context.pledges.filter { it.state == PledgeState.AUTHORIZED }) {
             if (clock.instant().isAfter(context.campaign.confirmDeadline) && !payments.attempted(pledge, PaymentAction.CAPTURE)) {
                 payments.void(pledge)
-            } else payments.capture(pledge, consumeSimulation(context, pledge),
-                allowNewCapture = !clock.instant().isAfter(context.campaign.confirmDeadline))
+            } else {
+                if (!payments.attempted(pledge, PaymentAction.CAPTURE)) {
+                    val check = terms.check(pledge, TermsCheckStage.PRE_CAPTURE)
+                    if (check.outcome != TermsCheckOutcome.MATCH) {
+                        pledge.lastError = "TERMS_CHECK_${check.outcome}"
+                        payments.move(pledge, PledgeState.CAPTURE_FAILED)
+                        continue
+                    }
+                }
+                payments.capture(pledge, consumeSimulation(context, pledge),
+                    allowNewCapture = !clock.instant().isAfter(context.campaign.confirmDeadline))
+            }
         }
         if (funded(capturedUnits(context.pledges), context.offer.minBatch)) {
             move(context.campaign, CampaignState.FUNDED)

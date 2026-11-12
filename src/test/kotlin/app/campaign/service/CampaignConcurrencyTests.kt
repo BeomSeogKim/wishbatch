@@ -9,6 +9,7 @@ import app.campaign.model.Option
 import app.campaign.model.Pledge
 import app.campaign.model.PledgeState
 import app.campaign.model.Workspace
+import app.campaign.provenance.DecisionRecordService
 import app.campaign.port.AuthorizationDetails
 import app.campaign.port.AuthorizationId
 import app.campaign.port.CaptureDetails
@@ -55,6 +56,8 @@ class CampaignConcurrencyTests @Autowired constructor(
     private val events: EventRepository,
     private val gateway: CrashableGateway,
     private val clock: MutableClock,
+    private val persistence: CampaignPersistence,
+    private val records: DecisionRecordService,
 ) {
     private val start = Instant.parse("2026-01-01T00:00:00Z")
     private val ownedWorkspaces = mutableListOf<UUID>()
@@ -184,6 +187,7 @@ class CampaignConcurrencyTests @Autowired constructor(
             200, "USD", "Shipping included", "US", 1, capacity, minOf(3, capacity)))
         val campaign = campaigns.saveAndFlush(Campaign(offer.id, CampaignState.OPEN,
             openedAt = start, closesAt = start.plusSeconds(900), confirmDeadline = start.plusSeconds(44_100)))
+        persistence.checkpoint { records.recordOffer(offer) }
         return CampaignRef(workspace.id, campaign.id)
     }
 
@@ -193,7 +197,7 @@ class CampaignConcurrencyTests @Autowired constructor(
             paypalOrderId = "order-$id",
             authorizationId = if (state == PledgeState.AUTHORIZED) "authorization-$id" else null,
             authorizationExpiresAt = if (state == PledgeState.AUTHORIZED) start.plusSeconds(86_400) else null,
-            createdAt = start, id = id))
+            createdAt = start, id = id)).also(gateway::registerOrder)
     }
 
     private fun <T> overlapping(gatewayHook: ((() -> Unit) -> Unit), action: (Int) -> T): List<T> {

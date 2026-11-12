@@ -6,6 +6,7 @@ import java.util.UUID
 enum class PaymentAction(val keyName: String) {
     CREATE_ORDER("create-order"), AUTHORIZE("authorize"), READ_AUTHORIZATION("read-authorization"),
     CAPTURE("capture"), VOID("void"), REFUND("refund"), READ_CAPTURE("read-capture"), READ_REFUND("read-refund"),
+    READ_ORDER("read-order"),
 }
 
 /**

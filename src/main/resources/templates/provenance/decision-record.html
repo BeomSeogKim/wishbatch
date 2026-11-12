@@ -38,6 +38,15 @@
                     </details>
                 </li>
             </ol>
+            <section class="stack">
+                <h4>Recorded terms checks</h4>
+                <p>These dated event observations are outside the hash chain. They are not a financial guarantee or signature.</p>
+                <p th:if="${#lists.isEmpty(pledge.termsChecks)}">Unavailable: no terms checks were recorded.</p>
+                <article th:each="check : ${pledge.termsChecks}">
+                    <p>Observed at <time th:text="${check.checkedAt}"></time></p>
+                    <pre th:text="${check.observation.toPrettyString()}"></pre>
+                </article>
+            </section>
         </article>
     </section>
     <section class="stack" aria-labelledby="sources-title">

@@ -43,6 +43,8 @@ class SequenceGateway : PaymentGateway {
         return fake.createAuthorizeOrder(request, idempotencyKey)
     }
 
+    override fun readOrder(orderId: OrderId, idempotencyKey: String) = fake.readOrder(orderId, idempotencyKey)
+
     override fun authorizeOrder(orderId: OrderId, idempotencyKey: String): PaymentResult<AuthorizationDetails> {
         val id = AuthorizationId(orderId.value.replaceFirst("order-", "auth-"))
         if (id.value !in amounts) activeHolds.add(id.value)
