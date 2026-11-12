@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const path = require('node:path');
 const script = fs.readFileSync(path.join(__dirname, '../../main/resources/static/js/offer-price.js'), 'utf8');
 
-function browser(fetch, {legacy = false} = {}) {
+function browser(fetch, {amountPreview = true} = {}) {
     const element = () => ({
         textContent: '', hidden: false, children: [], dataset: {},
         addEventListener(event, callback) { this[event] = callback; },
@@ -20,7 +20,7 @@ function browser(fetch, {legacy = false} = {}) {
     elements['offer-price-check'].dataset.url = '/w/token/maker/offer/price-check?run=run-id';
     elements.unitPrice.form = element();
     elements['offer-demand-pending'].hidden = true;
-    if (legacy) delete elements['price-check-amount'];
+    if (!amountPreview) delete elements['price-check-amount'];
     let timer;
     vm.runInNewContext(script, {
         document: {getElementById: id => elements[id], createElement: element},
@@ -40,10 +40,11 @@ test('decimal input is sent unchanged and only server formatted money and warnin
     const app = browser(async url => {
         raw = url.searchParams.get('unitPrice');
         return {ok: true, json: async () => ({formattedPrice: 'USD 6.50', belowCost: true,
-            fit: 2, compatible: 1, depends: 1, excludedByPrice: []})};
+            interest: 2, conditional: 1, excludedByPrice: 0, notServed: 0, excludedWishes: []})};
     });
     await app.input('6.50');
     assert.equal(raw, '6.50');
+    assert.equal(app.elements['price-check-summary'].textContent, 'Interested in this offer: 2; 0 excluded by price');
     assert.equal(app.elements['price-check-amount'].textContent, 'USD 6.50 per unit');
     assert.equal(app.elements['price-warning'].hidden, false);
     assert.equal(app.elements['offer-demand-pending'].hidden, false);
@@ -67,11 +68,11 @@ test('a rejected price clears checked money and below cost status', async () => 
     assert.match(app.elements['price-check-summary'].textContent, /Check this price/);
 });
 
-test('existing minor-unit page retains its own warning while using the older endpoint response', async () => {
-    const app = browser(async () => ({ok: true, json: async () => ({fit: 1, compatible: 1,
-        depends: 0, excludedByPrice: []})}), {legacy: true});
+test('page without an amount preview retains its warning with the current price response', async () => {
+    const app = browser(async () => ({ok: true, json: async () => ({interest: 1, conditional: 0,
+        excludedByPrice: 0, notServed: 0, excludedWishes: []})}), {amountPreview: false});
     app.elements['price-warning'].hidden = false;
-    await app.input('650');
+    await app.input('6.50');
     assert.equal(app.elements['price-warning'].hidden, false);
-    assert.match(app.elements['price-check-summary'].textContent, /1 wishes fit/);
+    assert.match(app.elements['price-check-summary'].textContent, /Interested in this offer: 1/);
 });
