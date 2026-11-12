@@ -37,8 +37,9 @@ class HelperPageErrors {
 }
 
 fun wantsHtml(request: HttpServletRequest): Boolean = try {
-    MediaType.parseMediaTypes(request.getHeader("Accept") ?: "").any {
-        it.type == "text" && it.subtype == "html" && it.qualityValue > 0
+    val accept = request.getHeader("Accept")
+    accept.isNullOrBlank() || MediaType.parseMediaTypes(accept).any {
+        (it.type == "text" && it.subtype == "html" || it.isWildcardType) && it.qualityValue > 0
     }
 } catch (_: IllegalArgumentException) {
     false

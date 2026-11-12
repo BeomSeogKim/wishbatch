@@ -32,7 +32,7 @@ object ReliabilityDrills {
         val first = pledge("declined-paid", PledgeState.AUTHORIZED)
         val second = pledge("declined-hold", PledgeState.AUTHORIZED)
         val run = Playback("capture-declined", "Capture declined",
-            "A simulated shortfall refunds a completed payment and releases the remaining hold.",
+            "A simulated shortfall triggers refund and hold-release requests; the simulated provider confirms both.",
             CampaignState.OPEN, listOf(first, second))
         run.confirm(2)
         run.capture(first)
@@ -54,7 +54,7 @@ object ReliabilityDrills {
         val pledge = pledge("timeout", PledgeState.AUTHORIZED)
         val run = Playback("capture-timeout", "Capture timeout followed by recovery",
             "An ambiguous response counts as zero paid units. A later simulated read recovers the original capture, " +
-                "then refunds it because the shortfall outcome is already final.", CampaignState.OPEN, listOf(pledge))
+                "then requests a refund because the shortfall outcome is already final; the simulated provider confirms it.", CampaignState.OPEN, listOf(pledge))
         run.confirm(1)
         val effect = run.effect(pledge, PaymentAction.CAPTURE)
         run.move(pledge, PledgeState.CAPTURE_PENDING)
@@ -91,7 +91,7 @@ object ReliabilityDrills {
                 run.provider[pledge.id] = resources(pledge, PaymentStatus.CAPTURED, PaymentStatus.COMPLETED)
                 run.move(pledge, PledgeState.CAPTURED)
                 run.record("Re-read simulated provider", "COMPLETED", "The simulated capture is completed despite the event body's claim; " +
-                    "the terminal shortfall requires a full refund.", pledge, PaymentAction.READ_CAPTURE)
+                    "the terminal shortfall triggers a full refund request.", pledge, PaymentAction.READ_CAPTURE)
                 run.refund(pledge)
             }
         }

@@ -7,7 +7,7 @@
         <p class="eyebrow">Maker workspace</p>
         <h1>Campaign counts</h1>
         <p class="lead">Interested in this offer → authorized holds → completed payments are different measures, not a tracked conversion cohort.</p>
-        <p>Wishes are distinct requests; payment counts are units. No personal wish-to-pledge association or conversion rate is recorded. Interest is not compatible demand.</p>
+        <p>Wishes are distinct requests; payment counts are units. Some pledges link to a wish, but these counts do not measure conversion.</p>
     </header>
     <div th:replace="~{charts/campaign :: charts(${charts})}"></div>
     <p><a th:href="@{/w/{token}/maker/campaign(token=${token})}">Back to campaign</a></p>
@@ -29,8 +29,8 @@
             <tbody>
             <tr><th scope="row">Interested in this offer</th><td th:text="${charts.interest == null ? 'Unavailable' : charts.interest}"></td><td>Visible requests compatible with this offer at its published price</td></tr>
             <tr><th scope="row">Depend on a condition</th><td th:text="${charts.conditional == null ? 'Unavailable' : charts.conditional}"></td><td>More wishes with an unresolved condition</td></tr>
-            <tr><th scope="row">Authorized holds</th><td th:text="${charts.authorized}"></td><td>Units in AUTHORIZED pledges; not completed payments</td></tr>
-            <tr><th scope="row">Completed payments</th><td th:text="${charts.paid}"></td><td>Units in CAPTURED pledges only; pending, failed and refunded states excluded</td></tr>
+            <tr><th scope="row">Authorized holds</th><td th:text="${charts.authorized}"></td><td>Units with an authorized hold; not completed payments</td></tr>
+            <tr><th scope="row">Completed payments</th><td th:text="${charts.paid}"></td><td>Units with completed payments; pending, failed and refunded states excluded</td></tr>
             </tbody>
         </table></div>
         <p th:if="${charts.analysisAt != null}">Offer analysis recorded <time th:datetime="${charts.analysisAt}" th:text="${@makerDisplay.time(charts.analysisAt)}"></time>.</p>
@@ -53,7 +53,7 @@
                 <tr th:each="point : ${charts.history.checkpoints}" th:id="${point.anchor}" tabindex="-1"
                     th:attr="data-recorded-at=${point.recordedAt},data-interest=${point.interest},data-authorized=${point.authorized},data-paid=${point.paid}">
                     <th scope="row"><a th:href="${'#' + point.anchor}"><time th:datetime="${point.recordedAt}" th:text="${@makerDisplay.time(point.recordedAt)}"></time></a></th>
-                    <td><ul><li th:each="source : ${point.sources}"><span data-source-type th:text="${@makerDisplay.words(source.type)}"></span> · Event <span th:title="${source.eventId}" th:text="${@makerDisplay.shortId(source.eventId)}"></span><span th:if="${source.transition != null}" th:text="${' · ' + @makerDisplay.detail(source.transition)}"></span></li></ul></td>
+                    <td><ul><li th:each="source : ${point.sources}"><span data-source-type th:text="${@makerDisplay.words(source.type)}"></span><span th:if="${source.transition != null}" th:text="${' · ' + @humanDisplay.state(source.transition)}"></span><details><summary>Event details</summary><span th:text="${source.eventId}"></span></details></li></ul></td>
                     <td th:text="${point.interest == null ? 'Unavailable' : point.interest}"></td>
                     <td th:text="${point.authorized == null ? 'Unavailable' : point.authorized}"></td>
                     <td th:text="${point.paid == null ? 'Unavailable' : point.paid}"></td>

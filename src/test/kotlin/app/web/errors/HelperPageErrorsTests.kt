@@ -28,6 +28,24 @@ class HelperPageErrorsTests @Autowired constructor(private val mvc: MockMvc) {
     private lateinit var drafts: OfferDraftService
 
     @Test
+    fun `page binding errors default to html and response body routes remain json`() {
+        listOf(
+            "/w/example/maker/books?campaignId=bad",
+            "/w/example/maker/replies",
+            "/w/example/questions?wish=bad",
+            "/w/example/maker/campaign/bad/charts",
+        ).forEach { path ->
+            mvc.get(path).andExpect {
+                status { isBadRequest() }; view { name("error/helper") }
+                content { contentTypeCompatibleWith(MediaType.TEXT_HTML) }
+            }.andReturn().response.contentAsString.let { assertContains(it, "Request incomplete") }
+        }
+        mvc.get("/w/example/maker/offer/price-check?run=bad&unitPrice=1").andExpect {
+            status { isBadRequest() }; content { contentTypeCompatibleWith(MediaType.APPLICATION_JSON) }
+        }
+    }
+
+    @Test
     fun `missing parameters render html for browsers and json for api clients`() {
         listOf("questions", "maker/glosses", "maker/replies", "maker/offer-draft").forEach { path ->
             mvc.get("/w/example/$path") { accept = MediaType.TEXT_HTML }.andExpect {

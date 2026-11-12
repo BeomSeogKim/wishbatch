@@ -93,6 +93,8 @@ class ReliabilityDrillsControllerTests @Autowired constructor(
         }
         assertContains(html, "href=\"/w/${owner.token}/maker\"")
         assertContains(html, "Back to maker")
+        assertContains(html, " / Completed payments below minimum")
+        assertContains(html, "refund and hold-release requests; the simulated provider confirms both")
         assertFalse(html.contains("sim-stored-capture-marker"))
         assertFalse(html.contains("Stored offer marker"))
         assertFalse(html.contains("<form"))

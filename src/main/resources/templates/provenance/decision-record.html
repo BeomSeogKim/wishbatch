@@ -45,8 +45,8 @@
                 <p>These dated event observations are outside the hash chain. They are not a financial guarantee or signature.</p>
                 <p th:if="${#lists.isEmpty(pledge.termsChecks)}">Unavailable: no terms checks were recorded.</p>
                 <article th:each="check : ${pledge.termsChecks}">
-                    <p>Observed at <time th:text="${@humanDisplay.time(check.checkedAt)}"></time></p>
-                    <pre th:text="${check.observation.toPrettyString()}"></pre>
+                    <p><span th:text="${@termsCheckDisplay.summary(check.observation)}"></span> · <time th:datetime="${check.checkedAt}" th:text="${@humanDisplay.time(check.checkedAt)}"></time></p>
+                    <details><summary>Raw record</summary><pre th:text="${check.observation.toPrettyString()}"></pre></details>
                 </article>
             </section>
         </article>

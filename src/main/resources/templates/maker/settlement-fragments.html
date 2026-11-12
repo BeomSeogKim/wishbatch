@@ -170,7 +170,9 @@
                     <time th:datetime="${event.time}" th:text="${@makerDisplay.time(event.time)}"></time>
                     <strong th:text="${@makerDisplay.words(event.type)}"></strong>
                     <p th:if="${event.pledgeId != null}" th:text="${pledgeLabels[event.pledgeId]}"></p>
-                    <p th:if="${event.detail != null}" th:text="${@makerDisplay.detail(event.detail)}"></p>
+                    <p th:if="${event.type == 'TERMS_CHECK'}" th:text="${@termsCheckDisplay.fromJson(event.detail)}"></p>
+                    <details th:if="${event.type == 'TERMS_CHECK' and event.detail != null}"><summary>Raw record</summary><pre th:text="${event.detail}"></pre></details>
+                    <p th:if="${event.type != 'TERMS_CHECK' and event.detail != null}" th:text="${@makerDisplay.detail(event.detail)}"></p>
                 </li>
             </ol>
             <details>
@@ -194,8 +196,9 @@
                         <p th:if="${event.status != null}">Status: <span th:text="${@makerDisplay.words(event.status)}">
                             </span>
                         </p>
-                        <p th:if="${event.detail != null}" th:text="${@makerDisplay.detail(event.detail)}">
-                        </p>
+                        <p th:if="${event.type == 'TERMS_CHECK'}" th:text="${@termsCheckDisplay.fromJson(event.detail)}"></p>
+                        <details th:if="${event.type == 'TERMS_CHECK' and event.detail != null}"><summary>Raw record</summary><pre th:text="${event.detail}"></pre></details>
+                        <p th:if="${event.type != 'TERMS_CHECK' and event.detail != null}" th:text="${@makerDisplay.detail(event.detail)}"></p>
                     </li>
                 </ol>
             </details>

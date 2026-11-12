@@ -42,7 +42,7 @@
                 <tbody>
                 <tr th:each="checkpoint : ${ {drill.before, drill.after} }">
                     <th scope="row" th:text="${checkpointStat.first ? 'Before' : 'After'}"></th>
-                    <td><span th:title="${checkpoint.campaignState}" th:text="${@humanDisplay.state(checkpoint.campaignState)}"></span><span th:if="${checkpoint.reason != null}" th:text="${' / ' + checkpoint.reason}"></span></td>
+                    <td><span th:title="${checkpoint.campaignState}" th:text="${@humanDisplay.state(checkpoint.campaignState)}"></span><span th:if="${checkpoint.reason != null}" th:text="${' / ' + @humanDisplay.state(checkpoint.reason)}"></span></td>
                     <td th:text="${checkpoint.counts.allRequests}"></td>
                     <td th:text="${checkpoint.counts.authorizedHolds}"></td>
                     <td th:text="${checkpoint.counts.paid}"></td>
@@ -82,10 +82,10 @@
                     <th scope="row" th:text="${row.pledgeId}"></th>
                     <td><span th:text="${row.quantity}"></span> units / <span th:text="${@humanDisplay.money(row.amount, row.currency)}"></span></td>
                     <td th:title="${row.before.state}" th:text="${@humanDisplay.state(row.before.state)}"></td>
-                    <td><ul><li th:each="resource : ${row.before.resources}"><span th:text="${resource.kind + ' ' + resource.id + ': ' + (resource.providerStatus ?: (resource.status ?: 'UNKNOWN'))}"></span><span th:if="${resource.amount != null}" th:text="${' / ' + resource.amount + ' minor units ' + (resource.currency ?: 'UNKNOWN')}"></span><span th:text="${resource.evidenceMatches ? ' / identity and amount evidence consistent' : ' / evidence missing or inconsistent'}"></span></li></ul><span th:if="${row.before.resources.isEmpty()}">Unknown: provider evidence unavailable</span></td>
+                    <td><ul><li th:each="resource : ${row.before.resources}" th:with="status=${resource.providerStatus ?: (resource.status ?: 'UNKNOWN')}"><span th:text="${@humanDisplay.state(resource.kind) + ' ' + resource.id + ': ' + (status.toString() == 'CAPTURED' ? 'Captured' : @humanDisplay.state(status))}"></span><span th:if="${resource.amount != null}" th:text="${' / ' + resource.amount + ' minor units ' + (resource.currency ?: 'UNKNOWN')}"></span><span th:text="${resource.evidenceMatches ? ' / identity and amount evidence consistent' : ' / evidence missing or inconsistent'}"></span></li></ul><span th:if="${row.before.resources.isEmpty()}">Unknown: provider evidence unavailable</span></td>
                     <td th:title="${row.before.match}" th:text="${@humanDisplay.state(row.before.match)}"></td>
                     <td th:title="${row.after.state}" th:text="${@humanDisplay.state(row.after.state)}"></td>
-                    <td><ul><li th:each="resource : ${row.after.resources}"><span th:text="${resource.kind + ' ' + resource.id + ': ' + (resource.providerStatus ?: (resource.status ?: 'UNKNOWN'))}"></span><span th:if="${resource.amount != null}" th:text="${' / ' + resource.amount + ' minor units ' + (resource.currency ?: 'UNKNOWN')}"></span><span th:text="${resource.evidenceMatches ? ' / identity and amount evidence consistent' : ' / evidence missing or inconsistent'}"></span></li></ul><span th:if="${row.after.resources.isEmpty()}">Unknown: provider evidence unavailable</span></td>
+                    <td><ul><li th:each="resource : ${row.after.resources}" th:with="status=${resource.providerStatus ?: (resource.status ?: 'UNKNOWN')}"><span th:text="${@humanDisplay.state(resource.kind) + ' ' + resource.id + ': ' + (status.toString() == 'CAPTURED' ? 'Captured' : @humanDisplay.state(status))}"></span><span th:if="${resource.amount != null}" th:text="${' / ' + resource.amount + ' minor units ' + (resource.currency ?: 'UNKNOWN')}"></span><span th:text="${resource.evidenceMatches ? ' / identity and amount evidence consistent' : ' / evidence missing or inconsistent'}"></span></li></ul><span th:if="${row.after.resources.isEmpty()}">Unknown: provider evidence unavailable</span></td>
                     <td th:title="${row.after.match}" th:text="${@humanDisplay.state(row.after.match)}"></td>
                 </tr>
                 </tbody>

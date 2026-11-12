@@ -203,6 +203,8 @@ class BooksCheckTests @Autowired constructor(
         assertContains(html, "books-table")
         assertContains(html, "id=\"books-fallback\" class=\"table-scroll\" tabindex=\"0\" role=\"region\" aria-label=\"Recorded pledge comparisons\"")
         assertContains(html, "USD 6.00")
+        assertContains(html, "Order order: Completed")
+        assertContains(html, "Authorization authorization: Created")
         assertContains(html, "MATCH")
         assertContains(html, "Check history")
         assertContains(html, "Sandbox demo. No real money moves.")
