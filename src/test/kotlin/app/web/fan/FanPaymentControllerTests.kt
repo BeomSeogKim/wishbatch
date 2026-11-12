@@ -539,6 +539,12 @@ class FanPaymentControllerTests @Autowired constructor(
             if (state == CampaignState.FUNDED || state == CampaignState.NOT_FUNDED) {
                 for (label in listOf("Stated interest", "Authorized holds", "Paid")) assertContains(html, label)
                 assertContains(html.lowercase(), if (state == CampaignState.FUNDED) "funded" else "not funded")
+                if (state == CampaignState.FUNDED) {
+                    assertContains(html, "The paid minimum was met at settlement.")
+                    assertContains(html, "Current payment status may change.")
+                } else {
+                    assertContains(html, "Refunds and hold releases are attempted; unresolved payments still need attention.")
+                }
                 val status = mvc.get("${fixture.path}/pledges/${pledge.id}").andReturn().response.contentAsString
                 assertContains(status, "href=\"${fixture.path}/result\"")
             }
@@ -547,6 +553,16 @@ class FanPaymentControllerTests @Autowired constructor(
             assertFalse(html.contains("private-buyer"))
             assertFalse(html.contains("paypal.com/sdk/js"))
         }
+    }
+
+    @Test
+    fun `funded result distinguishes settlement success from current payment shortfall`() {
+        val fixture = fixture(state = CampaignState.FUNDED)
+        val html = mvc.get("${fixture.path}/result").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        assertContains(html, "The paid minimum was met at settlement.")
+        assertContains(html, "Current completed payments are below the minimum and need attention.")
+        assertFalse(html.contains("Enough payments completed to release production."))
     }
 
     private fun fixture(

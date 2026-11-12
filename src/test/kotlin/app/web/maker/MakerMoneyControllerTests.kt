@@ -338,7 +338,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         healthyProviderReads(fixture)
         val settled = page(fixture.workspace.token, "result")
         shell(settled)
-        listOf("Funded", "Production is released", "Paid.", "USD 30.00", "USD 0.00", "cap-funded",
+        listOf("Funded", "The paid minimum was met at settlement.", "Paid.", "USD 30.00", "USD 0.00", "cap-funded",
             "Start a new offer from this proposal").forEach { assertContains(settled, it) }
         healthyProviderReads(fixture)
         assertContains(page(fixture.workspace.token, ""), "View settlement result")
@@ -437,6 +437,8 @@ class MakerMoneyControllerTests @Autowired constructor(
         gateway.readCaptureResults.add(PaymentResult.Received(capture, PaymentStatus.PENDING))
         val pending = page(fixture.workspace.token, "result")
         assertContains(pending, "Not funded")
+        assertContains(pending, "Refunds of completed payments and release of remaining holds are attempted")
+        assertFalse(pending.contains("Completed payments are refunded and remaining holds are released"))
         assertContains(pending, "PayPal is still processing your payment.")
         assertContains(pending, "These payments remain unresolved")
         assertContains(pending, "0 units with completed payments retained")
@@ -511,6 +513,8 @@ class MakerMoneyControllerTests @Autowired constructor(
 
         val html = page(fixture.workspace.token, "result")
 
+        assertContains(html, "The paid minimum was met at settlement.")
+        assertFalse(html.contains("Production is released"))
         assertContains(html, "Partial refund observed. Remaining amount is unconfirmed. Needs attention.")
         assertContains(html, "Completed payments are now below the minimum after settlement.")
         assertContains(html, "0 units with completed payments retained")

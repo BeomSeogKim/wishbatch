@@ -24,8 +24,8 @@
                         </h2>
                         <p th:if="${campaign.reason != null}" th:text="${@makerDisplay.words(campaign.reason)}">
                         </p>
-                        <p th:if="${campaign.result.productionReleased}">Enough payments completed. Production is released under the maker's offer and delivery terms.</p>
-                        <p th:unless="${campaign.result.productionReleased}">Production is not released. Completed payments are refunded and remaining holds are released; any unresolved payment is listed below.</p>
+                        <p th:if="${campaign.result.productionReleased}">The paid minimum was met at settlement. Review current payments and any items needing attention before making production decisions.</p>
+                        <p th:unless="${campaign.result.productionReleased}">Production is not released. Refunds of completed payments and release of remaining holds are attempted; unresolved payments are listed below.</p>
                     </div>
                     <div th:unless="${terminal}" class="empty-state">
                         <h2>Settlement is not final.</h2>

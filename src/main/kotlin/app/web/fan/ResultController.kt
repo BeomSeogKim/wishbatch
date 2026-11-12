@@ -38,12 +38,21 @@ internal fun addCampaignResult(model: Model, campaign: CampaignView?) {
         CampaignState.NOT_FUNDED -> "Not funded"
         else -> "No final result yet"
     })
-    model.addAttribute("resultReason", when (campaign?.reason) {
+    val reason = when (campaign?.reason) {
         CampaignReason.THRESHOLD_NOT_MET -> "The authorized quantity did not reach the minimum before closing."
         CampaignReason.CANCELLED_BY_MAKER -> "The maker cancelled this campaign."
         CampaignReason.CONFIRMATION_EXPIRED -> "The maker did not confirm production before the deadline."
         CampaignReason.CAPTURE_SHORTFALL -> "Too few payments completed to meet the minimum batch."
-        null -> if (campaign?.result?.productionReleased == true) "Enough payments completed to release production."
+        null -> if (campaign?.state == CampaignState.NOT_FUNDED) "The campaign did not fund."
             else "The campaign has not reached a final outcome."
+    }
+    model.addAttribute("resultReason", when (campaign?.state) {
+        CampaignState.FUNDED -> if (campaign.counts.paid < campaign.offer.minBatch) {
+            "The paid minimum was met at settlement. Current completed payments are below the minimum and need attention."
+        } else {
+            "The paid minimum was met at settlement. Current payment status may change."
+        }
+        CampaignState.NOT_FUNDED -> "$reason Refunds and hold releases are attempted; unresolved payments still need attention."
+        else -> reason
     })
 }
