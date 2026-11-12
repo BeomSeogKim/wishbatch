@@ -1,12 +1,12 @@
 # Wishbatch
 
-[Demo video (2 min 51 sec)](https://youtu.be/pqCL7ZykxYA) ·
+[Demo video (2 min 47.621 sec)](https://youtu.be/zjRppyAZa7Y) ·
 [Try the sandbox](https://wishbatch.onrender.com/) ·
 [Testing guide](https://wishbatch.onrender.com/guide)
 
 Fans ask for different things; a maker needs one batch they can actually make.
-Wishbatch groups free-text wishes into a feasible offer, then checks whether
-enough fans complete payment before production can proceed.
+Wishbatch uses AI to group free-text wishes into a feasible offer, then uses
+PayPal authorized holds to collect commitments before payment and production.
 
 ```text
 Maker options + fan wishes -> AI analysis -> maker-reviewed offer
@@ -44,6 +44,9 @@ The product hypothesis is unvalidated: no customer demand, production, delivery,
 or advantage over manual sorting has been established. Each workspace has one
 maker and one active campaign, with a US/USD catalog. Workspace links also
 grant access to maker actions; use disposable synthetic data.
+
+The stack uses Kotlin and Spring Boot, with AG Grid Community and AG Charts
+Community for review tables and charts.
 
 ## Getting started
 
@@ -134,8 +137,10 @@ rejects every API base URL except
 The client uses Orders v2 create/authorize and Payments v2 capture/void/refund
 and resource reads; [architecture](docs/architecture.md#paypal-client) lists
 the endpoints and resource-status mappings. A capture can fail. Hold release
-and refund availability depend on PayPal and the bank or card. The product
-never holds funds or guarantees production or delivery. The maker can run a
+and refund availability depend on PayPal and the bank or card. All captures
+settle to one configured sandbox merchant account; separate maker onboarding
+and marketplace payouts are not built. Production and delivery are not
+guaranteed. The maker can run a
 [books check](docs/reliability.md#books-check) to compare recorded pledges with
 sandbox resources and inspect dated results. A fan money trail shows recorded
 checkpoints; a wish is associated with a pledge only when explicitly linked.
