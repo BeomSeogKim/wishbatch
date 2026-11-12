@@ -255,8 +255,9 @@ still covers the full original snapshot. If every batch fails, no proposal is
 attempted and the run fails. Proposal failure and deadline expiry still fail the
 run; the caller retains its previous valid run on failure.
 A shared monotonic deadline covers queueing, both stages,
-retries and validation: 60 seconds total, at most 20 seconds per provider call,
-and a 10-second connection timeout. Deadline expiry cancels outstanding calls.
+retries and validation: 120 seconds total, with classification cut off at 100
+seconds to reserve 20 seconds for synthesis. Each provider call has at most 20
+seconds, and the connection timeout is 10 seconds. Deadline expiry cancels outstanding calls.
 Inputs allow at most 200 wishes of 500 characters each; both stage envelopes are
 limited to 160,000 characters. The 200-wish limit does not guarantee completion
 within the budget under all provider conditions.

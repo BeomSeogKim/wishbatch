@@ -37,7 +37,8 @@ The proposal page embeds the workbench; the same table is available at
 immutable analysis run. Label and option filters pair the verdict with its
 option; totals count distinct source wishes and never extracted quantities.
 A machine gloss is a reading aid that may be inaccurate; it does not change
-verdicts or counts. Language is unknown when no language metadata was collected.
+verdicts or counts. Language may come from a validated stored gloss or a
+labeled script-based fallback; otherwise it remains unknown.
 Displayed quotes must be exact substrings of the original wish, including its
 whitespace. Nonmatching quotes are unavailable; they are never rewritten to
 look like original evidence.

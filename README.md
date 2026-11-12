@@ -102,8 +102,9 @@ analysis evidence only, never a price or charge. The interest count uses the
 offered price: a price-only condition can resolve when its quoted limit covers
 that price, while other unresolved conditions stay conditional. Decimal amounts
 are converted exactly to minor units. Analysis has bounded retries,
-a 60-second deadline, a daily provider-call cap, and a ten-attempt workspace
-quota. [Analysis implementation](docs/architecture.md#wish-analysis).
+a 120-second overall deadline with a 100-second classification cutoff and
+20 seconds reserved for synthesis, a daily provider-call cap, and a ten-attempt
+workspace quota. [Analysis implementation](docs/architecture.md#wish-analysis).
 
 ## How PayPal is used
 

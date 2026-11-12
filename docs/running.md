@@ -103,8 +103,9 @@ The simulation fails one capture locally without sending that capture request.
 Other captures, refunds, and hold releases still use the PayPal sandbox.
 It is disabled by default.
 
-Live analysis uses a 60-second budget and preserves the last valid run on
-failure. The workspace permits ten configured analysis attempts. The daily
+Live analysis has a 120-second overall budget, with classification cut off
+after 100 seconds to reserve 20 seconds for synthesis. It preserves the last
+valid run on failure. The workspace permits ten configured analysis attempts. The daily
 provider-call cap includes retries and is process-local. For Gradle/JAR runs,
 `LLM_REASONING_EFFORT`, `LLM_BATCH_SIZE`, and `LLM_CONCURRENCY` are additional
 controls; Compose does not currently forward them. See
