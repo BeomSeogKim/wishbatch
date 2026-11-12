@@ -9,6 +9,10 @@ spring:
     password: ${DB_PASSWORD:}
   jpa:
     open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.hbm2ddl.halt_on_error: true
 
 server:
   port: ${SERVER_PORT:8200}
