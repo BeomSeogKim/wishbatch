@@ -34,9 +34,11 @@ class OpenAiAnalysisProviderTests {
         assertEquals("POST", http.method())
         assertEquals(Duration.ofSeconds(42), http.timeout().orElseThrow())
         val body = mapper.readTree(body(http))
-        assertEquals("gpt-6.1-sol", body["model"].asString())
+        assertEquals(AnalysisProperties("test").model, body["model"].asString())
         assertFalse(body["store"].asBoolean())
-        assertEquals(16000, body["max_output_tokens"].asInt())
+        assertEquals(request.maxOutputTokens, body["max_output_tokens"].asInt())
+        assertEquals(AnalysisProperties("test").reasoningEffort, body["reasoning"]["effort"].asString())
+        assertEquals("low", body["text"]["verbosity"].asString())
         assertEquals("json_schema", body["text"]["format"]["type"].asString())
         assertTrue(body["text"]["format"]["strict"].asBoolean())
         assertFalse(body["text"]["format"]["schema"]["additionalProperties"].asBoolean())
@@ -57,6 +59,20 @@ class OpenAiAnalysisProviderTests {
             if ((node.isObject || node.isArray)) node.forEach { check(it) }
         }
         check(mapper.valueToTree(AnalysisPrompt.schema(emptyList())))
+    }
+
+    @Test
+    fun `proposal uses its own instructions schema and output budget`() {
+        var sent: HttpRequest? = null
+        val provider = provider { sent = it; CompletableFuture.completedFuture(ProviderHttpResponse(200, response)) }
+        val proposalRequest = request.copy(stage = AnalysisStage.PROPOSE, maxOutputTokens = 1500)
+        assertIs<ProviderResult.Success>(provider.generate(proposalRequest, Duration.ofSeconds(10)))
+        val proposalBody = mapper.readTree(body(requireNotNull(sent)))
+        assertEquals(1500, proposalBody["max_output_tokens"].asInt())
+        val proposalInstructions = proposalBody["instructions"].asString()
+        provider.generate(request, Duration.ofSeconds(10))
+        val classificationInstructions = mapper.readTree(body(requireNotNull(sent)))["instructions"].asString()
+        assertTrue(proposalInstructions != classificationInstructions)
     }
 
     @Test

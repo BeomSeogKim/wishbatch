@@ -1,6 +1,7 @@
 package app.analysis
 
 import app.campaign.port.AnalysisFailure
+import org.slf4j.LoggerFactory
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.json.JsonMapper
 import java.net.URI
@@ -15,7 +16,15 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-data class AnalysisRequest(val input: String, val schema: Map<String, Any>, val retry: Boolean)
+enum class AnalysisStage { CLASSIFY, PROPOSE }
+
+data class AnalysisRequest(
+    val input: String,
+    val schema: Map<String, Any>,
+    val retry: Boolean,
+    val stage: AnalysisStage = AnalysisStage.CLASSIFY,
+    val maxOutputTokens: Int = 4096,
+)
 
 sealed interface ProviderResult {
     data class Success(val model: String, val json: String) : ProviderResult
@@ -37,6 +46,8 @@ class OpenAiAnalysisProvider internal constructor(
     private val mapper: JsonMapper,
     private val transport: AnalysisTransport,
 ) : AnalysisProvider {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     constructor(properties: AnalysisProperties, mapper: JsonMapper) : this(
         properties, mapper, httpTransport(),
     )
@@ -48,12 +59,13 @@ class OpenAiAnalysisProvider internal constructor(
         val body = mapper.writeValueAsString(mapOf(
             "model" to properties.model,
             "store" to false,
-            "max_output_tokens" to 16000,
-            "instructions" to AnalysisPrompt.instructions + if (request.retry) {
+            "max_output_tokens" to request.maxOutputTokens,
+            "reasoning" to mapOf("effort" to properties.reasoningEffort),
+            "instructions" to AnalysisPrompt.instructions + "\n" + AnalysisStages.instructions(request.stage) + if (request.retry) {
                 "\nThe previous output was invalid. Return one complete schema-shaped result with at most one proposal."
             } else "",
             "input" to listOf(mapOf("role" to "user", "content" to request.input)),
-            "text" to mapOf("format" to mapOf(
+            "text" to mapOf("verbosity" to "low", "format" to mapOf(
                 "type" to "json_schema", "name" to "wish_analysis", "strict" to true, "schema" to request.schema,
             )),
         ))
@@ -77,7 +89,12 @@ class OpenAiAnalysisProvider internal constructor(
                     AnalysisFailure.TIMEOUT
                 } else AnalysisFailure.PROVIDER_FAILURE)
             } else {
-                decode(response.body)
+                decode(response.body).also {
+                    logger.debug(
+                        "Analysis stage={} latencyMs={} result={}", request.stage,
+                        (System.nanoTime() - started) / 1000000, it.javaClass.simpleName,
+                    )
+                }
             }
         } catch (_: TimeoutException) {
             pending.cancel(true)
@@ -97,6 +114,17 @@ class OpenAiAnalysisProvider internal constructor(
 
     private fun decode(body: String): ProviderResult = try {
         val response = mapper.readTree(body)
+        logger.debug(
+            "Analysis tokens input={} output={} reasoning={}",
+            response.path("usage").path("input_tokens").asInt(0),
+            response.path("usage").path("output_tokens").asInt(0),
+            response.path("usage").path("output_tokens_details").path("reasoning_tokens").asInt(0),
+        )
+        logger.debug(
+            "Analysis completed={} outputLimitReached={}",
+            response.path("status").asString() == "completed",
+            response.path("incomplete_details").path("reason").asString() == "max_output_tokens",
+        )
         if (response.path("status").asString() != "completed" ||
             !response.path("error").isMissingNode && !response.path("error").isNull
         ) {

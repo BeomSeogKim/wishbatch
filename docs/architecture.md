@@ -149,56 +149,90 @@ expiry remains available through the expiry field and `AUTHORIZATION_EXPIRED`
 error mapping; `EXPIRED` is not a documented authorization response status.
 ## Wish analysis
 
-`DefaultWishAnalyzer` implements `WishAnalyzer` using the OpenAI Responses API.
-It sends only the snapshot's product fields and wish IDs/text, separates data
-from instructions, and requests a strict JSON schema. Instructions distinguish
-hard purchase conditions, preferences, unknowns, and non-requests before comparing
-each request with every option. A null proposal is a valid outcome.
+`DefaultWishAnalyzer` implements `WishAnalyzer` using two OpenAI Responses stages.
+Classification divides the snapshot into batches of four wishes, each compared
+against every option. Up to ten calls run concurrently across the singleton
+analyzer, including simultaneous workspace runs. Each batch uses a strict schema
+and passes the existing validator before aggregation. Code merges the normalized
+results and computes counts with `optionWishCounts`.
 
-Validation applies before returning any result:
+The proposal stage receives the options, complete computed counts, and at most
+nine evidence samples per option (three per verdict). Sampling favors distinct
+need attributes and hard conditions. Each sample carries at most three validated
+needs, with values capped at 120 characters and quotes at 200. The model chooses
+at most one proposal and supplies rationale, allowed variants, maker questions,
+not-served groups, and up to two alternatives. It cannot change classifications
+or counts. The combined output passes the same validator again. A null proposal
+is valid. Wishes and option strings are untrusted data, never instructions.
+
+Validation retains the same rules:
 
 - V1 drops unknown wish and option references and records a flag.
-- V2 drops ungrounded needs and rationale, flagging quotes that are not literal
-  substrings after Unicode whitespace normalization.
-- V3 discards model commercial terms. A quoted fan price limit is evidence in
-  exact minor units, never an offer price or production decision.
-- V4 drops variant suggestions outside the selected option's allowed values.
-- V5 rejects multiple proposals rather than choosing one silently.
-- V6 rebuilds not-served groups from the selected option's incompatible verdicts.
+- V2 drops ungrounded needs and rationale; quotes must be literal substrings
+  after Unicode whitespace normalization.
+- V3 discards model commercial terms. Quoted fan price limits are evidence in
+  exact minor units, never offer prices or production decisions.
+- V4 drops variants outside the selected option's allowed values.
+- V5 rejects multiple proposals.
+- V6 rebuilds not-served groups from all incompatible verdicts, including wishes
+  absent from the bounded proposal sample. A V6 flag can therefore be expected.
 
-The validator also requires a complete, unique wish roster and one verdict for
-each request/option pair. Quote validation proves textual grounding, not semantic
-correctness; classifications and normalized fan limits still require review.
-The shared `analysisInputHash` identifies the exact input; `optionWishCounts`
-computes display counts from validated output. Success returns the provider's
-model ID, injected-clock completion time, hash, output, and validation flags for
-the caller to persist as an immutable run. No campaign or payment state changes.
+The validator requires a complete, unique wish roster and one verdict for every
+request/option pair. Quote validation proves textual grounding, not semantic
+correctness. Classifications and normalized limits still need review. The shared
+`analysisInputHash` identifies the full input snapshot. Success exposes the
+provider model, completion time, validated output and flags for immutable
+persistence. Analysis never changes campaign or payment state.
 
-`LLM_API_KEY` is optional at startup; attempts without it return `NOT_CONFIGURED`.
-`LLM_MODEL` defaults to `gpt-6.1-sol`; `LLM_DAILY_RUN_CAP` defaults to 10 provider
-calls per UTC day (zero disables calls). The synchronized cap is shared by the
-singleton analyzer across workspaces, includes failures/retries, and resets on
-process restart. Multiple server processes need a shared cap before scaling.
-Invalid JSON or invalid output gets at most one retry within a total 60-second
-monotonic budget. Transport failures and refusals are typed failures without
-automatic retries. Calls have a 10-second connect timeout and the remaining run
-budget as their request deadline. Inputs are limited to 200 wishes of at most
-500 characters and a 160,000-character data envelope; output is capped at 16,000
-tokens. Workspace run quotas and retaining the previous valid run belong to the
-caller, which has the required persistence context.
+`LLM_API_KEY` is optional at startup; an absent key returns `NOT_CONFIGURED`.
+Measured defaults are `LLM_MODEL=gpt-6.1-sol`, `LLM_REASONING_EFFORT=low`,
+`LLM_BATCH_SIZE=4`, and `LLM_CONCURRENCY=10`. Batch size accepts 1-10 and concurrency
+accepts 1-16. Requests use low text verbosity and output limits of 4,096 tokens
+for classification and 2,048 for proposal, including reasoning tokens. Model and
+effort compatibility must be checked when overriding configuration.
 
-For a one-shot seed run, build the executable JAR, inject credentials, set
-`LLM_SEED_RUN=true`, and provide `LLM_SEED_OPTIONS_FILE`, `LLM_SEED_WISHES_FILE`,
-and `LLM_SEED_OUTPUT_FILE`. Input files are JSON arrays of `Option` and `Wish`
-using their Kotlin property names, UUIDs, and ISO timestamps. Use stable IDs for
-fixtures. Run with `--spring.main.web-application-type=none`. The runner writes
-the serialized `AnalysisResult.Success` only after validation, refuses to
-overwrite an existing file, reports model/latency/flags and shared counts, then
-closes the application. It is disabled by default; tests use fake providers only.
+A 40-wish, three-option seed took 28.51 seconds with batches of five and eight
+concurrent calls, versus 24.06 seconds with four and ten. With the final bounded
+evidence sampling, the latter configuration took 28.07 and 27.29 seconds. These are live
+sample measurements, not a latency guarantee. Token counts and per-call latency
+are available with `--logging.level.app.analysis=DEBUG`; logs contain no prompts,
+model output, or credentials.
+
+Every classification batch gets at most one retry, including provider failures.
+The proposal stage retries invalid JSON or rejected output once; transport failures
+return immediately. An exhausted classification batch currently fails the run:
+the port has no dedicated unanalyzed-wish field. The caller retains its previous
+valid run on failure. A shared monotonic deadline covers queueing, both stages,
+retries and validation: 60 seconds total, at most 20 seconds per provider call,
+and a 10-second connection timeout. Deadline expiry cancels outstanding calls.
+Inputs allow at most 200 wishes of 500 characters each; both stage envelopes are
+limited to 160,000 characters. The 200-wish limit does not guarantee completion
+within the budget under all provider conditions.
+
+`LLM_DAILY_RUN_CAP` counts provider calls, including retries, across workspaces
+and defaults to 100 (zero disables calls). A 40-wish run normally uses 11 calls;
+200 wishes use 51. The synchronized cap resets at UTC midnight and on process
+restart. Multiple processes need shared quota persistence before scaling.
+Workspace run quotas remain the caller's responsibility.
+
+For a stored seed run, build the executable JAR, inject credentials, set
+`LLM_SEED_RUN=true` and `LLM_SEED_OUTPUT_FILE`, and run with
+`--spring.main.web-application-type=none`. By default the generator reads the
+canonical classpath seed, using the zero UUID as its stable workspace namespace.
+It stores `AnalysisResult.Success` plus `seedWorkspaceId`, `optionKeys`, and
+`wishKeys` maps from UUID strings to stable seed keys, so consumers can remap the
+fixture into a new workspace. Model name and call completion time accompany the
+output. The generator refuses an existing output path or an incomplete wish
+roster and writes only validated results. To analyze explicit snapshots instead,
+provide both `LLM_SEED_OPTIONS_FILE` and `LLM_SEED_WISHES_FILE` as JSON arrays of
+`Option` and `Wish`; this mode stores the original success shape. Tests use fake
+providers only and never call the live API.
 
 API contracts: [Responses](https://developers.openai.com/api/reference/resources/responses/methods/create),
-[structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
-and [error codes](https://developers.openai.com/api/docs/guides/error-codes).
+[reasoning controls](https://developers.openai.com/api/docs/guides/reasoning),
+[model effort support](https://developers.openai.com/api/docs/models/gpt-6.1-sol),
+and [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
+
 ## Campaign services
 
 `CampaignService` is the web-facing application boundary. `createDraft` takes a
