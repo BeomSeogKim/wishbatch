@@ -36,6 +36,48 @@ class OfferDraftValidatorTests {
     }
 
     @Test
+    fun `approved stoneware cup copy is not mistaken for a currency code`() {
+        listOf("Stoneware cup", "Stoneware Cup").forEach { title ->
+            val result = validator.validate(json(title, "$title."), listOf("Stoneware cup"))
+            assertTrue(result.available, title)
+            assertEquals(title, result.title)
+            assertEquals("$title.", result.description)
+            assertTrue(result.removals.isEmpty())
+            assertNull(result.rejection)
+        }
+    }
+
+    @Test
+    fun `term boundaries preserve approved product words without accepting new cup claims`() {
+        listOf("Stoneware cups", "Copper glaze", "Cupboard artwork").forEach { fragment ->
+            val result = validator.validate(json(fragment, "$fragment."), listOf(fragment))
+            assertTrue(result.available, fragment)
+            assertTrue(result.removals.isEmpty())
+        }
+        listOf("Stoneware cups", "Stoneware cupful", "Waterproof stoneware cup").forEach { fragment ->
+            val result = validator.validate(json("Stoneware cup", "$fragment."), listOf("Stoneware cup"))
+            assertFalse(result.available, fragment)
+            assertEquals(listOf(OfferDraftRemoval("description", "$fragment.", "UNSUPPORTED_CLAIM")), result.removals)
+        }
+    }
+
+    @Test
+    fun `currency and financial terms remain blocked in approved cup copy`() {
+        listOf(
+            "Stoneware CUP.", "CUP.", "USD.", "usd.", "Stoneware cup currency.",
+            "Stoneware cup costs cup.", "Stoneware cup costs USD.", "Stoneware cup €.",
+            "Free stoneware cup.", "Refundable stoneware cup.", "Guaranteed stoneware cup.",
+        ).forEach { sentence ->
+            val result = validator.validate(
+                json("Stoneware cup", "Stoneware cup. $sentence"), listOf("Stoneware cup", sentence),
+            )
+            assertTrue(result.available, sentence)
+            assertEquals("Stoneware cup.", result.description, sentence)
+            assertEquals(listOf(OfferDraftRemoval("description", sentence, "COMMERCIAL_TERMS")), result.removals)
+        }
+    }
+
+    @Test
     fun `schema rejects missing extra non-string duplicate and trailing fields`() {
         listOf(
             "null", "[]", "{}", "{", "{\"title\":\"Botanical postcards\"}",

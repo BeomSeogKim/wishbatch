@@ -101,7 +101,10 @@ class OfferDraftValidator(private val mapper: JsonMapper) {
         )
         val CURRENCY = Regex(
             "\\p{Sc}|(?i)(?<![\\p{L}\\p{N}])(?:" +
-                Currency.getAvailableCurrencies().joinToString("|") { Regex.escape(it.currencyCode) } +
+                Currency.getAvailableCurrencies().joinToString("|") {
+                    // The product noun cup collides with the uppercase currency code CUP.
+                    if (it.currencyCode == "CUP") "(?-i:CUP)" else Regex.escape(it.currencyCode)
+                } +
                 "|dollars?|euros?|pounds?|yen|yuan|won|rupees?|cents?|pence|currency)(?![\\p{L}\\p{N}])",
         )
         val COMMERCIAL = terms(
