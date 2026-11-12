@@ -288,13 +288,19 @@ class DecisionRecordTests @Autowired constructor(
 
     @Test
     fun `legacy reads create no records and missing earlier snapshots remain unavailable`() {
+        val other = fixture()
+        snapshot(other)
+        val otherBefore = document(other)
         val fixture = fixture()
         repeat(2) {
             assertEquals("UNAVAILABLE", document(fixture).pledges.single().integrity)
             mvc.get("/w/${fixture.workspace.token}/maker/decision-record").andExpect { status { isOk() } }
             mvc.get("/w/${fixture.workspace.token}/maker/decision-record.json").andExpect { status { isOk() } }
         }
-        assertEquals(0L, entities.createQuery("select count(r) from PledgeDecisionRecord r", Long::class.java).singleResult)
+        assertEquals(0L, entities.createQuery(
+            "select count(r) from PledgeDecisionRecord r where r.workspaceId = :workspace", Long::class.java,
+        ).setParameter("workspace", fixture.workspace.id).singleResult)
+        assertEquals(otherBefore, document(other))
         assertTrue(document(fixture).sources.isEmpty())
         records.recordPledge(fixture.pledge)
         assertEquals("UNAVAILABLE", document(fixture).pledges.single().entries[2].payload["availability"].asString())
