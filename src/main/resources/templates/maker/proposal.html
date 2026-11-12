@@ -4,6 +4,7 @@
 <main id="main" class="shell">
     <style>
         .page-heading { padding-block: var(--space-6); }
+        .preview-section { padding-block: var(--space-6); }
         .page-heading h1 { font-size: clamp(2rem, 4vw, 3rem); }
         .proposal-hero { margin-block: var(--space-6); padding: var(--space-6); border: 1px solid var(--accent); border-radius: var(--radius); background: var(--accent-soft); }
         .proposal-hero h2 { margin-block: var(--space-3); }
@@ -19,7 +20,8 @@
         .proposal-needs li + li { margin-top: var(--space-3); }
         .proposal-needs q { display: block; color: var(--muted); }
         .proposal-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); margin-block: var(--space-6); }
-        .proposal-summary a { padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
+        .proposal-summary > div { padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
+        .proposal-summary blockquote { margin: var(--space-3) 0 0; overflow-wrap: anywhere; }
         .proposal-summary strong { display: block; font-size: 1.75rem; }
         .proposal-catalog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-6); }
         .proposal-group { scroll-margin-top: var(--space-6); }
@@ -39,6 +41,13 @@
         <p class="lead">AI grouped the wishes and proposed a format. You review the evidence and decide the offer.</p>
     </header>
     <div th:replace="~{maker/fragments :: steps(${token}, 3)}"></div>
+    <nav class="proposal-nav" aria-label="Proposal sections">
+        <a href="#proposal">Proposal</a>
+        <a href="#wish-workbench">Workbench</a>
+        <a th:if="${demand != null}" href="#proposal-demand">Demand</a>
+        <a th:if="${stored != null}" href="#maker-questions">Questions</a>
+        <a th:if="${stored != null}" href="#run-details">About this analysis</a>
+    </nav>
     <div th:if="${analysisError != null}" class="notice notice-error" role="alert" th:text="${analysisError}">Analysis could not finish.</div>
     <div th:if="${analysisNotice != null}" class="notice notice-info" role="status" th:text="${analysisNotice}">Analysis complete.</div>
     <div th:unless="${hasVisibleWishes}" class="empty-state">
@@ -60,16 +69,19 @@
             </th:block>
             <p th:if="${secondReading == null}">No second reading is recorded for this result. Re-run analysis to compare two readings and see an agreement rate.</p>
         </section>
-        <section th:if="${proposedOption != null}" class="proposal-hero" aria-labelledby="proposed-option">
+        <section id="proposal" th:if="${proposedOption != null}" class="proposal-hero" aria-labelledby="proposed-option">
             <p class="eyebrow">Proposed batch · for your review</p>
             <h2 id="proposed-option" th:text="${proposedOption.name}">Postcard set</h2>
             <p th:text="${optionFormat}">Format</p>
-            <nav class="proposal-summary" aria-label="Wish groups for this proposal">
-                <a href="#compatible"><strong th:text="${proposedCounts.compatible}">0</strong> Compatible</a>
-                <a href="#depends"><strong th:text="${proposedCounts.depends}">0</strong> Depends</a>
-                <a href="#not-served"><strong th:text="${proposedCounts.notServed}">0</strong> Not served</a>
-                <a href="#not-a-request"><strong th:text="${proposedCounts.notARequest}">0</strong> Not a request</a>
-            </nav>
+            <div class="proposal-summary" aria-label="Wish groups for this proposal">
+                <div th:each="group : ${groupSummaries}">
+                    <strong th:text="${group.count}">0</strong>
+                    <a th:href="@{/w/{token}/maker/proposal/wishes(token=${token},run=${stored.run.id},optionId=${proposedOption.id},label=${group.key})}"
+                       th:attr="data-filter-label=${group.key},data-filter-option=${proposedOption.id}" th:text="${group.label}">Compatible</a>
+                    <blockquote th:if="${group.representative != null}"><p th:text="${group.representative.wish.text}">Source wish</p></blockquote>
+                    <p th:if="${group.representative == null}">No wishes in this group.</p>
+                </div>
+            </div>
             <p>Stated interest, not orders. The model compared each wish with every catalog option.</p>
             <dl class="details-list proposal-catalog">
                 <div th:each="attribute : ${optionAttributes}"><dt th:text="${attribute.key}">Attribute</dt><dd th:text="${attribute.value}">Value</dd></div>
@@ -84,7 +96,7 @@
             <div class="button-row"><a class="button button-primary" th:href="@{/w/{token}/maker/offer(token=${token},run=${stored.run.id})}">Use this proposal</a></div>
             <p>You still set the price and confirm the exact product and delivery terms. This does not publish an offer.</p>
         </section>
-        <section th:if="${proposedOption == null}" class="empty-state" aria-labelledby="no-proposal">
+        <section id="proposal" th:if="${proposedOption == null}" class="empty-state" aria-labelledby="no-proposal">
             <h2 id="no-proposal">No feasible batch</h2>
             <p th:text="${stored.output.noProposalReason}">No catalog option serves these wishes.</p>
             <p>There is no proposal to turn into an offer. Review the wishes and feasible options before trying again.</p>
@@ -101,21 +113,17 @@
             <p class="field-help">Two readings and a proposal share a sixty-second time limit. The current result stays here while you wait.</p>
             <p id="analysis-working" class="notice notice-info" role="status" aria-live="polite" hidden>Reading wishes and checking evidence… Please keep this page open.</p>
         </form>
+        <a th:href="@{/w/{token}/maker/analysis-progress(token=${token})}">Live analysis progress</a>
     </div>
     <div th:replace="~{workbench/table :: workbench}"></div>
     <th:block th:if="${stored != null}">
-        <section th:replace="~{maker/demand :: explorer(${demand}, ${token}, ${stored.run.id})}"></section>
-        <nav class="proposal-nav" aria-label="Proposal sections">
-            <a href="#wish-workbench">Wish workbench</a>
-            <a th:if="${demand != null}" href="#demand-explorer">Price and demand</a>
-            <a th:if="${proposedOption != null}" href="#rationale">Quoted evidence</a>
-            <a href="#option-counts">All options</a>
-            <a href="#maker-questions">Open questions</a>
-            <a th:href="@{/w/{token}/maker/replies(token=${token},run=${stored.run.id})}">Review replies</a>
-            <a th:if="${proposedOption != null}" href="#wish-groups">Wish groups</a>
-            <a href="#run-details">Analysis details</a>
-        </nav>
+        <details th:if="${demand != null}" id="proposal-demand" class="preview-section">
+            <summary>Explore price and demand</summary>
+            <section th:replace="~{maker/demand :: explorer(${demand}, ${token}, ${stored.run.id})}"></section>
+        </details>
         <div th:replace="~{nextbatch/link :: link(${token}, ${stored.run.id})}"></div>
+        <p><a th:href="@{/w/{token}/maker/replies(token=${token},run=${stored.run.id})}">Review replies</a> ·
+            <a th:href="@{/w/{token}/maker/glosses(token=${token},run=${stored.run.id})}">English reading aids</a></p>
         <section th:if="${proposedOption != null}" class="preview-section" aria-labelledby="rationale">
             <div class="section-heading"><p class="eyebrow">Why this batch</p><h2 id="rationale">A claim needs a fan's words.</h2>
                 <p>Each quote is checked against its source. The interpretation is still yours to judge.</p></div>
@@ -127,8 +135,9 @@
                 </article>
             </div>
         </section>
-        <section class="preview-section" aria-labelledby="option-counts">
-            <div class="section-heading"><h2 id="option-counts">How every option compares.</h2>
+        <details class="preview-section" aria-labelledby="option-counts">
+            <summary id="option-counts">How every option compares.</summary>
+            <div class="section-heading">
                 <p>These counts are stated interest, not orders. Not a request is shown separately and excluded from request totals.</p></div>
             <div class="table-scroll" tabindex="0" role="region" aria-label="Wish counts for every option">
                 <table><caption>Server-counted wishes from this analysis</caption>
@@ -140,10 +149,10 @@
                     </tr></tbody>
                 </table>
             </div>
-        </section>
+        </details>
         <section class="preview-section" aria-labelledby="maker-questions">
             <div class="section-heading"><h2 id="maker-questions">Questions only you can settle.</h2></div>
-            <p><a th:href="@{/w/{token}/maker/questions(token=${token})}">Review follow-up questions</a></p>
+            <p><a th:href="@{/w/{token}/maker/questions(token=${token})}">Review follow-up questions for the latest analysis</a></p>
             <p th:if="${stored.output.questionsForMaker.isEmpty()}">No questions were returned. Check the evidence and production terms before making an offer.</p>
             <ul><li th:each="question : ${stored.output.questionsForMaker}">
                 <p th:text="${question.text}">Question for the maker</p>
@@ -153,40 +162,38 @@
                 </span>
             </li></ul>
         </section>
-        <section th:if="${proposedOption != null}" class="preview-section" aria-labelledby="wish-groups">
-            <div class="section-heading"><h2 id="wish-groups">Who this batch serves.</h2>
-                <p>Verdicts apply to the proposed option. Read each full wish alongside the needs extracted from it.</p></div>
-            <div th:replace="~{maker/proposal-fragments :: wishGroup('compatible', 'Compatible', 'No stated hard condition conflicts with this option.', ${compatibleWishes})}"></div>
-            <div th:replace="~{maker/proposal-fragments :: wishGroup('depends', 'Depends', 'A variant, price, or unanswered question still matters.', ${dependsWishes})}"></div>
-            <section id="not-served" class="proposal-group"><h3>Not served <span class="badge badge-neutral" th:text="${proposedCounts.notServed}">0</span></h3><p class="muted">A hard condition conflicts with this option.</p>
-                <p th:if="${proposedCounts.notServed == 0}">No wishes in this group.</p>
-                <div th:replace="~{maker/proposal-fragments :: reasonGroups(${notServedPreview})}"></div>
-                <details th:if="${proposedCounts.notServed > 3}" class="proposal-disclosure">
-                    <summary th:text="'Show all ' + ${proposedCounts.notServed} + ' not served wishes'">Show all wishes</summary>
-                    <div th:replace="~{maker/proposal-fragments :: reasonGroups(${notServedRemaining})}"></div>
-                </details>
-            </section>
-            <div th:replace="~{maker/proposal-fragments :: wishGroup('not-a-request', 'Not a request', 'These wishes do not express a product request and do not count toward interest.', ${nonRequestWishes})}"></div>
-        </section>
-        <section th:if="${proposedOption == null}" class="preview-section" aria-labelledby="review-wishes">
-            <h2 id="review-wishes">Review each wish.</h2>
-            <p>You can decide whether a wish is Compatible or Not served for any option.</p>
+        <details class="preview-section">
+            <summary>Review each wish.</summary>
+            <p>Review each full source wish and record a decision for any option.</p>
             <div th:replace="~{maker/proposal-fragments :: wishList(${allWishes})}"></div>
-        </section>
+        </details>
         <section class="preview-section proposal-meta" aria-labelledby="run-details">
             <div class="section-heading"><h2 id="run-details">About this analysis.</h2></div>
-            <p><span class="badge badge-neutral" th:text="${stored.run.isSeed ? 'Stored synthetic reference' : 'Live analysis'}">Stored synthetic reference</span></p>
-            <dl class="details-list">
-                <div th:if="${!stored.run.isSeed}"><dt>Model</dt><dd th:text="${stored.run.model}">Model</dd></div>
-                <div th:if="${!stored.run.isSeed}"><dt>Model call completed</dt><dd><time th:datetime="${stored.run.createdAt}" th:text="${@makerDisplay.time(stored.run.createdAt)}">Time</time></dd></div>
-                <div><dt>Live runs in this workspace</dt><dd th:text="${liveRunCount}">0</dd></div>
-            </dl>
-            <p th:text="'Validation items dropped or flagged: ' + ${stored.flags.size()} + '. Checks remove unsupported quotes, unknown references, and disallowed suggestions.'">Validation summary</p>
-            <p th:if="${stored.run.isSeed}">This stored synthetic reference illustrates the sample wishes. It is available even when live analysis is unavailable.</p>
+            <details>
+                <summary>Run evidence and validation flags</summary>
+                <div th:replace="~{boundary/panel :: panel(${boundary})}"></div>
+            </details>
             <p>Evidence checks confirm that quotes exist. They do not establish that a wish was interpreted correctly.</p>
         </section>
     </th:block>
     <script>
+        document.querySelectorAll('[data-filter-label]').forEach(function (link) {
+            link.addEventListener('click', function (event) {
+                const filters = document.querySelector('[data-workbench-filters]');
+                const option = filters?.querySelector('[name="optionId"]');
+                const label = filters?.querySelector('[name="label"]');
+                if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ||
+                    !option || !label || !document.querySelector('[data-workbench-table]')?.hidden) return;
+                event.preventDefault();
+                option.value = link.dataset.filterOption;
+                label.value = link.dataset.filterLabel;
+                label.dispatchEvent(new Event('change', { bubbles: true }));
+                window.dispatchEvent(new CustomEvent('wishbatch:filter-label', {
+                    detail: { optionId: link.dataset.filterOption, label: link.dataset.filterLabel }
+                }));
+                document.getElementById('wish-workbench').scrollIntoView();
+            });
+        });
         function revealSourceWish() {
             const target = document.getElementById(window.location.hash.slice(1));
             if (!target) return;

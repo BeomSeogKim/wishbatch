@@ -3,6 +3,7 @@ package app.web.maker
 import app.campaign.analysisrun.AnalysisRunResult
 import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.demand.exploreDemand
+import app.campaign.boundary.summarizeBoundary
 import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.Wish
 import app.campaign.model.WishKind
@@ -43,7 +44,7 @@ data class ProposalWish(
     val decisions: List<WishReviewOverride> = emptyList(),
     val readingLabels: List<String> = emptyList(),
 )
-data class ProposalWishGroup(val label: String, val reason: String, val wishes: List<ProposalWish>)
+data class ProposalGroupSummary(val label: String, val key: String, val count: Int, val representative: ProposalWish?)
 
 @Controller
 class ProposalController(
@@ -60,6 +61,7 @@ class ProposalController(
         val options = workspaces.listOptions(token).associateBy { it.id }
         val wishes = workspaces.listWishes(token).associateBy { it.id }
         model.addAttribute("stored", stored)
+        model.addAttribute("boundary", summarizeBoundary(stored))
         model.addAttribute("options", options)
         model.addAttribute("sourceWishes", wishes)
         model.addAttribute("hasVisibleWishes", wishes.values.any { !it.hidden })
@@ -118,24 +120,19 @@ class ProposalController(
                 }
             }.toMap()
             model.addAttribute("allWishes", rows.values.toList())
-            model.addAttribute("compatibleWishes", output.verdicts.filter {
-                it.optionId == option?.id && it.verdict == CompatibilityVerdict.COMPATIBLE
-            }.mapNotNull { rows[it.wishId] })
-            model.addAttribute("dependsWishes", output.verdicts.filter {
-                it.optionId == option?.id && it.verdict == CompatibilityVerdict.CONDITIONAL
-            }.mapNotNull { rows[it.wishId] })
-            val notServedGroups = output.notServed.map { group ->
-                ProposalWishGroup(catalogText(group.label), catalogText(group.reason), group.wishIds.mapNotNull { rows[it] })
+            if (option != null) {
+                val counts = optionWishCounts(output).single { it.optionId == option.id }
+                fun representative(verdict: CompatibilityVerdict): ProposalWish? = output.verdicts
+                    .firstOrNull { it.optionId == option.id && it.verdict == verdict }?.let { rows[it.wishId] }
+                model.addAttribute("groupSummaries", listOf(
+                    ProposalGroupSummary("Compatible", "COMPATIBLE", counts.compatible, representative(CompatibilityVerdict.COMPATIBLE)),
+                    ProposalGroupSummary("Depends", "CONDITIONAL", counts.depends, representative(CompatibilityVerdict.CONDITIONAL)),
+                    ProposalGroupSummary("Not served", "INCOMPATIBLE", counts.notServed, representative(CompatibilityVerdict.INCOMPATIBLE)),
+                    ProposalGroupSummary("Not a request", "NOT_A_REQUEST", counts.notARequest,
+                        output.wishes.firstOrNull { it.kind == WishKind.NOT_A_REQUEST }?.let { rows[it.wishId] }),
+                ))
             }
-            val previewIds = notServedGroups.flatMap { it.wishes }.take(3).map { it.wish.id }.toSet()
-            model.addAttribute("notServedPreview", notServedGroups.map { group ->
-                group.copy(wishes = group.wishes.filter { it.wish.id in previewIds })
-            }.filter { it.wishes.isNotEmpty() })
-            model.addAttribute("notServedRemaining", notServedGroups.map { group ->
-                group.copy(wishes = group.wishes.filter { it.wish.id !in previewIds })
-            }.filter { it.wishes.isNotEmpty() })
-            model.addAttribute("nonRequestWishes", output.wishes.filter { it.kind == WishKind.NOT_A_REQUEST }
-                .mapNotNull { rows[it.wishId] })
+
         }
         return "maker/proposal"
     }

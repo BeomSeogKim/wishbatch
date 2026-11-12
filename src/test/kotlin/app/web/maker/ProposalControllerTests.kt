@@ -81,8 +81,9 @@ class ProposalControllerTests(
         assertEquals(before, analyzer.calls.size)
         assertContains(html, "Sandbox demo. No real money moves.")
         assertContains(html, "Stored synthetic reference")
-        assertContains(html, "This stored synthetic reference illustrates the sample wishes.")
-        assertFalse(html.contains("Model call completed"))
+        assertContains(html, "Run evidence and validation flags")
+        assertContains(html, stored.run.model)
+        assertContains(html, stored.run.createdAt.toString())
         assertFalse(html.contains("real model call"))
         assertContains(html, "USD $6.50 / unit")
         assertContains(html, "3 units")
@@ -92,7 +93,7 @@ class ProposalControllerTests(
         assertContains(html, "/w/${workspace.token}/maker/offer?run=${stored.run.id}")
         assertContains(html, "stated interest, not orders")
         assertContains(html, "Not a request")
-        assertContains(html, "Validation items dropped or flagged")
+        assertContains(html, "Original validation flags")
         assertEquals(1, Regex("<h1\\b").findAll(html).count())
         assertEquals(1, Regex("button button-primary").findAll(html).count())
         assertFalse(html.contains("<progress"))
@@ -101,11 +102,15 @@ class ProposalControllerTests(
             assertContains(html, "id=\"wish-${evidence.wishId}\"")
         }
         val counts = optionWishCounts(stored.output).single { it.optionId == stored.output.proposal!!.optionId }
-        for ((group, count) in listOf("compatible" to counts.compatible, "depends" to counts.depends,
-            "not-served" to counts.notServed, "not-a-request" to counts.notARequest)) {
-            assertContains(html, "href=\"#$group\"><strong>$count</strong>")
-            assertContains(html, "id=\"$group\"")
+        for ((label, count) in listOf("COMPATIBLE" to counts.compatible, "CONDITIONAL" to counts.depends,
+            "INCOMPATIBLE" to counts.notServed, "NOT_A_REQUEST" to counts.notARequest)) {
+            assertContains(html, "<strong>$count</strong>")
+            assertContains(html, "label=$label")
+            assertContains(html, "data-filter-label=\"$label\"")
         }
+        assertContains(html, "Live analysis progress")
+        assertContains(html, "Review follow-up questions for the latest analysis")
+        assertContains(html, "wishbatch:filter-label")
         for (wishId in stored.output.questionsForMaker.flatMap { it.wishIds }) {
             assertContains(html, "href=\"#wish-$wishId\"")
         }
@@ -124,6 +129,8 @@ class ProposalControllerTests(
 
         assertContains(html, "Stored synthetic reference")
         assertContains(html, "offer?run=${original.run.id}")
+        assertContains(html, "glosses?run=${original.run.id}")
+        assertContains(html, "Review follow-up questions for the latest analysis")
         assertFalse(html.contains("No newer proposal."))
         assertContains(page(token), "No newer proposal.")
         assertEquals(before, analyzer.calls.size)
@@ -221,7 +228,7 @@ class ProposalControllerTests(
         val html = page(token)
         assertContains(html, "test-live-model")
         assertContains(html, "Live analysis")
-        assertContains(html, "Model call completed")
+        assertContains(html, "Completed")
         assertContains(html, "datetime=\"2090-01-01T00:00:00Z\"")
         assertFalse(html.contains("Stored synthetic reference"))
         assertContains(html, "Reading wishes and checking evidence")
@@ -269,7 +276,7 @@ class ProposalControllerTests(
         assertContains(html, "Hard condition")
         assertContains(html, "Preference")
         assertContains(html, "Unknown")
-        assertContains(html, "Validation items dropped or flagged: 1")
+        assertContains(html, "Ignored commercial field (V3)")
         for (counts in optionWishCounts(output)) {
             val row = Regex("<tr>\\s*<th scope=\"row\">${Regex.escape(options.single { it.id == counts.optionId }.name)}</th>(.*?)</tr>",
                 RegexOption.DOT_MATCHES_ALL).find(html)!!.groupValues[1]
@@ -279,16 +286,13 @@ class ProposalControllerTests(
     }
 
     @Test
-    fun `not served wishes are grouped by their conflict reason`() {
+    fun `not served links preserve run and option filters`() {
         val token = workspaces.create().token
-        val output = runs.latest(token)!!.output
-        val incompatible = output.verdicts.filter { it.optionId == output.proposal!!.optionId && it.verdict == CompatibilityVerdict.INCOMPATIBLE }
-        val group = NotServedGroup("Requires another format", incompatible.map { it.wishId }, "The requested product format is not a postcard.")
-        store(token, output.copy(notServed = listOf(group)))
+        val stored = runs.latest(token)!!
         val html = page(token)
-        assertContains(html, group.label)
-        assertContains(html, group.reason)
-        for (verdict in incompatible) assertContains(html, "id=\"wish-${verdict.wishId}\"")
+        assertContains(html, "run=${stored.run.id}")
+        assertContains(html, "optionId=${stored.output.proposal!!.optionId}")
+        assertContains(html, "label=INCOMPATIBLE")
     }
 
     @Test
@@ -316,55 +320,30 @@ class ProposalControllerTests(
     }
 
     @Test
-    fun `wish groups preview three and disclose the rest while preserving conflict reasons`() {
+    fun `groups render one source wish per label with filtered workbench links`() {
         for (size in listOf(0, 3, 6)) {
             val token = workspaces.create().token
             val output = runs.latest(token)!!.output
             val optionId = output.proposal!!.optionId
             val wishes = workspaces.listWishes(token).take(size * 4)
-            val groups = listOf("compatible", "depends", "not-served", "not-a-request")
+            val groups = listOf("COMPATIBLE", "CONDITIONAL", "INCOMPATIBLE", "NOT_A_REQUEST")
                 .mapIndexed { index, name -> name to wishes.drop(index * size).take(size) }.toMap()
-            val notServed = groups.getValue("not-served")
-            val reasonGroups = listOf(
-                NotServedGroup("Different format", notServed.take(2).map { it.id }, "Requires another format."),
-                NotServedGroup("Different size", notServed.drop(2).map { it.id }, "Requires another size."),
-            ).filter { it.wishIds.isNotEmpty() }
             store(token, output.copy(
                 wishes = wishes.map { AnalyzedWish(it.id,
-                    if (it in groups.getValue("not-a-request")) WishKind.NOT_A_REQUEST else WishKind.REQUEST, emptyList()) },
-                verdicts = listOf("compatible" to CompatibilityVerdict.COMPATIBLE,
-                    "depends" to CompatibilityVerdict.CONDITIONAL, "not-served" to CompatibilityVerdict.INCOMPATIBLE)
+                    if (it in groups.getValue("NOT_A_REQUEST")) WishKind.NOT_A_REQUEST else WishKind.REQUEST, emptyList()) },
+                verdicts = listOf("COMPATIBLE" to CompatibilityVerdict.COMPATIBLE,
+                    "CONDITIONAL" to CompatibilityVerdict.CONDITIONAL, "INCOMPATIBLE" to CompatibilityVerdict.INCOMPATIBLE)
                     .flatMap { (name, verdict) -> groups.getValue(name).map { WishVerdict(it.id, optionId, verdict, name) } },
                 proposal = Proposal(optionId, emptyMap(), emptyList()),
-                notServed = reasonGroups, questionsForMaker = emptyList(),
+                notServed = emptyList(), questionsForMaker = emptyList(),
             ))
             val html = page(token)
-            for ((name, rows) in groups) {
-                val section = html.substringAfter("id=\"$name\"")
-                    .substringBefore(if (name == "not-a-request") "About this analysis." else "id=\"${groups.keys.elementAt(groups.keys.indexOf(name) + 1)}\"")
-                assertContains(section, "class=\"badge badge-neutral\">$size</span>")
-                if (size > 3) {
-                    val preview = section.substringBefore("<details")
-                    val disclosure = section.substringAfter("<details").substringBefore("</details>")
-                    assertEquals(3, Regex("<article\\b").findAll(preview).count())
-                    assertEquals(size - 3, Regex("<article\\b").findAll(disclosure).count())
-                    assertFalse(disclosure.substringBefore('>').contains("open"))
-                    assertContains(disclosure, "Show all $size")
-                    rows.take(3).forEach { assertContains(preview, "id=\"wish-${it.id}\"") }
-                    rows.drop(3).forEach { assertContains(disclosure, "id=\"wish-${it.id}\"") }
-                    if (name == "not-served") {
-                        assertContains(preview, "Different format")
-                        assertContains(preview, "Different size")
-                        assertContains(disclosure, "Different size")
-                        assertContains(disclosure, "Requires another size.")
-                    }
-                } else {
-                    assertFalse(section.contains("<details"))
-                    assertEquals(size, Regex("<article\\b").findAll(section).count())
-                }
-            }
+            val summary = html.substringAfter("aria-label=\"Wish groups for this proposal\"").substringBefore("Stated interest")
+            assertEquals(4, Regex("data-filter-label=").findAll(summary).count())
+            assertEquals(if (size == 0) 0 else 4, Regex("<blockquote>").findAll(summary).count())
+            assertEquals(4, Regex("<strong>$size</strong>").findAll(summary).count())
+            groups.keys.forEach { assertContains(summary, "label=$it") }
             assertContains(html, "aria-label=\"Proposal sections\"")
-            assertContains(html, "href=\"#wish-groups\"")
         }
     }
 
