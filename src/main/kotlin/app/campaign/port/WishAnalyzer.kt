@@ -119,4 +119,7 @@ sealed interface AnalysisResult {
  */
 fun interface WishAnalyzer {
     fun analyze(options: List<Option>, wishes: List<Wish>): AnalysisResult
+
+    /** Classify one wish without proposing a batch; at most one call within fifteen seconds. */
+    fun classify(option: Option, wish: Wish): AnalysisResult = AnalysisResult.Failure(AnalysisFailure.NOT_CONFIGURED)
 }

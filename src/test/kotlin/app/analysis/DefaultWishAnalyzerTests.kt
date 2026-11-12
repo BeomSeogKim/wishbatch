@@ -39,6 +39,78 @@ class DefaultWishAnalyzerTests {
     private val wish = Wish(workspaceId, "I want cards under 12.34 dollars", WishSource.ONSITE, createdAt = now)
 
     @Test
+    fun `single wish classification uses only one small classification call and validates every verdict`() {
+        for (verdict in listOf("COMPATIBLE", "CONDITIONAL", "INCOMPATIBLE")) {
+            val provider = RecordingProvider { request, _ -> success(classification(request, price = true)
+                .replace("COMPATIBLE", verdict)) }
+            val result = assertIs<AnalysisResult.Success>(analyzer(provider).classify(option, wish))
+            assertEquals(verdict, result.validated.output.verdicts.single().verdict.name)
+            assertEquals("under 12.34 dollars", result.validated.output.wishes.single().needs.single().quote)
+            assertEquals(analysisInputHash(listOf(option), listOf(wish)), result.inputHash)
+            assertEquals(1, provider.requests.size)
+            assertEquals(AnalysisStage.CLASSIFY, provider.requests.single().stage)
+            assertEquals(1024, provider.requests.single().maxOutputTokens)
+            assertFalse(provider.requests.single().retry)
+            assertEquals(Duration.ofSeconds(15), provider.budgets.single())
+        }
+    }
+
+    @Test
+    fun `single classification never retries failures or invalid output`() {
+        for ((response, reason) in listOf(
+            success("{") to AnalysisFailure.INVALID_JSON,
+            success("{\"wishes\":[],\"verdicts\":[]}") to AnalysisFailure.INVALID_OUTPUT,
+            ProviderResult.Failure(AnalysisFailure.PROVIDER_FAILURE) to AnalysisFailure.PROVIDER_FAILURE,
+            ProviderResult.Failure(AnalysisFailure.TIMEOUT) to AnalysisFailure.TIMEOUT,
+        )) {
+            val provider = RecordingProvider { _, _ -> response }
+            assertFailure(reason, analyzer(provider).classify(option, wish))
+            assertEquals(1, provider.requests.size)
+        }
+        val throwing = RecordingProvider { _, _ -> throw IllegalStateException("Unavailable") }
+        assertFailure(AnalysisFailure.PROVIDER_FAILURE, analyzer(throwing).classify(option, wish))
+    }
+
+    @Test
+    fun `single classification drops invented quotes and recognizes non requests`() {
+        val provider = RecordingProvider { request, _ -> success(classification(request, price = true)
+            .replace("under 12.34 dollars", "A quote from another fan")) }
+        val result = assertIs<AnalysisResult.Success>(analyzer(provider).classify(option, wish))
+        assertTrue(result.validated.output.wishes.single().needs.isEmpty())
+        assertTrue(result.validated.flags.any { it.rule == AnalysisValidationRule.V2 })
+        val praise = RecordingProvider { request, _ -> success(classification(request, requestKind = "NOT_A_REQUEST")) }
+        val ignored = assertIs<AnalysisResult.Success>(analyzer(praise).classify(option, wish))
+        assertEquals(WishKind.NOT_A_REQUEST, ignored.validated.output.wishes.single().kind)
+        assertTrue(ignored.validated.output.verdicts.isEmpty())
+    }
+
+    @Test
+    fun `single classification shares the daily provider cap with maker analysis`() {
+        val provider = RecordingProvider()
+        val shared = analyzer(provider, AnalysisProperties("test", dailyRunCap = 3))
+        assertIs<AnalysisResult.Success>(shared.analyze(listOf(option), listOf(wish)))
+        assertIs<AnalysisResult.Success>(shared.classify(option, wish))
+        assertFailure(AnalysisFailure.RUN_LIMIT_REACHED, shared.classify(option, wish))
+        assertFailure(AnalysisFailure.RUN_LIMIT_REACHED, shared.analyze(listOf(option), listOf(wish)))
+        assertEquals(3, provider.requests.size)
+        assertFailure(AnalysisFailure.NOT_CONFIGURED, analyzer(provider, AnalysisProperties()).classify(option, wish))
+        assertFailure(AnalysisFailure.RUN_LIMIT_REACHED,
+            analyzer(provider, AnalysisProperties("test", dailyRunCap = 0)).classify(option, wish))
+        assertEquals(3, provider.requests.size)
+    }
+
+    @Test
+    fun `single classification rejects a success after its fifteen second deadline`() {
+        val nanos = AtomicLong()
+        val provider = RecordingProvider { request, _ ->
+            nanos.set(Duration.ofSeconds(15).toNanos())
+            success(classification(request))
+        }
+        assertFailure(AnalysisFailure.TIMEOUT, analyzer(provider, nanoTime = nanos::get).classify(option, wish))
+        assertEquals(1, provider.requests.size)
+    }
+
+    @Test
     fun `batches every wish against every option and merges before choosing a proposal`() {
         val wishes = (1..200).map { Wish(workspaceId, "Cards please $it", WishSource.ONSITE, createdAt = now) }
         val options = listOf(option, Option(workspaceId, "Print", "print", emptyMap(), emptyMap(), 100, "USD", 5, 20, "Two weeks", "US"))

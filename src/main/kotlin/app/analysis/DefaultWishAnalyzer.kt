@@ -41,6 +41,43 @@ class DefaultWishAnalyzer(
 
     private val permits = Semaphore(properties.concurrency)
 
+    override fun classify(option: Option, wish: Wish): AnalysisResult {
+        val started = nanoTime()
+        fun remaining() = Duration.ofNanos(Duration.ofSeconds(15).toNanos() - (nanoTime() - started))
+        if (properties.apiKey.isBlank()) return AnalysisResult.Failure(AnalysisFailure.NOT_CONFIGURED)
+        if (wish.text.length > 500) return AnalysisResult.Failure(AnalysisFailure.INVALID_OUTPUT)
+        val options = listOf(option)
+        val wishes = listOf(wish)
+        val input = AnalysisPrompt.input(mapper, options, wishes)
+        if (input.length > 160000) return AnalysisResult.Failure(AnalysisFailure.INVALID_OUTPUT)
+        val executor = Executors.newSingleThreadExecutor { task ->
+            Thread(task, "wish-match").apply { isDaemon = true }
+        }
+        val future = executor.submit<StageResult> {
+            generate(AnalysisRequest(input, AnalysisStages.schema(options, AnalysisStage.CLASSIFY), false,
+                maxOutputTokens = 1024), options, wishes, ::remaining, attempts = 1)
+        }
+        try {
+            val budget = remaining().toNanos()
+            if (budget <= 0) return AnalysisResult.Failure(AnalysisFailure.TIMEOUT)
+            val result = future.get(budget, TimeUnit.NANOSECONDS)
+            if (remaining().toNanos() <= 0) return AnalysisResult.Failure(AnalysisFailure.TIMEOUT, result.flags)
+            val output = result.output ?: return AnalysisResult.Failure(result.failure, result.flags)
+            return AnalysisResult.Success(result.model, AnalysisValidationResult.Accepted(output, result.flags),
+                analysisInputHash(options, wishes), clock.instant())
+        } catch (_: TimeoutException) {
+            return AnalysisResult.Failure(AnalysisFailure.TIMEOUT)
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+            return AnalysisResult.Failure(AnalysisFailure.PROVIDER_FAILURE)
+        } catch (_: ExecutionException) {
+            return AnalysisResult.Failure(AnalysisFailure.PROVIDER_FAILURE)
+        } finally {
+            future.cancel(true)
+            executor.shutdownNow()
+        }
+    }
+
     override fun analyze(options: List<Option>, wishes: List<Wish>): AnalysisResult {
         val started = nanoTime()
         fun remaining() = Duration.ofNanos(Duration.ofSeconds(60).toNanos() - (nanoTime() - started))
@@ -130,10 +167,11 @@ class DefaultWishAnalyzer(
         wishes: List<Wish>,
         remaining: () -> Duration,
         classified: AnalysisOutput? = null,
+        attempts: Int = 2,
     ): StageResult {
         val flags = mutableListOf<AnalysisValidationFlag>()
         var failure = AnalysisFailure.INVALID_OUTPUT
-        repeat(2) { attempt ->
+        repeat(attempts) { attempt ->
             val budget = remaining().toNanos()
             if (budget <= 0 || !permits.tryAcquire(budget, TimeUnit.NANOSECONDS)) {
                 return StageResult(failure = AnalysisFailure.TIMEOUT, flags = flags)

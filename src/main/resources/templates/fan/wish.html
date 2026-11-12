@@ -9,11 +9,16 @@
             <p><strong th:text="${maker.name}">Maker</strong> <span th:text="${maker.description}">Maker description</span></p>
             <p>A wish is stated interest, not an order. Nothing is charged, and no account is needed.</p>
         </header>
-        <aside th:if="${campaignOpen}" class="notice notice-info">
+        <aside th:if="${campaignOpen and wishSubmitted != true}" class="notice notice-info">
             <p>The maker has an offer open. <a th:href="@{/w/{token}/offer(token=${token})}">See the offer and its terms</a>.</p>
         </aside>
         <div th:if="${wishSubmitted == true}" class="notice notice-info" role="status">
-            Thanks for sharing your wish! The maker can now read it. This is not an order, and nothing was charged.
+            <p>Thanks for sharing your wish! The maker can now read it. This is not an order, and nothing was charged.</p>
+            <div th:if="${wishMatchNote}">
+                <p th:text="${wishMatchNote.message}">Offer match</p>
+                <p>You wrote: <q th:text="${wishMatchNote.quote}">Your wish</q></p>
+                <p th:if="${wishMatchNote.showOffer}"><a th:href="@{/w/{token}/offer(token=${token})}">Read the offer and its terms</a></p>
+            </div>
         </div>
         <div class="two-column">
             <section class="card form-stack" aria-labelledby="wish-form-title">
