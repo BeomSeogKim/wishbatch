@@ -1,6 +1,7 @@
 name: Keep warm
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '7-57/10 * * * *'
 
@@ -14,7 +15,7 @@ concurrency:
 jobs:
   landing-page:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 6
     steps:
       - name: Request the hosted landing page
-        run: curl --fail --silent --show-error --connect-timeout 10 --max-time 90 --output /dev/null https://wishbatch.onrender.com/
+        run: curl --fail --silent --show-error --connect-timeout 10 --max-time 300 --output /dev/null https://wishbatch.onrender.com/
