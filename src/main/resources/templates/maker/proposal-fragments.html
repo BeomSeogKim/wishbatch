@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
+<section th:fragment="helpers" class="proposal-helpers" aria-label="AI review helpers">
+    <article class="card" th:each="helper : ${proposalHelpers}">
+        <h3 th:text="${helper.title}">Follow-up questions</h3>
+        <p class="muted" th:text="${helper.state}">Unavailable</p>
+        <a th:href="${helper.url}" th:text="${helper.action}">Review</a>
+    </article>
+</section>
 <article th:fragment="wish(row)" class="card proposal-wish" th:id="'wish-' + ${row.wish.id}" tabindex="-1">
     <p class="eyebrow" th:text="${row.wish.displayName ?: 'Anonymous fan'}">Fan</p>
     <blockquote><p th:text="${row.wish.text}">The full source wish.</p></blockquote>

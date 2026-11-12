@@ -1,45 +1,26 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Proposal', ~{::main})}">
 <body>
-<main id="main" class="shell">
-    <style>
-        .page-heading { padding-block: var(--space-6); }
-        .preview-section { padding-block: var(--space-6); }
-        .page-heading h1 { font-size: clamp(2rem, 4vw, 3rem); }
-        .proposal-hero { margin-block: var(--space-6); padding: var(--space-6); border: 1px solid var(--accent); border-radius: var(--radius); background: var(--accent-soft); }
-        .proposal-hero h2 { margin-block: var(--space-3); }
-        .proposal-hero .button-row { margin-top: var(--space-6); }
-        .proposal-evidence, .proposal-wish-list { display: grid; gap: var(--space-4); margin-top: var(--space-6); }
-        .proposal-evidence .evidence { margin-top: var(--space-4); }
-        .proposal-group { margin-block: var(--space-8); }
-        .proposal-group > p { margin-top: var(--space-3); }
-        .proposal-wish { scroll-margin-top: var(--space-16); }
-        .proposal-wish:target { outline: 3px solid var(--focus); outline-offset: 4px; }
-        .proposal-wish blockquote { margin: var(--space-4) 0; }
-        .proposal-needs { padding-left: var(--space-6); }
-        .proposal-needs li + li { margin-top: var(--space-3); }
-        .proposal-needs q { display: block; color: var(--muted); }
-        .proposal-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); margin-block: var(--space-6); }
-        .proposal-summary > div { padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
-        .proposal-summary blockquote { margin: var(--space-3) 0 0; overflow-wrap: anywhere; }
-        .proposal-summary strong { display: block; font-size: 1.75rem; }
-        .proposal-catalog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-6); }
-        .proposal-group { scroll-margin-top: var(--space-6); }
-        @media (min-width: 800px) { .proposal-evidence { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-        @media (max-width: 600px) {
-            .proposal-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .proposal-catalog { grid-template-columns: 1fr; }
-            .proposal-hero { padding: var(--space-4); }
-        }
-        .proposal-meta { overflow-wrap: anywhere; }
-        .proposal-actions { display: grid; gap: var(--space-4); margin-block: var(--space-6); }
-        .proposal-actions [hidden] { display: none; }
-    </style>
+<main id="main" class="shell ux-proposal">
+    <link rel="stylesheet" th:href="@{/css/ux-proposal.css}">
     <header class="page-heading">
         <a th:href="@{/w/{token}/maker(token=${token})}">Maker home</a>
         <h1>One batch. The words behind it.</h1>
         <p class="lead">AI grouped the wishes and proposed a format. You review the evidence and decide the offer.</p>
     </header>
+    <div class="proposal-actions">
+        <p th:if="${stored != null}" th:class="${stored.newWishCount > 0 ? 'notice notice-info' : 'muted'}">
+            <strong th:text="${stored.newWishCount}">0</strong> visible wishes added after this analysis.
+            <span th:if="${stored.newWishCount > 0}">Re-run to include their words in the proposal.</span>
+        </p>
+        <form id="analysis-form" method="post" th:action="@{/w/{token}/maker/proposal(token=${token})}">
+            <button id="analysis-submit" class="button button-secondary" type="submit" th:disabled="${!hasVisibleWishes}"
+                    th:text="${stored == null ? 'Run analysis' : 'Run it live'}">Run it live</button>
+            <p class="field-help">Two readings and a proposal share a sixty-second time limit. The current result stays here while you wait.</p>
+            <p id="analysis-working" class="notice notice-info" role="status" aria-live="polite" hidden>Reading wishes and checking evidence… Please keep this page open.</p>
+        </form>
+        <a th:href="@{/w/{token}/maker/analysis-progress(token=${token})}">Live analysis progress</a>
+    </div>
     <div th:replace="~{maker/fragments :: steps(${token}, 3)}"></div>
     <nav class="proposal-nav" aria-label="Proposal sections">
         <a href="#proposal">Proposal</a>
@@ -60,15 +41,6 @@
         <p>Run analysis to compare these wishes with your feasible options.</p>
     </div>
     <th:block th:if="${stored != null}">
-        <section class="notice notice-info" aria-label="Second reading">
-            <th:block th:if="${secondReading != null}">
-                <p><strong>Two readings · agreement <span th:text="${agreementRate}">0%</span></strong>
-                    (<span th:text="${secondReading.agreedWishCount}">0</span> of <span th:text="${secondReading.comparedWishCount}">0</span> wishes).</p>
-                <p>Agreement means both readings matched on request type and every option verdict. Disagreements need your eyes and stay in Depends until you decide.</p>
-                <p th:unless="${secondReading.batchCompositionChanged}">Only one wish was available. Both readings used the same context.</p>
-            </th:block>
-            <p th:if="${secondReading == null}">No second reading is recorded for this result. Re-run analysis to compare two readings and see an agreement rate.</p>
-        </section>
         <section id="proposal" th:if="${proposedOption != null}" class="proposal-hero" aria-labelledby="proposed-option">
             <p class="eyebrow">Proposed batch · for your review</p>
             <h2 id="proposed-option" th:text="${proposedOption.name}">Postcard set</h2>
@@ -78,11 +50,30 @@
                     <strong th:text="${group.count}">0</strong>
                     <a th:href="@{/w/{token}/maker/proposal/wishes(token=${token},run=${stored.run.id},optionId=${proposedOption.id},label=${group.key})} + '#wish-workbench'"
                        data-workbench-label-link th:attr="data-label=${group.key},data-option-id=${proposedOption.id}" th:text="${group.label}">Compatible</a>
-                    <blockquote th:if="${group.representative != null}"><p th:text="${group.representative.wish.text}">Source wish</p></blockquote>
+                    <details th:if="${group.representative != null}">
+                        <summary>Source wish</summary>
+                        <blockquote><p th:text="${group.representative.wish.text}">Source wish</p></blockquote>
+                    </details>
                     <p th:if="${group.representative == null}">No wishes in this group.</p>
                 </div>
             </div>
             <p>Stated interest, not orders. The model compared each wish with every catalog option.</p>
+            <div class="button-row"><a class="button button-primary" th:href="@{/w/{token}/maker/offer(token=${token},run=${stored.run.id})}">Use this proposal</a></div>
+            <p>You still set the price and confirm the exact product and delivery terms. This does not publish an offer.</p>
+        </section>
+        <section id="proposal" th:if="${proposedOption == null}" class="empty-state" aria-labelledby="no-proposal">
+            <h2 id="no-proposal">No feasible batch</h2>
+            <p th:text="${stored.output.noProposalReason}">No catalog option serves these wishes.</p>
+            <p>There is no proposal to turn into an offer. Review the wishes and feasible options before trying again.</p>
+        </section>
+    </th:block>
+    <section th:if="${demand != null}" id="proposal-demand">
+        <section th:replace="~{maker/demand :: compact(${demand}, ${token}, ${stored.run.id}, ${proposedOption.unitCost}, 'Catalog cost reference')}"></section>
+    </section>
+    <th:block th:if="${stored != null}">
+        <section th:replace="~{maker/proposal-fragments :: helpers}"></section>
+        <details class="preview-section" th:if="${proposedOption != null}">
+            <summary>Catalog specification and production limits</summary>
             <dl class="details-list proposal-catalog">
                 <div th:each="attribute : ${optionAttributes}"><dt th:text="${attribute.key}">Attribute</dt><dd th:text="${attribute.value}">Value</dd></div>
                 <div th:each="variant : ${suggestedVariants}"><dt th:text="'Suggested ' + ${variant.key}">Suggested variant</dt><dd th:text="${variant.value}">Value</dd></div>
@@ -93,37 +84,11 @@
                 <div><dt>Ship region</dt><dd th:text="${proposedOption.shipRegion}">Region</dd></div>
             </dl>
             <p class="sample-label">Numbers and production terms come from your catalog. Costs and limits are demo-scale.</p>
-            <div class="button-row"><a class="button button-primary" th:href="@{/w/{token}/maker/offer(token=${token},run=${stored.run.id})}">Use this proposal</a></div>
-            <p>You still set the price and confirm the exact product and delivery terms. This does not publish an offer.</p>
-        </section>
-        <section id="proposal" th:if="${proposedOption == null}" class="empty-state" aria-labelledby="no-proposal">
-            <h2 id="no-proposal">No feasible batch</h2>
-            <p th:text="${stored.output.noProposalReason}">No catalog option serves these wishes.</p>
-            <p>There is no proposal to turn into an offer. Review the wishes and feasible options before trying again.</p>
-        </section>
+        </details>
     </th:block>
-    <div class="proposal-actions">
-        <p th:if="${stored != null}" th:class="${stored.newWishCount > 0 ? 'notice notice-info' : 'muted'}">
-            <strong th:text="${stored.newWishCount}">0</strong> visible wishes added after this analysis.
-            <span th:if="${stored.newWishCount > 0}">Re-run to include their words in the proposal.</span>
-        </p>
-        <form id="analysis-form" method="post" th:action="@{/w/{token}/maker/proposal(token=${token})}">
-            <button id="analysis-submit" class="button button-secondary" type="submit" th:disabled="${!hasVisibleWishes}"
-                    th:text="${stored == null ? 'Run analysis' : 'Re-run analysis'}">Re-run analysis</button>
-            <p class="field-help">Two readings and a proposal share a sixty-second time limit. The current result stays here while you wait.</p>
-            <p id="analysis-working" class="notice notice-info" role="status" aria-live="polite" hidden>Reading wishes and checking evidence… Please keep this page open.</p>
-        </form>
-        <a th:href="@{/w/{token}/maker/analysis-progress(token=${token})}">Live analysis progress</a>
-    </div>
     <div th:replace="~{workbench/table :: workbench}"></div>
     <th:block th:if="${stored != null}">
-        <details th:if="${demand != null}" id="proposal-demand" class="preview-section">
-            <summary>Explore price and demand</summary>
-            <section th:replace="~{maker/demand :: explorer(${demand}, ${token}, ${stored.run.id})}"></section>
-        </details>
-        <div th:replace="~{nextbatch/link :: link(${token}, ${stored.run.id})}"></div>
-        <p><a th:href="@{/w/{token}/maker/replies(token=${token},run=${stored.run.id})}">Review replies</a> ·
-            <a th:href="@{/w/{token}/maker/glosses(token=${token},run=${stored.run.id})}">English reading aids</a></p>
+        <p><a th:replace="~{nextbatch/link :: link(${token}, ${stored.run.id})}"></a></p>
         <details th:if="${proposedOption != null}" class="preview-section">
             <summary>Why this batch: review the supporting claims</summary>
             <div class="section-heading"><p class="eyebrow">Why this batch</p><h2 id="rationale">A claim needs a fan's words.</h2>
@@ -153,7 +118,6 @@
         </details>
         <section class="preview-section" aria-labelledby="maker-questions">
             <div class="section-heading"><h2 id="maker-questions">Questions only you can settle.</h2></div>
-            <p><a th:href="@{/w/{token}/maker/questions(token=${token})}">Review follow-up questions for the latest analysis</a></p>
             <p th:if="${stored.output.questionsForMaker.isEmpty()}">No questions were returned. Check the evidence and production terms before making an offer.</p>
             <ul><li th:each="question : ${stored.output.questionsForMaker}">
                 <p th:text="${question.text}">Question for the maker</p>
@@ -170,6 +134,15 @@
         </details>
         <section class="preview-section proposal-meta" aria-labelledby="run-details">
             <div class="section-heading"><h2 id="run-details">About this analysis.</h2></div>
+        <section class="notice notice-info" aria-label="Second reading">
+            <th:block th:if="${secondReading != null}">
+                <p><strong>Two readings · agreement <span th:text="${agreementRate}">0%</span></strong>
+                    (<span th:text="${secondReading.agreedWishCount}">0</span> of <span th:text="${secondReading.comparedWishCount}">0</span> wishes).</p>
+                <p>Agreement means both readings matched on request type and every option verdict. Disagreements need your eyes and stay in Depends until you decide.</p>
+                <p th:unless="${secondReading.batchCompositionChanged}">Only one wish was available. Both readings used the same context.</p>
+            </th:block>
+            <p th:if="${secondReading == null}">No second reading is recorded for this result. Re-run analysis to compare two readings and see an agreement rate.</p>
+        </section>
             <details>
                 <summary>Run evidence and validation flags</summary>
                 <div th:replace="~{boundary/panel :: panel(${boundary})}"></div>

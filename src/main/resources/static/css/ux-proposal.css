@@ -1,0 +1,51 @@
+.ux-proposal .page-heading { padding-block: var(--space-4); }
+.ux-proposal .page-heading h1 { font-size: clamp(1.7rem, 3vw, 2.3rem); }
+.ux-proposal .page-heading .lead { font-size: 1rem; margin-top: var(--space-2); }
+.ux-proposal .preview-section { padding-block: var(--space-6); }
+.ux-proposal .proposal-hero { margin-block: var(--space-4); padding: var(--space-4); border: 1px solid var(--accent); border-radius: var(--radius); background: var(--accent-soft); }
+.ux-proposal .proposal-hero h2 { font-size: 1.6rem; margin-block: var(--space-2); }
+.ux-proposal .proposal-hero p { font-size: .875rem; }
+.ux-proposal .proposal-hero .button-row { margin-top: var(--space-3); }
+.ux-proposal .proposal-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); margin-block: var(--space-3); }
+.ux-proposal .proposal-summary > div { padding: var(--space-2) var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
+.ux-proposal .proposal-summary blockquote { margin: var(--space-2) 0; overflow-wrap: anywhere; }
+.ux-proposal .proposal-summary strong { display: block; font-size: 1.4rem; }
+.ux-proposal .proposal-catalog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-6); }
+.ux-proposal .proposal-evidence, .ux-proposal .proposal-wish-list { display: grid; gap: var(--space-4); margin-top: var(--space-6); }
+.ux-proposal .proposal-evidence .evidence { margin-top: var(--space-4); }
+.ux-proposal .proposal-wish { scroll-margin-top: var(--space-16); }
+.ux-proposal .proposal-wish:target { outline: 3px solid var(--focus); outline-offset: 4px; }
+.ux-proposal .proposal-wish blockquote { margin: var(--space-4) 0; }
+.ux-proposal .proposal-needs { padding-left: var(--space-6); }
+.ux-proposal .proposal-needs li + li { margin-top: var(--space-3); }
+.ux-proposal .proposal-needs q { display: block; color: var(--muted); }
+.ux-proposal .proposal-meta { overflow-wrap: anywhere; }
+.ux-proposal .proposal-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); margin-bottom: var(--space-4); }
+.ux-proposal .proposal-actions > p { flex-basis: 100%; font-size: .875rem; }
+.ux-proposal .proposal-actions form { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
+.ux-proposal .proposal-actions .field-help { max-width: 36rem; margin: 0; }
+.ux-proposal .proposal-actions [hidden] { display: none; }
+.proposal-helpers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin-block: var(--space-4); }
+.proposal-helpers .card { padding: var(--space-4); display: grid; gap: var(--space-2); align-content: start; }
+.proposal-helpers p { font-size: .875rem; }
+.proposal-helpers a { align-self: end; }
+.demand-compact { padding: var(--space-4); overflow-wrap: anywhere; }
+.demand-compact h2 { font-size: 1.4rem; margin-bottom: var(--space-2); }
+.demand-compact > p { font-size: .875rem; margin-top: var(--space-2); }
+.demand-compact details { margin-top: var(--space-3); }
+.demand-compact summary { cursor: pointer; }
+.demand-compact .table-scroll { max-width: 100%; }
+.demand-compact [hidden] { display: none; }
+.proposal-helpers > *, .ux-proposal section, .ux-proposal details { min-width: 0; }
+@media (min-width: 800px) {
+    .ux-proposal .proposal-evidence { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+    .proposal-helpers { grid-template-columns: 1fr; }
+    .ux-proposal .proposal-nav { gap: var(--space-2) var(--space-4); font-size: .875rem; }
+    .ux-proposal .proposal-hero { padding: var(--space-3); }
+    .ux-proposal .proposal-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ux-proposal .proposal-summary > div { padding: var(--space-2); }
+    .ux-proposal .proposal-catalog { grid-template-columns: 1fr; }
+    .demand-compact { padding: var(--space-3); }
+}

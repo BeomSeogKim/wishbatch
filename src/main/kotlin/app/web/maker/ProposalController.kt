@@ -3,6 +3,11 @@ package app.web.maker
 import app.campaign.analysisrun.AnalysisRunResult
 import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.demand.exploreDemand
+import app.campaign.followup.FollowupService
+import app.campaign.gloss.GlossStatus
+import app.campaign.gloss.WishGlossService
+import app.campaign.replies.InvalidReplyEvidenceException
+import app.campaign.replies.ReplyService
 import app.campaign.boundary.summarizeBoundary
 import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.Wish
@@ -46,12 +51,17 @@ data class ProposalWish(
 )
 data class ProposalGroupSummary(val label: String, val key: String, val count: Int, val representative: ProposalWish?)
 
+data class ProposalHelper(val title: String, val state: String, val action: String, val url: String)
+
 @Controller
 class ProposalController(
     private val workspaces: WorkspaceService,
     private val runs: AnalysisRunService,
     private val display: MakerDisplay,
     private val reviews: WishReviewService,
+    private val followups: FollowupService,
+    private val replies: ReplyService,
+    private val glosses: WishGlossService,
 ) {
 
     @GetMapping("/w/{token}/maker/proposal")
@@ -75,6 +85,7 @@ class ProposalController(
             WorkbenchFilter(optionId = stored?.output?.proposal?.optionId))
         model.addAttribute("workbenchReturnTo", "proposal")
         if (stored != null) {
+            model.addAttribute("proposalHelpers", helperCards(token, stored.run.id))
             val output = stored.output
             val secondReading = stored.originalOutput.secondReading
             model.addAttribute("secondReading", secondReading)
@@ -88,7 +99,7 @@ class ProposalController(
             model.addAttribute("optionCounts", optionWishCounts(output))
             model.addAttribute("proposedCounts", optionWishCounts(output).singleOrNull { it.optionId == option?.id })
             if (option != null) {
-                model.addAttribute("demand", exploreDemand(output, options.values.toList(), wishes.values.toList(), option.id))
+                model.addAttribute("demand", exploreDemand(output, options.values.toList(), wishes.values.toList(), option.id, unitPrice = option.unitCost))
                 model.addAttribute("optionFormat", display.catalogLabel(option.format))
                 model.addAttribute("optionAttributes", option.fixedAttributes.mapKeys { display.catalogLabel(it.key) }
                     .mapValues { display.catalogLabel(it.value) })
@@ -169,6 +180,37 @@ class ProposalController(
     @ExceptionHandler(InvalidWishReviewException::class)
     fun invalidReview(): ResponseEntity<String> = ResponseEntity.badRequest()
         .body("Choose Compatible or Not served and provide a reason of 1 to 500 characters.")
+
+    private fun helperCards(token: String, runId: UUID): List<ProposalHelper> {
+        val questions = followups.makerPage(token)
+        val questionState = if (questions.runId != runId) "Counts unavailable · latest analysis only"
+            else if (questions.failure != null) "Draft attempt failed · ${questions.questions.size} saved questions"
+            else if (!questions.drafted) "Not drafted · ${questions.questions.size} saved questions"
+            else "${questions.questions.size} questions · ${questions.questions.count { it.approved }} approved"
+        val replyState = try {
+            val page = replies.maker(token, runId)
+            "${page.groups.size} groups · ${page.groups.count { it.draft != null }} saved replies · " +
+                "${page.groups.count { it.approved }} approved · ${page.status.lowercase().replace('_', ' ')}"
+        } catch (_: InvalidReplyEvidenceException) {
+            "Counts unavailable · historical or changed evidence"
+        }
+        val rows = glosses.read(token, runId).rows
+        val glossAction = when {
+            rows.any { !it.current } -> "source evidence unavailable"
+            rows.any { it.saved?.status == null && (it.saved?.attempts ?: 0) > 0 } -> "attempt failed; review reading aids"
+            rows.any { it.saved?.status == GlossStatus.UNCERTAIN } -> "uncertain results need review"
+            rows.any { it.saved?.status == null } -> "${rows.count { it.saved?.status == null }} unchecked"
+            rows.isEmpty() -> "no visible source wishes"
+            else -> "all visible wishes checked"
+        }
+        val glossState = if (rows.isNotEmpty() && rows.none { it.current }) "Reading aids unavailable · $glossAction"
+            else "${rows.count { it.saved?.status == GlossStatus.TRANSLATED }} translations ready · $glossAction"
+        return listOf(
+            ProposalHelper("Follow-up questions", questionState, "Review follow-up questions for the latest analysis", "/w/$token/maker/questions"),
+            ProposalHelper("Replies", replyState, "Review replies", "/w/$token/maker/replies?run=$runId"),
+            ProposalHelper("English reading aids", glossState, "Review reading aids", "/w/$token/maker/glosses?run=$runId"),
+        )
+    }
 
     private fun readingLabel(kind: WishKind, verdict: CompatibilityVerdict?): String =
         if (kind == WishKind.NOT_A_REQUEST) "Not a request" else when (verdict) {

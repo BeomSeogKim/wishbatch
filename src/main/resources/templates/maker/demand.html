@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-<section th:fragment="explorer(demand, token, runId)" th:if="${demand != null}" id="demand-explorer" class="card preview-section" aria-labelledby="demand-heading">
+<section th:fragment="explorer(demand, token, runId)" th:replace="~{maker/demand :: compact(${demand}, ${token}, ${runId}, ${null}, 'Price reference')}"></section>
+<section th:fragment="compact(demand, token, runId, referencePrice, referenceLabel)" th:if="${demand != null}" id="demand-explorer" class="card demand-compact" aria-labelledby="demand-heading">
+    <link rel="stylesheet" th:href="@{/css/ux-proposal.css}">
     <h2 id="demand-heading">Explore price and demand</h2>
     <p>Simulation of stated interest, not orders, authorized holds, or completed payments. Only Compatible wishes count; Depends and Not a request are excluded.</p>
     <p th:text="${demand.optionName + ': ' + demand.compatible + ' Compatible wishes. Minimum: ' + demand.minimum + ' units.'}"></p>
-    <p>Each wish counts once, regardless of requested quantity or repeated imports. Comparing wishes with minimum units is illustrative; it does not establish payment or production readiness.</p>
-    <p>Prices are parsed from quoted original limits, never model-normalized numbers. Only wishes made entirely of quoted, supported price-limit statements are parsed. Any additional sentence or clause stays unknown because it could change the currency or scope. USD and US$ are explicit; $ means USD in this USD catalog. Strict “under” limits exclude the stated amount. Totals for multiple items, delivery-inclusive amounts, unsupported currencies, and unclear wording stay unknown.</p>
-    <p th:text="${demand.missing + ' have no quoted price limit; ' + demand.ambiguous + ' have ambiguous or unsupported limits. Both groups are excluded from the price curve, not assumed willing to pay any price. ' + demand.unbounded + ' explicitly state no price limit and remain on the curve.'}"></p>
-    <p>On the offer form, use Check this price after editing the price or minimum to refresh this simulation.</p>
-    <div id="demand-price-chart" role="img" aria-label="Compatible wishes with a known price limit against the minimum; exact data and quotes follow" style="height: 320px; width: 100%" hidden></div>
+    <p th:if="${referencePrice != null}" id="demand-reference" th:text="${referenceLabel + ': ' + @makerDisplay.money(referencePrice, demand.currency) + ' · Minimum: ' + demand.minimum + ' units'}"></p>
+    <p th:if="${demand.wishes.isEmpty()}">No Compatible wishes for this option.</p>
+    <p class="muted" th:text="${demand.missing + ' without a quoted limit · ' + demand.ambiguous + ' ambiguous · ' + demand.unbounded + ' explicitly unbounded'}"></p>
+    <div id="demand-price-chart" role="img" aria-label="Compatible wishes with a known price limit against the minimum; exact data and quotes follow" style="height: 260px; width: 100%" hidden></div>
     <p id="demand-chart-status" role="status">Exact server-computed data and evidence are available below, including when charts cannot load.</p>
+    <details id="demand-exact-data" open>
+        <summary>Exact price-demand data and source links</summary>
     <div class="table-scroll" tabindex="0" role="region" aria-label="Price-demand evidence table">
         <table>
             <caption>Compatible wishes remaining at each unit price</caption>
@@ -33,17 +36,25 @@
             </tbody>
         </table>
     </div>
+    </details>
+    <details class="demand-method">
+        <summary>How price limits are counted</summary>
+    <p>Each wish counts once, regardless of requested quantity or repeated imports. Comparing wishes with minimum units is illustrative; it does not establish payment or production readiness.</p>
+    <p>Prices are parsed from quoted original limits, never model-normalized numbers. Only wishes made entirely of quoted, supported price-limit statements are parsed. Any additional sentence or clause stays unknown because it could change the currency or scope. USD and US$ are explicit; $ means USD in this USD catalog. Strict “under” limits exclude the stated amount. Totals for multiple items, delivery-inclusive amounts, unsupported currencies, and unclear wording stay unknown.</p>
+    <p th:text="${demand.missing + ' have no quoted price limit; ' + demand.ambiguous + ' have ambiguous or unsupported limits. Both groups are excluded from the price curve, not assumed willing to pay any price. ' + demand.unbounded + ' explicitly state no price limit and remain on the curve.'}"></p>
+    <p>On the offer form, use Check this price after editing the price or minimum to refresh this simulation.</p>
+    </details>
     <details id="demand-quotes">
         <summary>Price evidence for every Compatible wish</summary>
-        <p th:if="${demand.wishes.isEmpty()}">No Compatible wishes for this option.</p>
-        <article th:each="wish : ${demand.wishes}" th:id="${'demand-quote-' + wish.wishId}" class="evidence">
+            <article th:each="wish : ${demand.wishes}" th:id="${'demand-quote-' + wish.wishId}" class="evidence">
             <p th:text="${wish.price.status.name() == 'QUOTED_LIMIT' ? 'Maximum unit price: ' + @makerDisplay.money(wish.price.maximumMinor, demand.currency) : (wish.price.status.name() == 'MISSING' ? 'No quoted price limit; willingness at this price is unknown.' : (wish.price.status.name() == 'EXPLICITLY_UNBOUNDED' ? 'Explicitly no price limit.' : 'Ambiguous or unsupported price limit; excluded from curve.'))}"></p>
             <blockquote th:each="quote : ${wish.price.quotes}"><p style="white-space: pre-wrap" th:text="${quote}"></p></blockquote>
             <p th:if="${wish.price.quotes.isEmpty()}" style="white-space: pre-wrap" th:text="${wish.text}"></p>
             <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${runId})} + ${'#wish-' + wish.wishId}">View exact source wish</a>
         </article>
     </details>
-    <h3>Compare alternative coverage</h3>
+    <details id="demand-alternatives">
+    <summary>Compare alternative coverage</summary>
     <p>Format compatibility before applying a price. Each comparison shows wishes this option serves that the named other option does not classify as Compatible. Other conditions and maker review still apply.</p>
     <div id="demand-alternative-chart" role="img" aria-label="Compatible stated wishes for each option; exact differences follow" style="height: 300px; width: 100%" hidden></div>
     <div class="two-column">
@@ -63,12 +74,17 @@
             </div>
         </article>
     </div>
+    </details>
     <th:block th:replace="~{fragments/data-tools :: charts}"></th:block>
     <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', () => {
             const points = /*[[${demand.points}]]*/ [];
             const alternatives = /*[[${demand.alternatives}]]*/ [];
             const currency = /*[[${demand.currency}]]*/ 'USD';
+            const referencePrice = /*[[${referencePrice}]]*/ null;
+            const referenceLabel = /*[[${referenceLabel}]]*/ 'Price reference';
+            const moneyFormat = new Intl.NumberFormat('en-US', { style: 'currency', currency });
+            const money = value => moneyFormat.format(value / 10 ** moneyFormat.resolvedOptions().maximumFractionDigits);
             const workbenchActive = () => document.querySelector('#wish-workbench [data-workbench-grid]')?.hidden === false;
             const filterWishes = wishIds => {
                 window.dispatchEvent(new CustomEvent('wishbatch:filter-wishes', { detail: { wishIds } }));
@@ -80,6 +96,10 @@
                     button.addEventListener('click', () => filterWishes(button.dataset.wishIds ? button.dataset.wishIds.split(',') : []));
                 });
             }
+            if (new Set(points.map(point => point.priceMinor)).size < 2) {
+                document.getElementById('demand-chart-status').textContent = 'Not enough distinct price points to draw a curve. Exact server-computed data and evidence remain below.';
+                return;
+            }
             if (!window.agCharts?.AgCharts || !points.every(point => Number.isSafeInteger(point.priceMinor))) return;
             const priceChart = document.getElementById('demand-price-chart');
             const alternativeChart = document.getElementById('demand-alternative-chart');
@@ -88,22 +108,37 @@
                 agCharts.AgCharts.create({
                     container: priceChart,
                     data: points,
-                    axes: { x: { type: 'number', title: { text: currency + ' unit price (minor units)' } }, y: { type: 'number', min: 0, title: { text: 'Wishes / minimum units' } } },
+                    axes: { x: { type: 'number', title: { text: currency + ' unit price' }, label: { formatter: ({ value }) => money(value) } }, y: { type: 'number', min: 0, title: { text: 'Wishes / minimum units' } } },
                     series: [
                         { type: 'line', xKey: 'priceMinor', yKey: 'compatible', yName: 'Known-limit Compatible wishes', marker: { enabled: true }, interpolation: { type: 'step', position: 'end' }, listeners: { seriesNodeClick: event => filterWishes(event.datum.wishIds) } },
-                        { type: 'line', xKey: 'priceMinor', yKey: 'minimum', yName: 'Minimum units', marker: { enabled: false } }
+                        { type: 'line', xKey: 'priceMinor', yKey: 'minimum', yName: 'Minimum units', marker: { enabled: false }, lineDash: [6, 4] },
+                        ...(Number.isSafeInteger(referencePrice) && referencePrice > 0 ? [{
+                            type: 'line', xKey: 'priceMinor', yKey: 'reference', yName: referenceLabel + ' · ' + money(referencePrice),
+                            data: [{ priceMinor: referencePrice, reference: 0 }, { priceMinor: referencePrice, reference: Math.max(1, ...points.map(point => Math.max(point.minimum, point.compatible))) }],
+                            marker: { enabled: false }, lineDash: [3, 3]
+                        }] : [])
                     ]
                 });
-                alternativeChart.hidden = false;
-                agCharts.AgCharts.create({
-                    container: alternativeChart,
-                    data: alternatives,
-                    series: [{ type: 'bar', xKey: 'optionName', yKey: 'compatible', yName: 'Compatible wishes before price', listeners: { seriesNodeClick: event => filterWishes(event.datum.wishIds) } }]
+                document.getElementById('demand-exact-data').open = false;
+                document.getElementById('demand-alternatives').addEventListener('toggle', function () {
+                    if (!this.open || alternativeChart.dataset.rendered) return;
+                    try {
+                        alternativeChart.hidden = false;
+                        agCharts.AgCharts.create({
+                            container: alternativeChart,
+                            data: alternatives,
+                            series: [{ type: 'bar', xKey: 'optionName', yKey: 'compatible', yName: 'Compatible wishes before price', listeners: { seriesNodeClick: event => filterWishes(event.datum.wishIds) } }]
+                        });
+                        alternativeChart.dataset.rendered = 'true';
+                    } catch {
+                        alternativeChart.hidden = true;
+                    }
                 });
                 document.getElementById('demand-chart-status').textContent = workbenchActive() ? 'Select a demand point or option bar to filter the workbench. Exact evidence is also below.' : 'Exact evidence for the chart points and options is below.';
             } catch {
                 priceChart.hidden = true;
                 alternativeChart.hidden = true;
+                document.getElementById('demand-exact-data').open = true;
             }
         });
     </script>
