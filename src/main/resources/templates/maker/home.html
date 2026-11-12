@@ -8,6 +8,7 @@
         <p class="lead">Your demo already has product options and fan wishes. Review the options, then listen to the wishes before shaping an offer.</p>
         <p class="sample-label">Costs and production limits are demo-scale.</p>
     </header>
+    <p><a th:href="@{/w/{token}/maker/overview(token=${token})}">Open campaign overview</a></p>
     <div th:replace="~{maker/fragments :: steps(${token}, ${makerStep})}"></div>
     <section th:if="${makerStep == 1}" class="preview-section" aria-labelledby="next-step">
         <div class="card">
