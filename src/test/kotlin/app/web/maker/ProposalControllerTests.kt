@@ -108,7 +108,7 @@ class ProposalControllerTests(
         for (label in listOf("Interested in this offer", "Depend on a condition", "Excluded by price", "Not served")) {
             assertContains(html, label)
         }
-        assertContains(html, "more depend on a condition")
+        assertContains(html, "Interest at")
         assertContains(html, "Live analysis progress")
         assertContains(html, "Review questions to ask fans for the latest analysis")
         assertContains(html, "data-interest-group-link")

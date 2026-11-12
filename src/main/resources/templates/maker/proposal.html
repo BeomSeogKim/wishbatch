@@ -37,7 +37,7 @@
                     <p th:if="${group.representative == null}">No wishes in this group.</p>
                 </div>
             </div>
-            <p th:if="${proposedCounts != null}" th:text="${proposedCounts.conditional + ' more depend on a condition. Interest at ' + interestPrice + ', not orders.'}"></p>
+            <p th:if="${proposedCounts != null}" th:text="${'Interest at ' + interestPrice + ', not orders.'}"></p>
             <div class="button-row">
                 <a class="button button-primary" th:href="@{/w/{token}/maker/offer(token=${token},run=${stored.run.id})}">Use this proposal</a>
                 <button id="analysis-submit" form="analysis-form" class="button button-secondary" type="submit"

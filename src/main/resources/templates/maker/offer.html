@@ -18,6 +18,7 @@
             <section th:if="${option != null}" class="preview-section">
                 <div th:if="${unreadWishCount > 0}" class="notice" role="status">
                     <p>This analysis does not include all current visible wishes (<span th:text="${unreadWishCount}"></span> missing). Re-run it to review them before publishing.</p>
+                    <p>A successful re-run creates a new analysis. Saved reply and fan-question drafts do not carry over; draft them again for the new analysis.</p>
                     <form method="post" th:action="@{/w/{token}/maker/proposal(token=${token})}">
                         <button type="submit" class="button button-secondary">Re-run analysis</button>
                     </form>
