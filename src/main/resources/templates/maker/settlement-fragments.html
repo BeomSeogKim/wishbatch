@@ -20,6 +20,38 @@
                 </p>
             </div>
         </div>
+        <nav th:fragment="settlementNextSteps(campaign)" class="preview-section" aria-label="Settlement next steps">
+            <h2>Review settlement evidence</h2>
+            <div class="button-row">
+                <a th:href="@{/w/{token}/maker/books(token=${token},campaignId=${campaign.id})}">Check payment books</a>
+                <a th:href="@{/w/{token}/maker/decision-record(token=${token})}">Open decision record</a>
+                <a th:href="@{/w/{token}/maker/campaigns/{id}/trail(token=${token},id=${campaign.id})}">Payment trail</a>
+                <a th:href="@{/w/{token}/maker/reliability-drills(token=${token})}">Synthetic reliability drills</a>
+            </div>
+        </nav>
+        <section th:fragment="settlementCounts(campaign)" class="counts" aria-label="Campaign counts">
+            <div class="count count-interest">
+                <p class="count-label">Stated interest</p>
+                <p class="count-value" th:text="${campaign.counts.statedInterest}"></p>
+                <p class="count-caption">Wishes classified as requests. These are not orders.</p>
+            </div>
+            <div class="count" th:classappend="${terminal ? '' : 'count-authorized'}">
+                <p class="count-label">Authorized holds</p>
+                <p class="count-value" th:text="${campaign.counts.authorizedHolds}"></p>
+                <p class="count-caption">Units with a payment hold. Not paid yet.</p>
+                <th:block th:unless="${terminal}">
+                    <progress class="progress-authorized" th:value="${campaign.counts.authorizedHolds}" th:max="${campaign.offer.minBatch}" aria-label="Authorized units toward minimum batch" th:text="|${campaign.counts.authorizedHolds} of ${campaign.offer.minBatch}|"></progress>
+                    <p class="count-target" th:text="|${campaign.counts.authorizedHolds} / ${campaign.offer.minBatch} minimum units|"></p>
+                </th:block>
+            </div>
+            <div class="count count-paid">
+                <p class="count-label">Paid</p>
+                <p class="count-value" th:text="${campaign.counts.paid}"></p>
+                <p class="count-caption">Units with completed payments.</p>
+                <progress class="progress-paid" th:value="${campaign.counts.paid}" th:max="${campaign.offer.minBatch}" aria-label="Paid units toward minimum batch" th:text="|${campaign.counts.paid} of ${campaign.offer.minBatch}|"></progress>
+                <p class="count-target" th:text="|${campaign.counts.paid} / ${campaign.offer.minBatch} minimum units|"></p>
+            </div>
+        </section>
         <section th:fragment="pledges(campaign)" class="preview-section" aria-labelledby="pledges-heading">
             <h2 id="pledges-heading">Every pledge</h2>
             <p th:if="${campaign.pledges.isEmpty()}" class="empty-state">No pledges yet. Stated interest is not a payment commitment.</p>
@@ -126,30 +158,45 @@
                 <p>Recheck pending payments, refunds, and hold releases. Repeated provider errors delay retries from one minute up to one hour. Refreshing or retrying does not skip that wait.</p>
             </form>
         </section>
-        <section th:fragment="timeline(campaign)" class="preview-section" aria-labelledby="timeline-heading">
+        <section th:fragment="timeline(campaign)" class="preview-section" aria-labelledby="timeline-heading"
+                 th:with="recent=${@makerDisplay.recentEvents(campaign.timeline)}">
             <h2 id="timeline-heading">Campaign and payment timeline</h2>
-            <ol class="timeline">
-                <li th:each="event : ${campaign.timeline}">
-                    <time th:datetime="${event.time}" th:text="${@makerDisplay.time(event.time)}">
-                    </time>
-                    <strong th:text="${@makerDisplay.words(event.type)}">
-                    </strong>
-                    <p th:if="${event.pledgeId != null}"><span th:text="${pledgeLabels[event.pledgeId]}">
-                        </span>
-                    </p>
-                    <p th:if="${event.endpoint != null}">Endpoint: <span th:text="${event.endpoint}">
-                        </span>
-                    </p>
-                    <p th:if="${event.providerId != null}">Provider ID: <span th:text="${event.providerId}">
-                        </span>
-                    </p>
-                    <p th:if="${event.status != null}">Status: <span th:text="${@makerDisplay.words(event.status)}">
-                        </span>
-                    </p>
-                    <p th:if="${event.detail != null}" th:text="${@makerDisplay.detail(event.detail)}">
-                    </p>
+            <p>Recent campaign and pledge updates, newest first.</p>
+            <p th:if="${recent.isEmpty()}">No campaign or pledge updates recorded yet.</p>
+            <ol class="timeline" aria-label="Recent campaign updates">
+                <li th:each="event : ${recent}">
+                    <time th:datetime="${event.time}" th:text="${@makerDisplay.time(event.time)}"></time>
+                    <strong th:text="${@makerDisplay.words(event.type)}"></strong>
+                    <p th:if="${event.pledgeId != null}" th:text="${pledgeLabels[event.pledgeId]}"></p>
+                    <p th:if="${event.detail != null}" th:text="${@makerDisplay.detail(event.detail)}"></p>
                 </li>
             </ol>
+            <details>
+                <summary>Full campaign and payment log</summary>
+                <p>All recorded events, including provider endpoints, IDs, and statuses.</p>
+                <ol class="timeline">
+                    <li th:each="event : ${campaign.timeline}">
+                        <time th:datetime="${event.time}" th:text="${@makerDisplay.time(event.time)}">
+                        </time>
+                        <strong th:text="${@makerDisplay.words(event.type)}">
+                        </strong>
+                        <p th:if="${event.pledgeId != null}"><span th:text="${pledgeLabels[event.pledgeId]}">
+                            </span>
+                        </p>
+                        <p th:if="${event.endpoint != null}">Endpoint: <span th:text="${event.endpoint}">
+                            </span>
+                        </p>
+                        <p th:if="${event.providerId != null}">Provider ID: <span tabindex="0" th:title="${event.providerId}" th:attr="aria-label=${event.providerId}" th:text="${@makerDisplay.shortId(event.providerId)}">
+                            </span>
+                        </p>
+                        <p th:if="${event.status != null}">Status: <span th:text="${@makerDisplay.words(event.status)}">
+                            </span>
+                        </p>
+                        <p th:if="${event.detail != null}" th:text="${@makerDisplay.detail(event.detail)}">
+                        </p>
+                    </li>
+                </ol>
+            </details>
         </section>
     </body>
 </html>

@@ -1,71 +1,83 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Campaign dashboard', ~{::main})}">
     <body>
-        <main id="main" class="shell" data-live-campaign
+        <main id="main" class="shell campaign-page" data-live-campaign
                 th:with="confirmationVersion=${@liveCampaignDisplay.confirmationVersion(campaign)}"
                 th:attr="data-status-url=@{/w/{token}/api/campaign-status(token=${token})},data-campaign-id=${campaign?.id},data-initial-state=${campaign?.state},data-initial-holds=${campaign?.counts?.authorizedHolds},data-initial-paid=${campaign?.counts?.paid},data-initial-capacity=${campaign?.capacityLeft},data-confirmation-version=${confirmationVersion}">
+            <link rel="stylesheet" th:href="@{/css/ux-campaign.css}">
             <header class="page-heading">
                 <p class="eyebrow">Maker campaign</p>
                 <h1>Follow the commitments.</h1>
                 <p class="lead">Wishes, authorized holds, and completed payments are different facts. Only enough completed payments release production.</p>
             </header>
-            <div th:replace="~{maker/fragments :: steps(${token}, ${makerStep})}">
-            </div>
             <div th:replace="~{maker/settlement-fragments :: alerts}">
             </div>
             <div th:if="${campaign == null}" class="empty-state preview-section">
+                <div th:replace="~{maker/fragments :: steps(${token}, ${makerStep})}"></div>
                 <h2>No published campaign yet.</h2>
                 <p>Confirm an exact offer before opening it for pledges.</p>
                 <a class="button button-primary" th:href="@{/w/{token}/maker/offer(token=${token})}">Create offer</a>
             </div>
             <div th:if="${campaign != null}">
-                <section class="preview-section">
-                    <h2 th:text="${campaign.offer.title}">
-                    </h2>
-                    <p class="badge badge-neutral" data-live-field="state" th:text="${@makerDisplay.words(campaign.state)}">
-                    </p>
-                    <p class="offer-specification" th:text="${campaign.offer.specText}">
-                    </p>
-                    <p>
-                        <span th:text="${@makerDisplay.money(campaign.offer.unitPrice, campaign.offer.currency)}">
-                        </span> / unit · <span th:text="${campaign.offer.shipRegion}">
-                        </span>
-                    </p>
-                    <p th:text="${campaign.offer.deliveryTerms}">
-                    </p>
-                    <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${campaign.offer.analysisRunId})}">Offer evidence</a>
-                </section>
-                <div th:replace="~{livecampaign/fragments :: counts(${campaign})}">
-                </div>
-                <p><a th:href="@{/w/{token}/maker/campaign/{id}/charts(token=${token},id=${campaign.id})}">View campaign counts and recorded history</a></p>
-                <section class="two-column preview-section">
-                    <div class="card">
-                        <h2>Batch progress</h2>
-                        <p>
-                            <strong data-live-field="progressUnits" th:text="${campaign.progress.units}">
-                            </strong> / <span data-live-field="progressMinimum" th:text="${campaign.progress.minimum}">
-                            </span> units toward the minimum (<span data-live-field="progressBasis" th:text="${terminal or campaign.state.name() == 'SETTLING' ? 'paid' : 'authorized holds'}">
-                            </span>).</p>
-                        <p>Capacity left: <strong data-live-field="capacityLeft" th:text="${campaign.capacityLeft}">
-                            </strong> units
-                        </p>
+                <section class="campaign-overview" aria-labelledby="campaign-title">
+                    <div class="campaign-state-heading">
+                        <h2 id="campaign-title" th:text="${campaign.offer.title}"></h2>
+                        <p class="badge badge-neutral" data-live-field="state" th:text="${campaign.state.name() == 'FUNDED' ? 'Funded (historical settlement)' : @makerDisplay.words(campaign.state)}"></p>
                     </div>
-                    <div class="card">
-                        <h2>Real deadlines</h2>
-                        <p th:hidden="${terminal}">Time left: <strong data-live-field="timeLeft" th:text="${campaign.timeLeft.toHours() + 'h ' + campaign.timeLeft.toMinutesPart() + 'm ' + campaign.timeLeft.toSecondsPart() + 's'}">
-                            </strong> <span data-live-field="deadlineLabel" th:text="${campaign.state.name() == 'AWAITING_CONFIRMATION' ? 'to confirm production' : 'in the pledge window'}">
-                            </span>.</p>
-                        <p>Opened: <time th:datetime="${campaign.openedAt}" th:text="${@makerDisplay.time(campaign.openedAt)}">
-                            </time>
-                        </p>
-                        <p><span th:text="${terminal ? 'Scheduled close' : 'Closes'}">Closes</span>: <time data-live-field="closesAt" th:datetime="${campaign.closesAt}" th:text="${@makerDisplay.time(campaign.closesAt)}">
-                            </time>
-                        </p>
-                        <p><span th:text="${terminal ? 'Confirmation deadline' : 'Confirm by'}">Confirm by</span>: <time data-live-field="confirmDeadline" th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}">
-                            </time>
-                        </p>
-                        <p>Times are UTC. <a th:href="@{/w/{token}/maker/campaign(token=${token})}">Refresh current state</a>
-                        </p>
+                    <section class="counts" aria-label="Campaign counts">
+                        <div class="count count-interest">
+                            <p class="count-label">Stated interest</p>
+                            <p class="count-value" data-live-field="statedInterest" th:text="${campaign.counts.statedInterest}"></p>
+                            <p class="count-caption">Requests in the offer analysis. Not orders or payment units.</p>
+                        </div>
+                        <div class="count" th:classappend="${terminal ? '' : 'count-authorized'}">
+                            <p class="count-label">Authorized holds</p>
+                            <p class="count-value" data-live-field="authorizedHolds" th:text="${campaign.counts.authorizedHolds}"></p>
+                            <p class="count-caption">Units with a payment hold. Not paid yet.</p>
+                            <progress th:unless="${terminal}" class="progress-authorized" data-count-field="authorizedHolds" th:value="${campaign.counts.authorizedHolds}" th:max="${campaign.offer.minBatch}" aria-label="Authorized holds toward minimum"></progress>
+                            <p th:unless="${terminal}" class="count-target"><span data-live-field="authorizedHolds" th:text="${campaign.counts.authorizedHolds}"></span> / <span th:text="${campaign.offer.minBatch}"></span> units minimum</p>
+                        </div>
+                        <div class="count count-paid">
+                            <p class="count-label">Paid</p>
+                            <p class="count-value" data-live-field="paid" th:text="${campaign.counts.paid}"></p>
+                            <p class="count-caption">Units with completed payments. Only these count for production.</p>
+                            <progress class="progress-paid" data-count-field="paid" th:value="${campaign.counts.paid}" th:max="${campaign.offer.minBatch}" aria-label="Completed payments toward minimum"></progress>
+                            <p class="count-target"><span data-live-field="paid" th:text="${campaign.counts.paid}"></span> / <span th:text="${campaign.offer.minBatch}"></span> units minimum</p>
+                        </div>
+                    </section>
+                    <div class="campaign-summary-grid">
+                        <section class="card campaign-next" aria-labelledby="next-heading">
+                            <h2 id="next-heading">Next step</h2>
+                            <p th:if="${nextAction == 'SHARE'}">Share the exact offer with fans. Production confirmation becomes available when authorized holds meet the minimum during the confirmation window.</p>
+                            <p th:if="${nextAction == 'CONFIRM'}">The authorized minimum is met. Review the pledge total and payment consequences before confirming production.</p>
+                            <p th:if="${nextAction == 'REFRESH'}">Review the latest server state and unresolved payments. Pending captures are not paid.</p>
+                            <p th:if="${nextAction == 'RESULT'}">Review the settlement outcome and any unresolved payments before proceeding.</p>
+                            <div th:unless="${review}" data-live-action="confirmation">
+                                <a th:if="${nextAction == 'SHARE'}" class="button button-primary" th:href="@{/w/{token}/offer(token=${token})}" target="_blank" rel="noopener noreferrer">Open fan offer page (new tab)</a>
+                                <form th:if="${nextAction == 'CONFIRM'}" method="post" th:action="@{/w/{token}/maker/campaign(token=${token})}">
+                                    <input type="hidden" name="campaignId" th:value="${campaign.id}">
+                                    <button class="button button-primary" type="submit" name="action" value="review">Confirm production</button>
+                                </form>
+                                <a th:if="${nextAction == 'REFRESH'}" class="button button-primary" th:href="@{/w/{token}/maker/campaign(token=${token})}">Refresh current state</a>
+                                <a th:if="${nextAction == 'RESULT'}" class="button button-primary" th:href="@{/w/{token}/maker/result(token=${token})}">View settlement result</a>
+                            </div>
+                        </section>
+                        <aside class="card campaign-terms" aria-label="Offer terms and deadlines">
+                            <p th:hidden="${!showDeadline}">Time left: <strong data-live-field="timeLeft" th:text="${campaign.timeLeft.toHours() + 'h ' + campaign.timeLeft.toMinutesPart() + 'm ' + campaign.timeLeft.toSecondsPart() + 's'}"></strong> <span data-live-field="deadlineLabel" th:text="${campaign.state.name() == 'AWAITING_CONFIRMATION' ? 'to confirm production' : 'in the pledge window'}"></span>.</p>
+                            <p>Capacity left: <strong data-live-field="capacityLeft" th:text="${campaign.capacityLeft}"></strong> units</p>
+                            <details>
+                                <summary>Offer terms and exact deadlines</summary>
+                                <p class="offer-specification" th:text="${campaign.offer.specText}"></p>
+                                <p><strong th:text="${@makerDisplay.money(campaign.offer.unitPrice, campaign.offer.currency)}"></strong> / unit · <span th:text="${campaign.offer.shipRegion}"></span></p>
+                                <p>Minimum: <span th:text="${campaign.offer.minBatch}"></span> units · Capacity: <span th:text="${campaign.offer.capacity}"></span> units · Maximum per pledge: <span th:text="${campaign.offer.maxQtyPerPledge}"></span></p>
+                                <p th:text="${campaign.offer.deliveryTerms}"></p>
+                                <p>Opened: <time th:datetime="${campaign.openedAt}" th:text="${@makerDisplay.time(campaign.openedAt)}"></time></p>
+                                <p><span th:text="${terminal ? 'Scheduled close' : 'Closes'}"></span>: <time data-live-field="closesAt" th:datetime="${campaign.closesAt}" th:text="${@makerDisplay.time(campaign.closesAt)}"></time></p>
+                                <p><span th:text="${terminal ? 'Confirmation deadline' : 'Confirm by'}"></span>: <time data-live-field="confirmDeadline" th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}"></time></p>
+                                <p>Times are UTC.</p>
+                                <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${campaign.offer.analysisRunId})}">Offer evidence</a>
+                            </details>
+                        </aside>
                     </div>
                 </section>
                 <section th:if="${review and !terminal}" class="card preview-section" aria-labelledby="confirm-heading">
@@ -75,7 +87,7 @@
                         </strong> <span th:text="${campaign.confirmation.pledgeCount == 1 ? 'authorized pledge' : 'authorized pledges'}"></span>, <strong th:text="${campaign.confirmation.units}">
                         </strong> units, total <strong th:text="${@makerDisplay.money(campaign.confirmation.amount, campaign.confirmation.currency)}">
                         </strong>.</p>
-                    <p>Confirming starts capture attempts. A capture can fail. Production proceeds only if enough payments complete. If too few payments complete, completed payments are refunded and remaining holds are released. PayPal and the bank or card determine when funds reappear.</p>
+                    <p>Confirming starts capture attempts. A capture can fail. Production proceeds only if enough payments complete. If too few payments complete, requests are made for completed payments to be refunded and remaining holds to be released. PayPal and the bank or card determine when funds reappear.</p>
                     <form data-live-action="confirmation" method="post" th:action="@{/w/{token}/maker/campaign(token=${token})}">
                         <input type="hidden" name="action" value="confirm">
                         <input type="hidden" name="campaignId" th:value="${campaign.id}">
@@ -90,21 +102,32 @@
                     </form>
                     <a th:href="@{/w/{token}/maker/campaign(token=${token})}">Back to dashboard</a>
                 </section>
-                <section class="preview-section" th:unless="${review or terminal}">
-                    <form data-live-action="confirmation" method="post" th:action="@{/w/{token}/maker/campaign(token=${token})}">
-                        <input type="hidden" name="campaignId" th:value="${campaign.id}">
-                        <button class="button button-primary" type="submit" name="action" value="review" th:disabled="${!canConfirm}">Confirm production</button>
-                    </form>
-                    <p th:unless="${canConfirm}">Production confirmation becomes available when authorized holds meet the minimum during the confirmation window.</p>
+                <div th:replace="~{maker/fragments :: steps(${token}, ${makerStep})}"></div>
+                <div th:if="${charts != null}" class="campaign-chart-section">
+                    <h2>Counts and recorded history</h2>
+                    <p>Snapshot at page load. Live counts above may update; reload to refresh charts and the ledger.</p>
+                    <div th:replace="~{charts/campaign :: charts(${charts})}"></div>
+                    <a th:href="@{/w/{token}/maker/campaign/{id}/charts(token=${token},id=${campaign.id})}">View campaign counts and recorded history separately</a>
+                </div>
+                <section th:if="${campaign.pledges.isEmpty()}" class="empty-state preview-section" aria-labelledby="no-pledges-heading">
+                    <h2 id="no-pledges-heading">No pledges yet.</h2>
+                    <p>Stated interest is not a payment commitment. Fans must open the offer and authorize a hold before units count.</p>
+                    <a th:href="@{/w/{token}/offer(token=${token})}">Open fan offer page</a>
                 </section>
-                <section class="preview-section">
-                    <form data-live-action="campaign" th:if="${canCancel}" method="post" th:action="@{/w/{token}/maker/campaign(token=${token})}">
+                <th:block th:unless="${campaign.pledges.isEmpty()}">
+                    <div th:replace="~{maker/settlement-fragments :: pledges(${campaign})}"></div>
+                </th:block>
+                <div th:replace="~{maker/settlement-fragments :: attention(${campaign})}"></div>
+                <div th:replace="~{maker/settlement-fragments :: timeline(${campaign})}"></div>
+                <details class="campaign-controls preview-section" th:if="${canCancel}">
+                    <summary>Campaign controls</summary>
+                    <button th:unless="${canConfirm}" class="button button-secondary" type="button" th:disabled="${true}">Confirm production</button>
+                    <form data-live-action="campaign" method="post" th:action="@{/w/{token}/maker/campaign(token=${token})}">
                         <input type="hidden" name="campaignId" th:value="${campaign.id}">
                         <p>Cancelling ends the campaign and requests release of remaining holds. Release timing depends on PayPal and the bank or card; unresolved releases remain under Needs attention.</p>
                         <button class="button button-danger" type="submit" name="action" value="cancel">Cancel campaign</button>
                     </form>
-                    <a th:if="${terminal}" class="button button-primary" th:href="@{/w/{token}/maker/result(token=${token})}">View settlement result</a>
-                </section>
+                </details>
                 <section th:if="${simulationEnabled and canCancel}" class="notice notice-warning">
                     <h2>Demo simulation</h2>
                     <p>Off unless explicitly armed. Simulate failure of the next capture without making that capture call to PayPal. This changes demo settlement behavior.</p>
@@ -131,14 +154,19 @@
                     <a th:href="@{/w/{token}/maker/books(token=${token},campaignId=${campaign.id})}">View recorded checks and pledge ledger</a>
                     · <a th:href="@{/w/{token}/maker/campaigns/{id}/trail(token=${token},id=${campaign.id})}">Money trail</a>
                 </section>
-                <div th:replace="~{maker/settlement-fragments :: pledges(${campaign})}">
-                </div>
-                <div th:replace="~{maker/settlement-fragments :: attention(${campaign})}">
-                </div>
-                <div th:replace="~{maker/settlement-fragments :: timeline(${campaign})}">
-                </div>
+
             </div>
-            <div th:replace="~{livecampaign/fragments :: freshness}"></div>
+            <section class="preview-section" aria-label="Campaign refresh">
+                <p data-live-field="warning" th:text="${campaign != null and campaign.state.name() == 'FUNDED' and campaign.counts.paid < campaign.offer.minBatch ? 'The campaign was funded at settlement, but current paid units are below the minimum. Review payments before proceeding.' : ''}"></p>
+                <p data-live-field="attention" th:text="${campaign != null and !campaign.needsAttention.isEmpty() ? 'Payments need attention. Unresolved payments are not completed payments or completed refunds.' : ''}"></p>
+                <p data-live-field="message" role="status" aria-live="polite">Values are from the page render. Refresh if they become out of date.</p>
+                <p>Last observed: <span data-live-field="observedAt">at page render</span>.</p>
+                <a href="" data-live-reload hidden>Reload to review current terms and actions</a>
+            </section>
+            <th:block th:if="${campaign != null}">
+                <th:block th:replace="~{fragments/data-tools :: charts}"></th:block>
+                <script defer th:src="@{/js/campaign-charts.js}"></script>
+            </th:block>
             <script th:src="@{/js/live-campaign.js}" defer></script>
         </main>
     </body>

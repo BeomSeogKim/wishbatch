@@ -2,19 +2,27 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Campaign counts', ~{::main})}">
 <body>
 <main id="main" class="shell">
+    <link rel="stylesheet" th:href="@{/css/ux-campaign.css}">
     <header class="page-heading">
         <p class="eyebrow">Maker workspace</p>
         <h1>Campaign counts</h1>
         <p class="lead">Stated interest → authorized holds → completed payments are different measures, not a tracked conversion cohort.</p>
         <p>Wishes are distinct requests; payment counts are units. No personal wish-to-pledge association or conversion rate is recorded. Interest is not compatible demand.</p>
     </header>
+    <div th:replace="~{charts/campaign :: charts(${charts})}"></div>
+    <p><a th:href="@{/w/{token}/maker/campaign(token=${token})}">Back to campaign</a></p>
+    <th:block th:replace="~{fragments/data-tools :: charts}"></th:block>
+    <script defer th:src="@{/js/campaign-charts.js}"></script>
+</main>
+<div th:fragment="charts(charts)" class="campaign-charts">
     <section id="campaign-charts" class="preview-section card" aria-labelledby="current-stages"
              th:attr="data-interest=${charts.interest},data-authorized=${charts.authorized},data-paid=${charts.paid}">
         <h2 id="current-stages">Current stages</h2>
-        <p>Recorded state: <strong th:text="${charts.state}"></strong>. Observed <time th:datetime="${charts.observedAt}" th:text="${charts.observedAt}"></time> (UTC).</p>
-        <p>This read-only snapshot does not refresh provider status or evaluate campaign deadlines. Reloading is not a historical observation.</p>
+        <p>Recorded state: <strong th:text="${@makerDisplay.words(charts.state)}"></strong>. Observed <time th:datetime="${charts.observedAt}" th:text="${@makerDisplay.time(charts.observedAt)}"></time>.</p>
+        <p>This read-only page snapshot is separate from live campaign counts. It does not refresh provider status or evaluate campaign deadlines. Reloading is not a historical observation.</p>
         <p th:if="${charts.state.name() == 'FUNDED'}">FUNDED is a historical settlement outcome; it does not guarantee current payment availability, production or delivery.</p>
         <ul><li th:each="warning : ${charts.attention}" th:text="${warning}"></li></ul>
+        <div id="current-stages-chart" class="campaign-chart" hidden aria-label="Current stages: requests and payment units; the table contains exact values"></div>
         <div class="table-scroll" role="region" aria-label="Current stage counts table" tabindex="0"><table>
             <caption>Current values with distinct units</caption>
             <thead><tr><th scope="col">Measure</th><th scope="col">Count</th><th scope="col">Unit and source</th></tr></thead>
@@ -24,9 +32,8 @@
             <tr><th scope="row">Completed payments</th><td th:text="${charts.paid}"></td><td>Units in CAPTURED pledges only; pending, failed and refunded states excluded</td></tr>
             </tbody>
         </table></div>
-        <p th:if="${charts.analysisAt != null}">Offer analysis recorded <time th:datetime="${charts.analysisAt}" th:text="${charts.analysisAt}"></time> (UTC).</p>
+        <p th:if="${charts.analysisAt != null}">Offer analysis recorded <time th:datetime="${charts.analysisAt}" th:text="${@makerDisplay.time(charts.analysisAt)}"></time>.</p>
         <p>Minimum batch: <span th:text="${charts.minimum}"></span> paid units. These bars have different units and do not measure conversion.</p>
-        <div id="current-stages-chart" hidden aria-label="Current stages: requests and payment units; the table contains exact values"></div>
     </section>
     <section class="preview-section card" aria-labelledby="recorded-counts">
         <h2 id="recorded-counts">Recorded count history</h2>
@@ -36,7 +43,7 @@
         <ul><li th:each="limit : ${charts.history.limits}" th:text="${limit}"></li></ul>
         <p th:if="${charts.history.checkpoints.isEmpty()}">No recorded count checkpoints are available.</p>
         <p id="chart-status" role="status">Charts are optional. Exact values, source events and UTC times remain available in the tables below.</p>
-        <div id="recorded-counts-chart" hidden aria-label="Recorded checkpoints; select a point to focus its source table row"></div>
+        <div id="recorded-counts-chart" class="campaign-chart" hidden aria-label="Recorded checkpoints; select a point to focus its source table row"></div>
         <div class="table-scroll" role="region" aria-label="Recorded count history table" tabindex="0">
             <table id="count-history">
                 <caption>Recorded checkpoints; unavailable values are not zero</caption>
@@ -44,8 +51,8 @@
                 <tbody>
                 <tr th:each="point : ${charts.history.checkpoints}" th:id="${point.anchor}" tabindex="-1"
                     th:attr="data-recorded-at=${point.recordedAt},data-interest=${point.interest},data-authorized=${point.authorized},data-paid=${point.paid}">
-                    <th scope="row"><a th:href="${'#' + point.anchor}"><time th:datetime="${point.recordedAt}" th:text="${point.recordedAt}"></time></a></th>
-                    <td><ul><li th:each="source : ${point.sources}"><span data-source-type th:text="${source.type}"></span> · Event <span th:text="${source.eventId}"></span><span th:if="${source.transition != null}" th:text="${' · ' + source.transition}"></span></li></ul></td>
+                    <th scope="row"><a th:href="${'#' + point.anchor}"><time th:datetime="${point.recordedAt}" th:text="${@makerDisplay.time(point.recordedAt)}"></time></a></th>
+                    <td><ul><li th:each="source : ${point.sources}"><span data-source-type th:text="${@makerDisplay.words(source.type)}"></span> · Event <span th:title="${source.eventId}" th:text="${@makerDisplay.shortId(source.eventId)}"></span><span th:if="${source.transition != null}" th:text="${' · ' + @makerDisplay.detail(source.transition)}"></span></li></ul></td>
                     <td th:text="${point.interest == null ? 'Unavailable' : point.interest}"></td>
                     <td th:text="${point.authorized == null ? 'Unavailable' : point.authorized}"></td>
                     <td th:text="${point.paid == null ? 'Unavailable' : point.paid}"></td>
@@ -55,9 +62,6 @@
             </table>
         </div>
     </section>
-    <p><a th:href="@{/w/{token}/maker/campaign(token=${token})}">Back to campaign</a></p>
-    <th:block th:replace="~{fragments/data-tools :: charts}"></th:block>
-    <script defer th:src="@{/js/campaign-charts.js}"></script>
-</main>
+</div>
 </body>
 </html>

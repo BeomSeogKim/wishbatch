@@ -91,7 +91,8 @@ class LiveCampaignControllerTests @Autowired constructor(
         for (path in listOf("/maker/campaign?review=true", "/offer?quantity=2")) {
             val html = mvc.get("/w/$token$path").andExpect { status { isOk() } }.andReturn().response.contentAsString
             for (value in listOf("data-live-campaign", "data-status-url=\"/w/$token/api/campaign-status\"",
-                "data-live-field=\"authorizedHolds\"", "/js/live-campaign.js", "Refresh current state")) assertContains(html, value)
+                "data-live-field=\"authorizedHolds\"", "/js/live-campaign.js")) assertContains(html, value)
+            assertContains(html, if (path.startsWith("/maker/campaign")) "Reload to review current terms and actions" else "Refresh current state")
             assertFalse(html.contains("th:replace"))
         }
         authorizeMoneyPledge(campaigns, gateway, ref, "live", 3, clock)

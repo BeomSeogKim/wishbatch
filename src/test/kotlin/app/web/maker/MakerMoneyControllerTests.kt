@@ -114,7 +114,7 @@ class MakerMoneyControllerTests @Autowired constructor(
     fun `timeline details translate states without rewriting currency or protocol terms`() {
         assertEquals("Hold placed -> Paid; USD 30.00; HTTP POST /capture; API", MakerDisplay().detail(
             "AUTHORIZED -> CAPTURED; USD 30.00; HTTP POST /capture; API"))
-        assertEquals("Settling -> Not funded: Capture shortfall", MakerDisplay().detail(
+        assertEquals("Settlement in progress -> Not funded: Completed payments below minimum", MakerDisplay().detail(
             "SETTLING -> NOT_FUNDED: CAPTURE_SHORTFALL"))
     }
 
@@ -296,7 +296,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         listOf("Stated interest", "Authorized holds", "Paid", "Capacity left", "Time left", "2026-01-01T00:15:00Z",
             "2026-01-01T12:15:00Z", "Needs attention", "Campaign and payment timeline", "disabled=\"disabled\"",
             "Open fan offer page (new tab)", "Open public result (new tab)").forEach { assertContains(html, it) }
-        assertContains(html, "Jan 1, 2026 at 00:15:00 UTC")
+        assertContains(html, "1 Jan 2026, 00:15 UTC")
         assertContains(html, "data-live-field=\"timeLeft\"")
         assertContains(html, "data-live-field=\"deadlineLabel\"")
         assertContains(html, "View campaign counts and recorded history")
@@ -431,7 +431,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         healthyProviderReads(fixture)
         action(fixture, "confirm", confirmation(2, 3, 3000))
         val html = page(fixture.workspace.token, "result")
-        listOf("Not funded", "Capture shortfall", "Refunded.", "Hold released by PayPal", "USD 20.00", "USD 0.00",
+        listOf("Not funded", "Completed payments below minimum", "Refunded.", "Hold released by PayPal", "USD 20.00", "USD 0.00",
             "refund-shortfall", "cap-shortfall", "2 units with completed refunds", "1 unit with released holds").forEach { assertContains(html, it) }
     }
 
@@ -447,7 +447,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         gateway.readCaptureResults.add(PaymentResult.Received(capture, PaymentStatus.PENDING))
         val pending = page(fixture.workspace.token, "result")
         assertContains(pending, "Not funded")
-        assertContains(pending, "Refunds of completed payments and release of remaining holds are attempted")
+        assertContains(pending, "Refunds of completed payments and release of remaining holds are requested")
         assertFalse(pending.contains("Completed payments are refunded and remaining holds are released"))
         assertContains(pending, "PayPal is still processing your payment.")
         assertContains(pending, "These payments remain unresolved")
@@ -470,13 +470,13 @@ class MakerMoneyControllerTests @Autowired constructor(
         assertContains(closed, "Not funded")
         assertContains(closed, "Scheduled close")
         assertContains(closed, "<p hidden=\"hidden\">Time left:")
-        assertContains(page(below.workspace.token, "result"), "Threshold not met")
+        assertContains(page(below.workspace.token, "result"), "Minimum not met")
         val ready = fixture()
         publish(ready)
         authorize(ready, "expiry", 3)
         clock.current = clock.current.plusSeconds(901)
         healthyProviderReads(ready)
-        assertContains(page(ready.workspace.token, "campaign"), "Awaiting confirmation")
+        assertContains(page(ready.workspace.token, "campaign"), "Awaiting maker confirmation")
         gateway.voidAuthorizationResults.add(PaymentResult.Received(VoidDetails(AuthorizationId("auth-expiry")), PaymentStatus.VOIDED))
         clock.current = clock.current.plusSeconds(12 * 3600)
         healthyProviderReads(ready)

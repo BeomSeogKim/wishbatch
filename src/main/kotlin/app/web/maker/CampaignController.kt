@@ -1,5 +1,6 @@
 package app.web.maker
 
+import app.campaign.charts.CampaignChartsQuery
 import app.campaign.model.Campaign
 import app.campaign.model.CampaignState
 import app.campaign.model.CampaignReason
@@ -9,11 +10,13 @@ import app.campaign.service.CampaignRef
 import app.campaign.service.CampaignService
 import app.campaign.service.CampaignView
 import app.campaign.service.ServiceResult
+import app.campaign.service.TimelineEntry
 import app.campaign.store.AnalysisRunRepository
 import app.campaign.store.CampaignRepository
 import app.campaign.store.OfferRepository
 import app.campaign.workspace.WorkspaceNotFoundException
 import app.campaign.workspace.WorkspaceService
+import app.web.layout.HumanDisplay
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -26,12 +29,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
-import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.util.Currency
 import java.util.Locale
 import java.util.UUID
 
@@ -48,11 +47,10 @@ class MakerCampaignLookup(private val offers: OfferRepository, private val campa
 }
 
 @Component("makerDisplay")
-class MakerDisplay {
-    fun money(amount: Long, currency: String): String = money(BigInteger.valueOf(amount), currency)
-    fun money(amount: BigInteger, currency: String): String =
-        "$currency ${BigDecimal(amount, Currency.getInstance(currency).defaultFractionDigits).toPlainString()}"
-    fun words(value: Any): String = value.toString().lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
+class MakerDisplay(private val humanDisplay: HumanDisplay = HumanDisplay()) {
+    fun money(amount: Long, currency: String): String = humanDisplay.money(amount, currency)
+    fun money(amount: BigInteger, currency: String): String = humanDisplay.money(amount, currency)
+    fun words(value: Any): String = humanDisplay.state(value)
     fun catalogLabel(value: String): String = when (value) {
         "postcard-set" -> "Postcard set"
         "art-print" -> "Art print"
@@ -62,17 +60,12 @@ class MakerDisplay {
         else -> value.replace(Regex("([a-z])([A-Z])"), "$1 $2")
             .replace('-', ' ').replace('_', ' ').replaceFirstChar { it.titlecase(Locale.US) }
     }
-    fun time(value: Instant?): String = value?.let {
-        DateTimeFormatter.ofPattern("MMM d, uuuu 'at' HH:mm:ss 'UTC'", Locale.US)
-            .withZone(ZoneOffset.UTC).format(it)
-    } ?: "Not set"
+    fun time(value: Instant?): String = humanDisplay.time(value)
+    fun recentEvents(events: List<TimelineEntry>): List<TimelineEntry> = events
+        .filter { it.endpoint == null && !it.type.startsWith("PAYPAL_") }.takeLast(5).reversed()
+    fun shortId(value: Any?): String = humanDisplay.shortId(value)
     fun detail(value: String): String = Regex("\\b[A-Z][A-Z_]+\\b").replace(value) {
-        when (it.value) {
-            "AUTHORIZED" -> "Hold placed"
-            "CAPTURED" -> "Paid"
-            "VOIDED" -> "Hold released"
-            else -> if (it.value in stateTokens) words(it.value) else it.value
-        }
+        if (it.value in stateTokens) words(it.value) else it.value
     }
     private val stateTokens = (CampaignState.entries.map { it.name } +
         CampaignReason.entries.map { it.name } + PledgeState.entries.map { it.name }).toSet()
@@ -92,6 +85,7 @@ class CampaignController(
     private val lookup: MakerCampaignLookup,
     private val campaigns: CampaignService,
     private val analyses: AnalysisRunRepository,
+    private val charts: CampaignChartsQuery,
     @Value("\${app.campaign.demo-simulation-enabled:false}") private val simulationEnabled: Boolean,
 ) {
     @GetMapping("/w/{token}/maker/campaign")
@@ -100,6 +94,7 @@ class CampaignController(
         populate(model, view)
         model.addAttribute("review", review)
         model.addAttribute("simulationEnabled", simulationEnabled)
+        model.addAttribute("charts", view?.let { charts.read(token, it.id) })
         return "maker/campaign"
     }
 
@@ -186,8 +181,16 @@ class CampaignController(
         model.addAttribute("terminal", view?.state in terminalStates)
         val cancellable = view?.state in setOf(CampaignState.OPEN, CampaignState.AWAITING_CONFIRMATION)
         model.addAttribute("canCancel", cancellable)
-        model.addAttribute("canConfirm", cancellable && view != null &&
-            thresholdMet(view.counts.authorizedHolds, view.offer.minBatch))
+        val canConfirm = cancellable && view != null && thresholdMet(view.counts.authorizedHolds, view.offer.minBatch)
+        model.addAttribute("canConfirm", canConfirm)
+        model.addAttribute("nextAction", when {
+            view == null -> "OFFER"
+            view.state in terminalStates -> "RESULT"
+            canConfirm -> "CONFIRM"
+            view.state == CampaignState.OPEN -> "SHARE"
+            else -> "REFRESH"
+        })
+        model.addAttribute("showDeadline", view?.state in setOf(CampaignState.OPEN, CampaignState.AWAITING_CONFIRMATION))
     }
 
     private fun total(view: CampaignView, state: PledgeState): BigInteger = view.pledges.filter { it.state == state }

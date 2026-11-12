@@ -25,7 +25,7 @@
                         <p th:if="${campaign.reason != null}" th:text="${@makerDisplay.words(campaign.reason)}">
                         </p>
                         <p th:if="${campaign.result.productionReleased}">The paid minimum was met at settlement. Review current payments and any items needing attention before making production decisions.</p>
-                        <p th:unless="${campaign.result.productionReleased}">Production is not released. Refunds of completed payments and release of remaining holds are attempted; unresolved payments are listed below.</p>
+                        <p th:unless="${campaign.result.productionReleased}">Production is not released. Refunds of completed payments and release of remaining holds are requested; unresolved payments are listed below. Timing depends on PayPal and the bank or card.</p>
                     </div>
                     <div th:unless="${terminal}" class="empty-state">
                         <h2>Settlement is not final.</h2>
@@ -34,7 +34,8 @@
                         <a class="button button-primary" th:href="@{/w/{token}/maker/campaign(token=${token})}">Open campaign dashboard</a>
                     </div>
                 </section>
-                <div th:replace="~{fragments/components :: counts(${campaign.counts.statedInterest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}">
+                <div th:replace="~{maker/settlement-fragments :: settlementNextSteps(${campaign})}"></div>
+                <div th:replace="~{maker/settlement-fragments :: settlementCounts(${campaign})}">
                 </div>
                 <section class="two-column preview-section">
                     <div class="card">
