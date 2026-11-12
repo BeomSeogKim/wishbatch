@@ -9,6 +9,7 @@ import app.campaign.port.AnalysisOutput
 import app.campaign.port.AnalysisResult
 import app.campaign.port.AnalysisValidationFlag
 import app.campaign.port.WishAnalyzer
+import app.campaign.provenance.DecisionRecordService
 import app.campaign.review.WishReviewOverride
 import app.campaign.review.WishReviewService
 import app.campaign.review.reviewedAnalysis
@@ -47,6 +48,7 @@ class AnalysisRunService(
     private val mapper: JsonMapper,
     private val seed: StoredSeedAnalysis,
     private val reviews: WishReviewService,
+    private val records: DecisionRecordService,
 ) {
     fun latest(token: String): StoredAnalysisRun? {
         val workspace = workspace(token)
@@ -97,7 +99,7 @@ class AnalysisRunService(
                 ) {
                     AnalysisRunResult.Failed(AnalysisFailure.INVALID_OUTPUT)
                 } else {
-                    AnalysisRunResult.Completed(decode(workspace, persist(workspace, result, isSeed = false)))
+                    AnalysisRunResult.Completed(decode(workspace, persist(workspace, result, wishes, isSeed = false)))
                 }
             }
         }
@@ -105,10 +107,10 @@ class AnalysisRunService(
 
     @Transactional
     fun attachSeed(workspace: Workspace, options: List<Option>, wishes: List<Wish>) {
-        persist(workspace, seed.forWorkspace(workspace, options, wishes), isSeed = true)
+        persist(workspace, seed.forWorkspace(workspace, options, wishes), wishes, isSeed = true)
     }
 
-    private fun persist(workspace: Workspace, result: AnalysisResult.Success, isSeed: Boolean): AnalysisRun =
+    private fun persist(workspace: Workspace, result: AnalysisResult.Success, wishes: List<Wish>, isSeed: Boolean): AnalysisRun =
         AnalysisRun(
             workspaceId = workspace.id,
             model = result.model,
@@ -117,7 +119,10 @@ class AnalysisRunService(
             validationFlags = result.validated.flags.map { mapper.writeValueAsString(it) },
             isSeed = isSeed,
             createdAt = result.completedAt,
-        ).also(entityManager::persist)
+        ).also {
+            entityManager.persist(it)
+            records.recordAnalysis(it, wishes)
+        }
 
     private fun decode(workspace: Workspace, run: AnalysisRun): StoredAnalysisRun {
         val output = mapper.readValue(run.resultJson, AnalysisOutput::class.java)

@@ -10,6 +10,7 @@ import app.campaign.port.AnalysisValidationFlag
 import app.campaign.port.AnalysisValidationResult
 import app.campaign.port.AnalysisValidationRule
 import app.campaign.port.AnalyzedWish
+import app.campaign.provenance.DecisionRecordQuery
 import app.campaign.rules.analysisInputHash
 import app.campaign.workspace.WorkspaceNotFoundException
 import app.campaign.workspace.WorkspaceService
@@ -47,6 +48,7 @@ class AnalysisRunServiceTests @Autowired constructor(
     private val analyzer: InMemoryWishAnalyzer,
     private val entityManager: EntityManager,
     private val transactionManager: PlatformTransactionManager,
+    private val records: DecisionRecordQuery,
 ) {
     @TestConfiguration(proxyBeanMethods = false)
     class Fakes {
@@ -77,6 +79,19 @@ class AnalysisRunServiceTests @Autowired constructor(
         assertEquals(0, a.newWishCount)
         assertEquals(0, runs.liveRunCount(first.token))
         assertEquals(before, analyzer.calls.size)
+        val snapshots = records.findByToken(first.token)!!.sources
+        val snapshot = snapshots.single()
+        assertEquals("ANALYSIS", snapshot.sourceType)
+        assertEquals(a.run.id, snapshot.sourceId)
+        assertTrue(snapshot.intact)
+        assertTrue(snapshot.payload["seed"].asBoolean())
+        assertEquals(workspaces.listWishes(first.token).associate { it.id.toString() to it.text },
+            snapshot.payload["wishes"].toList().associate { it["wishId"].asString() to it["text"].asString() })
+        val wish = workspaces.listWishes(first.token).first()
+        entityManager.createNativeQuery("update wishes set text = :text where id = :id")
+            .setParameter("text", "Changed after seed analysis").setParameter("id", wish.id).executeUpdate()
+        entityManager.clear()
+        assertEquals(snapshots, records.findByToken(first.token)!!.sources)
     }
 
     @Test
@@ -101,11 +116,13 @@ class AnalysisRunServiceTests @Autowired constructor(
     fun `all typed failures preserve the last run and only configured attempts consume quota`() {
         val workspace = workspaces.create()
         val seed = runs.latest(workspace.token)!!.run.id
+        val snapshots = records.findByToken(workspace.token)!!.sources
         val before = analyzer.calls.size
         for (failure in AnalysisFailure.entries) {
             analyzer.results.add(AnalysisResult.Failure(failure))
             assertEquals(failure, assertIs<AnalysisRunResult.Failed>(runs.run(workspace.token)).reason)
             assertEquals(seed, runs.latest(workspace.token)!!.run.id)
+            assertEquals(snapshots, records.findByToken(workspace.token)!!.sources)
         }
         assertEquals(before + AnalysisFailure.entries.size, analyzer.calls.size)
         assertEquals(4, runs.liveRunCount(workspace.token))
@@ -147,7 +164,13 @@ class AnalysisRunServiceTests @Autowired constructor(
         workspaces.setWishHidden(workspace.token, old.id, true)
         val completed = Instant.now().plusSeconds(1)
         analyzer.results.add(success(workspace.token, completed))
-        assertIs<AnalysisRunResult.Completed>(runs.run(workspace.token))
+        val live = assertIs<AnalysisRunResult.Completed>(runs.run(workspace.token)).stored.run
+        val snapshot = records.findByToken(workspace.token)!!.sources.single { it.sourceId == live.id }
+        assertTrue(snapshot.intact)
+        assertFalse(snapshot.payload["seed"].asBoolean())
+        assertEquals(analyzer.calls.last().wishes.associate { it.id.toString() to it.text },
+            snapshot.payload["wishes"].toList().associate { it["wishId"].asString() to it["text"].asString() })
+        assertFalse(snapshot.payload["wishes"].toList().any { it["wishId"].asString() == old.id.toString() })
         assertEquals(0, runs.latest(workspace.token)!!.newWishCount)
         workspaces.setWishHidden(workspace.token, old.id, false)
         assertEquals(0, runs.latest(workspace.token)!!.newWishCount)
@@ -155,6 +178,11 @@ class AnalysisRunServiceTests @Autowired constructor(
             createdAt = completed.plusSeconds(1)))
         assertEquals(1, runs.latest(workspace.token)!!.newWishCount)
         assertEquals(40, analyzer.calls.last().wishes.size)
+        entityManager.flush()
+        entityManager.createNativeQuery("update wishes set text = :text where id = :id")
+            .setParameter("text", "Changed after live analysis").setParameter("id", added.id).executeUpdate()
+        entityManager.clear()
+        assertEquals(snapshot, records.findByToken(workspace.token)!!.sources.single { it.sourceId == live.id })
     }
 
     @Test
@@ -202,7 +230,7 @@ class AnalysisRunServiceTests @Autowired constructor(
             executor.shutdownNow()
             executor.awaitTermination(10, TimeUnit.SECONDS)
             transaction.executeWithoutResult {
-                for (entity in listOf("AnalysisRunQuota", "AnalysisRun", "Wish", "Option")) {
+                for (entity in listOf("DecisionSourceSnapshot", "AnalysisRunQuota", "AnalysisRun", "Wish", "Option")) {
                     entityManager.createQuery("delete from $entity e where e.workspaceId = :id")
                         .setParameter("id", workspace.id).executeUpdate()
                 }

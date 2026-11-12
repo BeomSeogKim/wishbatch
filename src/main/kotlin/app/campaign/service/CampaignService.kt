@@ -12,6 +12,8 @@ import app.campaign.model.PledgeState
 import app.campaign.port.AnalysisOutput
 import app.campaign.port.PaymentResult
 import app.campaign.port.PaymentStatus
+import app.campaign.provenance.DecisionRecordService
+import app.campaign.provenance.PledgeProvenanceCheckpoint
 import app.campaign.rules.CapacityDecision
 import app.campaign.rules.PaymentAction
 import app.campaign.rules.authorizedUnits
@@ -51,6 +53,8 @@ class CampaignService(
     private val mapper: ObjectMapper,
     private val clock: Clock,
     @Value("\${app.campaign.demo-simulation-enabled:false}") private val demoSimulationEnabled: Boolean,
+    private val records: DecisionRecordService,
+    private val provenance: PledgeProvenanceCheckpoint,
 ) {
     fun createDraft(workspaceId: UUID, command: DraftOffer): ServiceResult<DraftCreated> = persistence.locked(workspaceId) {
         val option = persistence.checkpoint { options.findByIdAndWorkspaceId(command.optionId, workspaceId) }
@@ -96,7 +100,7 @@ class CampaignService(
         context.campaign.openedAt = clock.instant()
         context.campaign.closesAt = closesAt(context.campaign.openedAt!!, duration)
         context.campaign.confirmDeadline = confirmDeadline(context.campaign.closesAt!!)
-        move(context.campaign, CampaignState.OPEN)
+        move(context.campaign, CampaignState.OPEN, publishedOffer = context.offer)
         successView(context)
     }
 
@@ -112,6 +116,7 @@ class CampaignService(
             pledges.saveAndFlush(pledge)
             events.save(Event(context.campaign.id, "PLEDGE_CREATED", pledge.id, detail = "CREATED", createdAt = clock.instant()))
         }
+        provenance.record(pledge)
         val result = payments.createOrder(pledge)
         if (result is PaymentResult.Received && result.status in setOf(PaymentStatus.CREATED, PaymentStatus.APPROVED)) {
             pledge.paypalOrderId = result.resource.orderId.value
@@ -366,12 +371,13 @@ class CampaignService(
         CapacityDecision.CAPACITY_EXCEEDED -> Rejection.CAPACITY_EXCEEDED
     }
 
-    private fun move(campaign: Campaign, state: CampaignState, reason: CampaignReason? = null) {
+    private fun move(campaign: Campaign, state: CampaignState, reason: CampaignReason? = null, publishedOffer: Offer? = null) {
         val previous = campaign.state
         campaign.state = requireCampaignTransition(previous, state, reason)
         campaign.reason = reason
         persistence.checkpoint {
             campaigns.saveAndFlush(campaign)
+            publishedOffer?.let(records::recordOffer)
             events.save(Event(campaign.id, "CAMPAIGN_STATE", detail = "$previous -> $state${reason?.let { ": $it" } ?: ""}", createdAt = clock.instant()))
         }
     }

@@ -17,6 +17,7 @@ import app.campaign.port.PaymentStatus
 import app.campaign.port.RefundDetails
 import app.campaign.port.RefundId
 import app.campaign.port.VoidDetails
+import app.campaign.provenance.PledgeProvenanceCheckpoint
 import app.campaign.rules.PaymentAction
 import app.campaign.rules.idempotencyKey
 import app.campaign.rules.requirePledgeTransition
@@ -33,8 +34,13 @@ class CampaignPayments(
     private val pledges: PledgeRepository,
     private val events: EventRepository,
     private val clock: Clock,
+    private val provenance: PledgeProvenanceCheckpoint,
 ) {
-    fun save(pledge: Pledge) = persistence.checkpoint { pledges.saveAndFlush(pledge) }
+    fun save(pledge: Pledge): Pledge {
+        val saved = persistence.checkpoint { pledges.saveAndFlush(pledge) }
+        provenance.record(saved)
+        return saved
+    }
 
     fun recheckDue(pledge: Pledge, vararg actions: PaymentAction): Boolean = persistence.checkpoint {
         // Use durable responses so page reads, scheduled ticks, and restarts share the same wait.
@@ -131,6 +137,7 @@ class CampaignPayments(
             events.save(Event(pledge.campaignId, "PLEDGE_STATE", pledge.id,
                 detail = "$previous -> $state", createdAt = clock.instant()))
         }
+        provenance.record(pledge)
     }
 
     fun attempted(pledge: Pledge, action: PaymentAction): Boolean = persistence.checkpoint {

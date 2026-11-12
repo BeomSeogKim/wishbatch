@@ -18,6 +18,7 @@ import app.campaign.port.PaymentStatus
 import app.campaign.port.RefundDetails
 import app.campaign.port.RefundId
 import app.campaign.port.VoidDetails
+import app.campaign.provenance.PledgeProvenanceCheckpoint
 import app.campaign.rules.PaymentAction
 import app.campaign.rules.idempotencyKey
 import app.campaign.store.CampaignRepository
@@ -53,6 +54,7 @@ class CampaignSettlementRetryTests @Autowired constructor(
     private val gateway: CrashableGateway,
     private val gateways: ObjectProvider<PaymentGateway>,
     private val clock: MutableClock,
+    private val provenance: PledgeProvenanceCheckpoint,
 ) {
     private val start = Instant.parse("2026-01-01T00:00:00Z")
     private val owned = mutableListOf<UUID>()
@@ -82,7 +84,7 @@ class CampaignSettlementRetryTests @Autowired constructor(
         val fixture = fixture(PledgeState.AUTHORIZED)
         gateway.fake.voidAuthorizationResults.add(PaymentResult.Failed(PaymentStatus.FAILED))
         assertEquals(PledgeState.VOID_FAILED, view(fixture).needsAttention.single().state)
-        val freshPayments = CampaignPayments(gateways, persistence, pledges, events, clock)
+        val freshPayments = CampaignPayments(gateways, persistence, pledges, events, clock, provenance)
         assertFalse(freshPayments.recheckDue(fixture.pledge, PaymentAction.VOID))
 
         for (delay in listOf(60L, 120L, 240L, 480L, 960L, 1920L, 3600L, 3600L)) {

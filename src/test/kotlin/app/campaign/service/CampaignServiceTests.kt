@@ -28,6 +28,8 @@ import app.campaign.port.Proposal
 import app.campaign.port.RefundDetails
 import app.campaign.port.RefundId
 import app.campaign.port.VoidDetails
+import app.campaign.provenance.DecisionRecordService
+import app.campaign.provenance.PledgeProvenanceCheckpoint
 import app.campaign.rules.CapacityDecision
 import app.campaign.rules.OfferWarning
 import app.campaign.rules.PaymentAction
@@ -86,6 +88,8 @@ class CampaignServiceTests @Autowired constructor(
     private val persistence: CampaignPersistence,
     private val payments: CampaignPayments,
     private val tick: CampaignReconciliationTick,
+    private val records: DecisionRecordService,
+    private val provenance: PledgeProvenanceCheckpoint,
 ) {
     private val start = Instant.parse("2026-01-01T00:00:00Z")
     private val ownedWorkspaces = mutableListOf<UUID>()
@@ -610,7 +614,7 @@ class CampaignServiceTests @Autowired constructor(
     @Test
     fun `enabled demo simulation fails only the next capture and records its synthetic source`() {
         val simulationService = CampaignService(persistence, offers, options, analyses, campaigns,
-            pledges, events, payments, mapper, clock, true)
+            pledges, events, payments, mapper, clock, true, records, provenance)
         val fixture = fixture(minimum = 2)
         val simulated = authorized(fixture, 1)
         val captured = authorized(fixture, 1)
