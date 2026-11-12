@@ -29,6 +29,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class TemporaryDatabaseBootTests {
@@ -134,8 +135,7 @@ class TemporaryDatabaseBootTests {
         val port = ServerSocket(0).use { it.localPort }
         Files.writeString(data.resolve("postgresql.conf"), "\nlisten_addresses = '127.0.0.1'\nport = $port\nunix_socket_directories = ''\n", StandardOpenOption.APPEND)
         val url = "jdbc:postgresql://127.0.0.1:$port/postgres"
-        try {
-            run(pgctl!!, "-D", data.toString(), "-l", directory.resolve("server.log").toString(), "-w", "start")
+        withPostgresServer(pgctl!!, data) {
             val token = application(url, "postgres").use { context ->
                 val source = context.getBean(HikariDataSource::class.java)
                 assertEquals(url, source.jdbcUrl)
@@ -166,9 +166,80 @@ class TemporaryDatabaseBootTests {
             assertTrue(generateSequence(schema as Throwable) { it.cause }.any {
                 it.message?.contains("Unsupported schema: pledges.state is missing") == true
             })
-        } finally {
-            run(pgctl!!, "-D", data.toString(), "-m", "immediate", "-w", "stop")
         }
+    }
+
+    @Test
+    fun `failed fixture start keeps startup diagnostics and does not stop an absent server`() {
+        Files.writeString(directory.resolve("server.log"), "Synthetic server startup diagnostic")
+        val failure = assertFailsWith<AssertionError> {
+            withPostgresServer(fakePgCtl(1, 3, 1), directory.resolve("data")) {
+                error("Application must not run after failed server startup")
+            }
+        }
+        assertContains(failure.message.orEmpty(), "fixture start")
+        assertContains(failure.message.orEmpty(), "Synthetic server startup diagnostic")
+        assertEquals("start\nstatus\n", Files.readString(directory.resolve("actions.log")))
+        assertTrue(failure.suppressed.isEmpty())
+        Files.list(directory).use { files ->
+            val logs = files.filter { it.fileName.toString().startsWith("command-") }.toList()
+            assertEquals(2, logs.size)
+            assertTrue(logs.any { Files.readString(it).contains("fixture start") })
+            assertTrue(logs.any { Files.readString(it).contains("fixture status") })
+        }
+    }
+
+    @Test
+    fun `fixture cleanup cannot replace a genuine assertion and cleanup alone still fails`() {
+        val pgctl = fakePgCtl(0, 0, 1)
+        val primary = AssertionError("Original application assertion")
+        val failure = assertFailsWith<AssertionError> {
+            withPostgresServer(pgctl, directory.resolve("data")) { throw primary }
+        }
+        assertSame(primary, failure)
+        assertEquals(1, failure.suppressed.size)
+        assertContains(failure.suppressed.single().message.orEmpty(), "fixture stop")
+        val cleanup = assertFailsWith<AssertionError> {
+            withPostgresServer(pgctl, directory.resolve("data")) { }
+        }
+        assertContains(cleanup.message.orEmpty(), "fixture stop")
+    }
+
+    private fun withPostgresServer(pgctl: String, data: Path, block: () -> Unit) {
+        var primary: Throwable? = null
+        try {
+            run(pgctl, "-D", data.toString(), "-l", directory.resolve("server.log").toString(), "-w", "start")
+            block()
+        } catch (failure: Throwable) {
+            primary = failure
+            throw failure
+        } finally {
+            try {
+                if (run(pgctl, "-D", data.toString(), "status", allowedExitCodes = setOf(0, 3)) == 0) {
+                    run(pgctl, "-D", data.toString(), "-m", "immediate", "-w", "stop")
+                }
+            } catch (cleanup: Throwable) {
+                if (primary != null) primary.addSuppressed(cleanup) else throw cleanup
+            }
+        }
+    }
+
+    private fun fakePgCtl(startExit: Int, statusExit: Int, stopExit: Int): String {
+        val script = directory.resolve("pgctl-fixture.sh")
+        Files.writeString(script, """
+            #!/bin/sh
+            for action in "${'$'}@"; do :; done
+            echo "${'$'}action" >> "${directory.resolve("actions.log")}"
+            echo "fixture ${'$'}action"
+            case "${'$'}action" in
+                start) exit $startExit ;;
+                status) exit $statusExit ;;
+                stop) exit $stopExit ;;
+            esac
+            exit 2
+        """.trimIndent())
+        check(script.toFile().setExecutable(true))
+        return script.toString()
     }
 
     private fun seededDemo(context: ConfigurableApplicationContext): String {
@@ -201,13 +272,21 @@ class TemporaryDatabaseBootTests {
     private fun executable(name: String): String? = System.getenv("PATH").split(File.pathSeparator)
         .map { Path.of(it, name) }.firstOrNull(Files::isExecutable)?.toString()
 
-    private fun run(vararg command: String) {
-        val output = directory.resolve("command.log").toFile()
+    private fun run(vararg command: String, allowedExitCodes: Set<Int> = setOf(0)): Int {
+        val output = Files.createTempFile(directory, "command-", ".log").toFile()
         val process = ProcessBuilder(*command).redirectErrorStream(true).redirectOutput(output).start()
         if (!process.waitFor(30, TimeUnit.SECONDS)) {
             process.destroyForcibly().waitFor()
-            error("Disposable PostgreSQL command timed out")
+            error("Disposable PostgreSQL command timed out\n${diagnostics(output)}")
         }
-        assertEquals(0, process.exitValue(), output.readText().takeLast(2000))
+        val exit = process.exitValue()
+        assertTrue(exit in allowedExitCodes, "Unexpected command exit $exit\n${diagnostics(output)}")
+        return exit
+    }
+
+    private fun diagnostics(output: File): String {
+        val server = directory.resolve("server.log").toFile()
+        return "Command output:\n${output.readText().takeLast(2000)}\nServer output:\n" +
+            if (server.exists()) server.readText().takeLast(4000) else "No server log was created."
     }
 }
