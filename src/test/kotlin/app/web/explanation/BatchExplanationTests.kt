@@ -7,8 +7,6 @@ import app.campaign.model.CampaignState
 import app.campaign.model.Offer
 import app.campaign.model.Pledge
 import app.campaign.model.PledgeState
-import app.campaign.explanation.BatchExplanationQuery
-import app.campaign.workspace.SeedCatalog
 import app.campaign.port.ProposalEvidence
 import app.campaign.workspace.WorkspaceService
 import app.testing.InMemoryPaymentGateway
@@ -39,8 +37,6 @@ import kotlin.test.assertFalse
 class BatchExplanationTests @Autowired constructor(
     private val workspaces: WorkspaceService,
     private val runs: AnalysisRunService,
-    private val explanation: BatchExplanationQuery,
-    private val seeds: SeedCatalog,
     private val entityManager: EntityManager,
     private val mapper: JsonMapper,
     private val mvc: MockMvc,
@@ -156,22 +152,28 @@ class BatchExplanationTests @Autowired constructor(
     }
 
     @Test
-    fun `quotes exact synthetic scenario wishes without exposing unverified free text`() {
-        val workspace = workspaces.create()
-        val stored = runs.latest(workspace.token)!!
-        val seedId = seeds.wishId(workspace.id, "w01")
-        val option = requireNotNull(stored.output.proposal).optionId
-        val quote = "cobalt bowl"
-        val output = stored.output.copy(proposal = requireNotNull(stored.output.proposal).copy(
-            rationale = listOf(ProposalEvidence("", seedId, quote)),
-        ))
-        val runId = transactions.execute {
-            entityManager.createQuery("update Wish w set w.text = :text where w.id = :id")
-                .setParameter("text", "Please make a cobalt bowl.").setParameter("id", seedId).executeUpdate()
-            AnalysisRun(workspace.id, "synthetic", "hash", mapper.writeValueAsString(output), createdAt = now)
-                .also(entityManager::persist).id
-        }!!
-        assertContains(requireNotNull(explanation.evidence(workspace.id, runId, option)).quotes, quote)
+    fun `ceramicist and textile pages show their real scenario evidence`() {
+        for ((scenario, title, quote) in listOf(
+            Triple("ceramicist", "Stoneware cup", "I would buy the cup."),
+            Triple("textile", "Canvas pouch", "I would buy the pouch."),
+        )) {
+            val workspace = workspaces.create(scenario)
+            val stored = requireNotNull(runs.latest(workspace.token))
+            val proposal = requireNotNull(stored.output.proposal)
+            val campaignId = transactions.execute {
+                val offer = Offer(workspace.id, proposal.optionId, stored.run.id, title, "Maker-confirmed terms",
+                    emptyMap(), 200, "USD", "Ships later", "US", 2, 10)
+                entityManager.persist(offer)
+                Campaign(offer.id, CampaignState.OPEN, openedAt = now, closesAt = now.plusSeconds(900),
+                    confirmDeadline = now.plusSeconds(44100)).also(entityManager::persist).id
+            }
+            val html = mvc.get("/w/${workspace.token}/campaigns/$campaignId/how-this-batch-was-chosen")
+                .andExpect { status { isOk() } }.andReturn().response.contentAsString
+            assertContains(html, title)
+            assertContains(HtmlUtils.htmlUnescape(html), quote)
+            assertContains(html, "Anonymous synthetic wish")
+            assertContains(html, "stored analysis of synthetic demo wishes")
+        }
     }
 
     @TestConfiguration(proxyBeanMethods = false)
