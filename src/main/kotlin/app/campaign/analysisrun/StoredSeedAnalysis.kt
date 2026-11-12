@@ -86,6 +86,11 @@ class StoredSeedAnalysis(private val catalog: SeedCatalog, private val mapper: J
             },
             alternatives = output.alternatives.map { it.copy(optionId = optionIds.getValue(it.optionId)) },
             optionIds = output.optionIds.map(optionIds::getValue),
+            secondReading = output.secondReading?.let { reading ->
+                reading.copy(comparisons = reading.comparisons.map {
+                    it.copy(wishId = wishIds.getValue(it.wishId), optionId = optionIds.getValue(it.optionId))
+                })
+            },
         )
         return stored.success.copy(
             validated = stored.success.validated.copy(output = mapped),

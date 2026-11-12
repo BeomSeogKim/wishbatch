@@ -6,6 +6,8 @@ import app.campaign.model.Wish
 import app.campaign.model.WishKind
 import app.campaign.model.WishSource
 import app.campaign.model.Workspace
+import app.campaign.port.SecondReading
+import app.campaign.port.WishReadingComparison
 import app.campaign.rules.analysisInputHash
 import app.campaign.workspace.SeedCatalog
 import org.junit.jupiter.api.Test
@@ -13,6 +15,7 @@ import org.springframework.core.io.ClassPathResource
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.KotlinModule
 import java.time.Instant
+import java.io.ByteArrayInputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
@@ -23,6 +26,49 @@ class StoredSeedAnalysisTests {
     private val mapper = JsonMapper.builder().addModule(KotlinModule.Builder().build()).build()
     private val stored = StoredSeedAnalysis(catalog, mapper)
     private val now = Instant.parse("2026-11-12T12:00:00Z")
+
+    @Test
+    fun `serialized second reading maps comparison references into each workspace and preserves agreement`() {
+        val fixture = ClassPathResource("seed/analysis-run.json").inputStream.use {
+            mapper.readValue(it, SeedAnalysisFixture::class.java)
+        }
+        val output = fixture.validated.output
+        val verdicts = output.verdicts.associateBy { it.wishId to it.optionId }
+        val reading = SecondReading(output.wishes.size, output.wishes.size, output.wishes.flatMap { wish ->
+            output.optionIds.map { optionId ->
+                val verdict = verdicts[wish.wishId to optionId]?.verdict
+                WishReadingComparison(wish.wishId, optionId, wish.kind, wish.kind, verdict, verdict)
+            }
+        }, batchCompositionChanged = true)
+        val json = mapper.writeValueAsBytes(fixture.copy(
+            validated = fixture.validated.copy(output = output.copy(secondReading = reading)),
+        ))
+        val thread = Thread.currentThread()
+        val originalLoader = thread.contextClassLoader
+        thread.contextClassLoader = object : ClassLoader(originalLoader) {
+            override fun getResourceAsStream(name: String): java.io.InputStream? =
+                if (name == "seed/analysis-run.json") ByteArrayInputStream(json) else super.getResourceAsStream(name)
+        }
+        try {
+            val enriched = StoredSeedAnalysis(catalog, mapper)
+            for (workspace in listOf(workspace("first-reading"), workspace("second-reading"))) {
+                val mapped = enriched.forWorkspace(workspace, options(workspace), wishes(workspace)).validated.output
+                val expected = reading.copy(comparisons = reading.comparisons.map { comparison ->
+                    comparison.copy(
+                        wishId = catalog.wishId(workspace.id, fixture.wishKeys.getValue(comparison.wishId)),
+                        optionId = catalog.optionId(workspace.id, fixture.optionKeys.getValue(comparison.optionId)),
+                    )
+                })
+                assertEquals(expected, mapped.secondReading)
+                assertTrue(mapped.secondReading!!.comparisons.none {
+                    it.wishId in fixture.wishKeys || it.optionId in fixture.optionKeys
+                })
+                assertEquals(output.verdicts.map { it.verdict }, mapped.verdicts.map { it.verdict })
+            }
+        } finally {
+            thread.contextClassLoader = originalLoader
+        }
+    }
 
     @Test
     fun `every nested seed reference maps into an isolated workspace while provenance stays intact`() {

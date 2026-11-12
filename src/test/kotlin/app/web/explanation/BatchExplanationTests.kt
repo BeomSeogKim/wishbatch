@@ -4,10 +4,12 @@ import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.model.AnalysisRun
 import app.campaign.model.Campaign
 import app.campaign.model.CampaignState
+import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.Offer
 import app.campaign.model.Pledge
 import app.campaign.model.PledgeState
 import app.campaign.port.ProposalEvidence
+import app.campaign.rules.optionWishCounts
 import app.campaign.workspace.WorkspaceService
 import app.testing.InMemoryPaymentGateway
 import app.testing.fixedClock
@@ -22,6 +24,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 import org.springframework.web.util.HtmlUtils
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
@@ -30,6 +33,7 @@ import java.time.Instant
 import java.util.UUID
 import kotlin.test.assertContains
 import kotlin.test.assertFalse
+import kotlin.test.assertEquals
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -44,6 +48,50 @@ class BatchExplanationTests @Autowired constructor(
 ) {
     private val transactions = TransactionTemplate(transactionManager)
     private val now = Instant.parse("2026-01-01T00:00:00Z")
+
+    @Test
+    fun `public explanation counts follow maker reviews after publication without changing terms or the run`() {
+        val workspace = workspaces.create()
+        val stored = requireNotNull(runs.latest(workspace.token))
+        val option = requireNotNull(stored.output.proposal).optionId
+        val counts = optionWishCounts(stored.output).single { it.optionId == option }
+        val wish = stored.output.verdicts.first {
+            it.optionId == option && it.verdict == CompatibilityVerdict.COMPATIBLE
+        }.wishId
+        val (offer, campaignId) = transactions.execute {
+            val offer = Offer(workspace.id, option, stored.run.id, "Reviewed offer", "Printed cards", emptyMap(),
+                200, "USD", "Ships later", "US", 2, 10).also(entityManager::persist)
+            val campaign = Campaign(offer.id, CampaignState.OPEN, openedAt = now,
+                closesAt = now.plusSeconds(900), confirmDeadline = now.plusSeconds(44100)).also(entityManager::persist)
+            offer to campaign.id
+        }!!
+        val originalTerms = mapper.writeValueAsString(offer)
+        for ((verdict, compatible, notServed) in listOf(
+            Triple("INCOMPATIBLE", counts.compatible - 1, counts.notServed + 1),
+            Triple("COMPATIBLE", counts.compatible, counts.notServed),
+        )) {
+            mvc.post("/w/${workspace.token}/maker/proposal/review") {
+                param("run", stored.run.id.toString())
+                param("wish", wish.toString())
+                param("option", option.toString())
+                param("verdict", verdict)
+                param("reason", "The maker reviewed the requested format.")
+            }.andExpect { status { is3xxRedirection() } }
+            val html = mvc.get("/w/${workspace.token}/campaigns/$campaignId/how-this-batch-was-chosen")
+                .andExpect { status { isOk() } }.andReturn().response.contentAsString
+            assertContains(html, "<dt>Compatible</dt><dd>$compatible</dd>")
+            assertContains(html, "<dt>Depends</dt><dd>${counts.depends}</dd>")
+            assertContains(html, "<dt>Not served</dt><dd>$notServed</dd>")
+            assertContains(html, "This stored synthetic reference illustrates the validated analysis format")
+            assertEquals(compatible, optionWishCounts(runs.find(workspace.token, stored.run.id)!!.output)
+                .single { it.optionId == option }.compatible)
+        }
+        transactions.executeWithoutResult {
+            assertEquals(stored.run.resultJson, entityManager.find(AnalysisRun::class.java, stored.run.id).resultJson)
+            assertEquals(originalTerms, mapper.writeValueAsString(entityManager.find(Offer::class.java, offer.id)))
+            assertEquals(CampaignState.OPEN, entityManager.find(Campaign::class.java, campaignId).state)
+        }
+    }
 
     @Test
     fun `unknown token and workspace without published campaign return not found`() {
