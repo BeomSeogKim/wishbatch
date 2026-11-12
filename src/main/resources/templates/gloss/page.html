@@ -11,18 +11,36 @@
         <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${page.runId})}">Back to proposal</a>
     </header>
     <p th:if="${glossNotice}" class="notice notice-info" role="status" th:text="${glossNotice}">Translation is unavailable.</p>
-    <p th:if="${#lists.isEmpty(page.rows)}" class="empty-state">No visible wishes in this analysis. Translation is unavailable.</p>
+    <p th:if="${#lists.isEmpty(page.rows)}" class="empty-state">No visible wishes in this analysis.</p>
     <form th:unless="${#lists.isEmpty(page.rows)}" th:action="@{/w/{token}/maker/glosses(token=${token})}" method="post" class="form-stack">
         <input type="hidden" name="run" th:value="${page.runId}">
-        <p>Select up to 20 wishes to request an English reading aid. Language is unknown until machine-inferred.</p>
-        <section th:each="row : ${page.rows}" class="card form-stack">
-            <label th:if="${row.selectable}">
-                <input type="checkbox" name="wishIds" th:value="${row.wishId}">
-                Select this wish
-            </label>
-            <div th:replace="~{gloss/reading :: reading(${row})}"></div>
-        </section>
         <button class="button button-primary" type="submit">Generate selected reading aids</button>
+        <p>Select up to 20 unchecked wishes below to request an English reading aid.</p>
+        <p th:if="${#lists.isEmpty(translated)}" class="empty-state">No translated reading aids yet. Open unchecked wishes to select source text.</p>
+        <section th:each="row : ${translated}" class="card">
+            <h2>Original wish</h2>
+            <p style="white-space: pre-wrap; overflow-wrap: anywhere" th:text="${row.original}">Original text</p>
+            <h3>Machine translation</h3>
+            <p style="white-space: pre-wrap; overflow-wrap: anywhere" th:text="${row.saved.englishGloss}">English reading aid</p>
+            <p class="field-help">Machine-inferred language: <span th:text="${row.saved.inferredLanguage}">Language</span></p>
+        </section>
+        <details th:if="${!#lists.isEmpty(otherResults)}">
+            <summary>Other checked wishes (<span th:text="${#lists.size(otherResults)}">0</span>)</summary>
+            <ul><li th:each="row : ${otherResults}">
+                <span style="white-space: pre-wrap; overflow-wrap: anywhere" th:text="${row.original}">Original wish</span>
+                <span th:if="${row.saved.status.name() == 'ENGLISH'}"> — Machine-inferred English</span>
+                <span th:if="${row.saved.status.name() == 'UNCERTAIN'}"> — Language uncertain</span>
+            </li></ul>
+        </details>
+        <details th:if="${!#lists.isEmpty(unchecked)}">
+            <summary>Unchecked wishes (<span th:text="${#lists.size(unchecked)}">0</span>)</summary>
+            <ul><li th:each="row : ${unchecked}">
+                <label th:if="${row.selectable}"><input type="checkbox" name="wishIds" th:value="${row.wishId}"> <span style="white-space: pre-wrap; overflow-wrap: anywhere" th:text="${row.original}">Original wish</span></label>
+                <span th:unless="${row.selectable}" style="white-space: pre-wrap; overflow-wrap: anywhere" th:text="${row.original}">Original wish</span>
+                <span th:unless="${row.current}"> — Source unavailable for this analysis</span>
+                <span th:if="${row.current and !row.selectable}"> — Reading aid unavailable</span>
+            </li></ul>
+        </details>
     </form>
 </main>
 </body>

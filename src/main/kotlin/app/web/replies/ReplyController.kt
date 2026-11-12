@@ -5,6 +5,11 @@ import app.campaign.replies.ReplyService
 import app.campaign.replies.UnsafeReplyException
 import app.campaign.workspace.WorkspaceNotFoundException
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletRequest
+import app.web.errors.wantsHtml
+import org.springframework.http.ResponseEntity
+import org.springframework.web.servlet.HandlerMapping
+import org.springframework.web.servlet.ModelAndView
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -74,8 +79,11 @@ class ReplyController(private val replies: ReplyService) {
     }
 
     @ExceptionHandler(InvalidReplyEvidenceException::class)
-    fun stale(response: HttpServletResponse): String {
-        response.status = HttpServletResponse.SC_CONFLICT
-        return "replies/stale"
+    fun stale(request: HttpServletRequest): Any {
+        if (!wantsHtml(request)) {
+            return ResponseEntity.status(409).body(mapOf("message" to "Reply evidence changed. Open the latest proposal."))
+        }
+        val variables = request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as? Map<*, *>
+        return ModelAndView("replies/stale", mapOf("token" to variables?.get("token")), org.springframework.http.HttpStatus.CONFLICT)
     }
 }

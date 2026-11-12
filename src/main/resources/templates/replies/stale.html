@@ -5,6 +5,7 @@
 <main id="main" class="shell">
     <h1>Reply evidence changed</h1>
     <p>This analysis no longer matches the current wishes or review. Reopen the latest proposal before drafting or approving replies.</p>
+    <a th:if="${token != null}" th:href="@{/w/{token}/maker/proposal(token=${token})}">Open the latest proposal</a>
 </main>
 </body>
 </html>

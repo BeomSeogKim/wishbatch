@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Request incomplete', ~{::main})}">
+<body>
+<main id="main" class="shell form-stack">
+    <h1>Request incomplete</h1>
+    <p>Some information needed to open this page is missing or invalid.</p>
+    <a th:if="${token != null}" th:href="@{/w/{token}(token=${token})}">Return to wishes</a>
+    <a th:if="${token != null}" th:href="@{/w/{token}/maker/proposal(token=${token})}">Open the latest proposal</a>
+</main>
+</body>
+</html>

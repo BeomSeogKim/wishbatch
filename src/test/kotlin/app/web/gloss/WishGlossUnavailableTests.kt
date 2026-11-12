@@ -47,7 +47,8 @@ class WishGlossUnavailableTests @Autowired constructor(
         }
         val html = mvc.get(path) { param("run", run.toString()) }.andExpect { status { isOk() } }
             .andReturn().response.contentAsString
-        assertContains(html, "Translation is unavailable")
+        assertContains(html, "No translated reading aids yet")
+        assertContains(html, "Unchecked wishes")
         assertEquals(before.rows.map { it.original }, glosses.read(workspace.token, run).rows.map { it.original })
     }
 }

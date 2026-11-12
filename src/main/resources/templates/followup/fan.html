@@ -13,7 +13,9 @@
     <p th:if="${answerSaved == true}" class="notice notice-info" role="status">Your answer is saved with its source. The wish is resolved by code when every required condition is covered.</p>
     <section th:if="${#lists.isEmpty(questions)}" class="card">
         <h2>No questions waiting</h2>
-        <p>There are no approved follow-up questions for this wish right now.</p>
+        <p>There are no approved follow-up questions for this wish right now. You can return to your wish or see the current offer.</p>
+        <a th:href="@{/w/{token}(token=${token})}">Back to wishes</a>
+        <a th:href="@{/w/{token}/offer(token=${token})}">See the offer</a>
     </section>
     <section th:each="question : ${questions}" class="card form-stack" th:with="answer=${answersByQuestion[question.id]}">
         <h2 th:text="${question.text}">Follow-up question</h2>

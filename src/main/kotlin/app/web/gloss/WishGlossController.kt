@@ -1,6 +1,7 @@
 package app.web.gloss
 
 import app.campaign.gloss.GlossResult
+import app.campaign.gloss.GlossStatus
 import app.campaign.gloss.WishGlossService
 import app.campaign.workspace.WorkspaceNotFoundException
 import org.springframework.http.HttpStatus
@@ -20,7 +21,11 @@ class WishGlossController(private val glosses: WishGlossService) {
     @GetMapping("/w/{token}/maker/glosses")
     fun page(@PathVariable token: String, @RequestParam run: UUID, model: Model): String {
         model.addAttribute("token", token)
-        model.addAttribute("page", glosses.read(token, run))
+        val page = glosses.read(token, run)
+        model.addAttribute("page", page)
+        model.addAttribute("translated", page.rows.filter { it.current && it.saved?.status == GlossStatus.TRANSLATED })
+        model.addAttribute("otherResults", page.rows.filter { it.current && it.saved?.status != null && it.saved.status != GlossStatus.TRANSLATED })
+        model.addAttribute("unchecked", page.rows.filter { it.saved?.status == null })
         return "gloss/page"
     }
 
