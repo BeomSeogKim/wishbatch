@@ -2,7 +2,9 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page('The offer', ~{::main})}">
 <body>
-<main id="main" class="shell fan-page">
+<main id="main" class="shell fan-page" data-live-campaign
+      th:with="confirmationVersion=${@liveCampaignDisplay.confirmationVersion(campaign)}"
+      th:attr="data-status-url=@{/w/{token}/api/campaign-status(token=${token})},data-campaign-id=${campaign?.id},data-initial-state=${campaign?.state},data-initial-holds=${campaign?.counts?.authorizedHolds},data-initial-paid=${campaign?.counts?.paid},data-initial-capacity=${campaign?.capacityLeft},data-confirmation-version=${confirmationVersion}">
     <p><a th:href="@{/w/{token}(token=${token})}">Back to wishes</a></p>
     <h1 th:text="${campaign != null ? campaign.offer.title : 'No open offer'}">The offer</h1>
     <div th:unless="${campaignOpen}" class="empty-state">
@@ -21,17 +23,18 @@
                 <dt>Delivery terms</dt><dd th:text="${campaign.offer.deliveryTerms}"></dd>
                 <dt>Shipping region</dt><dd th:text="${campaign.offer.shipRegion}"></dd>
                 <dt>Minimum batch</dt><dd th:text="${campaign.offer.minBatch + ' units'}"></dd>
-                <dt>Capacity left</dt><dd th:text="${campaign.capacityLeft + ' units'}"></dd>
-                <dt>Close time (UTC)</dt><dd><time th:datetime="${campaign.closesAt}" th:text="${@makerDisplay.time(campaign.closesAt)}"></time></dd>
-                <dt>Confirmation deadline (UTC)</dt><dd><time th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}"></time></dd>
+                <dt>Capacity left</dt><dd><span data-live-field="capacityLeft" th:text="${campaign.capacityLeft}"></span> units</dd>
+                <dt>Close time (UTC)</dt><dd><time data-live-field="closesAt" th:datetime="${campaign.closesAt}" th:text="${@makerDisplay.time(campaign.closesAt)}"></time></dd>
+                <dt>Confirmation deadline (UTC)</dt><dd><time data-live-field="confirmDeadline" th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}"></time></dd>
             </dl>
         </section>
         <th:block th:if="${offerEvidence != null}">
             <section th:replace="~{fan/offer-evidence :: why(${offerEvidence})}"></section>
         </th:block>
-        <div th:replace="~{fragments/components :: counts(${campaign.counts.statedInterest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}"></div>
+        <div th:replace="~{livecampaign/fragments :: counts(${campaign})}"></div>
+        <section th:replace="~{livecampaign/fragments :: progress(${campaign})}"></section>
         <section th:replace="~{fan/outcome-map :: map(${null}, ${null})}"></section>
-        <section th:if="${campaignOpen}" class="card" aria-label="Authorize a pledge">
+        <section data-live-action="pledge" th:if="${campaignOpen}" class="card" aria-label="Authorize a pledge">
             <h2>Choose your quantity</h2>
             <form method="get" th:action="@{/w/{token}/offer(token=${token})}">
                 <div class="field">
@@ -60,6 +63,8 @@
             </div>
         </section>
     </th:block>
+    <div th:replace="~{livecampaign/fragments :: freshness}"></div>
+    <script th:src="@{/js/live-campaign.js}" defer></script>
 </main>
 </body>
 </html>
