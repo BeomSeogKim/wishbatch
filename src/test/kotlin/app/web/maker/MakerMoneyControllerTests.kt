@@ -111,6 +111,14 @@ class MakerMoneyControllerTests @Autowired constructor(
     }
 
     @Test
+    fun `timeline details translate states without rewriting currency or protocol terms`() {
+        assertEquals("Hold placed -> Paid; USD 30.00; HTTP POST /capture; API", MakerDisplay().detail(
+            "AUTHORIZED -> CAPTURED; USD 30.00; HTTP POST /capture; API"))
+        assertEquals("Settling -> Not funded: Capture shortfall", MakerDisplay().detail(
+            "SETTLING -> NOT_FUNDED: CAPTURE_SHORTFALL"))
+    }
+
+    @Test
     fun `workspace without analysis renders honest empty states and shared shell`() {
         val workspace = workspaces.create().also(owned::add)
         analyses.deleteAll(analyses.findByWorkspaceId(workspace.id))
@@ -132,6 +140,9 @@ class MakerMoneyControllerTests @Autowired constructor(
             "At least 3 units", "From 1 to 10 units", "Default: 3 units", "15 minutes", "2 hours", "24 hours", "48 hours",
             "USD 6.50", "US", "minor units", "readonly", "price-warning")) assertContains(html, text)
         assertContains(html, "run=${fixture.run.id}")
+        assertContains(html, "Postcard set\nSize: A6\nDesigns in a set: 5")
+        assertFalse(html.contains("designCount"))
+        assertFalse(html.contains("postcard-set"))
         assertContains(html, "value=\"glossy\" selected=\"selected\"")
         assertTrue(Regex("id=\"unitPrice\"[^>]*value=\"650\"").containsMatchIn(html))
         assertTrue(Regex("id=\"maxQtyPerPledge\"[^>]*value=\"3\"").containsMatchIn(html))
@@ -285,6 +296,9 @@ class MakerMoneyControllerTests @Autowired constructor(
         listOf("Stated interest", "Authorized holds", "Paid", "Capacity left", "Time left", "2026-01-01T00:15:00Z",
             "2026-01-01T12:15:00Z", "Needs attention", "Campaign and payment timeline", "disabled=\"disabled\"",
             "Open fan offer page (new tab)", "Open public result (new tab)").forEach { assertContains(html, it) }
+        assertContains(html, "Jan 1, 2026 at 00:15:00 UTC")
+        assertFalse(Regex(">\\s*2026-01-01T").containsMatchIn(html))
+        assertFalse(html.contains(">DRAFT<"))
         assertFalse(html.contains("Simulate next capture failure"))
         val blocked = action(fixture, "confirm", mapOf("acknowledged" to "true", "pledgeCount" to "0", "units" to "0", "amount" to "0"))
         assertContains(blocked.andReturn().flashMap["error"].toString(), "threshold not met")
@@ -294,6 +308,10 @@ class MakerMoneyControllerTests @Autowired constructor(
         assertContains(pledged, "m***@example.test")
         assertFalse(pledged.contains("maker-fan@example.test"))
         assertContains(pledged, "Hold placed. You have not been charged.")
+        assertContains(pledged, "Pledge 1")
+        val pledgeId = pledgeRows.findByCampaignIdOrderByCreatedAtAscIdAsc(ref(fixture).campaignId).single().id
+        assertFalse(pledged.contains(pledgeId.toString()))
+        assertFalse(pledged.contains("CREATED -&gt; AUTHORIZED"))
         val simulation = action(fixture, "simulate").andReturn()
         assertContains(simulation.flashMap["error"].toString(), "simulation disabled")
     }
@@ -306,7 +324,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         val review = action(fixture, "review").andReturn().response.redirectedUrl!!
         assertEquals("/w/${fixture.workspace.token}/maker/campaign?review=true", review)
         val html = page(fixture.workspace.token, "campaign?review=true")
-        listOf("Review before confirming production", "authorized pledges", "USD 30.00", "A capture can fail", "refunded", "released").forEach { assertContains(html, it) }
+        listOf("Review before confirming production", "authorized pledge</span>", "USD 30.00", "A capture can fail", "refunded", "released").forEach { assertContains(html, it) }
         assertContains(action(fixture, "confirm").andReturn().flashMap["error"].toString(), "Review")
         assertContains(action(fixture, "confirm", confirmation(1, 2, 2000)).andReturn().flashMap["error"].toString(), "Review")
         gateway.captureResults.add(PaymentResult.Received(CaptureDetails(CaptureId("cap-funded"), Money(3000, "USD")), PaymentStatus.COMPLETED))
@@ -346,13 +364,13 @@ class MakerMoneyControllerTests @Autowired constructor(
         val html = page(fixture.workspace.token, "result")
         val production = html.substringAfter("<h2 id=\"batch-heading\">").substringBefore("<h2 id=\"pledges-heading\">")
         for (text in listOf("Batch to produce", "3 units", "USD 30.00", "Synthetic Buyer", "42 Sample Lane", "Unit 7",
-            "Example City", "90001", "Captured", "m***@example.test")) assertContains(production, text)
+            "Example City", "90001", "Paid.", "m***@example.test")) assertContains(production, text)
         val completed = production.substringBefore("<h3>Payments not completed</h3>")
         val incomplete = production.substringAfter("<h3>Payments not completed</h3>")
         assertFalse(completed.contains("Excluded Buyer"))
         assertContains(incomplete, "Excluded Buyer")
         assertContains(incomplete, "99 Unpaid Road")
-        assertContains(incomplete, "Voided")
+        assertContains(incomplete, "Hold released by PayPal.")
         assertFalse(html.contains("maker-fan@example.test"))
         val path = "/w/${fixture.workspace.token}"
         for (route in listOf("/result", "/offer", "/pledges/${rows[0].id}", "/pledges/${rows[1].id}")) {
@@ -391,7 +409,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         action(fixture, "confirm", confirmation(2, 3, 3000))
         val html = page(fixture.workspace.token, "result")
         listOf("Not funded", "Capture shortfall", "Refunded.", "Hold released by PayPal", "USD 20.00", "USD 0.00",
-            "refund-shortfall", "cap-shortfall", "2 units with completed refunds", "1 units with released holds").forEach { assertContains(html, it) }
+            "refund-shortfall", "cap-shortfall", "2 units with completed refunds", "1 unit with released holds").forEach { assertContains(html, it) }
     }
 
     @Test

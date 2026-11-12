@@ -38,7 +38,7 @@
                                 </p>
                             </div>
                             <div class="field" th:each="variant : ${option.allowedVariants}">
-                                <label th:for="${'variant.' + variant.key}" th:text="${variant.key}">
+                                <label th:for="${'variant.' + variant.key}" th:text="${@makerDisplay.catalogLabel(variant.key)}">
                                 </label>
                                 <select th:id="${'variant.' + variant.key}" th:name="${'variant.' + variant.key}" required>
                                     <option th:each="value : ${variant.value}" th:value="${value}" th:selected="${fields['variant.' + variant.key] == value}" th:text="${value}">

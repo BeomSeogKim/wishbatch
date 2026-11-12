@@ -2,6 +2,7 @@ package app.web.maker
 
 import app.campaign.model.Campaign
 import app.campaign.model.CampaignState
+import app.campaign.model.CampaignReason
 import app.campaign.model.PledgeState
 import app.campaign.rules.thresholdMet
 import app.campaign.service.CampaignRef
@@ -27,7 +28,11 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Currency
+import java.util.Locale
 import java.util.UUID
 
 /** Read-only workspace lookup until the campaign boundary exposes a current-campaign query. */
@@ -48,6 +53,30 @@ class MakerDisplay {
     fun money(amount: BigInteger, currency: String): String =
         "$currency ${BigDecimal(amount, Currency.getInstance(currency).defaultFractionDigits).toPlainString()}"
     fun words(value: Any): String = value.toString().lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
+    fun catalogLabel(value: String): String = when (value) {
+        "postcard-set" -> "Postcard set"
+        "art-print" -> "Art print"
+        "sticker-sheet" -> "Sticker sheet"
+        "designCount" -> "Designs in a set"
+        "cut" -> "Cut style"
+        else -> value.replace(Regex("([a-z])([A-Z])"), "$1 $2")
+            .replace('-', ' ').replace('_', ' ').replaceFirstChar { it.titlecase(Locale.US) }
+    }
+    fun time(value: Instant?): String = value?.let {
+        DateTimeFormatter.ofPattern("MMM d, uuuu 'at' HH:mm:ss 'UTC'", Locale.US)
+            .withZone(ZoneOffset.UTC).format(it)
+    } ?: "Not set"
+    fun detail(value: String): String = Regex("\\b[A-Z][A-Z_]+\\b").replace(value) {
+        when (it.value) {
+            "AUTHORIZED" -> "Hold placed"
+            "CAPTURED" -> "Paid"
+            "VOIDED" -> "Hold released"
+            else -> if (it.value in stateTokens) words(it.value) else it.value
+        }
+    }
+    private val stateTokens = (CampaignState.entries.map { it.name } +
+        CampaignReason.entries.map { it.name } + PledgeState.entries.map { it.name }).toSet()
+
     fun pledge(state: PledgeState): String = when (state) {
         PledgeState.CREATED -> "Approval not completed; no hold counted."
         PledgeState.ABANDONED -> "Approval abandoned; no hold counted."
@@ -149,6 +178,9 @@ class CampaignController(
     private fun populate(model: Model, view: CampaignView?) {
         if (view != null) model.addAttribute("makerStep", if (view.state in terminalStates) 6 else 5)
         model.addAttribute("campaign", view)
+        model.addAttribute("pledgeLabels", view?.pledges?.mapIndexed { index, pledge ->
+            pledge.id to "Pledge ${index + 1}"
+        }?.toMap().orEmpty())
         model.addAttribute("terminal", view?.state in terminalStates)
         val cancellable = view?.state in setOf(CampaignState.OPEN, CampaignState.AWAITING_CONFIRMATION)
         model.addAttribute("canCancel", cancellable)

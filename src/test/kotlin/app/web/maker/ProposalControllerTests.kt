@@ -82,6 +82,7 @@ class ProposalControllerTests(
         assertContains(html, "Stored seed run")
         assertContains(html, stored.run.model)
         assertContains(html, "datetime=\"${stored.run.createdAt}\"")
+        assertContains(html, ">${MakerDisplay().time(stored.run.createdAt)}</time>")
         assertContains(html, "USD $6.50 / unit")
         assertContains(html, "3 units")
         assertContains(html, "10 units")
@@ -90,7 +91,7 @@ class ProposalControllerTests(
         assertContains(html, "/w/${workspace.token}/maker/offer?run=${stored.run.id}")
         assertContains(html, "stated interest, not orders")
         assertContains(html, "Not a request")
-        assertContains(html, "validation items dropped or flagged")
+        assertContains(html, "Validation items dropped or flagged")
         assertEquals(1, Regex("<h1\\b").findAll(html).count())
         assertEquals(1, Regex("button button-primary").findAll(html).count())
         assertFalse(html.contains("<progress"))
@@ -263,7 +264,7 @@ class ProposalControllerTests(
         assertContains(html, "Hard condition")
         assertContains(html, "Preference")
         assertContains(html, "Unknown")
-        assertContains(html, "1 validation items dropped or flagged")
+        assertContains(html, "Validation items dropped or flagged: 1")
         for (counts in optionWishCounts(output)) {
             val row = Regex("<tr>\\s*<th scope=\"row\">${Regex.escape(options.single { it.id == counts.optionId }.name)}</th>(.*?)</tr>",
                 RegexOption.DOT_MATCHES_ALL).find(html)!!.groupValues[1]

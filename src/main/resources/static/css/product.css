@@ -302,3 +302,35 @@ tbody th { min-width: 180px; }
 .proposal-disclosure > summary { cursor: pointer; padding: var(--space-3); color: var(--accent); border: 1px solid var(--line); border-radius: var(--radius-small); }
 .proposal-reason { margin-top: var(--space-6); }
 .proposal-wish { overflow-wrap: anywhere; }
+
+.offer-specification { white-space: pre-line; }
+
+.card > h2 + p, .card > h2 + form, .card > h2 + .field { margin-top: var(--space-4); }
+.card > .field + .field, .card > .field-help + .field { margin-top: var(--space-4); }
+main > .card + .card, .two-column + .card { margin-top: var(--space-6); }
+.card fieldset.field { min-width: 0; margin: var(--space-6) 0 0; padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-small); }
+.card fieldset legend { padding-inline: var(--space-2); font-weight: 600; }
+.card fieldset .checkbox-field { font-weight: 400; }
+.card > form + p, .card > form + a { margin-top: var(--space-4); }
+.card > form + a { display: inline-block; }
+.card .money-terms { margin-block: var(--space-6); }
+.table-scroll + .button { margin-top: var(--space-4); }
+
+.fan-page > h1 { margin-block: var(--space-8); }
+.fan-page > .card, .fan-page > .counts { margin-block: var(--space-6); }
+.term-list { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-3) var(--space-4); }
+.term-list dt { color: var(--muted); }
+.term-list dd { margin: 0; overflow-wrap: anywhere; }
+
+main > .notice + .two-column, main > .notice + .card { margin-top: var(--space-6); }
+.preview-section > h2 + .empty-state, .preview-section > h2 + .table-scroll { margin-top: var(--space-4); }
+.site-footer { margin-top: var(--space-12); }
+
+.wish-import { margin-block: var(--space-6); }
+.wish-table td:nth-child(2) { min-width: 240px; }
+.table-scroll + .button-row { margin-top: var(--space-4); }
+
+.proposal-hero .button-row + p { margin-top: var(--space-3); }
+
+.table-scroll + h3 { margin-top: var(--space-6); }
+#paypal-button-container { max-width: 750px; color-scheme: light; }

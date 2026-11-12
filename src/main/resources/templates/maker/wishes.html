@@ -14,7 +14,7 @@
             <p class="count-value" th:text="${visibleWishCount}">40</p>
             <p>Includes comments that may not be product requests. Wishes are not orders.</p>
         </div>
-        <form th:action="@{/w/{token}/maker/wishes(token=${token})}" method="post">
+        <form class="form-stack wish-import" th:action="@{/w/{token}/maker/wishes(token=${token})}" method="post">
             <label for="comments">Import wishes (one per line, up to 100 lines)</label>
             <p class="notice notice-info">Imported comments inform analysis only. They are not contact permission or purchase consent.</p>
             <textarea id="comments" name="comments" rows="6"></textarea>
@@ -31,14 +31,14 @@
             <p>All wishes are hidden. Unhide a wish before requesting a proposal.</p>
         </div>
         <div th:unless="${wishes.isEmpty()}" class="table-scroll" tabindex="0" role="region" aria-label="Fan wishes">
-            <table>
+            <table class="wish-table">
                 <caption>Fan wishes, including hidden wishes</caption>
                 <thead><tr><th scope="col">Display name</th><th scope="col">Wish</th><th scope="col">Source</th><th scope="col">Time (UTC)</th><th scope="col">Visibility</th></tr></thead>
                 <tbody><tr th:each="wish : ${wishes}" th:id="${'wish-' + wish.id}">
                     <th scope="row" th:text="${wish.displayName ?: 'Anonymous fan'}">Fan</th>
                     <td th:text="${wish.text}">Wish text</td>
                     <td><span class="badge badge-neutral" th:text="${wish.source.name() == 'ONSITE' ? 'On-site' : 'Imported'}">Imported</span></td>
-                    <td><time th:datetime="${wish.createdAt}" th:text="${wish.createdAt}">Time</time></td>
+                    <td><time th:datetime="${wish.createdAt}" th:text="${@makerDisplay.time(wish.createdAt)}">Time</time></td>
                     <td>
                         <span class="badge badge-neutral" th:text="${wish.hidden ? 'Hidden' : 'Visible'}">Visible</span>
                         <form th:action="@{/w/{token}/maker/wishes(token=${token})}" method="post">

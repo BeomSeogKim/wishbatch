@@ -81,7 +81,7 @@ class MakerStartControllerTests(
         assertContains(html, "USD $4.00 / unit")
         assertContains(html, "USD $2.50 / unit")
         for (option in catalog.definition.options) {
-            for (text in listOf(option.name, option.format, option.leadTimeText, option.shipRegion,
+            for (text in listOf(option.name, MakerDisplay().catalogLabel(option.format), option.leadTimeText, option.shipRegion,
                 "${option.minBatch} units", "${option.maxCapacity} units") + option.fixedAttributes.values +
                 option.allowedVariants.values.flatten()) {
                 assertContains(html, text)
@@ -90,6 +90,9 @@ class MakerStartControllerTests(
         assertContains(html, "role=\"region\"")
         assertContains(html, "tabindex=\"0\"")
         assertContains(html, "Review wishes")
+        assertContains(html, "Designs in a set")
+        assertFalse(html.contains("designCount"))
+        assertFalse(html.contains("postcard-set"))
     }
 
     @Test
@@ -114,6 +117,8 @@ class MakerStartControllerTests(
         assertContains(html, "Imported")
         assertContains(html, "Anonymous fan")
         assertContains(html, "datetime=\"${wish.createdAt}\"")
+        assertContains(html, ">${MakerDisplay().time(wish.createdAt)}</time>")
+        assertFalse(html.contains(">${wish.createdAt}</time>"))
         assertContains(html, "&lt;script&gt;")
         assertContains(html, "&lt;b&gt;Fan&lt;/b&gt;")
         assertFalse(html.contains("<script>"))

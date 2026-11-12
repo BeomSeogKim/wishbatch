@@ -158,7 +158,7 @@ class OfferController(
     private fun defaults(option: Option, output: AnalysisOutput, run: AnalysisRun): Map<String, String> = buildMap {
         put("run", run.id.toString())
         put("title", option.name)
-        put("specText", (listOf(option.format) + option.fixedAttributes.map { "${it.key}: ${it.value}" }).joinToString("\n"))
+        put("specText", (listOf(display.catalogLabel(option.format)) + option.fixedAttributes.map { "${display.catalogLabel(it.key)}: ${it.value}" }).joinToString("\n"))
         put("unitPrice", option.unitCost.toString())
         put("deliveryTerms", option.leadTimeText)
         put("minBatch", option.minBatch.toString())

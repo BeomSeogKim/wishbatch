@@ -157,15 +157,27 @@
             <p><span class="badge badge-neutral" th:text="${stored.run.isSeed ? 'Stored seed run' : 'Live analysis'}">Stored seed run</span></p>
             <dl class="details-list">
                 <div><dt>Model</dt><dd th:text="${stored.run.model}">Model</dd></div>
-                <div><dt>Model call completed</dt><dd><time th:datetime="${stored.run.createdAt}" th:text="${stored.run.createdAt}">Time</time></dd></div>
+                <div><dt>Model call completed</dt><dd><time th:datetime="${stored.run.createdAt}" th:text="${@makerDisplay.time(stored.run.createdAt)}">Time</time></dd></div>
                 <div><dt>Live runs in this workspace</dt><dd th:text="${liveRunCount}">0</dd></div>
             </dl>
-            <p th:text="${stored.flags.size()} + ' validation items dropped or flagged. Checks remove unsupported quotes, unknown references, and disallowed suggestions.'">Validation summary</p>
+            <p th:text="'Validation items dropped or flagged: ' + ${stored.flags.size()} + '. Checks remove unsupported quotes, unknown references, and disallowed suggestions.'">Validation summary</p>
             <p th:if="${stored.run.isSeed}">This result came from a real model call on the sample wishes. It is available even when live analysis is unavailable.</p>
             <p>Evidence checks confirm that quotes exist. They do not guarantee that the model understood a fan correctly.</p>
         </section>
     </th:block>
     <script>
+        function revealSourceWish() {
+            const target = document.getElementById(window.location.hash.slice(1));
+            if (!target) return;
+            let disclosure = target.closest('details');
+            while (disclosure) {
+                disclosure.open = true;
+                disclosure = disclosure.parentElement.closest('details');
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener('hashchange', revealSourceWish);
+        revealSourceWish();
         document.getElementById('analysis-form').addEventListener('submit', function () {
             document.getElementById('analysis-submit').disabled = true;
             document.getElementById('analysis-submit').textContent = 'Analyzing…';

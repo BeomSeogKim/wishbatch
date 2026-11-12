@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page('The offer', ~{::main})}">
 <body>
-<main id="main" class="shell">
+<main id="main" class="shell fan-page">
     <p><a th:href="@{/w/{token}(token=${token})}">Back to wishes</a></p>
     <h1 th:text="${campaign != null ? campaign.offer.title : 'No open offer'}">The offer</h1>
     <div th:unless="${campaignOpen}" class="empty-state">
@@ -12,18 +12,18 @@
     <th:block th:if="${campaign != null}">
         <section class="card" aria-label="Exact offer">
             <h2>What the maker will produce</h2>
-            <p th:text="${campaign.offer.specText}"></p>
-            <dl>
+            <p class="offer-specification" th:text="${campaign.offer.specText}"></p>
+            <dl class="term-list">
                 <th:block th:each="variant : ${campaign.offer.chosenVariants}">
-                    <dt th:text="${variant.key}"></dt><dd th:text="${variant.value}"></dd>
+                    <dt th:text="${@makerDisplay.catalogLabel(variant.key)}"></dt><dd th:text="${@makerDisplay.catalogLabel(variant.value)}"></dd>
                 </th:block>
                 <dt>Unit price</dt><dd th:text="${unitPrice}"></dd>
                 <dt>Delivery terms</dt><dd th:text="${campaign.offer.deliveryTerms}"></dd>
                 <dt>Shipping region</dt><dd th:text="${campaign.offer.shipRegion}"></dd>
-                <dt>Minimum batch</dt><dd th:text="${campaign.offer.minBatch}"></dd>
-                <dt>Capacity left</dt><dd th:text="${campaign.capacityLeft}"></dd>
-                <dt>Close time (UTC)</dt><dd><time th:datetime="${campaign.closesAt}" th:text="${campaign.closesAt}"></time></dd>
-                <dt>Confirmation deadline (UTC)</dt><dd><time th:datetime="${campaign.confirmDeadline}" th:text="${campaign.confirmDeadline}"></time></dd>
+                <dt>Minimum batch</dt><dd th:text="${campaign.offer.minBatch + ' units'}"></dd>
+                <dt>Capacity left</dt><dd th:text="${campaign.capacityLeft + ' units'}"></dd>
+                <dt>Close time (UTC)</dt><dd><time th:datetime="${campaign.closesAt}" th:text="${@makerDisplay.time(campaign.closesAt)}"></time></dd>
+                <dt>Confirmation deadline (UTC)</dt><dd><time th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}"></time></dd>
             </dl>
         </section>
         <th:block th:if="${offerEvidence != null}">
@@ -44,7 +44,7 @@
                 <button class="button button-secondary" type="submit">Update total</button>
             </form>
             <p th:if="${total != null}">Total to authorize: <strong id="pledge-total" th:text="${total}"></strong>
-                for <span th:text="${quantity}"></span> unit(s).</p>
+                for <span th:text="${quantity}"></span> <span th:text="${quantity == 1 ? 'unit' : 'units'}"></span>.</p>
             <p th:if="${quoteError != null}" class="notice notice-warning" role="alert" th:text="${quoteError}"></p>
             <div th:replace="~{fragments/components :: moneyTerms}"></div>
             <p th:unless="${paypalReady}" class="notice notice-info">PayPal sandbox checkout is not configured. Please try again later.</p>

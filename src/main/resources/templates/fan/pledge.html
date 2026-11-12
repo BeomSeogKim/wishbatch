@@ -2,18 +2,18 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page('Pledge status', ~{::main})}">
 <body>
-<main id="main" class="shell">
+<main id="main" class="shell fan-page">
     <h1>Pledge status</h1>
     <p th:if="${error != null}" class="notice notice-error" role="alert" th:text="${error}"></p>
     <p th:if="${notice != null}" class="notice notice-info" role="status" th:text="${notice}"></p>
     <section class="card" aria-label="Your pledge">
         <h2 th:text="${campaign.offer.title}"></h2>
         <p class="notice notice-info" th:text="${sentence}"></p>
-        <dl>
+        <dl class="term-list">
             <dt>Quantity</dt><dd th:text="${pledge.quantity}"></dd>
             <dt>Amount</dt><dd th:text="${amount}"></dd>
             <dt th:if="${pledge.authorizationExpiresAt != null}">Authorization expiry (UTC)</dt>
-            <dd th:if="${pledge.authorizationExpiresAt != null}" th:text="${pledge.authorizationExpiresAt}"></dd>
+            <dd th:if="${pledge.authorizationExpiresAt != null}" th:text="${@makerDisplay.time(pledge.authorizationExpiresAt)}"></dd>
         </dl>
         <h2>What happens next</h2>
         <p th:text="${next}"></p>

@@ -24,13 +24,13 @@
                 </tr></thead>
                 <tbody><tr th:each="option : ${options}">
                     <th scope="row" th:text="${option.name}">Product</th>
-                    <td><span th:text="${option.format}">Format</span>
+                    <td><span th:text="${@makerDisplay.catalogLabel(option.format)}">Format</span>
                         <dl><th:block th:each="attribute : ${option.fixedAttributes}">
-                            <dt th:text="${attribute.key}">Attribute</dt><dd th:text="${attribute.value}">Value</dd>
+                            <dt th:text="${@makerDisplay.catalogLabel(attribute.key)}">Attribute</dt><dd th:text="${attribute.value}">Value</dd>
                         </th:block></dl>
                     </td>
                     <td><dl><th:block th:each="variant : ${option.allowedVariants}">
-                        <dt th:text="${variant.key}">Variant</dt><dd th:text="${#strings.listJoin(variant.value, ', ')}">Values</dd>
+                        <dt th:text="${@makerDisplay.catalogLabel(variant.key)}">Variant</dt><dd th:text="${#strings.listJoin(variant.value, ', ')}">Values</dd>
                     </th:block></dl><span th:if="${option.allowedVariants.isEmpty()}">No variants</span></td>
                     <td th:text="${unitCosts[option.id]} + ' / unit'">USD $1.00 / unit</td>
                     <td th:text="${option.minBatch} + ' units'">3 units</td>

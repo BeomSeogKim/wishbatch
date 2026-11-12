@@ -40,10 +40,10 @@
                                 <span th:text="${pledge.payerEmailMasked ?: 'Payer unavailable'}">
                                 </span>
                                 <br>
-                                <small th:text="${pledge.id}">
+                                <small th:text="${pledgeLabels[pledge.id]}">
                                 </small>
                             </th>
-                            <td th:text="${pledge.quantity + ' units'}">
+                            <td th:text="${pledge.quantity + (pledge.quantity == 1 ? ' unit' : ' units')}">
                             </td>
                             <td th:text="${@makerDisplay.money(pledge.amount, pledge.currency)}">
                             </td>
@@ -78,7 +78,7 @@
                         <th scope="col">Buyer name</th>
                         <th scope="col">Quantity</th>
                         <th scope="col">Shipping address</th>
-                        <th scope="col">Capture state</th>
+                        <th scope="col">Payment state</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -99,7 +99,10 @@
                                 <div th:if="${address.countryCode != null}" th:text="${address.countryCode}"></div>
                             </th:block>
                         </td>
-                        <td th:text="${@makerDisplay.words(row.state)}"></td>
+                        <td>
+                            <span th:if="${@makerDisplay.pledge(row.state).isEmpty()}" th:text="#{${'pledge.' + row.state.name()}}"></span>
+                            <span th:unless="${@makerDisplay.pledge(row.state).isEmpty()}" th:text="${@makerDisplay.pledge(row.state)}"></span>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -109,7 +112,7 @@
             <p th:if="${campaign.needsAttention.isEmpty()}">No unresolved payments reported.</p>
             <ul th:unless="${campaign.needsAttention.isEmpty()}">
                 <li th:each="item : ${campaign.needsAttention}">
-                    <span th:text="${item.pledgeId}">
+                    <span th:text="${pledgeLabels[item.pledgeId]}">
                     </span>: <span th:text="${@makerDisplay.words(item.state)}">
                     </span>
                     <span th:if="${item.reason != null}" th:text="${' — ' + @makerDisplay.words(item.reason)}">
@@ -122,11 +125,11 @@
             <h2 id="timeline-heading">Campaign and payment timeline</h2>
             <ol class="timeline">
                 <li th:each="event : ${campaign.timeline}">
-                    <time th:datetime="${event.time}" th:text="${event.time}">
+                    <time th:datetime="${event.time}" th:text="${@makerDisplay.time(event.time)}">
                     </time>
                     <strong th:text="${@makerDisplay.words(event.type)}">
                     </strong>
-                    <p th:if="${event.pledgeId != null}">Pledge: <span th:text="${event.pledgeId}">
+                    <p th:if="${event.pledgeId != null}"><span th:text="${pledgeLabels[event.pledgeId]}">
                         </span>
                     </p>
                     <p th:if="${event.endpoint != null}">Endpoint: <span th:text="${event.endpoint}">
@@ -135,10 +138,10 @@
                     <p th:if="${event.providerId != null}">Provider ID: <span th:text="${event.providerId}">
                         </span>
                     </p>
-                    <p th:if="${event.status != null}">Status: <span th:text="${event.status}">
+                    <p th:if="${event.status != null}">Status: <span th:text="${@makerDisplay.words(event.status)}">
                         </span>
                     </p>
-                    <p th:if="${event.detail != null}" th:text="${event.detail}">
+                    <p th:if="${event.detail != null}" th:text="${@makerDisplay.detail(event.detail)}">
                     </p>
                 </li>
             </ol>

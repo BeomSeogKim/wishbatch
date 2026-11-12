@@ -30,7 +30,11 @@ data class ProposalWish(val wish: Wish, val needs: List<WishNeed>, val reason: S
 data class ProposalWishGroup(val label: String, val reason: String, val wishes: List<ProposalWish>)
 
 @Controller
-class ProposalController(private val workspaces: WorkspaceService, private val runs: AnalysisRunService) {
+class ProposalController(
+    private val workspaces: WorkspaceService,
+    private val runs: AnalysisRunService,
+    private val display: MakerDisplay,
+) {
 
     @GetMapping("/w/{token}/maker/proposal")
     fun proposal(@PathVariable token: String, @RequestParam(required = false) run: UUID?, model: Model): String {
@@ -51,11 +55,11 @@ class ProposalController(private val workspaces: WorkspaceService, private val r
             model.addAttribute("optionCounts", optionWishCounts(output))
             model.addAttribute("proposedCounts", optionWishCounts(output).singleOrNull { it.optionId == option?.id })
             if (option != null) {
-                model.addAttribute("optionFormat", catalogLabel(option.format))
-                model.addAttribute("optionAttributes", option.fixedAttributes.mapKeys { catalogLabel(it.key) }
-                    .mapValues { catalogLabel(it.value) })
-                model.addAttribute("suggestedVariants", output.proposal.suggestedVariants.mapKeys { catalogLabel(it.key) }
-                    .mapValues { catalogLabel(it.value) })
+                model.addAttribute("optionFormat", display.catalogLabel(option.format))
+                model.addAttribute("optionAttributes", option.fixedAttributes.mapKeys { display.catalogLabel(it.key) }
+                    .mapValues { display.catalogLabel(it.value) })
+                model.addAttribute("suggestedVariants", output.proposal.suggestedVariants.mapKeys { display.catalogLabel(it.key) }
+                    .mapValues { display.catalogLabel(it.value) })
                 val currency = Currency.getInstance(option.currency)
                 val amount = BigDecimal.valueOf(option.unitCost, currency.defaultFractionDigits)
                 val format = NumberFormat.getCurrencyInstance(Locale.US).apply { this.currency = currency }
@@ -104,18 +108,8 @@ class ProposalController(private val workspaces: WorkspaceService, private val r
     @ResponseStatus(HttpStatus.NOT_FOUND)
     fun notFound(): String = "error/not-found"
 
-    private fun catalogLabel(value: String): String = when (value) {
-        "postcard-set" -> "Postcard set"
-        "art-print" -> "Art print"
-        "sticker-sheet" -> "Sticker sheet"
-        "designCount" -> "Designs in a set"
-        "cut" -> "Cut style"
-        else -> value.replace(Regex("([a-z])([A-Z])"), "$1 $2")
-            .replace('-', ' ').replace('_', ' ').replaceFirstChar { it.titlecase(Locale.US) }
-    }
-
     private fun catalogText(value: String): String =
-        Regex("postcard-set|art-print|sticker-sheet|designCount|die-cut").replace(value) { catalogLabel(it.value) }
+        Regex("postcard-set|art-print|sticker-sheet|designCount|die-cut").replace(value) { display.catalogLabel(it.value) }
 
     private fun failureMessage(reason: AnalysisFailure): String = when (reason) {
         AnalysisFailure.NOT_CONFIGURED -> "Live analysis is not configured. A model API key is needed to re-run. Your last valid analysis is still shown."

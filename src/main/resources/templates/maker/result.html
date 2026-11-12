@@ -41,16 +41,16 @@
                         <h2>Paid total</h2>
                         <p th:text="${@makerDisplay.money(paidAmount, campaign.offer.currency)}">
                         </p>
-                        <p th:text="${campaign.result.paidUnits + ' units with completed payments retained'}">
+                        <p th:text="${campaign.result.paidUnits + (campaign.result.paidUnits == 1 ? ' unit' : ' units') + ' with completed payments retained'}">
                         </p>
                     </div>
                     <div class="card">
                         <h2>Refunded total</h2>
                         <p th:text="${@makerDisplay.money(refundedAmount, campaign.offer.currency)}">
                         </p>
-                        <p th:text="${campaign.result.refundedUnits + ' units with completed refunds'}">
+                        <p th:text="${campaign.result.refundedUnits + (campaign.result.refundedUnits == 1 ? ' unit' : ' units') + ' with completed refunds'}">
                         </p>
-                        <p th:text="${campaign.result.releasedUnits + ' units with released holds'}">
+                        <p th:text="${campaign.result.releasedUnits + (campaign.result.releasedUnits == 1 ? ' unit' : ' units') + ' with released holds'}">
                         </p>
                     </div>
                 </section>

@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page('Campaign result', ~{::main})}">
 <body>
-<main id="main" class="shell">
+<main id="main" class="shell fan-page">
     <h1 th:text="${resultTitle}">Campaign result</h1>
     <p th:text="${resultReason}"></p>
     <th:block th:if="${campaign != null}">
@@ -10,7 +10,7 @@
         <div th:replace="~{fragments/components :: counts(${campaign.counts.statedInterest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}"></div>
         <section th:if="${resultAvailable}" class="card">
             <h2>Payment outcomes</h2>
-            <dl>
+            <dl class="term-list">
                 <dt>Paid units</dt><dd th:text="${campaign.result.paidUnits}"></dd>
                 <dt>Refunded units</dt><dd th:text="${campaign.result.refundedUnits}"></dd>
                 <dt>Released units</dt><dd th:text="${campaign.result.releasedUnits}"></dd>

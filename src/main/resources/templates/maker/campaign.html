@@ -22,7 +22,7 @@
                     </h2>
                     <p class="badge badge-neutral" th:text="${@makerDisplay.words(campaign.state)}">
                     </p>
-                    <p th:text="${campaign.offer.specText}">
+                    <p class="offer-specification" th:text="${campaign.offer.specText}">
                     </p>
                     <p>
                         <span th:text="${@makerDisplay.money(campaign.offer.unitPrice, campaign.offer.currency)}">
@@ -52,13 +52,13 @@
                         <p>Time left: <strong th:text="${campaign.timeLeft.toHours() + 'h ' + campaign.timeLeft.toMinutesPart() + 'm ' + campaign.timeLeft.toSecondsPart() + 's'}">
                             </strong> <span th:text="${campaign.state.name() == 'AWAITING_CONFIRMATION' ? 'to confirm production' : 'in the pledge window'}">
                             </span>.</p>
-                        <p>Opened: <time th:datetime="${campaign.openedAt}" th:text="${campaign.openedAt}">
+                        <p>Opened: <time th:datetime="${campaign.openedAt}" th:text="${@makerDisplay.time(campaign.openedAt)}">
                             </time>
                         </p>
-                        <p>Closes: <time th:datetime="${campaign.closesAt}" th:text="${campaign.closesAt}">
+                        <p>Closes: <time th:datetime="${campaign.closesAt}" th:text="${@makerDisplay.time(campaign.closesAt)}">
                             </time>
                         </p>
-                        <p>Confirm by: <time th:datetime="${campaign.confirmDeadline}" th:text="${campaign.confirmDeadline}">
+                        <p>Confirm by: <time th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}">
                             </time>
                         </p>
                         <p>Times are UTC. <a th:href="@{/w/{token}/maker/campaign(token=${token})}">Refresh current state</a>
@@ -69,7 +69,7 @@
                     <h2 id="confirm-heading">Review before confirming production</h2>
                     <p>
                         <strong th:text="${campaign.confirmation.pledgeCount}">
-                        </strong> authorized pledges, <strong th:text="${campaign.confirmation.units}">
+                        </strong> <span th:text="${campaign.confirmation.pledgeCount == 1 ? 'authorized pledge' : 'authorized pledges'}"></span>, <strong th:text="${campaign.confirmation.units}">
                         </strong> units, total <strong th:text="${@makerDisplay.money(campaign.confirmation.amount, campaign.confirmation.currency)}">
                         </strong>.</p>
                     <p>Confirming starts capture attempts. A capture can fail. Production proceeds only if enough payments complete. If too few payments complete, completed payments are refunded and remaining holds are released. PayPal and the bank or card determine when funds reappear.</p>
@@ -107,7 +107,7 @@
                     <p>Off unless explicitly armed. Simulate failure of the next capture without making that capture call to PayPal. This changes demo settlement behavior.</p>
                     <p th:each="event : ${campaign.timeline}" th:if="${event.type == 'SIMULATION_ARMED' or event.type == 'SIMULATION_CONSUMED'}">
                         <span th:text="${@makerDisplay.words(event.type)}">
-                        </span> at <time th:datetime="${event.time}" th:text="${event.time}">
+                        </span> at <time th:datetime="${event.time}" th:text="${@makerDisplay.time(event.time)}">
                         </time>
                     </p>
                     <form method="post" th:action="@{/w/{token}/maker/campaign(token=${token})}">
