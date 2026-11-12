@@ -14,9 +14,13 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.mock.web.MockHttpServletRequest
+import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.servlet.ModelAndView
 import java.time.Instant
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -32,6 +36,7 @@ class DemoGuideTests @Autowired constructor(
     private val offers: OfferRepository,
     private val campaigns: CampaignRepository,
     private val pledges: PledgeRepository,
+    private val guideConfiguration: DemoGuideConfiguration,
 ) {
     @Test
     fun `workspace pages show the guide without changing the existing forms`() {
@@ -86,6 +91,36 @@ class DemoGuideTests @Autowired constructor(
         pledge.state = PledgeState.AUTHORIZED
         pledges.saveAndFlush(pledge)
         assertContains(html(), "Review the holds and confirm production")
+        val interceptor = guideConfiguration.guideInterceptor()
+        for ((route, location, next) in listOf(
+            Triple("maker/decision-record", "Maker: decision record", "/maker/campaign"),
+            Triple("maker/another-page", "Maker workspace", "/maker/campaign"),
+            Triple("how-this-batch-was-chosen", "Fan: batch explanation", "/offer"),
+            Triple("campaigns/${campaign.id}/how-this-batch-was-chosen", "Fan: batch explanation", "/offer"),
+        )) {
+            val view = ModelAndView("example")
+            val request = MockHttpServletRequest("GET", "/w/${workspace.token}/$route")
+            interceptor.postHandle(request, MockHttpServletResponse(), Any(), view)
+            val guide = view.model["demoGuide"] as DemoGuide
+            assertEquals(location, guide.location)
+            assertEquals("/w/${workspace.token}$next", guide.nextUrl)
+        }
+        val rejectedView = ModelAndView("example")
+        val rejectedResponse = MockHttpServletResponse().apply { status = 404 }
+        interceptor.postHandle(MockHttpServletRequest("GET", "/w/${workspace.token}/maker/missing"),
+            rejectedResponse, Any(), rejectedView)
+        assertFalse(rejectedView.model.containsKey("demoGuide"))
+        val redirect = ModelAndView("redirect:/")
+        interceptor.postHandle(MockHttpServletRequest("GET", "/w/${workspace.token}/maker/another-page"),
+            MockHttpServletResponse(), Any(), redirect)
+        assertFalse(redirect.model.containsKey("demoGuide"))
+        val json = mvc.get("/w/${workspace.token}/maker/offer/price-check") {
+            param("run", analysis.id.toString())
+            param("unitPrice", "500")
+        }.andExpect { status { isOk() } }.andReturn()
+        assertEquals(null, json.modelAndView)
+        interceptor.postHandle(MockHttpServletRequest("GET", "/w/${workspace.token}/maker/decision-record.json"),
+            MockHttpServletResponse(), Any(), null)
         assertEquals(CampaignState.OPEN, campaigns.findById(campaign.id).orElseThrow().state)
         assertEquals(PledgeState.AUTHORIZED, pledges.findById(pledge.id).orElseThrow().state)
         campaign.state = CampaignState.NOT_FUNDED
@@ -93,6 +128,26 @@ class DemoGuideTests @Autowired constructor(
         val terminal = html()
         assertContains(terminal, "Review the settlement result")
         assertContains(terminal, "href=\"/w/${workspace.token}/how-this-batch-was-chosen\"")
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    fun `published explanation pages retain current campaign guidance`() {
+        val workspace = workspaces.create()
+        val option = workspaces.listOptions(workspace.token).first()
+        val analysis = analyses.findByWorkspaceId(workspace.id).first()
+        val offer = offers.save(Offer(workspace.id, option.id, analysis.id, "Example", "Example", emptyMap(),
+            500, "USD", "Example", "US", 2, 10))
+        val openedAt = Instant.parse("2020-01-01T00:00:00Z")
+        val campaign = campaigns.save(Campaign(offer.id, CampaignState.NOT_FUNDED, openedAt = openedAt,
+            closesAt = openedAt.plusSeconds(3600), confirmDeadline = openedAt.plusSeconds(46800)))
+        for (path in listOf("how-this-batch-was-chosen", "campaigns/${campaign.id}/how-this-batch-was-chosen")) {
+            val html = mvc.get("/w/${workspace.token}/$path").andExpect { status { isOk() } }
+                .andReturn().response.contentAsString
+            assertContains(html, "Fan: batch explanation")
+            assertContains(html, "Review the campaign result")
+            assertContains(html, "href=\"/w/${workspace.token}/result\"")
+        }
     }
 
     @Test

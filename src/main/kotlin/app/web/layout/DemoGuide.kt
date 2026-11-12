@@ -35,27 +35,29 @@ class DemoGuideConfiguration(
     private val pledges: ObjectProvider<PledgeRepository>,
 ) : WebMvcConfigurer {
     override fun addInterceptors(registry: InterceptorRegistry) {
-        registry.addInterceptor(object : HandlerInterceptor {
-            override fun postHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any, modelAndView: ModelAndView?) {
-                if (request.method != "GET" || response.status != 200 || modelAndView == null ||
-                    modelAndView.viewName?.startsWith("redirect:") != false) return
-                val match = Regex("^/w/([A-Za-z0-9_-]{43})(?:/(maker(?:/(?:options|wishes|proposal|offer|campaign|result|decision-record))?|offer|result|how-this-batch-was-chosen|pledges/[0-9a-fA-F-]+))?/?$")
-                    .matchEntire(request.requestURI.removePrefix(request.contextPath)) ?: return
-                val token = match.groupValues[1]
-                val path = match.groupValues[2]
-                val workspace = workspaces.ifAvailable?.findByToken(token) ?: return
-                val records = campaigns.ifAvailable?.findByWorkspaceId(workspace.id) ?: return
-                val order = compareByDescending<Campaign> { it.openedAt ?: Instant.MIN }.thenByDescending { it.id }
-                val campaign = records.filter { it.state in activeStates }.sortedWith(order).firstOrNull()
-                    ?: records.filter { it.state in terminalStates }.sortedWith(order).firstOrNull()
-                val minimumMet = campaign?.let {
-                    val offer = offers.ifAvailable?.findByIdAndWorkspaceId(it.offerId, workspace.id)
-                    val holds = pledges.ifAvailable?.findByCampaignIdOrderByCreatedAtAscIdAsc(it.id)
-                    offer != null && holds != null && authorizedUnits(holds) >= offer.minBatch
-                } ?: false
-                modelAndView.addObject("demoGuide", guideFor(token, path, campaign?.state, minimumMet, modelAndView.model["proposalUnavailable"] == true))
-            }
-        })
+        registry.addInterceptor(guideInterceptor())
+    }
+
+    internal fun guideInterceptor(): HandlerInterceptor = object : HandlerInterceptor {
+        override fun postHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any, modelAndView: ModelAndView?) {
+            if (request.method != "GET" || response.status != 200 || modelAndView == null ||
+                modelAndView.viewName?.startsWith("redirect:") != false) return
+            val match = Regex("^/w/([A-Za-z0-9_-]{43})(?:/(.*))?$")
+                .matchEntire(request.requestURI.removePrefix(request.contextPath)) ?: return
+            val token = match.groupValues[1]
+            val path = match.groupValues[2].trimEnd('/')
+            val workspace = workspaces.ifAvailable?.findByToken(token) ?: return
+            val records = campaigns.ifAvailable?.findByWorkspaceId(workspace.id) ?: return
+            val order = compareByDescending<Campaign> { it.openedAt ?: Instant.MIN }.thenByDescending { it.id }
+            val campaign = records.filter { it.state in activeStates }.sortedWith(order).firstOrNull()
+                ?: records.filter { it.state in terminalStates }.sortedWith(order).firstOrNull()
+            val minimumMet = campaign?.let {
+                val offer = offers.ifAvailable?.findByIdAndWorkspaceId(it.offerId, workspace.id)
+                val holds = pledges.ifAvailable?.findByCampaignIdOrderByCreatedAtAscIdAsc(it.id)
+                offer != null && holds != null && authorizedUnits(holds) >= offer.minBatch
+            } ?: false
+            modelAndView.addObject("demoGuide", guideFor(token, path, campaign?.state, minimumMet, modelAndView.model["proposalUnavailable"] == true))
+        }
     }
 }
 
@@ -78,9 +80,12 @@ internal fun guideFor(
         path == "maker/decision-record" -> "Maker: decision record"
         path == "offer" -> "Fan: offer"
         path == "result" -> "Fan: result"
-        path == "how-this-batch-was-chosen" -> "Fan: batch explanation"
+        path == "how-this-batch-was-chosen" ||
+            (path.startsWith("campaigns/") && path.endsWith("/how-this-batch-was-chosen")) -> "Fan: batch explanation"
         path.startsWith("pledges/") -> "Fan: pledge status"
-        else -> "Fan: wishes"
+        path.isEmpty() -> "Fan: wishes"
+        maker -> "Maker workspace"
+        else -> "Workspace"
     }
     val next = if (maker) {
         when (state) {
