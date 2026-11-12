@@ -27,6 +27,7 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
 import org.springframework.mock.env.MockEnvironment
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
@@ -74,7 +75,7 @@ class WishGlossServiceTests @Autowired constructor(
 
     @TestConfiguration(proxyBeanMethods = false)
     class TranslatorConfiguration {
-        @Bean fun offlineTranslator() = OfflineTranslator()
+        @Bean @Primary fun offlineTranslator() = OfflineTranslator()
     }
 
     @BeforeEach

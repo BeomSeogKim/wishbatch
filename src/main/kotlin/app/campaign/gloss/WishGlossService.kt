@@ -69,14 +69,17 @@ class WishGlossService(
         }
         val translator = translators.ifAvailable ?: return GlossResult.Failed(GlossFailure.NOT_CONFIGURED)
         val request = GlossRequest(selected.map { GlossSource(it.wishId, glossSourceHash(it.original), it.original) })
-        val records = selected.map { row ->
-            (row.saved ?: WishGloss(workspace.id, row.wishId, glossSourceHash(row.original)).also(entities::persist))
-                .also { it.attempts++ }
-        }
         val result = try {
             translator.translate(request)
         } catch (_: Exception) {
             GlossResult.Failed(GlossFailure.PROVIDER_FAILURE)
+        }
+        if (result is GlossResult.Failed && result.reason in setOf(GlossFailure.NOT_CONFIGURED, GlossFailure.LIMIT_REACHED)) {
+            return result
+        }
+        val records = selected.map { row ->
+            (row.saved ?: WishGloss(workspace.id, row.wishId, glossSourceHash(row.original)).also(entities::persist))
+                .also { it.attempts++ }
         }
         if (result is GlossResult.Completed) {
             try {

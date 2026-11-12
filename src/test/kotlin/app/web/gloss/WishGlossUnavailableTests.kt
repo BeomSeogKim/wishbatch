@@ -17,10 +17,10 @@ import org.springframework.test.web.servlet.get
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@SpringBootTest(properties = ["LLM_DAILY_RUN_CAP=100"])
+@SpringBootTest(properties = ["LLM_DAILY_RUN_CAP=100", "LLM_API_KEY="])
 @AutoConfigureMockMvc
 @Transactional
 class WishGlossUnavailableTests @Autowired constructor(
@@ -31,8 +31,8 @@ class WishGlossUnavailableTests @Autowired constructor(
     private val mvc: MockMvc,
 ) {
     @Test
-    fun `production has no translator until provider purpose handoff and preserves source on failed POST`() {
-        assertNull(translators.ifAvailable)
+    fun `configured production translator preserves source without credentials on failed POST`() {
+        assertNotNull(translators.ifAvailable)
         val workspace = workspaces.create()
         val run = runs.latest(workspace.token)!!.run.id
         val before = glosses.read(workspace.token, run)

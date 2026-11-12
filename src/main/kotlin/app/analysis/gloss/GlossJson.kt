@@ -14,6 +14,25 @@ object GlossJson {
         .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS).build()
     private val fields = setOf("wish_id", "source_hash", "status", "inferred_language", "english_gloss")
 
+    fun schema(request: GlossRequest): Map<String, Any> = mapOf(
+        "type" to "object", "additionalProperties" to false, "required" to listOf("translations"),
+        "properties" to mapOf("translations" to mapOf(
+            "type" to "array", "minItems" to request.sources.size, "maxItems" to request.sources.size,
+            "items" to mapOf(
+                "type" to "object", "additionalProperties" to false, "required" to fields.toList(),
+                "properties" to mapOf(
+                    "wish_id" to mapOf("type" to "string", "enum" to request.sources.map { it.wishId.toString() }),
+                    "source_hash" to mapOf("type" to "string", "enum" to request.sources.map { it.sourceHash }.distinct()),
+                    "status" to mapOf("type" to "string", "enum" to GlossStatus.entries.map { it.name },
+                        "description" to "TRANSLATED: non-English source with an English gloss. ENGLISH: en language and null gloss. UNCERTAIN: null language and null gloss."),
+                    "inferred_language" to mapOf("type" to listOf("string", "null"), "maxLength" to 40,
+                        "description" to "Machine-inferred language tag, lowercase primary subtag; null when uncertain."),
+                    "english_gloss" to mapOf("type" to listOf("string", "null"), "maxLength" to 1500),
+                ),
+            ),
+        )),
+    )
+
     fun decode(json: String, request: GlossRequest): List<GlossTranslation> {
         require(json.length <= 40_000)
         val root = mapper.readTree(json)
