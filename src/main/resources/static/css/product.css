@@ -173,7 +173,7 @@ progress::-moz-progress-bar { background: var(--progress-color); border-radius: 
 .hold-swatch { background: var(--hold-soft); color: var(--hold); }
 .danger-swatch { background: var(--danger-soft); color: var(--danger); }
 .two-column { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
-.card { padding: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.card { padding: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow-wrap: anywhere; }
 .card > h3 + p, .card > .eyebrow + h3 { margin-top: 16px; }
 .card > p:not(.eyebrow), .muted { color: var(--muted); }
 .details-list { margin: 24px 0 0; }
