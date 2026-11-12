@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare validated seed analysis artifacts with frozen output-blind labels."""
+"""Compare historical analysis artifacts against their frozen source snapshot."""
 import argparse
 import hashlib
 import json
@@ -135,10 +135,14 @@ def main():
     args = parser.parse_args()
     reference_path = ROOT / 'evaluation/reference-labels.json'
     reference = read(reference_path)
+    source = ROOT / 'evaluation/historical'
+    baseline = read(source / 'baseline.json')
+    if baseline['sourceSha256'] != reference['method']['sourceSha256'] or sha256(reference_path) != baseline['referenceSha256']:
+        raise ValueError('Historical reference changed')
     for filename, digest in reference['method']['sourceSha256'].items():
-        if sha256(ROOT / 'src/main/resources/seed' / filename) != digest:
+        if sha256(source / filename) != digest:
             raise ValueError('Seed changed since reference labeling')
-    texts = {row['key']: row['text'] for row in read(ROOT / 'src/main/resources/seed/wishes.json')}
+    texts = {row['key']: row['text'] for row in read(source / 'wishes.json')}
     reports = []
     for path in args.runs:
         path = path.resolve()
@@ -152,7 +156,8 @@ def main():
         reports.append(report)
     if len({report['inputHash'] for report in reports}) != 1:
         raise ValueError('Runs have different input snapshots')
-    result = {'referenceSha256': sha256(reference_path), 'runs': reports}
+    result = {'status': 'historical', 'sourceBaseline': baseline,
+              'referenceSha256': sha256(reference_path), 'runs': reports}
     rendered = json.dumps(result, indent=2) + '\n'
     if args.output:
         args.output.write_text(rendered)

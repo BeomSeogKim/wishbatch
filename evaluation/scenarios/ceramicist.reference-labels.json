@@ -1,0 +1,641 @@
+{
+  "schemaVersion": 1,
+  "scenario": "ceramicist",
+  "method": {
+    "authorType": "machine-written synthetic seed reference; not human labels",
+    "construction": "Extracted without relabeling from each stored synthetic-reference analysis fixture.",
+    "independenceLimit": "Derived from stored reference output, not an output-blind or independently adjudicated benchmark. Self-comparison establishes alignment only.",
+    "sourceRevision": "85730b2094776a95a52a915b203c883f8cc86bb0",
+    "sourceSha256": {
+      "options.json": "ced0a2b31c6c018f93d549f86254d912e89559784080ad7882675451b67b775f",
+      "wishes.json": "c58545406e8fa793428391d9b51a97eb3592d3bbb5fa2af4b67851c94b3330ab",
+      "analysis-run.json": "a593f8c9d34e5deb0af51813075f766f62c3e79c0a4d9a24a3e6876d1ebe7ea6"
+    },
+    "sourceInputHash": "43192efe499e7d069d10dbae5c09dcac953e66b42d7b866ae13ea37ef3aea332",
+    "sourceModel": "synthetic-reference",
+    "reasonableDisagreementAnnotation": "Not supplied by the stored reference; null means unknown."
+  },
+  "optionKeys": [
+    "ceramicist-cup",
+    "ceramicist-bowl",
+    "ceramicist-planter"
+  ],
+  "wishes": [
+    {
+      "wishKey": "w01",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w02",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w03",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w04",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w05",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w06",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w07",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w08",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w09",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w10",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w11",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w12",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w13",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w14",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w15",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w16",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w17",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w18",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w19",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w20",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w21",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "INCOMPATIBLE",
+        "ceramicist-bowl": "COMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format differs.; ceramicist-bowl: The requested format is available.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format differs.",
+        "ceramicist-bowl": "The requested format is available.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w22",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "INCOMPATIBLE",
+        "ceramicist-bowl": "COMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format differs.; ceramicist-bowl: The requested format is available.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format differs.",
+        "ceramicist-bowl": "The requested format is available.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w23",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "INCOMPATIBLE",
+        "ceramicist-bowl": "COMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format differs.; ceramicist-bowl: The requested format is available.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format differs.",
+        "ceramicist-bowl": "The requested format is available.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w24",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "INCOMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "COMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format differs.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format is available.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format differs.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format is available."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w25",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "INCOMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "COMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format differs.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format is available.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format differs.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format is available."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w26",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "INCOMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "COMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format differs.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format is available.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format differs.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format is available."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w27",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "INCOMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The stated requirement is outside this catalog.; ceramicist-bowl: The stated requirement is outside this catalog.; ceramicist-planter: The stated requirement is outside this catalog.",
+      "verdictReasons": {
+        "ceramicist-cup": "The stated requirement is outside this catalog.",
+        "ceramicist-bowl": "The stated requirement is outside this catalog.",
+        "ceramicist-planter": "The stated requirement is outside this catalog."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w28",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "INCOMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The stated requirement is outside this catalog.; ceramicist-bowl: The stated requirement is outside this catalog.; ceramicist-planter: The stated requirement is outside this catalog.",
+      "verdictReasons": {
+        "ceramicist-cup": "The stated requirement is outside this catalog.",
+        "ceramicist-bowl": "The stated requirement is outside this catalog.",
+        "ceramicist-planter": "The stated requirement is outside this catalog."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w29",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "INCOMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The stated requirement is outside this catalog.; ceramicist-bowl: The stated requirement is outside this catalog.; ceramicist-planter: The stated requirement is outside this catalog.",
+      "verdictReasons": {
+        "ceramicist-cup": "The stated requirement is outside this catalog.",
+        "ceramicist-bowl": "The stated requirement is outside this catalog.",
+        "ceramicist-planter": "The stated requirement is outside this catalog."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w30",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "CONDITIONAL",
+        "ceramicist-bowl": "CONDITIONAL",
+        "ceramicist-planter": "CONDITIONAL"
+      },
+      "reason": "ceramicist-cup: The stated budget needs maker review.; ceramicist-bowl: The stated budget needs maker review.; ceramicist-planter: The stated budget needs maker review.",
+      "verdictReasons": {
+        "ceramicist-cup": "The stated budget needs maker review.",
+        "ceramicist-bowl": "The stated budget needs maker review.",
+        "ceramicist-planter": "The stated budget needs maker review."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w31",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "CONDITIONAL",
+        "ceramicist-bowl": "CONDITIONAL",
+        "ceramicist-planter": "CONDITIONAL"
+      },
+      "reason": "ceramicist-cup: The conflicting color requirements need clarification.; ceramicist-bowl: The conflicting color requirements need clarification.; ceramicist-planter: The conflicting color requirements need clarification.",
+      "verdictReasons": {
+        "ceramicist-cup": "The conflicting color requirements need clarification.",
+        "ceramicist-bowl": "The conflicting color requirements need clarification.",
+        "ceramicist-planter": "The conflicting color requirements need clarification."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w32",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "COMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format is available.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format is available.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w33",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "COMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format is available.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format is available."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w34",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w35",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w36",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w37",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reason": "The stored synthetic reference marks this as not a request.",
+      "verdictReasons": {},
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w38",
+      "kind": "REQUEST",
+      "verdicts": {
+        "ceramicist-cup": "COMPATIBLE",
+        "ceramicist-bowl": "INCOMPATIBLE",
+        "ceramicist-planter": "INCOMPATIBLE"
+      },
+      "reason": "ceramicist-cup: The requested format is available.; ceramicist-bowl: The requested format differs.; ceramicist-planter: The requested format differs.",
+      "verdictReasons": {
+        "ceramicist-cup": "The requested format is available.",
+        "ceramicist-bowl": "The requested format differs.",
+        "ceramicist-planter": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w39",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reason": "The stored synthetic reference marks this as not a request.",
+      "verdictReasons": {},
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w40",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reason": "The stored synthetic reference marks this as not a request.",
+      "verdictReasons": {},
+      "reasonableDisagreement": null
+    }
+  ]
+}

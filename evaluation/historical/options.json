@@ -1,0 +1,53 @@
+{
+  "maker": {
+    "name": "Mira Fenlow",
+    "description": "An illustrator of small woodland adventures and things that glow after dark.",
+    "characters": {
+      "Tavi": "A fox courier with an overstuffed satchel",
+      "Orin": "A sleepy moon moth",
+      "Pipkin": "A little lantern frog"
+    }
+  },
+  "defaultMaxQtyPerPledge": 3,
+  "options": [
+    {
+      "key": "postcard-set",
+      "name": "A6 postcard set, 5 designs",
+      "format": "postcard-set",
+      "fixedAttributes": {"size": "A6", "designCount": "5"},
+      "allowedVariants": {"finish": ["matte", "glossy"]},
+      "unitCost": 650,
+      "currency": "USD",
+      "minBatch": 3,
+      "maxCapacity": 10,
+      "leadTimeText": "2 weeks",
+      "shipRegion": "US"
+    },
+    {
+      "key": "a5-print",
+      "name": "A5 art print, single design",
+      "format": "art-print",
+      "fixedAttributes": {"size": "A5", "designCount": "1"},
+      "allowedVariants": {"paper": ["matte", "satin"]},
+      "unitCost": 400,
+      "currency": "USD",
+      "minBatch": 5,
+      "maxCapacity": 20,
+      "leadTimeText": "2 weeks",
+      "shipRegion": "US"
+    },
+    {
+      "key": "sticker-sheet",
+      "name": "Die-cut sticker sheet",
+      "format": "sticker-sheet",
+      "fixedAttributes": {"cut": "die-cut"},
+      "allowedVariants": {},
+      "unitCost": 250,
+      "currency": "USD",
+      "minBatch": 5,
+      "maxCapacity": 30,
+      "leadTimeText": "3 weeks",
+      "shipRegion": "US"
+    }
+  ]
+}

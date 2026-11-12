@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "status": "historical",
+  "scenario": "former-illustrator",
+  "sourceRevision": "310f5f1cfc3fb4b50a4042e23a1af12c6d1cbf96",
+  "sourceDirectory": "src/main/resources/seed",
+  "sourceSha256": {
+    "options.json": "b81e2cd52cefbb0db29ed329260657fae2449a118754cecc233b9ecfdfd32df8",
+    "wishes.json": "bfcee1327b31b93267e12f5a6f8aff1ac5a0e0d175f6605d5dd67997c9146b16"
+  },
+  "referenceFile": "evaluation/reference-labels.json",
+  "referenceSha256": "65ed3c779e86124ee2d9e267a0ff9ac5b11abe602d2629f64bfbdb875725279e",
+  "scope": "Frozen source snapshot for the historical reference and runs only. Does not describe current scenario data."
+}

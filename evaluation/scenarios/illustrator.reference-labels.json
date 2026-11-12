@@ -1,0 +1,625 @@
+{
+  "schemaVersion": 1,
+  "scenario": "illustrator",
+  "method": {
+    "authorType": "machine-written synthetic seed reference; not human labels",
+    "construction": "Extracted without relabeling from each stored synthetic-reference analysis fixture.",
+    "independenceLimit": "Derived from stored reference output, not an output-blind or independently adjudicated benchmark. Self-comparison establishes alignment only.",
+    "sourceRevision": "85730b2094776a95a52a915b203c883f8cc86bb0",
+    "sourceSha256": {
+      "options.json": "b81e2cd52cefbb0db29ed329260657fae2449a118754cecc233b9ecfdfd32df8",
+      "wishes.json": "cbda4737edb93aa09db6a8cc117d57bb005dbd47ae9717b05a32da7519bcd02f",
+      "analysis-run.json": "2f8bb22a331ebbcb2519ecb508c69b1ff11a45ff2aa2abe1bc21cf092b9c9a9f"
+    },
+    "sourceInputHash": "53b459c891c61023c805234693fc7f0c1cc13abc63f3ebb54f1a74401618f26d",
+    "sourceModel": "synthetic-reference",
+    "reasonableDisagreementAnnotation": "Not supplied by the stored reference; null means unknown."
+  },
+  "optionKeys": [
+    "postcard-set",
+    "a5-print",
+    "sticker-sheet"
+  ],
+  "wishes": [
+    {
+      "wishKey": "w01",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Matches requested postcard format.; a5-print: Art print is not the requested postcard set.; sticker-sheet: Sticker sheet is not the requested postcard set.",
+      "verdictReasons": {
+        "postcard-set": "Matches requested postcard format.",
+        "a5-print": "Art print is not the requested postcard set.",
+        "sticker-sheet": "Sticker sheet is not the requested postcard set."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w02",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Matches requested five-postcard set.; a5-print: Single art print is not five postcards.; sticker-sheet: Sticker sheet is not five postcards.",
+      "verdictReasons": {
+        "postcard-set": "Matches requested five-postcard set.",
+        "a5-print": "Single art print is not five postcards.",
+        "sticker-sheet": "Sticker sheet is not five postcards."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w03",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Matches requested A6 postcard set.; a5-print: A5 art print conflicts with A6 postcard demand.; sticker-sheet: Sticker sheet is not an A6 postcard set.",
+      "verdictReasons": {
+        "postcard-set": "Matches requested A6 postcard set.",
+        "a5-print": "A5 art print conflicts with A6 postcard demand.",
+        "sticker-sheet": "Sticker sheet is not an A6 postcard set."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w04",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Matches postcards and preference for five different scenes.; a5-print: Art print is not the requested postcard format.; sticker-sheet: Sticker sheet is not the requested postcard format.",
+      "verdictReasons": {
+        "postcard-set": "Matches postcards and preference for five different scenes.",
+        "a5-print": "Art print is not the requested postcard format.",
+        "sticker-sheet": "Sticker sheet is not the requested postcard format."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w05",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Requested format; subject preference is non-gating.; a5-print: An art print is not a postcard set.; sticker-sheet: A sticker sheet is not a postcard set.",
+      "verdictReasons": {
+        "postcard-set": "Requested format; subject preference is non-gating.",
+        "a5-print": "An art print is not a postcard set.",
+        "sticker-sheet": "A sticker sheet is not a postcard set."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w06",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Requested postcard-set format; no hard conflict.; a5-print: An art print is not a postcard set.; sticker-sheet: A sticker sheet is not a postcard set.",
+      "verdictReasons": {
+        "postcard-set": "Requested postcard-set format; no hard conflict.",
+        "a5-print": "An art print is not a postcard set.",
+        "sticker-sheet": "A sticker sheet is not a postcard set."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w07",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Will the whole set sell for less than $15?; a5-print: A single art print is not a five-card set.; sticker-sheet: A sticker sheet is not a five-card set.",
+      "verdictReasons": {
+        "postcard-set": "Will the whole set sell for less than $15?",
+        "a5-print": "A single art print is not a five-card set.",
+        "sticker-sheet": "A sticker sheet is not a five-card set."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w08",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Will the total including delivery be at most $12?; a5-print: An art print is not postcards.; sticker-sheet: A sticker sheet is not postcards.",
+      "verdictReasons": {
+        "postcard-set": "Will the total including delivery be at most $12?",
+        "a5-print": "An art print is not postcards.",
+        "sticker-sheet": "A sticker sheet is not postcards."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w09",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Will the selling price be $10 or less per set?; a5-print: Art print does not meet postcard-set demand.; sticker-sheet: Sticker sheet does not meet postcard-set demand.",
+      "verdictReasons": {
+        "postcard-set": "Will the selling price be $10 or less per set?",
+        "a5-print": "Art print does not meet postcard-set demand.",
+        "sticker-sheet": "Sticker sheet does not meet postcard-set demand."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w10",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Will the total selling price for two sets be $24 or less?; a5-print: Art print does not meet postcard-set demand.; sticker-sheet: Sticker sheet does not meet postcard-set demand.",
+      "verdictReasons": {
+        "postcard-set": "Will the total selling price for two sets be $24 or less?",
+        "a5-print": "Art print does not meet postcard-set demand.",
+        "sticker-sheet": "Sticker sheet does not meet postcard-set demand."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w11",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Glossy is preferred; matte is explicitly acceptable.; a5-print: Art print does not meet postcard-set demand.; sticker-sheet: Sticker sheet does not meet postcard-set demand.",
+      "verdictReasons": {
+        "postcard-set": "Glossy is preferred; matte is explicitly acceptable.",
+        "a5-print": "Art print does not meet postcard-set demand.",
+        "sticker-sheet": "Sticker sheet does not meet postcard-set demand."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w12",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Matte is preferred; either finish is acceptable.; a5-print: Art print does not meet postcard-set demand.; sticker-sheet: Sticker sheet does not meet postcard-set demand.",
+      "verdictReasons": {
+        "postcard-set": "Matte is preferred; either finish is acceptable.",
+        "a5-print": "Art print does not meet postcard-set demand.",
+        "sticker-sheet": "Sticker sheet does not meet postcard-set demand."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w13",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Requested format; Orin is explicitly optional.; a5-print: Art print is not the requested postcard set.; sticker-sheet: Sticker sheet is not the requested postcard set.",
+      "verdictReasons": {
+        "postcard-set": "Requested format; Orin is explicitly optional.",
+        "a5-print": "Art print is not the requested postcard set.",
+        "sticker-sheet": "Sticker sheet is not the requested postcard set."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w14",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Requested format; arrival timing is explicitly non-gating.; a5-print: Art print is not the requested postcards.; sticker-sheet: Sticker sheet is not the requested postcards.",
+      "verdictReasons": {
+        "postcard-set": "Requested format; arrival timing is explicitly non-gating.",
+        "a5-print": "Art print is not the requested postcards.",
+        "sticker-sheet": "Sticker sheet is not the requested postcards."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w15",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "COMPATIBLE"
+      },
+      "reason": "postcard-set: Postcards are an explicitly accepted format.; a5-print: Art print is neither of the requested formats.; sticker-sheet: Sticker sheet is an explicitly accepted format.",
+      "verdictReasons": {
+        "postcard-set": "Postcards are an explicitly accepted format.",
+        "a5-print": "Art print is neither of the requested formats.",
+        "sticker-sheet": "Sticker sheet is an explicitly accepted format."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w16",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "COMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Postcard set is an explicitly accepted format.; a5-print: A5 print is an explicitly accepted format.; sticker-sheet: Sticker sheet is neither of the requested formats.",
+      "verdictReasons": {
+        "postcard-set": "Postcard set is an explicitly accepted format.",
+        "a5-print": "A5 print is an explicitly accepted format.",
+        "sticker-sheet": "Sticker sheet is neither of the requested formats."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w17",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "COMPATIBLE",
+        "sticker-sheet": "COMPATIBLE"
+      },
+      "reason": "postcard-set: \"Any of the three works for me\" explicitly allows postcards.; a5-print: \"Any of the three works for me\" explicitly allows the art print.; sticker-sheet: \"Any of the three works for me\" explicitly allows stickers.",
+      "verdictReasons": {
+        "postcard-set": "\"Any of the three works for me\" explicitly allows postcards.",
+        "a5-print": "\"Any of the three works for me\" explicitly allows the art print.",
+        "sticker-sheet": "\"Any of the three works for me\" explicitly allows stickers."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w18",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Matches \"I'd take three postcard sets\".; a5-print: An art print does not match \"three postcard sets\".; sticker-sheet: Stickers do not match \"three postcard sets\".",
+      "verdictReasons": {
+        "postcard-set": "Matches \"I'd take three postcard sets\".",
+        "a5-print": "An art print does not match \"three postcard sets\".",
+        "sticker-sheet": "Stickers do not match \"three postcard sets\"."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w19",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Matches \"interested in two sets of postcards\"; not a commitment.; a5-print: An art print does not match \"two sets of postcards\".; sticker-sheet: Stickers do not match \"two sets of postcards\".",
+      "verdictReasons": {
+        "postcard-set": "Matches \"interested in two sets of postcards\"; not a commitment.",
+        "a5-print": "An art print does not match \"two sets of postcards\".",
+        "sticker-sheet": "Stickers do not match \"two sets of postcards\"."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w20",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Matches \"Just one five-card set for me, please.\"; a5-print: A single art print is not a \"five-card set\".; sticker-sheet: A sticker sheet is not a \"five-card set\".",
+      "verdictReasons": {
+        "postcard-set": "Matches \"Just one five-card set for me, please.\"",
+        "a5-print": "A single art print is not a \"five-card set\".",
+        "sticker-sheet": "A sticker sheet is not a \"five-card set\"."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w21",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "CONDITIONAL",
+        "sticker-sheet": "CONDITIONAL"
+      },
+      "reason": "postcard-set: The conflicting size requirements need clarification.; a5-print: The conflicting size requirements need clarification.; sticker-sheet: The conflicting size requirements need clarification.",
+      "verdictReasons": {
+        "postcard-set": "The conflicting size requirements need clarification.",
+        "a5-print": "The conflicting size requirements need clarification.",
+        "sticker-sheet": "The conflicting size requirements need clarification."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w22",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "CONDITIONAL",
+        "sticker-sheet": "CONDITIONAL"
+      },
+      "reason": "postcard-set: Would A6 meet the intended shelf-size limit?; a5-print: Would A5 meet the intended shelf-size limit?; sticker-sheet: Would a sticker sheet count as paper, and what size would fit?",
+      "verdictReasons": {
+        "postcard-set": "Would A6 meet the intended shelf-size limit?",
+        "a5-print": "Would A5 meet the intended shelf-size limit?",
+        "sticker-sheet": "Would a sticker sheet count as paper, and what size would fit?"
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w23",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "CONDITIONAL"
+      },
+      "reason": "postcard-set: Would A6 fit the journal and intended pocket-size limit?; a5-print: A single design is not a collection of drawings.; sticker-sheet: Does the sheet collect drawings, and would it fit the journal?",
+      "verdictReasons": {
+        "postcard-set": "Would A6 fit the journal and intended pocket-size limit?",
+        "a5-print": "A single design is not a collection of drawings.",
+        "sticker-sheet": "Does the sheet collect drawings, and would it fit the journal?"
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w24",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Does at least one card feature Tavi the fox courier?; a5-print: An art print is not the requested postcard set.; sticker-sheet: A sticker sheet is not the requested postcard set.",
+      "verdictReasons": {
+        "postcard-set": "Does at least one card feature Tavi the fox courier?",
+        "a5-print": "An art print is not the requested postcard set.",
+        "sticker-sheet": "A sticker sheet is not the requested postcard set."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w25",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Will the designs include sleepy Orin, the moon moth?; a5-print: An art print is not the requested postcard set.; sticker-sheet: A sticker sheet is not the requested postcard set.",
+      "verdictReasons": {
+        "postcard-set": "Will the designs include sleepy Orin, the moon moth?",
+        "a5-print": "An art print is not the requested postcard set.",
+        "sticker-sheet": "A sticker sheet is not the requested postcard set."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w26",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Will a design show Pipkin carrying his lantern?; a5-print: An art print is not the requested cards.; sticker-sheet: A sticker sheet is not the requested cards.",
+      "verdictReasons": {
+        "postcard-set": "Will a design show Pipkin carrying his lantern?",
+        "a5-print": "An art print is not the requested cards.",
+        "sticker-sheet": "A sticker sheet is not the requested cards."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w27",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: US-only shipping conflicts with required Canada delivery.; a5-print: Wrong format and US-only shipping; Canada delivery required.; sticker-sheet: Wrong format and US-only shipping; Canada delivery required.",
+      "verdictReasons": {
+        "postcard-set": "US-only shipping conflicts with required Canada delivery.",
+        "a5-print": "Wrong format and US-only shipping; Canada delivery required.",
+        "sticker-sheet": "Wrong format and US-only shipping; Canada delivery required."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w28",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: US-only shipping conflicts with required UK delivery.; a5-print: Wrong format and US-only shipping; UK delivery required.; sticker-sheet: Wrong format and US-only shipping; UK delivery required.",
+      "verdictReasons": {
+        "postcard-set": "US-only shipping conflicts with required UK delivery.",
+        "a5-print": "Wrong format and US-only shipping; UK delivery required.",
+        "sticker-sheet": "Wrong format and US-only shipping; UK delivery required."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w29",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: US-only shipping conflicts with required Australia delivery.; a5-print: Wrong format and US-only shipping; Australia delivery required.; sticker-sheet: Wrong format and US-only shipping; Australia delivery required.",
+      "verdictReasons": {
+        "postcard-set": "US-only shipping conflicts with required Australia delivery.",
+        "a5-print": "Wrong format and US-only shipping; Australia delivery required.",
+        "sticker-sheet": "Wrong format and US-only shipping; Australia delivery required."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w30",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: A6 postcards are not a wall poster sized A2 or larger.; a5-print: A5 is smaller than the required A2 or larger.; sticker-sheet: Sticker sheets are not the requested wall poster.",
+      "verdictReasons": {
+        "postcard-set": "A6 postcards are not a wall poster sized A2 or larger.",
+        "a5-print": "A5 is smaller than the required A2 or larger.",
+        "sticker-sheet": "Sticker sheets are not the requested wall poster."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w31",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: A6 postcards conflict with the A1 poster requirement.; a5-print: A5 print conflicts with the A1 poster requirement.; sticker-sheet: Sticker sheets conflict with the A1 poster requirement.",
+      "verdictReasons": {
+        "postcard-set": "A6 postcards conflict with the A1 poster requirement.",
+        "a5-print": "A5 print conflicts with the A1 poster requirement.",
+        "sticker-sheet": "Sticker sheets conflict with the A1 poster requirement."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w32",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Paper goods excluded; hoodie or T-shirt required.; a5-print: Paper goods excluded; hoodie or T-shirt required.; sticker-sheet: Sticker sheets are not the required hoodie or T-shirt.",
+      "verdictReasons": {
+        "postcard-set": "Paper goods excluded; hoodie or T-shirt required.",
+        "a5-print": "Paper goods excluded; hoodie or T-shirt required.",
+        "sticker-sheet": "Sticker sheets are not the required hoodie or T-shirt."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w33",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: Postcards are not the requested acrylic stands.; a5-print: An art print is not the requested acrylic stands.; sticker-sheet: Stickers are not the requested acrylic stands.",
+      "verdictReasons": {
+        "postcard-set": "Postcards are not the requested acrylic stands.",
+        "a5-print": "An art print is not the requested acrylic stands.",
+        "sticker-sheet": "Stickers are not the requested acrylic stands."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w34",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "CONDITIONAL",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reason": "postcard-set: A6 postcards conflict with the A5 art-print requirement.; a5-print: Can satin paper be selected, and is the design the pond scene?; sticker-sheet: A sticker sheet conflicts with the A5 art-print requirement.",
+      "verdictReasons": {
+        "postcard-set": "A6 postcards conflict with the A5 art-print requirement.",
+        "a5-print": "Can satin paper be selected, and is the design the pond scene?",
+        "sticker-sheet": "A sticker sheet conflicts with the A5 art-print requirement."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w35",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "COMPATIBLE"
+      },
+      "reason": "postcard-set: Loose postcards are explicitly excluded.; a5-print: An art print is explicitly excluded.; sticker-sheet: The sticker sheet meets the adhesive sticker-sheet request.",
+      "verdictReasons": {
+        "postcard-set": "Loose postcards are explicitly excluded.",
+        "a5-print": "An art print is explicitly excluded.",
+        "sticker-sheet": "The sticker sheet meets the adhesive sticker-sheet request."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w36",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reason": "The stored synthetic reference marks this as not a request.",
+      "verdictReasons": {},
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w37",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reason": "The stored synthetic reference marks this as not a request.",
+      "verdictReasons": {},
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w38",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reason": "The stored synthetic reference marks this as not a request.",
+      "verdictReasons": {},
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w39",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reason": "The stored synthetic reference marks this as not a request.",
+      "verdictReasons": {},
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w40",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reason": "The stored synthetic reference marks this as not a request.",
+      "verdictReasons": {},
+      "reasonableDisagreement": null
+    }
+  ]
+}

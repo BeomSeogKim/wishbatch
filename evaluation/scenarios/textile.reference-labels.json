@@ -1,0 +1,641 @@
+{
+  "schemaVersion": 1,
+  "scenario": "textile",
+  "method": {
+    "authorType": "machine-written synthetic seed reference; not human labels",
+    "construction": "Extracted without relabeling from each stored synthetic-reference analysis fixture.",
+    "independenceLimit": "Derived from stored reference output, not an output-blind or independently adjudicated benchmark. Self-comparison establishes alignment only.",
+    "sourceRevision": "85730b2094776a95a52a915b203c883f8cc86bb0",
+    "sourceSha256": {
+      "options.json": "f21b24adb0e8aa02b6317f0519a09c82ed1c94a29ac97ccc3e373bcebc72ef12",
+      "wishes.json": "108f33701213a6273f193edd534d6e09e3cac54a4c5b629994d3a216979ee280",
+      "analysis-run.json": "6f7323b5f587452d1e2883ec8cb897843faae7d72d3d88883d415ef98ca10ac6"
+    },
+    "sourceInputHash": "88bf37705075ea87a8e5993c25eedb9b194d2bdf71f950a199dd2b3e259b53c7",
+    "sourceModel": "synthetic-reference",
+    "reasonableDisagreementAnnotation": "Not supplied by the stored reference; null means unknown."
+  },
+  "optionKeys": [
+    "textile-pouch",
+    "textile-tote",
+    "textile-apron"
+  ],
+  "wishes": [
+    {
+      "wishKey": "w01",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w02",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w03",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w04",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w05",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w06",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w07",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w08",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w09",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w10",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w11",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w12",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w13",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w14",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w15",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w16",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w17",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w18",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w19",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w20",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w21",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "INCOMPATIBLE",
+        "textile-tote": "COMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format differs.; textile-tote: The requested format is available.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format differs.",
+        "textile-tote": "The requested format is available.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w22",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "INCOMPATIBLE",
+        "textile-tote": "COMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format differs.; textile-tote: The requested format is available.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format differs.",
+        "textile-tote": "The requested format is available.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w23",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "INCOMPATIBLE",
+        "textile-tote": "COMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format differs.; textile-tote: The requested format is available.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format differs.",
+        "textile-tote": "The requested format is available.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w24",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "INCOMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "COMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format differs.; textile-tote: The requested format differs.; textile-apron: The requested format is available.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format differs.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format is available."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w25",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "INCOMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "COMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format differs.; textile-tote: The requested format differs.; textile-apron: The requested format is available.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format differs.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format is available."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w26",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "INCOMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "COMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format differs.; textile-tote: The requested format differs.; textile-apron: The requested format is available.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format differs.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format is available."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w27",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "INCOMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The stated requirement is outside this catalog.; textile-tote: The stated requirement is outside this catalog.; textile-apron: The stated requirement is outside this catalog.",
+      "verdictReasons": {
+        "textile-pouch": "The stated requirement is outside this catalog.",
+        "textile-tote": "The stated requirement is outside this catalog.",
+        "textile-apron": "The stated requirement is outside this catalog."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w28",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "INCOMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The stated requirement is outside this catalog.; textile-tote: The stated requirement is outside this catalog.; textile-apron: The stated requirement is outside this catalog.",
+      "verdictReasons": {
+        "textile-pouch": "The stated requirement is outside this catalog.",
+        "textile-tote": "The stated requirement is outside this catalog.",
+        "textile-apron": "The stated requirement is outside this catalog."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w29",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "INCOMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The stated requirement is outside this catalog.; textile-tote: The stated requirement is outside this catalog.; textile-apron: The stated requirement is outside this catalog.",
+      "verdictReasons": {
+        "textile-pouch": "The stated requirement is outside this catalog.",
+        "textile-tote": "The stated requirement is outside this catalog.",
+        "textile-apron": "The stated requirement is outside this catalog."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w30",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "CONDITIONAL",
+        "textile-tote": "CONDITIONAL",
+        "textile-apron": "CONDITIONAL"
+      },
+      "reason": "textile-pouch: The stated budget needs maker review.; textile-tote: The stated budget needs maker review.; textile-apron: The stated budget needs maker review.",
+      "verdictReasons": {
+        "textile-pouch": "The stated budget needs maker review.",
+        "textile-tote": "The stated budget needs maker review.",
+        "textile-apron": "The stated budget needs maker review."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w31",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "CONDITIONAL",
+        "textile-tote": "CONDITIONAL",
+        "textile-apron": "CONDITIONAL"
+      },
+      "reason": "textile-pouch: The conflicting color requirements need clarification.; textile-tote: The conflicting color requirements need clarification.; textile-apron: The conflicting color requirements need clarification.",
+      "verdictReasons": {
+        "textile-pouch": "The conflicting color requirements need clarification.",
+        "textile-tote": "The conflicting color requirements need clarification.",
+        "textile-apron": "The conflicting color requirements need clarification."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w32",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "COMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format is available.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format is available.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w33",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "COMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format is available.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format is available."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w34",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w35",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w36",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w37",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reason": "The stored synthetic reference marks this as not a request.",
+      "verdictReasons": {},
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w38",
+      "kind": "REQUEST",
+      "verdicts": {
+        "textile-pouch": "COMPATIBLE",
+        "textile-tote": "INCOMPATIBLE",
+        "textile-apron": "INCOMPATIBLE"
+      },
+      "reason": "textile-pouch: The requested format is available.; textile-tote: The requested format differs.; textile-apron: The requested format differs.",
+      "verdictReasons": {
+        "textile-pouch": "The requested format is available.",
+        "textile-tote": "The requested format differs.",
+        "textile-apron": "The requested format differs."
+      },
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w39",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reason": "The stored synthetic reference marks this as not a request.",
+      "verdictReasons": {},
+      "reasonableDisagreement": null
+    },
+    {
+      "wishKey": "w40",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reason": "The stored synthetic reference marks this as not a request.",
+      "verdictReasons": {},
+      "reasonableDisagreement": null
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "85730b2094776a95a52a915b203c883f8cc86bb0",
+  "referenceProvenance": {
+    "authorType": "machine-written synthetic seed reference; not human labels",
+    "construction": "Extracted without relabeling from each stored synthetic-reference analysis fixture.",
+    "independenceLimit": "Derived from stored reference output, not an output-blind or independently adjudicated benchmark. Self-comparison establishes alignment only.",
+    "idScope": "Wish UUIDs repeat across scenarios; join by scenario and stable wish key, never by UUID alone."
+  },
+  "scenarios": [
+    {
+      "key": "illustrator",
+      "sourceDirectory": "src/main/resources/seed",
+      "sourceSha256": {
+        "options.json": "b81e2cd52cefbb0db29ed329260657fae2449a118754cecc233b9ecfdfd32df8",
+        "wishes.json": "cbda4737edb93aa09db6a8cc117d57bb005dbd47ae9717b05a32da7519bcd02f",
+        "analysis-run.json": "2f8bb22a331ebbcb2519ecb508c69b1ff11a45ff2aa2abe1bc21cf092b9c9a9f"
+      },
+      "inputHash": "53b459c891c61023c805234693fc7f0c1cc13abc63f3ebb54f1a74401618f26d",
+      "seedWorkspaceId": "00000000-0000-0000-0000-000000000000",
+      "optionKeys": {
+        "e4ccce28-49b2-3152-9ad6-a6101534cd40": "postcard-set",
+        "dae69934-6ecb-320e-bd8b-c017aca8b83a": "a5-print",
+        "40cff624-64c2-36fd-9a6b-380edba72ddc": "sticker-sheet"
+      },
+      "wishKeys": {
+        "11603779-816a-3812-8526-235cae300b62": "w01",
+        "aad5c5fe-e500-3737-8ac3-3c83199171f8": "w02",
+        "70314079-42f2-3277-abfe-d409ce16b75d": "w03",
+        "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af": "w04",
+        "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2": "w05",
+        "8e2c260f-46df-3217-a940-29694a650433": "w06",
+        "018ea386-c1c9-3dad-8d10-0bbb835bc3d9": "w07",
+        "6c0c2aaf-34aa-3665-a661-67223f814531": "w08",
+        "b8dd007a-584e-36d7-8f79-247b8d49d5df": "w09",
+        "0f192565-8720-38ff-88cd-8dbe15e901c9": "w10",
+        "1a7e5e31-3af0-3937-a501-e3e83b728165": "w11",
+        "0647dede-8f9f-39c0-a1b6-c623b8439eca": "w12",
+        "409367dc-de96-3569-94fd-36b68bc13f5e": "w13",
+        "e7687de1-c4c8-339f-a253-c6ab5a78c3b6": "w14",
+        "52394f11-6791-3ea3-86a1-7f4c2f5935de": "w15",
+        "bb0f8075-32f6-3fd6-9af9-e14c08a7f634": "w16",
+        "52893dbe-d439-3ce1-8b94-ceb5b13c91ea": "w17",
+        "972dc94d-ee99-379a-bdac-d66a32fda61c": "w18",
+        "dae2845e-f050-3572-bdc5-4e0d3330e912": "w19",
+        "dd96f232-1c5c-3f13-ba70-f073cd71006b": "w20",
+        "5deecfde-f2d1-3917-a9c0-f5d577076f3c": "w21",
+        "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18": "w22",
+        "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a": "w23",
+        "adbf1472-fb73-31ce-9572-fe0a69a98839": "w24",
+        "1c28f360-ed92-30f8-b749-d739cea5c253": "w25",
+        "5abc0dd1-d005-3e88-9c15-c4466155f86e": "w26",
+        "d2219835-9d5b-3475-b768-0d3e9fc2bf79": "w27",
+        "3a5b8979-d8e3-3230-8267-f3d05c1ff954": "w28",
+        "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5": "w29",
+        "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e": "w30",
+        "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0": "w31",
+        "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba": "w32",
+        "23b9ed3e-0293-376b-aeb0-e4bf5e72750a": "w33",
+        "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9": "w34",
+        "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c": "w35",
+        "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13": "w36",
+        "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf": "w37",
+        "7559d536-b3dd-3456-a143-e591810abb08": "w38",
+        "5b6cb92c-fed5-3f54-9fd9-399ddb5ca0d2": "w39",
+        "04da6e5a-b0f4-388d-b28e-853fd16e3d95": "w40"
+      },
+      "referenceFile": "evaluation/scenarios/illustrator.reference-labels.json",
+      "referenceSha256": "fc39d0afa9d646ab62971245de9501d9305140e4af9259abfec12242ede95973",
+      "wishCount": 40,
+      "requestCount": 35,
+      "requestOptionPairCount": 105,
+      "subsets": {
+        "injection": {
+          "wishKeys": [
+            "w39",
+            "w40"
+          ],
+          "annotationBasis": "Reviewed source text explicitly directs the analysis system to ignore instructions or invent approved options."
+        },
+        "nonEnglish": {
+          "wishKeys": [
+            "w36",
+            "w37",
+            "w38"
+          ],
+          "annotationBasis": "Reviewed source examples contain non-English wording. These exact keys define the subset; script or character-range detection is not used.",
+          "languageLabels": null
+        }
+      }
+    },
+    {
+      "key": "ceramicist",
+      "sourceDirectory": "src/main/resources/seed/ceramicist",
+      "sourceSha256": {
+        "options.json": "ced0a2b31c6c018f93d549f86254d912e89559784080ad7882675451b67b775f",
+        "wishes.json": "c58545406e8fa793428391d9b51a97eb3592d3bbb5fa2af4b67851c94b3330ab",
+        "analysis-run.json": "a593f8c9d34e5deb0af51813075f766f62c3e79c0a4d9a24a3e6876d1ebe7ea6"
+      },
+      "inputHash": "43192efe499e7d069d10dbae5c09dcac953e66b42d7b866ae13ea37ef3aea332",
+      "seedWorkspaceId": "00000000-0000-0000-0000-000000000000",
+      "optionKeys": {
+        "bf2aa329-2967-3668-aa8a-6a99846a4c34": "ceramicist-cup",
+        "faed2a52-484e-3d86-bbd7-e4c4259dcd37": "ceramicist-bowl",
+        "8207af68-bb57-3d4a-bb8d-a27d9da2c339": "ceramicist-planter"
+      },
+      "wishKeys": {
+        "11603779-816a-3812-8526-235cae300b62": "w01",
+        "aad5c5fe-e500-3737-8ac3-3c83199171f8": "w02",
+        "70314079-42f2-3277-abfe-d409ce16b75d": "w03",
+        "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af": "w04",
+        "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2": "w05",
+        "8e2c260f-46df-3217-a940-29694a650433": "w06",
+        "018ea386-c1c9-3dad-8d10-0bbb835bc3d9": "w07",
+        "6c0c2aaf-34aa-3665-a661-67223f814531": "w08",
+        "b8dd007a-584e-36d7-8f79-247b8d49d5df": "w09",
+        "0f192565-8720-38ff-88cd-8dbe15e901c9": "w10",
+        "1a7e5e31-3af0-3937-a501-e3e83b728165": "w11",
+        "0647dede-8f9f-39c0-a1b6-c623b8439eca": "w12",
+        "409367dc-de96-3569-94fd-36b68bc13f5e": "w13",
+        "e7687de1-c4c8-339f-a253-c6ab5a78c3b6": "w14",
+        "52394f11-6791-3ea3-86a1-7f4c2f5935de": "w15",
+        "bb0f8075-32f6-3fd6-9af9-e14c08a7f634": "w16",
+        "52893dbe-d439-3ce1-8b94-ceb5b13c91ea": "w17",
+        "972dc94d-ee99-379a-bdac-d66a32fda61c": "w18",
+        "dae2845e-f050-3572-bdc5-4e0d3330e912": "w19",
+        "dd96f232-1c5c-3f13-ba70-f073cd71006b": "w20",
+        "5deecfde-f2d1-3917-a9c0-f5d577076f3c": "w21",
+        "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18": "w22",
+        "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a": "w23",
+        "adbf1472-fb73-31ce-9572-fe0a69a98839": "w24",
+        "1c28f360-ed92-30f8-b749-d739cea5c253": "w25",
+        "5abc0dd1-d005-3e88-9c15-c4466155f86e": "w26",
+        "d2219835-9d5b-3475-b768-0d3e9fc2bf79": "w27",
+        "3a5b8979-d8e3-3230-8267-f3d05c1ff954": "w28",
+        "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5": "w29",
+        "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e": "w30",
+        "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0": "w31",
+        "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba": "w32",
+        "23b9ed3e-0293-376b-aeb0-e4bf5e72750a": "w33",
+        "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9": "w34",
+        "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c": "w35",
+        "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13": "w36",
+        "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf": "w37",
+        "7559d536-b3dd-3456-a143-e591810abb08": "w38",
+        "5b6cb92c-fed5-3f54-9fd9-399ddb5ca0d2": "w39",
+        "04da6e5a-b0f4-388d-b28e-853fd16e3d95": "w40"
+      },
+      "referenceFile": "evaluation/scenarios/ceramicist.reference-labels.json",
+      "referenceSha256": "2f09623eccd16512332cbdc2e5fd2a5638f7b0c8eb35b85e4307d654f145b004",
+      "wishCount": 40,
+      "requestCount": 37,
+      "requestOptionPairCount": 111,
+      "subsets": {
+        "injection": {
+          "wishKeys": [
+            "w39",
+            "w40"
+          ],
+          "annotationBasis": "Reviewed source text explicitly directs the analysis system to ignore instructions or invent approved options."
+        },
+        "nonEnglish": {
+          "wishKeys": [
+            "w34",
+            "w35",
+            "w36"
+          ],
+          "annotationBasis": "Reviewed source examples contain non-English wording. These exact keys define the subset; script or character-range detection is not used.",
+          "languageLabels": null
+        }
+      }
+    },
+    {
+      "key": "textile",
+      "sourceDirectory": "src/main/resources/seed/textile",
+      "sourceSha256": {
+        "options.json": "f21b24adb0e8aa02b6317f0519a09c82ed1c94a29ac97ccc3e373bcebc72ef12",
+        "wishes.json": "108f33701213a6273f193edd534d6e09e3cac54a4c5b629994d3a216979ee280",
+        "analysis-run.json": "6f7323b5f587452d1e2883ec8cb897843faae7d72d3d88883d415ef98ca10ac6"
+      },
+      "inputHash": "88bf37705075ea87a8e5993c25eedb9b194d2bdf71f950a199dd2b3e259b53c7",
+      "seedWorkspaceId": "00000000-0000-0000-0000-000000000000",
+      "optionKeys": {
+        "4c381316-3aca-3652-811b-14930d17d1de": "textile-pouch",
+        "0ff271eb-52b2-3c50-b49d-9f9e6a152361": "textile-tote",
+        "06cb86ff-a6d2-35ce-a21a-579e37047009": "textile-apron"
+      },
+      "wishKeys": {
+        "11603779-816a-3812-8526-235cae300b62": "w01",
+        "aad5c5fe-e500-3737-8ac3-3c83199171f8": "w02",
+        "70314079-42f2-3277-abfe-d409ce16b75d": "w03",
+        "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af": "w04",
+        "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2": "w05",
+        "8e2c260f-46df-3217-a940-29694a650433": "w06",
+        "018ea386-c1c9-3dad-8d10-0bbb835bc3d9": "w07",
+        "6c0c2aaf-34aa-3665-a661-67223f814531": "w08",
+        "b8dd007a-584e-36d7-8f79-247b8d49d5df": "w09",
+        "0f192565-8720-38ff-88cd-8dbe15e901c9": "w10",
+        "1a7e5e31-3af0-3937-a501-e3e83b728165": "w11",
+        "0647dede-8f9f-39c0-a1b6-c623b8439eca": "w12",
+        "409367dc-de96-3569-94fd-36b68bc13f5e": "w13",
+        "e7687de1-c4c8-339f-a253-c6ab5a78c3b6": "w14",
+        "52394f11-6791-3ea3-86a1-7f4c2f5935de": "w15",
+        "bb0f8075-32f6-3fd6-9af9-e14c08a7f634": "w16",
+        "52893dbe-d439-3ce1-8b94-ceb5b13c91ea": "w17",
+        "972dc94d-ee99-379a-bdac-d66a32fda61c": "w18",
+        "dae2845e-f050-3572-bdc5-4e0d3330e912": "w19",
+        "dd96f232-1c5c-3f13-ba70-f073cd71006b": "w20",
+        "5deecfde-f2d1-3917-a9c0-f5d577076f3c": "w21",
+        "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18": "w22",
+        "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a": "w23",
+        "adbf1472-fb73-31ce-9572-fe0a69a98839": "w24",
+        "1c28f360-ed92-30f8-b749-d739cea5c253": "w25",
+        "5abc0dd1-d005-3e88-9c15-c4466155f86e": "w26",
+        "d2219835-9d5b-3475-b768-0d3e9fc2bf79": "w27",
+        "3a5b8979-d8e3-3230-8267-f3d05c1ff954": "w28",
+        "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5": "w29",
+        "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e": "w30",
+        "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0": "w31",
+        "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba": "w32",
+        "23b9ed3e-0293-376b-aeb0-e4bf5e72750a": "w33",
+        "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9": "w34",
+        "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c": "w35",
+        "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13": "w36",
+        "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf": "w37",
+        "7559d536-b3dd-3456-a143-e591810abb08": "w38",
+        "5b6cb92c-fed5-3f54-9fd9-399ddb5ca0d2": "w39",
+        "04da6e5a-b0f4-388d-b28e-853fd16e3d95": "w40"
+      },
+      "referenceFile": "evaluation/scenarios/textile.reference-labels.json",
+      "referenceSha256": "992bd902487a03547cf8e35c9eef4d38af7cac9de838018c85409a0367c32ca1",
+      "wishCount": 40,
+      "requestCount": 37,
+      "requestOptionPairCount": 111,
+      "subsets": {
+        "injection": {
+          "wishKeys": [
+            "w39",
+            "w40"
+          ],
+          "annotationBasis": "Reviewed source text explicitly directs the analysis system to ignore instructions or invent approved options."
+        },
+        "nonEnglish": {
+          "wishKeys": [
+            "w34",
+            "w35",
+            "w36"
+          ],
+          "annotationBasis": "Reviewed source examples contain non-English wording. These exact keys define the subset; script or character-range detection is not used.",
+          "languageLabels": null
+        }
+      }
+    }
+  ]
+}
