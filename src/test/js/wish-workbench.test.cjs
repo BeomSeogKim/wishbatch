@@ -108,6 +108,13 @@ test('missing or failed CDN keeps server forms and table usable', () => {
     }
 });
 
+test('source text and quoted evidence retain exact whitespace in grid data', () => {
+    const app = browser({sourceRows: [{id: 'spaced', text: 'A matte  print',
+        evidence: ' matte  print ', labels: 'Print: Compatible', labelsByOption: [['print', 'COMPATIBLE']]}]});
+    assert.equal(app.displayed[0].text, 'A matte  print');
+    assert.equal(app.displayed[0].evidence, ' matte  print ');
+});
+
 test('option and label filters use the same option pair with searchable evidence and flags', () => {
     const app = browser();
     assert.equal(app.table.hidden, true);

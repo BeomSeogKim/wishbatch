@@ -13,7 +13,8 @@
     const rows = Array.from(table.querySelectorAll('tbody tr[data-wish-id]')).map((element, index) => {
         const row = {id: element.dataset.wishId, index, createdAt: element.dataset.createdAt || '', labelsByOption: []};
         for (const field of ['text', 'labels', 'evidence', 'flags', 'source', 'language', 'hidden', 'provenance']) {
-            row[field] = element.querySelector(`[data-field="${field}"]`)?.textContent.trim() || '';
+            const text = element.querySelector(`[data-field="${field}"]`)?.textContent || '';
+            row[field] = field === 'text' || field === 'evidence' ? text : text.trim();
         }
         row.labelsByOption = Array.from(element.querySelectorAll('[data-option-id][data-label]')).map(label => ({
             optionId: label.dataset.optionId,

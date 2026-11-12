@@ -46,6 +46,8 @@ class WishWorkbenchProposalTests(
         assertContains(html, "value=\"${selected.run.id}\"")
         assertFalse(html.contains("value=\"${newer.id}\""))
         assertContains(html, "/w/${workspace.token}/maker/offer?run=${selected.run.id}")
+        assertContains(html, "href=\"/w/${workspace.token}/maker/next-batch?run=${selected.run.id}\"")
+        assertFalse(html.contains("/maker/next-batch?run=${newer.id}"))
         assertEquals(1, Regex("<h1\\b").findAll(html).count())
         assertEquals(workspaces.listWishes(workspace.token).size, Regex("data-wish-id=").findAll(html).count())
         for (evidence in selected.output.proposal!!.rationale) {

@@ -112,9 +112,7 @@
             <a th:if="${proposedOption != null}" href="#wish-groups">Wish groups</a>
             <a href="#run-details">Analysis details</a>
         </nav>
-        <th:block th:if="${nextBatchAvailable}">
-            <div th:replace="~{nextbatch/link :: link(${token}, ${stored.run.id})}"></div>
-        </th:block>
+        <div th:replace="~{nextbatch/link :: link(${token}, ${stored.run.id})}"></div>
         <section th:if="${proposedOption != null}" class="preview-section" aria-labelledby="rationale">
             <div class="section-heading"><p class="eyebrow">Why this batch</p><h2 id="rationale">A claim needs a fan's words.</h2>
                 <p>Each quote is checked against its source. The interpretation is still yours to judge.</p></div>

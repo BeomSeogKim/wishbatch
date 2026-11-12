@@ -17,7 +17,6 @@ import app.campaign.workbench.WishWorkbench
 import app.campaign.workbench.WorkbenchFilter
 import app.campaign.workbench.wishWorkbenchRows
 import app.web.workbench.addWorkbenchAttributes
-import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -72,7 +71,6 @@ class ProposalController(
         addWorkbenchAttributes(model, WishWorkbench(stored, options.values.toList(), reviewRows),
             WorkbenchFilter(optionId = stored?.output?.proposal?.optionId))
         model.addAttribute("workbenchReturnTo", "proposal")
-        model.addAttribute("nextBatchAvailable", ClassPathResource("templates/nextbatch/link.html").exists())
         if (stored != null) {
             val output = stored.output
             val secondReading = stored.originalOutput.secondReading

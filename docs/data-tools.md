@@ -37,6 +37,9 @@ The proposal page embeds the workbench; the same table is available at
 immutable analysis run. Label and option filters pair the verdict with its
 option; totals count distinct source wishes and never extracted quantities.
 Language is unknown when no language metadata was collected.
+Displayed quotes must be exact substrings of the original wish, including its
+whitespace. Nonmatching quotes are unavailable; they are never rewritten to
+look like original evidence.
 Only flags with an explicit wish UUID are attached to a row. Batch-local numeric
 indices cannot identify a wish after merging or reshuffling; these flags remain
 visible in the run-level validation list.

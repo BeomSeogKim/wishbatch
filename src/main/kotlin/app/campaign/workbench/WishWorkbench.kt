@@ -28,6 +28,7 @@ data class WorkbenchRow(
     val language: String,
     val hidden: Boolean,
     val provenance: List<String>,
+    val evidenceUnavailable: Boolean,
 )
 
 data class WorkbenchFilter(
@@ -94,7 +95,7 @@ fun wishWorkbenchRows(
                     else -> "UNANALYZED"
                 }, verdict?.reason.orEmpty())
             },
-            evidence = quotes.distinct().filter { it.isNotBlank() && normalized(wish.text).contains(normalized(it)) },
+            evidence = quotes.distinct().filter { it.isNotBlank() && wish.text.contains(it) },
             flags = rowFlags + readingFlags,
             source = wish.source.name,
             language = "Unknown",
@@ -104,6 +105,7 @@ fun wishWorkbenchRows(
                 "${decision.source} / $optionName / ${decision.verdict} / revision ${decision.revision} / " +
                     "${decision.createdAt} / reason: ${decision.reason} / run ${decision.runId}"
             },
+            evidenceUnavailable = quotes.any { it.isNotBlank() && !wish.text.contains(it) },
         )
     }
 }
@@ -112,5 +114,3 @@ fun workbenchCounts(rows: List<WorkbenchRow>, optionId: UUID?): Map<String, Int>
     rows.distinctBy { it.id }.flatMap { row ->
         row.labels.filter { optionId == null || it.optionId == optionId }.map { it.label }.distinct()
     }.groupingBy { it }.eachCount()
-
-private fun normalized(value: String): String = value.replace(Regex("[\\s\\p{Z}]+"), " ").trim()

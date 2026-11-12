@@ -35,7 +35,7 @@ class WishWorkbenchTests {
         "Two weeks", "US")
 
     @Test
-    fun `source rows remain distinct and only literal normalized quotes are exposed`() {
+    fun `source rows remain distinct and changed whitespace quotes are unavailable`() {
         val wish = wish("I want a matte\u00a0print")
         val missing = wish("A wish added after analysis")
         val output = output(wish, needs = listOf(
@@ -44,12 +44,25 @@ class WishWorkbenchTests {
         ))
         val rows = wishWorkbenchRows(listOf(wish, wish, missing), listOf(option, option), output, emptyList())
         assertEquals(2, rows.size)
-        assertEquals(listOf("matte print", "I want"), rows.first().evidence)
+        assertEquals(listOf("I want"), rows.first().evidence)
+        assertTrue(rows.first().evidenceUnavailable)
         assertEquals(1, rows.first().labels.size)
         assertEquals("Unknown", rows.first().language)
         assertEquals("IMPORTED", rows.first().source)
         assertEquals("UNANALYZED", rows.last().labels.single().label)
         assertTrue(rows.last().evidence.isEmpty())
+    }
+
+    @Test
+    fun `exact multiple spaces are preserved while collapsed whitespace quotes are unavailable`() {
+        val wish = wish("I want a matte  print")
+        val output = output(wish, listOf(
+            WishNeed(NeedStrength.HARD, NeedAttribute.FINISH, "matte", "matte  print"),
+            WishNeed(NeedStrength.HARD, NeedAttribute.FINISH, "matte", "matte print"),
+        ))
+        val row = wishWorkbenchRows(listOf(wish), listOf(option), output, emptyList()).single()
+        assertEquals(listOf("matte  print", "I want"), row.evidence)
+        assertTrue(row.evidenceUnavailable)
     }
 
     @Test

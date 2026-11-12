@@ -6,11 +6,12 @@
         [data-wish-workbench] { margin-block: var(--space-8); }
         [data-wish-workbench] [hidden] { display: none !important; }
         [data-workbench-grid] { height: 620px; width: 100%; margin-block: var(--space-4); }
-        [data-workbench-grid] .ag-cell-wrap-text { line-height: 1.45; padding-block: var(--space-2); white-space: pre-line; }
+        [data-workbench-grid] .ag-cell-wrap-text { line-height: 1.45; padding-block: var(--space-2); white-space: pre-wrap; }
         .workbench-table-scroll { overflow-x: auto; margin-block: var(--space-4); }
         [data-workbench-table] { min-width: 960px; width: 100%; }
         [data-workbench-table] td { vertical-align: top; overflow-wrap: anywhere; max-width: 28rem; }
         [data-workbench-table] q, [data-workbench-table] .workbench-label { display: block; margin-bottom: var(--space-3); }
+        [data-workbench-table] q { white-space: pre-wrap; }
         [data-workbench-filters], .workbench-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: end; }
         [data-workbench-filters] label, .workbench-actions label { display: grid; gap: var(--space-2); }
         [data-workbench-status] { margin-block: var(--space-4); }
@@ -86,7 +87,7 @@
                     <td data-field="id" th:text="${row.id}"></td>
                     <td data-field="text" th:text="${row.text}"></td>
                     <td data-field="labels"><span class="workbench-label" th:each="item : ${row.labels}" th:attr="data-option-id=${item.optionId},data-label=${item.label}" th:text="${item.optionName} + ': ' + ${item.displayLabel} + ' - ' + ${item.reason}"></span></td>
-                    <td data-field="evidence"><q th:each="quote : ${row.evidence}" th:text="${quote}"></q><span th:if="${row.evidence.isEmpty()}">No grounded quote recorded</span></td>
+                    <td data-field="evidence"><q th:each="quote : ${row.evidence}" th:text="${quote}"></q><span th:if="${row.evidenceUnavailable}">Some analysis evidence is unavailable: no exact source quote.</span><span th:if="${row.evidence.isEmpty() && !row.evidenceUnavailable}">No exact source quote recorded</span></td>
                     <td data-field="flags"><span th:each="flag : ${row.flags}" th:text="${flag} + ' '"></span><span th:if="${row.flags.isEmpty()}">No row flags recorded</span></td>
                     <td data-field="source" th:text="${row.source}"></td>
                     <td data-field="language" th:text="${row.language}"></td>
