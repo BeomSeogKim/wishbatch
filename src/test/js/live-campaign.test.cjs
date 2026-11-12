@@ -12,7 +12,7 @@ function status(changes = {}) {
         availability: 'CAMPAIGN', observedAt: new Date(origin).toISOString(),
         campaign: {
             id: 'campaign-a', state: 'OPEN',
-            counts: {conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: '3', paid: '0'},
+            counts: {interestAvailable: true, conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: '3', paid: '0'},
             progress: {units: '3', minimum: '5', basis: 'HOLDS'},
             capacityLeft: '7', closesAt: new Date(origin + 60000).toISOString(),
             confirmDeadline: new Date(origin + 3600000).toISOString(),
@@ -108,7 +108,7 @@ function browser({hidden = false, readyState = 'complete', hasRoot = true} = {})
 test('updates separate decimal counts losslessly using text and server-relative time', async () => {
     const page = browser();
     const large = '9007199254740993';
-    await page.respond(status({counts: {conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: large, paid: '0'},
+    await page.respond(status({counts: {interestAvailable: true, conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: large, paid: '0'},
         progress: {units: large, minimum: '5', basis: 'HOLDS'}}));
     assert.equal(page.fields.authorizedHolds.textContent, large);
     assert.equal(page.fields.progressUnits.textContent, large);
@@ -178,7 +178,7 @@ test('identity and terminal changes hide money actions without ever re-enabling 
     const page = browser();
     page.buttons[0].disabled = true;
     await page.respond(status({id: 'campaign-b', state: 'FUNDED', pledgesOpen: false,
-        counts: {conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: '0', paid: '3'},
+        counts: {interestAvailable: true, conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: '0', paid: '3'},
         progress: {units: '3', minimum: '5', basis: 'PAID'}, fundedPaidShortfall: true, needsAttention: true}));
     assert.ok(Object.values(page.actions).every(action => action.hidden));
     assert.ok(page.buttons.every(button => button.disabled));
@@ -282,7 +282,7 @@ test('no campaign is explicit and does not invent zero counts', async () => {
 
 test('invalid decimal payload retains the server fallback', async () => {
     const page = browser();
-    await page.respond(status({counts: {conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: 9007199254740992, paid: '0'}}));
+    await page.respond(status({counts: {interestAvailable: true, conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: 9007199254740992, paid: '0'}}));
     assert.equal(page.fields.authorizedHolds.textContent, 'server-authorizedHolds');
     assert.match(page.fields.message.textContent, /stale/);
 });
@@ -295,4 +295,28 @@ test('missing bindings are inert and loading documents wait for the DOM', async 
     loading.listeners.DOMContentLoaded();
     assert.equal(loading.requests.length, 1);
     await loading.respond();
+});
+
+
+test('unknown interest stays unavailable while payment values update and known zero remains zero', async () => {
+    const page = browser();
+    await page.respond(status({counts: {interestAvailable: false, interest: '0', conditional: '0',
+        excludedByPrice: '0', notServed: '0', authorizedHolds: '3', paid: '2'}}));
+    assert.equal(page.fields.interest.textContent, 'Unavailable');
+    assert.equal(page.fields.conditional.textContent, 'Conditional interest unavailable.');
+    assert.equal(page.fields.authorizedHolds.textContent, '3');
+    assert.equal(page.fields.paid.textContent, '2');
+    await page.advance(10000);
+    await page.respond(status({counts: {interestAvailable: true, interest: '0', conditional: '0',
+        excludedByPrice: '0', notServed: '0', authorizedHolds: '3', paid: '2'}}));
+    assert.equal(page.fields.interest.textContent, '0');
+    assert.equal(page.fields.conditional.textContent, '0 more depend on a condition');
+    await page.advance(10000);
+    const next = status();
+    delete next.campaign.counts.interestAvailable;
+    await page.respond(next);
+    assert.equal(page.fields.interest.textContent, 'Unavailable');
+    assert.equal(page.fields.conditional.textContent, 'Conditional interest unavailable.');
+    assert.equal(page.fields.authorizedHolds.textContent, '3');
+    assert.equal(page.fields.paid.textContent, '0');
 });

@@ -27,8 +27,8 @@
                     <section class="counts" aria-label="Campaign counts">
                         <div class="count count-interest">
                             <p class="count-label">Interested in this offer</p>
-                            <p class="count-value" data-live-field="interest" th:text="${campaign.counts.interest}"></p>
-                            <p><span data-live-field="conditional" th:text="${campaign.counts.conditional}"></span> more depend on a condition</p>
+                            <p class="count-value" data-live-field="interest" th:text="${campaign.counts.interestAvailable ? campaign.counts.interest : 'Unavailable'}"></p>
+                            <p data-live-field="conditional" th:text="${campaign.counts.interestAvailable ? campaign.counts.conditional + ' more depend on a condition' : 'Conditional interest unavailable.'}"></p>
                             <p class="count-caption">Visible requests compatible with this offer and price. Not orders or payment units.</p>
                         </div>
                         <div class="count" th:classappend="${terminal ? '' : 'count-authorized'}">

@@ -11,10 +11,10 @@
             <p>These are classifications from the analysis used for this offer, not orders. Some wishes may have arrived later.</p>
             <p th:if="${evidence.isSeed}">This offer uses a stored analysis of synthetic demo wishes.</p>
             <dl class="term-list">
-                <dt>Interested in this offer</dt><dd th:text="${counts.interest}"></dd>
-                <dt>Depend on a condition</dt><dd th:text="${counts.conditional}"></dd>
-                <dt>Not served</dt><dd th:text="${counts.notServed}"></dd>
-                <dt>Excluded by price</dt><dd th:text="${counts.excludedByPrice}"></dd>
+                <dt>Interested in this offer</dt><dd th:text="${counts.interestAvailable ? counts.interest : 'Unavailable'}"></dd>
+                <dt>Depend on a condition</dt><dd th:text="${counts.interestAvailable ? counts.conditional : 'Unavailable'}"></dd>
+                <dt>Not served</dt><dd th:text="${counts.interestAvailable ? counts.notServed : 'Unavailable'}"></dd>
+                <dt>Excluded by price</dt><dd th:text="${counts.interestAvailable ? counts.excludedByPrice : 'Unavailable'}"></dd>
             </dl>
             <p th:if="${!#lists.isEmpty(evidence.quotes)}" class="sample-label">Sample data: quotes from synthetic demo wishes</p>
             <figure class="evidence" th:each="quote : ${evidence.quotes}">
@@ -57,7 +57,7 @@
         <h2>What the money states mean</h2>
         <p>Current campaign state: <strong th:text="${state}"></strong></p>
         <dl class="term-list">
-            <dt>Interested in this offer</dt><dd><span th:text="${counts.interest}"></span> wishes; these are not orders or payments.</dd>
+            <dt>Interested in this offer</dt><dd th:text="${!counts.interestAvailable ? 'Unavailable. Interest is not an order or payment.' : (counts.interest == 1 ? '1 wish; this is not an order or payment.' : counts.interest + ' wishes; these are not orders or payments.')}"></dd>
             <dt>Authorized holds</dt><dd><span th:text="${counts.authorizedHolds}"></span> units with PayPal authorization holds; these are not completed payments.</dd>
             <dt>Paid</dt><dd><span th:text="${counts.paid}"></span> units with completed captures.</dd>
         </dl>

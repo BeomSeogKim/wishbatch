@@ -453,9 +453,10 @@ class CampaignService(
         val authorized = authorizedUnits(context.pledges)
         val captured = capturedUnits(context.pledges)
         val shortfall = campaign.state == CampaignState.FUNDED && !funded(captured, offer.minBatch)
-        val interest = persistence.checkpoint {
+        val observedInterest = persistence.checkpoint {
             interestQuery.read(offer.workspaceId, offer.analysisRunId, offer.optionId, offer.unitPrice)
-        } ?: OfferInterest()
+        }
+        val interest = observedInterest ?: OfferInterest()
         val timeline = persistence.checkpoint { events.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id) }
         val deadline = when (campaign.state) {
             CampaignState.OPEN -> campaign.closesAt
@@ -471,7 +472,7 @@ class CampaignService(
             campaign.state, campaign.reason, campaign.openedAt, campaign.closesAt, campaign.confirmDeadline,
             CampaignCounts(interest.interest, authorized, captured, interest.conditional, interest.excludedByPrice,
                 interest.notServed, interest.interestWishIds, interest.conditionalWishIds,
-                interest.excludedByPriceWishIds, interest.notServedWishIds),
+                interest.excludedByPriceWishIds, interest.notServedWishIds, observedInterest != null),
             MinimumProgress(if (campaign.state in terminalStates || campaign.state == CampaignState.SETTLING) captured else authorized, offer.minBatch),
             (offer.capacity.toLong() - authorized - captured).coerceAtLeast(0), timeLeft,
             ConfirmationSummary(holds.size, authorized, holds.fold(0L) { sum, pledge -> Math.addExact(sum, pledge.amount) }, offer.currency),

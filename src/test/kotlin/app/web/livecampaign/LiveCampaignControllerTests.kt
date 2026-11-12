@@ -1,6 +1,7 @@
 package app.web.livecampaign
 
 import app.campaign.model.Money
+import app.campaign.model.Pledge
 import app.campaign.model.PledgeState
 import app.campaign.port.AuthorizationDetails
 import app.campaign.port.AuthorizationId
@@ -11,6 +12,7 @@ import app.campaign.port.PaymentStatus
 import app.campaign.service.CampaignQueries
 import app.campaign.service.CampaignRef
 import app.campaign.service.CampaignService
+import app.campaign.service.ServiceResult
 import app.campaign.store.AnalysisRunRepository
 import app.campaign.store.CampaignRepository
 import app.campaign.store.PledgeRepository
@@ -171,6 +173,75 @@ class LiveCampaignControllerTests @Autowired constructor(
         for (privateValue in listOf("cap-live", "auth-live", "order-live", "example.test", "\"pledges\"", "timeline", "lastError", "shippingAddress")) {
             assertFalse(status.toString().contains(privateValue))
         }
+    }
+
+    @Test
+    fun `unavailable interest stays distinct from numeric zero across campaign readouts`() {
+        val (token, ref) = published()
+        val view = (queries.currentCampaign(token) as ServiceResult.Success).value!!
+        assertTrue(view.counts.interestAvailable)
+        transactions.executeWithoutResult {
+            entityManager.createQuery("delete from Option o where o.id = :id")
+                .setParameter("id", view.offer.optionId).executeUpdate()
+        }
+        val unknown = (queries.currentCampaign(token) as ServiceResult.Success).value!!
+        assertFalse(unknown.counts.interestAvailable)
+        assertEquals(0, unknown.counts.interest)
+        assertEquals(0L, unknown.counts.authorizedHolds)
+        assertEquals(0L, unknown.counts.paid)
+        val live = status(token)
+        assertFalse(live.at("/campaign/counts/interestAvailable").asBoolean())
+        for (field in listOf("interest", "conditional", "excludedByPrice", "notServed", "authorizedHolds", "paid")) {
+            assertEquals("0", live.at("/campaign/counts/$field").asString())
+        }
+        val pledge = pledges.saveAndFlush(Pledge(ref.campaignId, 1, view.offer.unitPrice, view.offer.currency,
+            createdAt = clock.instant()))
+        for (path in listOf("/maker/campaign?review=true", "/offer", "/pledges/${pledge.id}")) {
+            val card = interestCard(token, path)
+            assertContains(card, "Unavailable")
+            assertContains(card, "Conditional interest unavailable.")
+            assertFalse(card.contains(">0<"))
+        }
+        val explanation = mvc.get("/w/$token/how-this-batch-was-chosen").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        assertContains(explanation, "Unavailable. Interest is not an order or payment.")
+        assertContains(explanation, "<dt>Depend on a condition</dt><dd>Unavailable</dd>")
+        campaigns.cancel(ref)
+        for (path in listOf("/maker/result", "/result")) {
+            assertContains(interestCard(token, path), "Unavailable")
+        }
+    }
+
+    @Test
+    fun `available zero remains zero and explanation uses singular and plural wish grammar`() {
+        val (token, ref) = published()
+        val singular = mvc.get("/w/$token/how-this-batch-was-chosen").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        assertContains(singular, "1 wish; this is not an order or payment.")
+        transactions.executeWithoutResult {
+            entityManager.createQuery("update Wish w set w.hidden = true where w.workspaceId = :id")
+                .setParameter("id", ref.workspaceId).executeUpdate()
+        }
+        val view = (queries.currentCampaign(token) as ServiceResult.Success).value!!
+        assertTrue(view.counts.interestAvailable)
+        assertEquals(0, view.counts.interest)
+        val live = status(token)
+        assertTrue(live.at("/campaign/counts/interestAvailable").asBoolean())
+        assertEquals("0", live.at("/campaign/counts/interest").asString())
+        for (path in listOf("/maker/campaign?review=true", "/offer")) {
+            val card = interestCard(token, path)
+            assertContains(card, ">0</p>")
+            assertFalse(card.contains("Unavailable"))
+        }
+        val explanation = mvc.get("/w/$token/how-this-batch-was-chosen").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        assertContains(explanation, "0 wishes; these are not orders or payments.")
+    }
+
+    private fun interestCard(token: String, path: String): String {
+        val html = mvc.get("/w/$token$path").andExpect { status { isOk() } }.andReturn().response.contentAsString
+        return Regex("""<div class="count count-interest">([\s\S]*?)</div>""").find(html)?.groupValues?.get(1)
+            ?: error("Missing interest card at $path")
     }
 
     private fun published(): Pair<String, CampaignRef> {

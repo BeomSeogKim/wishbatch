@@ -96,8 +96,9 @@
 
             snapshot = next;
             receivedAt = Date.now();
-            text('interest', counts.interest);
-            text('conditional', counts.conditional);
+            text('interest', counts.interestAvailable === true ? counts.interest : 'Unavailable');
+            text('conditional', counts.interestAvailable === true ?
+                counts.conditional + ' more depend on a condition' : 'Conditional interest unavailable.');
             text('authorizedHolds', counts.authorizedHolds);
             const terminal = campaign.state === 'FUNDED' || campaign.state === 'NOT_FUNDED';
             root.querySelectorAll('[data-live-hold-card]').forEach(node => {

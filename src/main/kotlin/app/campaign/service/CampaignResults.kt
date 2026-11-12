@@ -99,6 +99,7 @@ data class CampaignCounts(
     val conditionalWishIds: List<UUID> = emptyList(),
     val excludedByPriceWishIds: List<UUID> = emptyList(),
     val notServedWishIds: List<UUID> = emptyList(),
+    val interestAvailable: Boolean = true,
 )
 data class MinimumProgress(val units: Long, val minimum: Int)
 data class AttentionItem(val pledgeId: UUID, val state: PledgeState, val reason: String?)
