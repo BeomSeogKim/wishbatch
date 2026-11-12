@@ -17,12 +17,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
+import java.util.UUID
 
 data class ProposalWish(val wish: Wish, val needs: List<WishNeed>, val reason: String)
 data class ProposalWishGroup(val label: String, val reason: String, val wishes: List<ProposalWish>)
@@ -31,8 +33,9 @@ data class ProposalWishGroup(val label: String, val reason: String, val wishes: 
 class ProposalController(private val workspaces: WorkspaceService, private val runs: AnalysisRunService) {
 
     @GetMapping("/w/{token}/maker/proposal")
-    fun proposal(@PathVariable token: String, model: Model): String {
-        val stored = runs.latest(token)
+    fun proposal(@PathVariable token: String, @RequestParam(required = false) run: UUID?, model: Model): String {
+        val stored = if (run == null) runs.latest(token)
+            else runs.find(token, run) ?: throw WorkspaceNotFoundException()
         val options = workspaces.listOptions(token).associateBy { it.id }
         val wishes = workspaces.listWishes(token).associateBy { it.id }
         model.addAttribute("stored", stored)

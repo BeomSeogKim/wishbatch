@@ -40,6 +40,7 @@ import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
 import java.time.Instant
+import java.util.UUID
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -106,6 +107,41 @@ class ProposalControllerTests(
         for (wishId in stored.output.questionsForMaker.flatMap { it.wishIds }) {
             assertContains(html, "href=\"#wish-$wishId\"")
         }
+    }
+
+    @Test
+    fun `offer evidence links retain the selected analysis after a newer run`() {
+        val token = workspaces.create().token
+        val original = assertNotNull(runs.latest(token))
+        store(token, original.output.copy(proposal = null, noProposalReason = "No newer proposal.", notServed = emptyList()))
+        val before = analyzer.calls.size
+
+        val html = mvc.get("/w/$token/maker/proposal") {
+            param("run", original.run.id.toString())
+        }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+
+        assertContains(html, "Stored seed run")
+        assertContains(html, original.run.model)
+        assertContains(html, "offer?run=${original.run.id}")
+        assertFalse(html.contains("No newer proposal."))
+        assertContains(page(token), "No newer proposal.")
+        assertEquals(before, analyzer.calls.size)
+    }
+
+    @Test
+    fun `selected analysis must exist in the requested workspace`() {
+        val token = workspaces.create().token
+        val foreign = assertNotNull(runs.latest(workspaces.create().token)).run.id
+        val before = analyzer.calls.size
+        for (run in listOf(foreign, UUID.randomUUID())) {
+            mvc.get("/w/$token/maker/proposal") {
+                param("run", run.toString())
+            }.andExpect {
+                status { isNotFound() }
+                view { name("error/not-found") }
+            }
+        }
+        assertEquals(before, analyzer.calls.size)
     }
 
     @Test

@@ -16,6 +16,7 @@ import jakarta.persistence.LockModeType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
+import java.util.UUID
 
 data class StoredAnalysisRun(
     val run: AnalysisRun,
@@ -47,6 +48,15 @@ class AnalysisRunService(
             "select r from AnalysisRun r where r.workspaceId = :workspaceId " +
                 "order by r.isSeed asc, r.createdAt desc, r.id desc", AnalysisRun::class.java,
         ).setParameter("workspaceId", workspace.id).setMaxResults(1).resultList.singleOrNull()
+            ?: return null
+        return decode(workspace, run)
+    }
+
+    fun find(token: String, id: UUID): StoredAnalysisRun? {
+        val workspace = workspace(token)
+        val run = entityManager.createQuery(
+            "select r from AnalysisRun r where r.workspaceId = :workspaceId and r.id = :id", AnalysisRun::class.java,
+        ).setParameter("workspaceId", workspace.id).setParameter("id", id).resultList.singleOrNull()
             ?: return null
         return decode(workspace, run)
     }
