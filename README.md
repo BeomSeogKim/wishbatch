@@ -153,10 +153,18 @@ without credentials using JDK 21 and `./gradlew bootRun`; a new workspace
 displayed the stored postcard proposal. A Compose run at that historical
 baseline also created a PostgreSQL workspace with the stored proposal.
 
-A local sandbox golden path passed at the historical `340fb73` baseline.
-Current-source sandbox and hosted verification remain pending. A prior hosted
-check completed one sandbox authorization and capture; it does not establish
-that current source is deployed or webhooks are registered and receiving events.
+A hosted manual check of revision `e17d492` exercised all three populated demos,
+one $48 sandbox authorization and completed capture, record verification, the
+books check before and after payment, and a tamper test on a copy. A signed
+`CAPTURE.COMPLETED` webhook was accepted by the hosted handler. An explicitly
+linked wish added after publication had an unavailable analysis verdict. These
+observations do not establish that a later revision is deployed or verified.
+
+One hosted 40-wish live analysis completed in 57.41 seconds with a complete
+second reading and 40/40 paired agreement. Usage was only partially recorded;
+an earlier attempt timed out. This is an execution observation, not a quality
+score or a latency guarantee. Grid and Charts interactions were checked; the
+browser fallback with the CDN unavailable was not verified in that check.
 
 The offline deterministic settlement sequence test exercises 16 seeds with 64
 actions each using a fake gateway; it is not a provider or hosted test. Earlier
