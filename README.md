@@ -163,7 +163,7 @@ later revision is deployed or verified.
 
 One hosted 40-wish live analysis completed in 57.41 seconds with a complete
 second reading and 40/40 paired agreement. Usage was only partially recorded;
-a Timeout category from an earlier request remained in the metrics. This is an
+a Timeout category remained in the saved metrics. This is an
 execution observation, not a quality score or a latency guarantee. Grid and Charts interactions were checked; the
 browser fallback with the CDN unavailable was not verified in that check.
 
