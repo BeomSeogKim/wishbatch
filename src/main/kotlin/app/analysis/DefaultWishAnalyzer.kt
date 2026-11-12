@@ -7,6 +7,7 @@ import app.campaign.port.AnalysisOutput
 import app.campaign.port.AnalysisResult
 import app.campaign.port.AnalysisValidationFlag
 import app.campaign.port.AnalysisValidationResult
+import app.campaign.port.AnalysisValidationRule
 import app.campaign.port.WishAnalyzer
 import app.campaign.rules.analysisInputHash
 import java.time.Clock
@@ -65,14 +66,25 @@ class DefaultWishAnalyzer(
                 }
             }
             val outputs = mutableListOf<AnalysisOutput>()
-            for (future in futures) {
+            val analyzedWishes = mutableListOf<Wish>()
+            var batchFailure = AnalysisFailure.INVALID_OUTPUT
+            for ((index, future) in futures.withIndex()) {
                 val budget = remaining().toNanos()
                 if (budget <= 0) return AnalysisResult.Failure(AnalysisFailure.TIMEOUT, flags)
                 val result = future.get(budget, TimeUnit.NANOSECONDS)
                 flags += result.flags
-                if (result.output == null) return AnalysisResult.Failure(result.failure, flags)
-                outputs += result.output
+                if (result.output == null) {
+                    batchFailure = result.failure
+                    flags += batches[index].map {
+                        AnalysisValidationFlag(AnalysisValidationRule.UNANALYZED_WISH,
+                            "wishes[${it.id}]", "Wish could not be analyzed.")
+                    }
+                } else {
+                    outputs += result.output
+                    analyzedWishes += batches[index]
+                }
             }
+            if (outputs.isEmpty()) return AnalysisResult.Failure(batchFailure, flags.toList())
             val merged = AnalysisOutput(
                 outputs.flatMap { it.wishes }, outputs.flatMap { it.verdicts }, null,
                 "No proposal selected.", emptyList(), emptyList(), emptyList(), options.map { it.id },
@@ -82,7 +94,7 @@ class DefaultWishAnalyzer(
             val proposalTask = executor.submit<StageResult> { generate(AnalysisRequest(
                 proposalInput,
                 AnalysisStages.schema(options, AnalysisStage.PROPOSE), false, AnalysisStage.PROPOSE, 2048,
-            ), options, wishes, ::remaining, merged) }
+            ), options, analyzedWishes, ::remaining, merged) }
             futures += proposalTask
             val proposalBudget = remaining().toNanos()
             if (proposalBudget <= 0) return AnalysisResult.Failure(AnalysisFailure.TIMEOUT, flags)

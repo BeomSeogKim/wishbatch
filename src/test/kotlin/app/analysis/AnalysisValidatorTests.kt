@@ -121,6 +121,70 @@ class AnalysisValidatorTests {
     }
 
     @Test
+    fun `numeric rationale is dropped and flagged without losing clean evidence`() {
+        val numeric = listOf(
+            "Largest compatible audience: 16 wishes, versus 3 for stickers.",
+            "Three fans prefer cards.", "Serves twenty-one wishes.", "A dozen requests match.",
+            "Half the audience prefers cards.", "A single fan wants cards.",
+            "Serves 25% of fans.", "Priced at $12.50.", "Ready on 2026-11-12.",
+            "Ready on November twelfth.", "Serves one hundred fans.",
+            "Costs twelve dollars.", "Supported by \u0663 fans.", "A6 serves 5 wishes.",
+            "A60 matches the request.", "AA6 matches the request.",
+        )
+        numeric.forEach { text ->
+            val proposal = """{"option_id":"${option.id}","suggested_variants":{},"rationale":[
+                {"text":"$text","wish_id":"${wish.id}","quote":"matte cards"},
+                {"text":"Card demand","wish_id":"${wish.id}","quote":"matte cards"}]}"""
+            val result = accepted(output(proposal = proposal))
+            assertEquals(listOf("Card demand"), result.output.proposal!!.rationale.map { it.text }, text)
+            val flag = result.flags.single()
+            assertEquals(AnalysisValidationRule.MODEL_WRITTEN_NUMBER, flag.rule, text)
+            assertEquals("proposal.rationale[0].text", flag.path)
+            assertEquals("Numeric rationale dropped.", flag.message)
+        }
+    }
+
+    @Test
+    fun `catalog numeric phrases are allowed only for the selected option and never as bare counts`() {
+        val cards = Option(workspaceId, "A6 postcard set, 5 designs", "postcard-set",
+            mapOf("size" to "A6", "designCount" to "5"), option.allowedVariants, 200, "USD", 10, 50, "Two weeks", "US", option.id)
+        val allowed = listOf("A6 matches the format.", "Fans favor 5 designs.",
+            "A6 postcard set, 5 designs matches the request.", "The chosen format matches demand.",
+            "Someone wants cards.", "The stone artwork matches.")
+        val disallowed = listOf("5 wishes match.", "A5 matches demand.", "15 designs match demand.",
+            "A6 serves five wishes.", "A6 postcard set, 5 designs serves 5 wishes.")
+        (allowed + disallowed).forEach { text ->
+            val result = assertIs<AnalysisValidationResult.Accepted>(
+                validator.validate(output().replace("Card demand", text), listOf(cards), listOf(wish)))
+            assertEquals(text in allowed, result.output.proposal!!.rationale.isNotEmpty(), text)
+            assertEquals(if (text in allowed) 0 else 1, result.flags.size, text)
+        }
+        val other = Option(workspaceId, "Stickers", "stickers", emptyMap(), emptyMap(),
+            200, "USD", 10, 50, "Two weeks", "US", UUID(0, 4))
+        val json = output(
+            verdicts = """[{"wish_id":"${wish.id}","option_id":"${option.id}","verdict":"COMPATIBLE","reason":"Matches"},
+                {"wish_id":"${wish.id}","option_id":"${other.id}","verdict":"COMPATIBLE","reason":"Matches"}]""",
+            proposal = """{"option_id":"${other.id}","suggested_variants":{},"rationale":[
+                {"text":"A6 with 5 designs matches demand.","wish_id":"${wish.id}","quote":"matte cards"}]}""",
+        )
+        val result = assertIs<AnalysisValidationResult.Accepted>(validator.validate(json, listOf(cards, other), listOf(wish)))
+        assertTrue(result.output.proposal!!.rationale.isEmpty())
+        assertEquals(AnalysisValidationRule.MODEL_WRITTEN_NUMBER, result.flags.single().rule)
+    }
+
+    @Test
+    fun `number only catalog words cannot authorize unrelated audience quantities`() {
+        for (value in listOf("5", "five", "twenty five", "one hundred and five", "single")) {
+            val cards = Option(workspaceId, "Cards", "card", mapOf("designCount" to value),
+                mapOf("pack" to listOf(value)), 200, "USD", 10, 50, "Two weeks", "US", option.id)
+            val json = output().replace("Card demand", "$value fans want cards")
+            val result = assertIs<AnalysisValidationResult.Accepted>(validator.validate(json, listOf(cards), listOf(wish)))
+            assertTrue(result.output.proposal!!.rationale.isEmpty(), value)
+            assertTrue(result.flags.any { it.rule == AnalysisValidationRule.MODEL_WRITTEN_NUMBER }, value)
+        }
+    }
+
+    @Test
     fun `fan price limits use exact minor units and never supply offer terms`() {
         val input = Wish(workspaceId, "Cards only under 12.34 dollars", WishSource.ONSITE, createdAt = Instant.EPOCH, id = wish.id)
         val wishes = """[{"wish_id":"${wish.id}","kind":"REQUEST","needs":[{"strength":"HARD","attribute":"price","value":"12.34","quote":"under 12.34 dollars"}],"max_unit_price":12.34}]"""

@@ -165,7 +165,13 @@ class AnalysisValidator(private val mapper: JsonMapper) {
                     val id = reference(evidence, "wish_id", wishById.keys, "proposal.rationale[$index].wish_id")
                         ?: return@mapIndexedNotNull null
                     val groundedQuote = quote(evidence, id, "proposal.rationale[$index]") ?: return@mapIndexedNotNull null
-                    ProposalEvidence(evidence.text("text"), id, groundedQuote)
+                    val text = evidence.text("text")
+                    if (RationaleNumbers.containsNumber(text, optionById.getValue(optionId))) {
+                        flag(AnalysisValidationRule.MODEL_WRITTEN_NUMBER, "proposal.rationale[$index].text",
+                            "Numeric rationale dropped.")
+                        return@mapIndexedNotNull null
+                    }
+                    ProposalEvidence(text, id, groundedQuote)
                 }
                 Proposal(optionId, suggestions, rationale)
             }

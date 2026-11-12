@@ -33,6 +33,10 @@ internal object AnalysisStages {
             Include up to four concise maker questions about unresolved conditions.
             Never reclassify wishes or invent missing evidence. Omitted incompatible wishes will
             be regrouped by code. Keep reasons and rationale short; do not enumerate every wish.
+            Rationale and reason sentences must contain no counts, totals, percentages, prices,
+            or dates, whether written as digits or number words. Counts are displayed by code.
+            Only exact product names or attributes from the relevant option's catalog may contain
+            numbers (for example A6 or 5 designs). Never rewrite a verbatim evidence quote.
         """.trimIndent()
     }
 

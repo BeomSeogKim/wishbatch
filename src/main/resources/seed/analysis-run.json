@@ -27,6 +27,11 @@
           "attribute" : "FORMAT",
           "value" : "postcard-set",
           "quote" : "Five little postcards from this world? Yes please."
+        }, {
+          "strength" : "HARD",
+          "attribute" : "OTHER",
+          "value" : "5 postcards per set",
+          "quote" : "Five little postcards"
         } ],
         "maxUnitPrice" : null,
         "quantity" : null,
@@ -64,7 +69,7 @@
         }, {
           "strength" : "PREFERENCE",
           "attribute" : "OTHER",
-          "value" : "five different scenes",
+          "value" : "5 different scenes",
           "quote" : "I like the idea of getting five different scenes rather than picking one favorite."
         } ],
         "maxUnitPrice" : null,
@@ -110,7 +115,7 @@
         }, {
           "strength" : "HARD",
           "attribute" : "PRICE",
-          "value" : "Whole set strictly below USD 15",
+          "value" : "Whole set strictly less than USD 15",
           "quote" : "if the whole set costs less than $15"
         } ],
         "maxUnitPrice" : {
@@ -130,7 +135,7 @@
         }, {
           "strength" : "HARD",
           "attribute" : "PRICE",
-          "value" : "At most USD 12 including delivery",
+          "value" : "Maximum USD 12 including delivery",
           "quote" : "$12 including delivery is the most I can spend."
         } ],
         "maxUnitPrice" : {
@@ -175,7 +180,7 @@
         }, {
           "strength" : "HARD",
           "attribute" : "PRICE",
-          "value" : "At most USD 24 for two sets",
+          "value" : "At most USD 24 total for two sets",
           "quote" : "provided the total for both is no more than $24"
         } ],
         "maxUnitPrice" : {
@@ -191,7 +196,7 @@
           "strength" : "HARD",
           "attribute" : "FORMAT",
           "value" : "postcard-set",
-          "quote" : "postcards"
+          "quote" : "Matte wouldn't stop me buying a set though."
         }, {
           "strength" : "PREFERENCE",
           "attribute" : "FINISH",
@@ -224,7 +229,7 @@
         "needs" : [ {
           "strength" : "HARD",
           "attribute" : "FORMAT",
-          "value" : "postcard-set",
+          "value" : "postcard set",
           "quote" : "I'd still want the set if you choose other scenes."
         }, {
           "strength" : "PREFERENCE",
@@ -242,7 +247,7 @@
           "strength" : "HARD",
           "attribute" : "FORMAT",
           "value" : "postcards",
-          "quote" : "the postcards"
+          "quote" : "Ideally the postcards would arrive before my pen-pal exchange next month."
         }, {
           "strength" : "PREFERENCE",
           "attribute" : "TIMING",
@@ -275,7 +280,7 @@
         "needs" : [ {
           "strength" : "HARD",
           "attribute" : "FORMAT",
-          "value" : "postcard-set or A5 art-print",
+          "value" : "postcard set or A5 print",
           "quote" : "I'd buy either the postcard set or an A5 print."
         } ],
         "maxUnitPrice" : null,
@@ -304,12 +309,12 @@
         "needs" : [ {
           "strength" : "HARD",
           "attribute" : "FORMAT",
-          "value" : "postcard-set",
+          "value" : "postcard sets",
           "quote" : "I'd take three postcard sets"
         }, {
           "strength" : "HARD",
           "attribute" : "QUANTITY",
-          "value" : "3 sets",
+          "value" : "3",
           "quote" : "I'd take three postcard sets"
         } ],
         "maxUnitPrice" : null,
@@ -321,13 +326,13 @@
         "needs" : [ {
           "strength" : "HARD",
           "attribute" : "FORMAT",
-          "value" : "postcard-set",
+          "value" : "postcard sets",
           "quote" : "interested in two sets of postcards"
         }, {
           "strength" : "HARD",
           "attribute" : "QUANTITY",
-          "value" : "2 sets",
-          "quote" : "interested in two sets of postcards"
+          "value" : "2",
+          "quote" : "two sets of postcards"
         } ],
         "maxUnitPrice" : null,
         "quantity" : 2,
@@ -338,13 +343,18 @@
         "needs" : [ {
           "strength" : "HARD",
           "attribute" : "FORMAT",
-          "value" : "five-card set",
+          "value" : "card set",
           "quote" : "Just one five-card set for me, please."
         }, {
           "strength" : "HARD",
           "attribute" : "QUANTITY",
-          "value" : "1 set containing 5 cards",
+          "value" : "1 set",
           "quote" : "That's five cards altogether, not five sets!"
+        }, {
+          "strength" : "HARD",
+          "attribute" : "OTHER",
+          "value" : "5 cards per set",
+          "quote" : "Just one five-card set for me, please."
         } ],
         "maxUnitPrice" : null,
         "quantity" : 1,
@@ -368,7 +378,7 @@
           "strength" : "HARD",
           "attribute" : "FORMAT",
           "value" : "Paper version",
-          "quote" : "a small paper version"
+          "quote" : "paper version"
         }, {
           "strength" : "PREFERENCE",
           "attribute" : "SUBJECT",
@@ -388,14 +398,14 @@
         "kind" : "REQUEST",
         "needs" : [ {
           "strength" : "HARD",
-          "attribute" : "FORMAT",
+          "attribute" : "OTHER",
           "value" : "Collection of drawings",
-          "quote" : "a pocket-size collection of these drawings"
+          "quote" : "collection of these drawings"
         }, {
           "strength" : "UNKNOWN",
           "attribute" : "SIZE",
-          "value" : "Pocket-size and journal-compatible; dimensions unresolved",
-          "quote" : "I want something I can tuck into my journal, but I haven't measured it."
+          "value" : "Pocket-size and journal-fitting; dimensions unresolved",
+          "quote" : "Maybe a pocket-size collection of these drawings? I want something I can tuck into my journal, but I haven't measured it."
         } ],
         "maxUnitPrice" : null,
         "quantity" : null,
@@ -428,7 +438,7 @@
         }, {
           "strength" : "HARD",
           "attribute" : "SUBJECT",
-          "value" : "Include sleepy Orin, the moon moth",
+          "value" : "sleepy Orin; moon moth",
           "quote" : "the postcard set needs to include sleepy Orin. Without the moon moth I'd pass"
         } ],
         "maxUnitPrice" : null,
@@ -441,12 +451,12 @@
           "strength" : "HARD",
           "attribute" : "FORMAT",
           "value" : "postcard-set",
-          "quote" : "I'd get the cards"
+          "quote" : "the cards"
         }, {
           "strength" : "HARD",
           "attribute" : "SUBJECT",
-          "value" : "Include Pipkin carrying his lantern",
-          "quote" : "if one shows Pipkin carrying his lantern."
+          "value" : "Pipkin carrying his lantern",
+          "quote" : "I'd get the cards if one shows Pipkin carrying his lantern."
         } ],
         "maxUnitPrice" : null,
         "quantity" : null,
@@ -458,7 +468,7 @@
           "strength" : "HARD",
           "attribute" : "FORMAT",
           "value" : "postcard-set",
-          "quote" : "I'd love the postcard set"
+          "quote" : "the postcard set"
         }, {
           "strength" : "HARD",
           "attribute" : "REGION",
@@ -475,7 +485,7 @@
           "strength" : "HARD",
           "attribute" : "FORMAT",
           "value" : "postcard-set",
-          "quote" : "Can you send a set to the UK?"
+          "quote" : "The cards"
         }, {
           "strength" : "HARD",
           "attribute" : "REGION",
@@ -491,13 +501,13 @@
         "needs" : [ {
           "strength" : "HARD",
           "attribute" : "FORMAT",
-          "value" : "postcard-set",
+          "value" : "postcard sets",
           "quote" : "I'd buy two postcard sets"
         }, {
           "strength" : "HARD",
           "attribute" : "REGION",
-          "value" : "Australia; no US forwarding available",
-          "quote" : "if you can ship to Australia. I don't have anyone in the US who could forward them."
+          "value" : "Australia",
+          "quote" : "if you can ship to Australia."
         } ],
         "maxUnitPrice" : null,
         "quantity" : null,
@@ -514,7 +524,7 @@
           "strength" : "HARD",
           "attribute" : "SIZE",
           "value" : "A2 or larger",
-          "quote" : "A2 or larger"
+          "quote" : "A2 or larger."
         } ],
         "maxUnitPrice" : null,
         "quantity" : null,
@@ -536,7 +546,7 @@
           "strength" : "HARD",
           "attribute" : "SIZE",
           "value" : "A1",
-          "quote" : "an A1 poster"
+          "quote" : "I only want the lantern market as an A1 poster."
         } ],
         "maxUnitPrice" : null,
         "quantity" : null,
@@ -552,7 +562,7 @@
         }, {
           "strength" : "HARD",
           "attribute" : "SUBJECT",
-          "value" : "Pipkin on the sleeve for hoodie",
+          "value" : "Pipkin on the sleeve for the hoodie",
           "quote" : "A hoodie with Pipkin on the sleeve is what I'd buy."
         } ],
         "maxUnitPrice" : null,
@@ -565,12 +575,7 @@
           "strength" : "HARD",
           "attribute" : "FORMAT",
           "value" : "acrylic stands; not cards or stickers",
-          "quote" : "Could we get acrylic stands of Tavi and Orin?"
-        }, {
-          "strength" : "HARD",
-          "attribute" : "FORMAT",
-          "value" : "excludes cards and stickers",
-          "quote" : "I'm not looking for cards or stickers."
+          "quote" : "Could we get acrylic stands of Tavi and Orin? I'd buy one of each for my desk, but I'm not looking for cards or stickers."
         }, {
           "strength" : "HARD",
           "attribute" : "SUBJECT",
@@ -580,7 +585,7 @@
           "strength" : "HARD",
           "attribute" : "QUANTITY",
           "value" : "one of each",
-          "quote" : "I'd buy one of each for my desk"
+          "quote" : "I'd buy one of each"
         } ],
         "maxUnitPrice" : null,
         "quantity" : 2,
@@ -591,18 +596,18 @@
         "needs" : [ {
           "strength" : "HARD",
           "attribute" : "FORMAT",
-          "value" : "art print; excludes postcards",
+          "value" : "art print; not postcards",
           "quote" : "Only an A5 art print for me, on satin paper."
         }, {
           "strength" : "HARD",
           "attribute" : "SIZE",
           "value" : "A5",
-          "quote" : "Only an A5 art print for me, on satin paper."
+          "quote" : "Only an A5 art print for me"
         }, {
           "strength" : "HARD",
           "attribute" : "FINISH",
           "value" : "satin paper",
-          "quote" : "Only an A5 art print for me, on satin paper."
+          "quote" : "on satin paper."
         }, {
           "strength" : "UNKNOWN",
           "attribute" : "SUBJECT",
@@ -618,7 +623,7 @@
         "needs" : [ {
           "strength" : "HARD",
           "attribute" : "FORMAT",
-          "value" : "sticker sheet; excludes loose cards and prints",
+          "value" : "sticker sheet; not cards or print",
           "quote" : "I'd buy a sticker sheet for my sketchbook cover."
         }, {
           "strength" : "HARD",
@@ -628,7 +633,7 @@
         }, {
           "strength" : "HARD",
           "attribute" : "FORMAT",
-          "value" : "excludes loose cards and prints",
+          "value" : "no loose cards or print",
           "quote" : "I don't have a use for loose cards or a print."
         } ],
         "maxUnitPrice" : null,
@@ -674,7 +679,7 @@
         "wishId" : "11603779-816a-3812-8526-235cae300b62",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Matches requested postcard set; subject is a preference."
+        "reason" : "Matches requested postcard format."
       }, {
         "wishId" : "11603779-816a-3812-8526-235cae300b62",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
@@ -689,27 +694,27 @@
         "wishId" : "aad5c5fe-e500-3737-8ac3-3c83199171f8",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Matches demand for five postcards."
+        "reason" : "Matches requested five-postcard set."
       }, {
         "wishId" : "aad5c5fe-e500-3737-8ac3-3c83199171f8",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Single art print does not match five postcards."
+        "reason" : "Single art print is not five postcards."
       }, {
         "wishId" : "aad5c5fe-e500-3737-8ac3-3c83199171f8",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Sticker sheet does not match five postcards."
+        "reason" : "Sticker sheet is not five postcards."
       }, {
         "wishId" : "70314079-42f2-3277-abfe-d409ce16b75d",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Matches A6 postcard set; subject is a preference."
+        "reason" : "Matches requested A6 postcard set."
       }, {
         "wishId" : "70314079-42f2-3277-abfe-d409ce16b75d",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "A5 art print conflicts with A6 postcard-set demand."
+        "reason" : "A5 art print conflicts with A6 postcard demand."
       }, {
         "wishId" : "70314079-42f2-3277-abfe-d409ce16b75d",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
@@ -724,57 +729,57 @@
         "wishId" : "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Art print is not the requested postcards."
+        "reason" : "Art print is not the requested postcard format."
       }, {
         "wishId" : "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Sticker sheet is not the requested postcards."
+        "reason" : "Sticker sheet is not the requested postcard format."
       }, {
         "wishId" : "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Matches \"A set of your postcards\"; subject is a preference."
+        "reason" : "Requested format; subject preference is non-gating."
       }, {
         "wishId" : "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "An art print is not the requested postcard set."
+        "reason" : "An art print is not a postcard set."
       }, {
         "wishId" : "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "A sticker sheet is not the requested postcard set."
+        "reason" : "A sticker sheet is not a postcard set."
       }, {
         "wishId" : "8e2c260f-46df-3217-a940-29694a650433",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Matches \"another postcard set\"."
+        "reason" : "Requested postcard-set format; no hard conflict."
       }, {
         "wishId" : "8e2c260f-46df-3217-a940-29694a650433",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "An art print is not the requested postcard set."
+        "reason" : "An art print is not a postcard set."
       }, {
         "wishId" : "8e2c260f-46df-3217-a940-29694a650433",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "A sticker sheet is not the requested postcard set."
+        "reason" : "A sticker sheet is not a postcard set."
       }, {
         "wishId" : "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "CONDITIONAL",
-        "reason" : "Will the whole set cost less than $15? Selling price is unset."
+        "reason" : "Will the whole set sell for less than $15?"
       }, {
         "wishId" : "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "A single art print is not the requested five-card set."
+        "reason" : "A single art print is not a five-card set."
       }, {
         "wishId" : "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "A sticker sheet is not the requested five-card set."
+        "reason" : "A sticker sheet is not a five-card set."
       }, {
         "wishId" : "6c0c2aaf-34aa-3665-a661-67223f814531",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
@@ -784,12 +789,12 @@
         "wishId" : "6c0c2aaf-34aa-3665-a661-67223f814531",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "An art print is not the requested postcards."
+        "reason" : "An art print is not postcards."
       }, {
         "wishId" : "6c0c2aaf-34aa-3665-a661-67223f814531",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "A sticker sheet is not the requested postcards."
+        "reason" : "A sticker sheet is not postcards."
       }, {
         "wishId" : "b8dd007a-584e-36d7-8f79-247b8d49d5df",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
@@ -824,22 +829,22 @@
         "wishId" : "1a7e5e31-3af0-3937-a501-e3e83b728165",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Postcard format matches; either finish is acceptable."
+        "reason" : "Glossy is preferred; matte is explicitly acceptable."
       }, {
         "wishId" : "1a7e5e31-3af0-3937-a501-e3e83b728165",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Art print does not meet postcard demand."
+        "reason" : "Art print does not meet postcard-set demand."
       }, {
         "wishId" : "1a7e5e31-3af0-3937-a501-e3e83b728165",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Sticker sheet does not meet postcard demand."
+        "reason" : "Sticker sheet does not meet postcard-set demand."
       }, {
         "wishId" : "0647dede-8f9f-39c0-a1b6-c623b8439eca",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Postcard format matches; either finish is acceptable."
+        "reason" : "Matte is preferred; either finish is acceptable."
       }, {
         "wishId" : "0647dede-8f9f-39c0-a1b6-c623b8439eca",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
@@ -854,32 +859,32 @@
         "wishId" : "409367dc-de96-3569-94fd-36b68bc13f5e",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Requested set; Orin is explicitly optional."
+        "reason" : "Requested format; Orin is explicitly optional."
       }, {
         "wishId" : "409367dc-de96-3569-94fd-36b68bc13f5e",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Art print does not match postcard-set demand."
+        "reason" : "Art print is not the requested postcard set."
       }, {
         "wishId" : "409367dc-de96-3569-94fd-36b68bc13f5e",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Sticker sheet does not match postcard-set demand."
+        "reason" : "Sticker sheet is not the requested postcard set."
       }, {
         "wishId" : "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Requested postcards; arrival timing is explicitly non-gating."
+        "reason" : "Requested format; arrival timing is explicitly non-gating."
       }, {
         "wishId" : "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Art print does not match postcard demand."
+        "reason" : "Art print is not the requested postcards."
       }, {
         "wishId" : "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Sticker sheet does not match postcard demand."
+        "reason" : "Sticker sheet is not the requested postcards."
       }, {
         "wishId" : "52394f11-6791-3ea3-86a1-7f4c2f5935de",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
@@ -889,7 +894,7 @@
         "wishId" : "52394f11-6791-3ea3-86a1-7f4c2f5935de",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Art print is neither accepted format."
+        "reason" : "Art print is neither of the requested formats."
       }, {
         "wishId" : "52394f11-6791-3ea3-86a1-7f4c2f5935de",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
@@ -909,67 +914,67 @@
         "wishId" : "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Sticker sheet is neither accepted format."
+        "reason" : "Sticker sheet is neither of the requested formats."
       }, {
         "wishId" : "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Explicitly accepts postcards."
+        "reason" : "\"Any of the three works for me\" explicitly allows postcards."
       }, {
         "wishId" : "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "COMPATIBLE",
-        "reason" : "Explicitly accepts the small art print."
+        "reason" : "\"Any of the three works for me\" explicitly allows the art print."
       }, {
         "wishId" : "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "COMPATIBLE",
-        "reason" : "Explicitly accepts stickers."
+        "reason" : "\"Any of the three works for me\" explicitly allows stickers."
       }, {
         "wishId" : "972dc94d-ee99-379a-bdac-d66a32fda61c",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Matches requested postcard sets."
+        "reason" : "Matches \"I'd take three postcard sets\"."
       }, {
         "wishId" : "972dc94d-ee99-379a-bdac-d66a32fda61c",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Art print is not the requested postcard set."
+        "reason" : "An art print does not match \"three postcard sets\"."
       }, {
         "wishId" : "972dc94d-ee99-379a-bdac-d66a32fda61c",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Sticker sheet is not the requested postcard set."
+        "reason" : "Stickers do not match \"three postcard sets\"."
       }, {
         "wishId" : "dae2845e-f050-3572-bdc5-4e0d3330e912",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Matches postcard-set interest; not a purchase commitment."
+        "reason" : "Matches \"interested in two sets of postcards\"; not a commitment."
       }, {
         "wishId" : "dae2845e-f050-3572-bdc5-4e0d3330e912",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Art print is not the requested postcard set."
+        "reason" : "An art print does not match \"two sets of postcards\"."
       }, {
         "wishId" : "dae2845e-f050-3572-bdc5-4e0d3330e912",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Sticker sheet is not the requested postcard set."
+        "reason" : "Stickers do not match \"two sets of postcards\"."
       }, {
         "wishId" : "dd96f232-1c5c-3f13-ba70-f073cd71006b",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "COMPATIBLE",
-        "reason" : "Matches one set of five cards."
+        "reason" : "Matches \"Just one five-card set for me, please.\""
       }, {
         "wishId" : "dd96f232-1c5c-3f13-ba70-f073cd71006b",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Single art print is not a five-card set."
+        "reason" : "A single art print is not a \"five-card set\"."
       }, {
         "wishId" : "dd96f232-1c5c-3f13-ba70-f073cd71006b",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Sticker sheet is not a five-card set."
+        "reason" : "A sticker sheet is not a \"five-card set\"."
       }, {
         "wishId" : "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
@@ -984,7 +989,7 @@
         "wishId" : "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "CONDITIONAL",
-        "reason" : "What sheet dimensions would fit the intended desk corner?"
+        "reason" : "What sheet dimensions would fit the desk corner?"
       }, {
         "wishId" : "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
@@ -999,42 +1004,42 @@
         "wishId" : "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "CONDITIONAL",
-        "reason" : "Is the sheet paper, and would its dimensions fit?"
+        "reason" : "Would a sticker sheet count as paper, and what size would fit?"
       }, {
         "wishId" : "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "CONDITIONAL",
-        "reason" : "Would A6 fit the pocket and journal?"
+        "reason" : "Would A6 fit the journal and intended pocket-size limit?"
       }, {
         "wishId" : "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "One design is not a collection of drawings."
+        "reason" : "A single design is not a collection of drawings."
       }, {
         "wishId" : "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "CONDITIONAL",
-        "reason" : "Does it collect multiple drawings and fit the pocket and journal?"
+        "reason" : "Does the sheet collect drawings, and would it fit the journal?"
       }, {
         "wishId" : "adbf1472-fb73-31ce-9572-fe0a69a98839",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "CONDITIONAL",
-        "reason" : "Does an approved card design feature Tavi the fox courier?"
+        "reason" : "Does at least one card feature Tavi the fox courier?"
       }, {
         "wishId" : "adbf1472-fb73-31ce-9572-fe0a69a98839",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Not the requested postcard-set format."
+        "reason" : "An art print is not the requested postcard set."
       }, {
         "wishId" : "adbf1472-fb73-31ce-9572-fe0a69a98839",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Not the requested postcard-set format."
+        "reason" : "A sticker sheet is not the requested postcard set."
       }, {
         "wishId" : "1c28f360-ed92-30f8-b749-d739cea5c253",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "CONDITIONAL",
-        "reason" : "Does a design include sleepy Orin, the moon moth?"
+        "reason" : "Will the designs include sleepy Orin, the moon moth?"
       }, {
         "wishId" : "1c28f360-ed92-30f8-b749-d739cea5c253",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
@@ -1049,7 +1054,7 @@
         "wishId" : "5abc0dd1-d005-3e88-9c15-c4466155f86e",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "CONDITIONAL",
-        "reason" : "Does a design show Pipkin carrying his lantern?"
+        "reason" : "Will a design show Pipkin carrying his lantern?"
       }, {
         "wishId" : "5abc0dd1-d005-3e88-9c15-c4466155f86e",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
@@ -1099,32 +1104,32 @@
         "wishId" : "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Wrong format and no shipping to Australia."
+        "reason" : "Wrong format and US-only shipping; Australia delivery required."
       }, {
         "wishId" : "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Wrong format and no shipping to Australia."
+        "reason" : "Wrong format and US-only shipping; Australia delivery required."
       }, {
         "wishId" : "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "A6 cards do not meet the A2-or-larger wall poster requirement."
+        "reason" : "A6 postcards are not a wall poster sized A2 or larger."
       }, {
         "wishId" : "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "A5 is smaller than the required A2-or-larger poster."
+        "reason" : "A5 is smaller than the required A2 or larger."
       }, {
         "wishId" : "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Stickers are not the required A2-or-larger wall poster."
+        "reason" : "Sticker sheets are not the requested wall poster."
       }, {
         "wishId" : "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "A6 cards conflict with the A1 poster requirement."
+        "reason" : "A6 postcards conflict with the A1 poster requirement."
       }, {
         "wishId" : "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
@@ -1134,79 +1139,81 @@
         "wishId" : "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Stickers conflict with the A1 poster requirement."
+        "reason" : "Sticker sheets conflict with the A1 poster requirement."
       }, {
         "wishId" : "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Paper cards are not a hoodie or T-shirt."
+        "reason" : "Paper goods excluded; hoodie or T-shirt required."
       }, {
         "wishId" : "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Paper print is not a hoodie or T-shirt."
+        "reason" : "Paper goods excluded; hoodie or T-shirt required."
       }, {
         "wishId" : "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Sticker sheet is not a hoodie or T-shirt."
+        "reason" : "Sticker sheets are not the required hoodie or T-shirt."
       }, {
         "wishId" : "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Requires acrylic stands and explicitly excludes cards."
+        "reason" : "Postcards are not the requested acrylic stands."
       }, {
         "wishId" : "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Requires acrylic stands, not an art print."
+        "reason" : "An art print is not the requested acrylic stands."
       }, {
         "wishId" : "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Requires acrylic stands and explicitly excludes stickers."
+        "reason" : "Stickers are not the requested acrylic stands."
       }, {
         "wishId" : "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Requires an A5 satin art print; postcards are excluded."
+        "reason" : "A6 postcards conflict with the A5 art-print requirement."
       }, {
         "wishId" : "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "CONDITIONAL",
-        "reason" : "Can satin be selected, and is the design the pond scene?"
+        "reason" : "Can satin paper be selected, and is the design the pond scene?"
       }, {
         "wishId" : "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Requires an A5 satin art print, not stickers."
+        "reason" : "A sticker sheet conflicts with the A5 art-print requirement."
       }, {
         "wishId" : "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Requires adhesive stickers and explicitly excludes loose cards."
+        "reason" : "Loose postcards are explicitly excluded."
       }, {
         "wishId" : "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "INCOMPATIBLE",
-        "reason" : "Requires adhesive stickers and explicitly excludes a print."
+        "reason" : "An art print is explicitly excluded."
       }, {
         "wishId" : "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "COMPATIBLE",
-        "reason" : "Sticker sheet meets the adhesive sticker demand."
+        "reason" : "The sticker sheet meets the adhesive sticker-sheet request."
       } ],
       "proposal" : {
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
-        "suggestedVariants" : { },
+        "suggestedVariants" : {
+          "finish" : "glossy"
+        },
         "rationale" : [ {
-          "text" : "Largest compatible audience: 16 wishes, versus 3 for stickers and 2 for prints; 10 additional wishes remain conditional.",
+          "text" : "Directly matches the requested format.",
           "wishId" : "70314079-42f2-3277-abfe-d409ce16b75d",
           "quote" : "I'd happily buy the A6 postcard set."
         }, {
-          "text" : "The five-design format also matches this preference.",
-          "wishId" : "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
-          "quote" : "I like the idea of getting five different scenes rather than picking one favorite."
+          "text" : "Glossy serves an expressed preference.",
+          "wishId" : "1a7e5e31-3af0-3937-a501-e3e83b728165",
+          "quote" : "I'd pick glossy postcards if you offer them"
         } ]
       },
       "noProposalReason" : null,
@@ -1225,44 +1232,44 @@
       }, {
         "label" : "Not served",
         "wishIds" : [ "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e" ],
-        "reason" : "A6 cards do not meet the A2-or-larger wall poster requirement."
+        "reason" : "A6 postcards are not a wall poster sized A2 or larger."
       }, {
         "label" : "Not served",
         "wishIds" : [ "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0" ],
-        "reason" : "A6 cards conflict with the A1 poster requirement."
+        "reason" : "A6 postcards conflict with the A1 poster requirement."
       }, {
         "label" : "Not served",
         "wishIds" : [ "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba" ],
-        "reason" : "Paper cards are not a hoodie or T-shirt."
+        "reason" : "Paper goods excluded; hoodie or T-shirt required."
       }, {
         "label" : "Not served",
         "wishIds" : [ "23b9ed3e-0293-376b-aeb0-e4bf5e72750a" ],
-        "reason" : "Requires acrylic stands and explicitly excludes cards."
+        "reason" : "Postcards are not the requested acrylic stands."
       }, {
         "label" : "Not served",
         "wishIds" : [ "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9" ],
-        "reason" : "Requires an A5 satin art print; postcards are excluded."
+        "reason" : "A6 postcards conflict with the A5 art-print requirement."
       }, {
         "label" : "Not served",
         "wishIds" : [ "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c" ],
-        "reason" : "Requires adhesive stickers and explicitly excludes loose cards."
+        "reason" : "Loose postcards are explicitly excluded."
       } ],
       "questionsForMaker" : [ {
-        "text" : "What is the selling total for two sets, and does it meet the stated $24 limit?",
+        "text" : "What is the selling price, and does it meet the stated total budget?",
         "wishIds" : [ "0f192565-8720-38ff-88cd-8dbe15e901c9" ]
       }, {
-        "text" : "Does at least one approved card design feature Tavi the fox courier?",
-        "wishIds" : [ "adbf1472-fb73-31ce-9572-fe0a69a98839" ]
+        "text" : "Can you confirm whether A6 fits the fan's journal?",
+        "wishIds" : [ "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a" ]
       }, {
-        "text" : "Can you confirm with the requester whether A6 fits their intended desk corner?",
-        "wishIds" : [ "5deecfde-f2d1-3917-a9c0-f5d577076f3c" ]
+        "text" : "Does the set feature Tavi the fox courier as required?",
+        "wishIds" : [ "adbf1472-fb73-31ce-9572-fe0a69a98839" ]
       } ],
       "alternatives" : [ {
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
-        "whyNotFirst" : "Only 3 compatible wishes, compared with 16 for postcards; another 3 remain conditional."
+        "whyNotFirst" : "Serves a smaller compatible audience than the postcard set."
       }, {
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
-        "whyNotFirst" : "Only 2 compatible wishes, compared with 16 for postcards; another 3 remain conditional."
+        "whyNotFirst" : "Serves a smaller compatible audience than the postcard set."
       } ],
       "optionIds" : [ "e4ccce28-49b2-3152-9ad6-a6101534cd40", "dae69934-6ecb-320e-bd8b-c017aca8b83a", "40cff624-64c2-36fd-9a6b-380edba72ddc" ]
     },
@@ -1273,7 +1280,7 @@
     } ]
   },
   "inputHash" : "0f35018b7eedb2e3aeda035e1af859c19466dc88a869ed06103a8137b44592c0",
-  "completedAt" : "2026-11-12T08:10:04.430487Z",
+  "completedAt" : "2026-11-12T08:55:29.331650Z",
   "seedWorkspaceId" : "00000000-0000-0000-0000-000000000000",
   "optionKeys" : {
     "e4ccce28-49b2-3152-9ad6-a6101534cd40" : "postcard-set",

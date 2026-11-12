@@ -172,10 +172,17 @@ Validation applies these rules:
 - V5 rejects multiple proposals.
 - V6 rebuilds not-served groups from all incompatible verdicts, including wishes
   absent from the bounded proposal sample. A V6 flag can therefore be expected.
+- `MODEL_WRITTEN_NUMBER` drops a rationale item containing digits or English
+  number words. Exact numeric product phrases from the selected option's name
+  or attributes remain allowed, including `A6` and `5 designs`; a bare numeric
+  attribute never permits an audience count. Source quotes remain unchanged.
+  The proposal prompt also forbids counts, totals, percentages, prices, and dates
+  in rationale and reason sentences. Displayed counts come from code.
 
-The validator requires a complete, unique wish roster and one verdict for every
-request/option pair. Quote validation proves textual grounding, not semantic
-correctness. Classifications and normalized limits still need review. The shared
+The validator requires a complete, unique wish roster within each successful
+batch and one verdict for every analyzed request/option pair. Quote validation
+proves textual grounding, not semantic correctness. Classifications and normalized
+limits still need review. The shared
 `analysisInputHash` identifies the full input snapshot. Success exposes the
 provider model, completion time, validated output and flags for immutable
 persistence. Analysis never changes campaign or payment state.
@@ -189,18 +196,24 @@ accepts 1-16. Requests use low text verbosity and output limits of 4,096 tokens
 for classification and 2,048 for proposal, including reasoning tokens. Model and
 effort compatibility must be checked when overriding configuration.
 
-A 40-wish, three-option seed took 28.51 seconds with batches of five and eight
-concurrent calls, versus 24.06 seconds with four and ten. With the final bounded
-evidence sampling, the latter configuration took 28.07 and 27.29 seconds. These are live
-sample measurements, not a latency guarantee. Token counts and per-call latency
+With batches of four and ten concurrent calls, two complete 40-wish,
+three-option seed runs took 28.704 and 22.117 seconds. An additional attempt
+returned partial analysis and was rejected by the stored-seed completeness gate.
+These are live sample measurements, not a latency guarantee. Token counts and per-call latency
 are available with `--logging.level.app.analysis=DEBUG`; logs contain no prompts,
 model output, or credentials.
 
 Every classification batch gets at most one retry, including provider failures.
 The proposal stage retries invalid JSON or rejected output once; transport failures
-return immediately. An exhausted classification batch currently fails the run:
-the port has no dedicated unanalyzed-wish field. The caller retains its previous
-valid run on failure. A shared monotonic deadline covers queueing, both stages,
+return immediately. An exhausted classification batch contributes no wishes or
+verdicts. Each omitted wish gets an `UNANALYZED_WISH` flag with path
+`wishes[UUID]`; screens can count these flags and identify the missing wishes.
+Successful batches alone supply the proposal stage's evidence and computed
+counts, and its output is validated against that analyzed subset. The input hash
+still covers the full original snapshot. If every batch fails, no proposal is
+attempted and the run fails. Proposal failure and deadline expiry still fail the
+run; the caller retains its previous valid run on failure.
+A shared monotonic deadline covers queueing, both stages,
 retries and validation: 60 seconds total, at most 20 seconds per provider call,
 and a 10-second connection timeout. Deadline expiry cancels outstanding calls.
 Inputs allow at most 200 wishes of 500 characters each; both stage envelopes are

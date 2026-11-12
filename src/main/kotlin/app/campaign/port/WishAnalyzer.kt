@@ -73,6 +73,10 @@ enum class AnalysisValidationRule {
     V5,
     /** Not-served groups are rebuilt from the proposed option's verdicts. */
     V6,
+    /** Numeric rationale is dropped unless it names the selected option's catalog attributes. */
+    MODEL_WRITTEN_NUMBER,
+    /** An exhausted classification batch omits this wish; path is wishes[UUID]. */
+    UNANALYZED_WISH,
 }
 
 /** Path identifies an output location; message must not contain raw private input. */

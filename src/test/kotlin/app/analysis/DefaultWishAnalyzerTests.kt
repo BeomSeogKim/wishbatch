@@ -116,10 +116,69 @@ class DefaultWishAnalyzerTests {
             val provider = RecordingProvider { _, _ ->
                 if (failure == AnalysisFailure.INVALID_JSON) success("{") else ProviderResult.Failure(failure)
             }
-            assertFailure(failure, analyzer(provider).analyze(listOf(option), listOf(wish)))
+            val result = assertIs<AnalysisResult.Failure>(analyzer(provider).analyze(listOf(option), listOf(wish)))
+            assertEquals(failure, result.reason)
+            assertEquals(listOf("wishes[${wish.id}]"), result.flags.filter {
+                it.rule == AnalysisValidationRule.UNANALYZED_WISH
+            }.map { it.path })
             assertEquals(2, provider.requests.size)
             assertTrue(provider.requests.all { it.stage == AnalysisStage.CLASSIFY })
         }
+    }
+
+    @Test
+    fun `exhausted batches are flagged individually and only validated successes reach the proposal`() {
+        val wishes = (1..6).map { Wish(workspaceId, "Cards please $it", WishSource.ONSITE, createdAt = now) }
+        val failed = wishes.take(2) + wishes.takeLast(2)
+        val succeeded = wishes.slice(2..3)
+        for (failure in listOf(AnalysisFailure.INVALID_JSON, AnalysisFailure.INVALID_OUTPUT,
+            AnalysisFailure.PROVIDER_FAILURE, AnalysisFailure.TIMEOUT)) {
+            val provider = RecordingProvider { request, _ ->
+                if (request.stage == AnalysisStage.PROPOSE) {
+                    val input = mapper.readTree(request.input)
+                    assertEquals(2, input["counts"][0]["compatible"].asInt())
+                    assertEquals(succeeded.map { it.id.toString() }.toSet(),
+                        input["evidence"][option.id.toString()].toList().map { it["wish_id"].asString() }.toSet())
+                    success(proposal(evidence = listOf(
+                        mapOf("text" to "Card demand", "wish_id" to failed.first().id, "quote" to failed.first().text),
+                        mapOf("text" to "Card demand", "wish_id" to succeeded.first().id, "quote" to succeeded.first().text),
+                    )))
+                } else if (mapper.readTree(request.input)["wishes"][0]["wish_id"].asString() in failed.map { it.id.toString() }) {
+                    when (failure) {
+                        AnalysisFailure.INVALID_JSON -> success("{")
+                        AnalysisFailure.INVALID_OUTPUT -> success("{\"wishes\":[],\"verdicts\":[]}")
+                        else -> ProviderResult.Failure(failure)
+                    }
+                } else success(classification(request))
+            }
+            val result = assertIs<AnalysisResult.Success>(analyzer(provider,
+                AnalysisProperties("test", batchSize = 2, concurrency = 3)).analyze(listOf(option), wishes))
+            assertEquals(succeeded.map { it.id }, result.validated.output.wishes.map { it.wishId })
+            assertEquals(succeeded.map { it.id }, result.validated.output.verdicts.map { it.wishId })
+            assertEquals(2, optionWishCounts(result.validated.output).single().compatible)
+            assertEquals(analysisInputHash(listOf(option), wishes), result.inputHash)
+            assertEquals(failed.map { "wishes[${it.id}]" }, result.validated.flags.filter {
+                it.rule == AnalysisValidationRule.UNANALYZED_WISH
+            }.map { it.path })
+            assertTrue(result.validated.flags.any { it.rule == AnalysisValidationRule.V1 })
+            assertEquals(succeeded.first().id, result.validated.output.proposal!!.rationale.single().wishId)
+            assertEquals(5, provider.requests.count { it.stage == AnalysisStage.CLASSIFY })
+            assertEquals(2, provider.requests.count { it.retry })
+            assertEquals(1, provider.requests.count { it.stage == AnalysisStage.PROPOSE })
+        }
+    }
+
+    @Test
+    fun `all failed batches record every omitted wish and never propose`() {
+        val wishes = (1..4).map { Wish(workspaceId, "Cards please $it", WishSource.ONSITE, createdAt = now) }
+        val provider = RecordingProvider { _, _ -> ProviderResult.Failure(AnalysisFailure.PROVIDER_FAILURE) }
+        val result = assertIs<AnalysisResult.Failure>(analyzer(provider,
+            AnalysisProperties("test", batchSize = 2)).analyze(listOf(option), wishes))
+        assertEquals(AnalysisFailure.PROVIDER_FAILURE, result.reason)
+        assertEquals(wishes.map { "wishes[${it.id}]" }, result.flags.map { it.path })
+        assertTrue(result.flags.all { it.rule == AnalysisValidationRule.UNANALYZED_WISH })
+        assertEquals(4, provider.requests.size)
+        assertTrue(provider.requests.all { it.stage == AnalysisStage.CLASSIFY })
     }
 
     @Test
@@ -145,6 +204,23 @@ class DefaultWishAnalyzerTests {
         val result = assertIs<AnalysisResult.Success>(analyzer(provider).analyze(listOf(option), listOf(wish)))
         assertTrue(result.validated.output.proposal!!.rationale.isEmpty())
         assertTrue(result.validated.flags.any { it.rule == AnalysisValidationRule.V2 })
+    }
+
+    @Test
+    fun `stage two drops numeric rationale while preserving source quotes and computed counts`() {
+        val evidence = listOf(
+            mapOf("text" to "Compatible audience: 16 wishes", "wish_id" to wish.id, "quote" to wish.text),
+            mapOf("text" to "Card demand with a budget condition", "wish_id" to wish.id, "quote" to wish.text),
+        )
+        val provider = RecordingProvider { request, _ ->
+            if (request.stage == AnalysisStage.CLASSIFY) success(classification(request)) else success(proposal(evidence = evidence))
+        }
+        val result = assertIs<AnalysisResult.Success>(analyzer(provider).analyze(listOf(option), listOf(wish)))
+        assertEquals("Card demand with a budget condition", result.validated.output.proposal!!.rationale.single().text)
+        assertEquals(wish.text, result.validated.output.proposal!!.rationale.single().quote)
+        assertEquals(AnalysisValidationRule.MODEL_WRITTEN_NUMBER, result.validated.flags.single().rule)
+        assertEquals(1, optionWishCounts(result.validated.output).single().compatible)
+        assertEquals(2, provider.requests.size)
     }
 
     @Test
