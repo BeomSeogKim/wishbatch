@@ -4,6 +4,7 @@ import app.campaign.model.Campaign
 import app.campaign.model.CampaignState
 import app.campaign.rules.authorizedUnits
 import app.campaign.store.CampaignRepository
+import app.campaign.store.EventRepository
 import app.campaign.store.OfferRepository
 import app.campaign.store.PledgeRepository
 import app.campaign.store.WorkspaceRepository
@@ -35,6 +36,7 @@ class DemoGuideConfiguration(
     private val campaigns: ObjectProvider<CampaignRepository>,
     private val offers: ObjectProvider<OfferRepository>,
     private val pledges: ObjectProvider<PledgeRepository>,
+    private val events: ObjectProvider<EventRepository>,
 ) : WebMvcConfigurer {
     override fun addInterceptors(registry: InterceptorRegistry) {
         registry.addInterceptor(guideInterceptor())
@@ -58,10 +60,14 @@ class DemoGuideConfiguration(
                 pledges.ifAvailable?.findByCampaignIdOrderByCreatedAtAscIdAsc(it.id)
             }.orEmpty()
             val minimumMet = offer?.let { authorizedUnits(campaignPledges) >= it.minBatch } ?: false
+            val booksCheckRecorded = (path == "maker/result" || path == "result") &&
+                campaign?.state == CampaignState.FUNDED && offer != null &&
+                events.ifAvailable?.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id)
+                    ?.any { it.type == "BOOKS_CHECK" } == true
             modelAndView.addObject("demoGuide", guideFor(token, path, campaign?.state, minimumMet,
                 modelAndView.model["proposalUnavailable"] == true, modelAndView.model["makerStep"] as? Int,
                 modelAndView.model["wishSubmitted"] == true || modelAndView.model["lastWishId"] != null,
-                campaign?.id, campaignPledges.lastOrNull()?.id))
+                campaign?.id, campaignPledges.lastOrNull()?.id, booksCheckRecorded))
         }
     }
 }
@@ -73,6 +79,7 @@ internal fun guideFor(
     token: String, path: String, state: CampaignState?, minimumMet: Boolean, proposalUnavailable: Boolean = false,
     makerStep: Int? = null, wishSubmitted: Boolean = false,
     campaignId: UUID? = null, pledgeId: UUID? = null,
+    booksCheckRecorded: Boolean = false,
 ): DemoGuide {
     val base = "/w/$token"
     val maker = path == "maker" || path.startsWith("maker/")
@@ -122,8 +129,10 @@ internal fun guideFor(
         "Switch to the maker view to review the wishes" to "$base/maker/wishes"
     } else if (state == CampaignState.FUNDED) {
         when {
-            path == "maker/result" || path == "result" -> "Check against PayPal in the maker view" to
-                ("$base/maker/books" + (campaignId?.let { "?campaignId=$it" } ?: ""))
+            path == "maker/result" || path == "result" -> if (booksCheckRecorded)
+                "Review the decision record" to "$base/maker/decision-record"
+                else "Check against PayPal in the maker view" to
+                    ("$base/maker/books" + (campaignId?.let { "?campaignId=$it" } ?: ""))
             path == "maker/books" -> "Review the decision record" to "$base/maker/decision-record"
             path == "maker/decision-record" || path == "maker/reliability-drills" ->
                 "Verify this record" to "$base/maker/decision-record/verify"

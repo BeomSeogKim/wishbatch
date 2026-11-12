@@ -2,11 +2,13 @@ package app.web.layout
 
 import app.campaign.model.Campaign
 import app.campaign.model.CampaignState
+import app.campaign.model.Event
 import app.campaign.model.Offer
 import app.campaign.model.Pledge
 import app.campaign.model.PledgeState
 import app.campaign.store.AnalysisRunRepository
 import app.campaign.store.CampaignRepository
+import app.campaign.store.EventRepository
 import app.campaign.store.OfferRepository
 import app.campaign.store.PledgeRepository
 import app.campaign.workspace.WorkspaceService
@@ -40,6 +42,7 @@ class DemoGuideTests @Autowired constructor(
     private val offers: OfferRepository,
     private val campaigns: CampaignRepository,
     private val pledges: PledgeRepository,
+    private val events: EventRepository,
     private val guideConfiguration: DemoGuideConfiguration,
 ) {
     @Test
@@ -171,16 +174,17 @@ class DemoGuideTests @Autowired constructor(
     fun `funded guide advances through scoped evidence pages and finishes without a next link`() {
         val workspace = workspaces.create()
         val foreign = workspaces.create()
-        fun fundedCampaign(token: String): Campaign {
+        fun fundedCampaign(token: String, openedAt: Instant = Instant.parse("2030-01-01T00:00:00Z")): Campaign {
             val owner = workspaces.findByToken(token)!!
             val option = workspaces.listOptions(token).first()
             val run = analyses.findByWorkspaceId(owner.id).first()
             val offer = offers.save(Offer(owner.id, option.id, run.id, "Example", "Example", emptyMap(),
                 500, "USD", "Example", "US", 2, 10))
             return campaigns.saveAndFlush(Campaign(offer.id, CampaignState.FUNDED,
-                openedAt = Instant.parse("2030-01-01T00:00:00Z")))
+                openedAt = openedAt))
         }
         val campaign = fundedCampaign(workspace.token)
+        val historical = fundedCampaign(workspace.token, Instant.parse("2020-01-01T00:00:00Z"))
         val foreignCampaign = fundedCampaign(foreign.token)
         val pledge = pledges.saveAndFlush(Pledge(campaign.id, 2, 1000, "USD", PledgeState.CAPTURED,
             createdAt = Instant.parse("2030-01-01T00:00:00Z")))
@@ -205,6 +209,24 @@ class DemoGuideTests @Autowired constructor(
             assertEquals(next, actual.nextUrl)
             assertFalse(actual.nextUrl!!.contains(foreignCampaign.id.toString()))
             assertFalse(actual.nextUrl!!.contains(foreignPledge.id.toString()))
+        }
+        for (other in listOf(historical, foreignCampaign)) {
+            events.saveAndFlush(Event(other.id, "BOOKS_CHECK", detail = "{}",
+                createdAt = Instant.parse("2030-01-02T00:00:00Z")))
+        }
+        events.saveAndFlush(Event(campaign.id, "BOOKS_RESOURCE_READ", detail = "{}",
+            createdAt = Instant.parse("2030-01-02T00:00:00Z")))
+        assertEquals("$base/maker/books?campaignId=${campaign.id}", guide("maker/result").nextUrl)
+        for (status in listOf("MISMATCH", "UNKNOWN")) {
+            events.saveAndFlush(Event(campaign.id, "BOOKS_CHECK", detail = "{\"status\":\"$status\"}",
+                createdAt = Instant.parse("2030-01-02T00:00:00Z")))
+            val before = events.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id).map { it.id }
+            for (path in listOf("maker/result", "result")) {
+                val checked = guide(path)
+                assertEquals("$base/maker/decision-record", checked.nextUrl)
+                assertEquals("Review the decision record", checked.next)
+            }
+            assertEquals(before, events.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id).map { it.id })
         }
         assertEquals("Maker: books check", guide("maker/books").location)
         assertEquals("Maker: reliability drills", guide("maker/reliability-drills").location)
