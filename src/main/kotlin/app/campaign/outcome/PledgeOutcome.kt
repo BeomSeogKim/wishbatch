@@ -9,5 +9,6 @@ fun outcomeStep(state: PledgeState): OutcomeStep = when (state) {
     PledgeState.AUTHORIZED -> OutcomeStep.HOLD
     PledgeState.CAPTURE_PENDING, PledgeState.CAPTURE_FAILED, PledgeState.CAPTURED -> OutcomeStep.CAPTURE
     PledgeState.VOIDED, PledgeState.VOID_FAILED -> OutcomeStep.RELEASE
-    PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED, PledgeState.REFUNDED -> OutcomeStep.REFUND
+    PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED, PledgeState.REFUNDED,
+    PledgeState.PARTIALLY_REFUNDED -> OutcomeStep.REFUND
 }

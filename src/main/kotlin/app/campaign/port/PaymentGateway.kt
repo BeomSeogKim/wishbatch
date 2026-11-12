@@ -55,7 +55,10 @@ data class AuthorizationDetails(
     val captureId: CaptureId? = null,
 )
 
-/** The original capture amount does not identify the retained balance after a partial refund. */
+/**
+ * A partially refunded capture retains PARTIALLY_REFUNDED status and its original amount.
+ * That amount does not identify the retained balance.
+ */
 data class CaptureDetails(
     val captureId: CaptureId,
     val amount: Money,

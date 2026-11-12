@@ -409,6 +409,7 @@ class FanPaymentControllerTests @Autowired constructor(
             PledgeState.REFUNDED to "REFUND",
             PledgeState.REFUND_PENDING to "REFUND",
             PledgeState.REFUND_FAILED to "REFUND",
+            PledgeState.PARTIALLY_REFUNDED to "REFUND",
         )
         assertEquals(PledgeState.entries.toSet(), steps.keys)
         for (state in PledgeState.entries) {
@@ -446,6 +447,7 @@ class FanPaymentControllerTests @Autowired constructor(
                 PledgeState.REFUNDED -> "Refunded."
                 PledgeState.REFUND_PENDING -> "PayPal is processing your refund."
                 PledgeState.REFUND_FAILED -> "The refund is not confirmed."
+                PledgeState.PARTIALLY_REFUNDED -> "Partial refund observed. Remaining amount is unconfirmed. Needs attention."
             }
             assertContains(map, "Current status: $expectedStatus")
             assertContains(html, "4.00")
