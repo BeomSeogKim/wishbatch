@@ -74,7 +74,7 @@ class OfferEvidenceTests @Autowired constructor(
     }
 
     @Test
-    fun `offer uses its original run and at most three exact quotes with escaped names`() {
+    fun `offer uses its original run and at most three exact anonymous quotes`() {
         val fixture = fixture()
         transactions.executeWithoutResult {
             entityManager.persist(AnalysisRun(fixture.workspace.id, "synthetic", "newer",
@@ -90,12 +90,13 @@ class OfferEvidenceTests @Autowired constructor(
         assertEquals(listOf("Fan <0>", "Fan <1>", "Fan <2>"), evidence.quotes.map { it.displayName })
         val html = render(fixture)
         for (text in listOf("Why this offer", "Compatible wishes:", "5", "stated interest, not orders",
-            "AI grouped the wishes; the maker chose and confirmed this offer.", "Fan &lt;0&gt;")) {
+            "AI grouped the wishes; the maker chose and confirmed this offer.", "Anonymous fan")) {
             assertContains(html, text)
         }
         assertEquals(3, Regex("<figure class=\"evidence\">").findAll(html).count())
         evidence.quotes.forEach { assertContains(html, it.quote) }
         assertFalse(html.contains("Fan <0>"))
+        assertFalse(html.contains("Fan &lt;0&gt;"))
         assertFalse(html.contains("Fan &lt;3&gt;"))
     }
 

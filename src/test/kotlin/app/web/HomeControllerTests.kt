@@ -134,7 +134,8 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
             "no payment has been captured yet",
             "maker confirms production",
             "bank or card",
-            "completed payments are refunded",
+            "refunds of completed payments are requested",
+            "A refund is not complete until PayPal confirms it",
             "capture will succeed",
             "delivery terms"
         ).forEach {
