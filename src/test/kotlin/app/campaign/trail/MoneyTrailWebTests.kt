@@ -19,6 +19,8 @@ import app.campaign.store.OfferRepository
 import app.campaign.store.PledgeRepository
 import app.campaign.store.WorkspaceRepository
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -39,6 +41,30 @@ class MoneyTrailWebTests @Autowired constructor(
     private val events: EventRepository,
     private val mapper: JsonMapper,
 ) {
+    @Test
+    fun `persisted repeated refund transitions appear in order in table and csv`() {
+        val now = Instant.parse("2026-01-01T00:00:00Z")
+        val owner = workspaces.save(Workspace(UUID.randomUUID().toString().replace("-", "") + "12345678901", now))
+        val offer = offers.save(Offer(owner.id, UUID.randomUUID(), UUID.randomUUID(), "Offer", "Spec", emptyMap(), 650, "USD", "Delivery", "US", 1, 5))
+        val campaign = campaigns.save(Campaign(offer.id))
+        val pledge = pledges.save(Pledge(campaign.id, 1, 650, "USD", createdAt = now, refundId = "refund-1"))
+        events.save(Event(campaign.id, "REFUND_REQUEST", pledge.id, paypalId = "request-only", createdAt = now))
+        listOf("CAPTURED -> REFUND_PENDING", "REFUND_PENDING -> REFUND_FAILED", "REFUND_FAILED -> REFUND_PENDING")
+            .forEachIndexed { index, transition ->
+                events.save(Event(campaign.id, "PLEDGE_STATE", pledge.id, detail = transition, createdAt = now.plusSeconds(index.toLong() + 1)))
+            }
+        val path = "/w/${owner.token}/maker/campaigns/${campaign.id}/trail"
+        val html = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
+        val csv = mvc.get("$path.csv").andExpect { status { isOk() } }.andReturn().response.contentAsString
+        for (output in listOf(html, csv)) {
+            val first = output.indexOf("Refund pending")
+            val failed = output.indexOf("Refund failed", first + 1)
+            val second = output.indexOf("Refund pending", failed + 1)
+            assertTrue(first >= 0 && failed > first && second > failed)
+            assertFalse(output.contains("request-only"))
+        }
+    }
+
     @Test
     fun `ledger uses persisted checkpoints and rejects another workspace`() {
         val now = Instant.parse("2026-01-01T00:00:00Z")

@@ -49,7 +49,7 @@ fun trailEntries(pledges: List<Pledge>, events: List<Event>): List<TrailEntry> {
             else -> return@mapNotNull null
         }
         TrailEntry(pledge.id, event.createdAt, label, id, amount)
-    }.distinctBy { Triple(it.pledgeId, it.status, it.providerId) }
+    }
 }
 
 @Service

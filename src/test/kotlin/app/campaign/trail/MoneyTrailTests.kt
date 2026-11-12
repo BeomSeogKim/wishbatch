@@ -3,6 +3,7 @@ package app.campaign.trail
 import app.campaign.model.Event
 import app.campaign.model.Pledge
 import app.web.trail.csvCell
+import app.web.trail.trailCsv
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -10,7 +11,7 @@ import java.util.UUID
 
 class MoneyTrailTests {
     @Test
-    fun `only validated state checkpoints are shown once and partial amount is unknown`() {
+    fun `state checkpoints are retained and partial amount is unknown`() {
         val campaignId = UUID.randomUUID()
         val time = Instant.parse("2026-01-01T00:00:00Z")
         val pledge = Pledge(campaignId, 1, 650, "USD", createdAt = time, captureId = "capture")
@@ -22,9 +23,33 @@ class MoneyTrailTests {
             Event(campaignId, "PLEDGE_STATE", pledge.id, detail = "CAPTURED -> PARTIALLY_REFUNDED", createdAt = time.plusSeconds(3)),
         )
         val result = trailEntries(listOf(pledge), events)
-        assertEquals(listOf("Payment pending", "Payment confirmed", "Partial refund observed"), result.map { it.status })
+        assertEquals(listOf("Payment pending", "Payment confirmed", "Payment confirmed", "Partial refund observed"), result.map { it.status })
         assertEquals(time.plusSeconds(1), result[1].checkpoint)
         assertEquals("Unknown", result.last().amount)
+    }
+
+    @Test
+    fun `repeated pending transitions remain ordered in timeline and csv`() {
+        val campaignId = UUID.randomUUID()
+        val time = Instant.parse("2026-01-01T00:00:00Z")
+        val pledge = Pledge(campaignId, 1, 650, "USD", createdAt = time, refundId = "refund-1")
+        val events = listOf(
+            Event(campaignId, "REFUND_REQUEST", pledge.id, paypalId = "request-only", createdAt = time),
+            Event(campaignId, "PLEDGE_STATE", pledge.id, detail = "CAPTURED -> REFUND_PENDING", createdAt = time.plusSeconds(1)),
+            Event(campaignId, "PLEDGE_STATE", pledge.id, detail = "REFUND_PENDING -> REFUND_FAILED", createdAt = time.plusSeconds(2)),
+            Event(campaignId, "REFUND_REQUEST", pledge.id, paypalId = "request-only", createdAt = time.plusSeconds(3)),
+            Event(campaignId, "PLEDGE_STATE", pledge.id, detail = "REFUND_FAILED -> REFUND_PENDING", createdAt = time.plusSeconds(4)),
+        )
+        val entries = trailEntries(listOf(pledge), events)
+        assertEquals(listOf("Refund pending", "Refund failed", "Refund pending"), entries.map { it.status })
+        assertEquals(listOf(time.plusSeconds(1), time.plusSeconds(2), time.plusSeconds(4)), entries.map { it.checkpoint })
+        assertEquals(listOf("refund-1", "refund-1", "refund-1"), entries.map { it.providerId })
+        val lines = trailCsv(entries).trim().split("\r\n")
+        assertEquals(4, lines.size)
+        assertEquals(true, lines[1].contains("2026-01-01T00:00:01Z\",\"Refund pending"))
+        assertEquals(true, lines[2].contains("2026-01-01T00:00:02Z\",\"Refund failed"))
+        assertEquals(true, lines[3].contains("2026-01-01T00:00:04Z\",\"Refund pending"))
+        assertEquals(false, lines.any { it.contains("request-only") })
     }
 
     @Test
