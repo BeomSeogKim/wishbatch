@@ -4,6 +4,8 @@ import app.campaign.model.AnalysisRun
 import app.campaign.model.NeedAttribute
 import app.campaign.model.Option
 import app.campaign.port.AnalysisOutput
+import app.campaign.review.WishReviewService
+import app.campaign.review.reviewedAnalysis
 import app.campaign.rules.OfferViolation
 import app.campaign.rules.offerPriceCheck
 import app.campaign.service.CampaignRef
@@ -36,6 +38,7 @@ class OfferController(
     private val mapper: ObjectMapper,
     private val campaigns: CampaignService,
     private val display: MakerDisplay,
+    private val reviews: WishReviewService,
 ) {
     @GetMapping("/w/{token}/maker/offer")
     fun offer(@PathVariable token: String, @RequestParam(required = false) run: UUID?, model: Model): String {
@@ -143,7 +146,8 @@ class OfferController(
     }
 
     private fun output(run: AnalysisRun): AnalysisOutput? = try {
-        mapper.readValue(run.resultJson, AnalysisOutput::class.java)
+        val original = mapper.readValue(run.resultJson, AnalysisOutput::class.java)
+        reviewedAnalysis(original, reviews.history(run.workspaceId, run.id))
     } catch (_: tools.jackson.core.JacksonException) { null }
 
     private fun priceView(token: String, run: AnalysisRun, output: AnalysisOutput, option: Option, price: Long): OfferPriceView {

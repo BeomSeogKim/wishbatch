@@ -42,6 +42,25 @@ data class NotServedGroup(val label: String, val wishIds: List<UUID>, val reason
 data class MakerQuestion(val text: String, val wishIds: List<UUID>)
 data class AnalysisAlternative(val optionId: UUID, val whyNotFirst: String)
 
+data class WishReadingComparison(
+    val wishId: UUID,
+    val optionId: UUID,
+    val firstKind: WishKind,
+    val secondKind: WishKind,
+    val firstVerdict: CompatibilityVerdict?,
+    val secondVerdict: CompatibilityVerdict?,
+) {
+    val needsYourEyes: Boolean get() = firstKind != secondKind || firstVerdict != secondVerdict
+}
+
+/** Agreement counts wishes whose kind and verdicts agree across every option. */
+data class SecondReading(
+    val agreedWishCount: Int,
+    val comparedWishCount: Int,
+    val comparisons: List<WishReadingComparison>,
+    val batchCompositionChanged: Boolean = false,
+)
+
 /**
  * Normalized output: at most one proposal, zero to two alternatives, and no model-owned offer
  * prices, thresholds, capacities or dates. A missing proposal requires noProposalReason.
@@ -58,6 +77,7 @@ data class AnalysisOutput(
     val questionsForMaker: List<MakerQuestion>,
     val alternatives: List<AnalysisAlternative>,
     val optionIds: List<UUID>,
+    val secondReading: SecondReading? = null,
 )
 
 enum class AnalysisValidationRule {

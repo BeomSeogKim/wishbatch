@@ -87,16 +87,16 @@ class DefaultWishAnalyzerTests {
     @Test
     fun `single classification shares the daily provider cap with maker analysis`() {
         val provider = RecordingProvider()
-        val shared = analyzer(provider, AnalysisProperties("test", dailyRunCap = 3))
+        val shared = analyzer(provider, AnalysisProperties("test", dailyRunCap = 4))
         assertIs<AnalysisResult.Success>(shared.analyze(listOf(option), listOf(wish)))
         assertIs<AnalysisResult.Success>(shared.classify(option, wish))
         assertFailure(AnalysisFailure.RUN_LIMIT_REACHED, shared.classify(option, wish))
         assertFailure(AnalysisFailure.RUN_LIMIT_REACHED, shared.analyze(listOf(option), listOf(wish)))
-        assertEquals(3, provider.requests.size)
+        assertEquals(4, provider.requests.size)
         assertFailure(AnalysisFailure.NOT_CONFIGURED, analyzer(provider, AnalysisProperties()).classify(option, wish))
         assertFailure(AnalysisFailure.RUN_LIMIT_REACHED,
             analyzer(provider, AnalysisProperties("test", dailyRunCap = 0)).classify(option, wish))
-        assertEquals(3, provider.requests.size)
+        assertEquals(4, provider.requests.size)
     }
 
     @Test
@@ -117,7 +117,7 @@ class DefaultWishAnalyzerTests {
         val provider = RecordingProvider()
         val result = assertIs<AnalysisResult.Success>(analyzer(provider).analyze(options, wishes))
         val batches = provider.requests.filter { it.stage == AnalysisStage.CLASSIFY }
-        assertEquals(40, batches.size)
+        assertEquals(80, batches.size)
         assertTrue(batches.all { mapper.readTree(it.input)["wishes"].size() == 5 })
         assertTrue(batches.all { mapper.readTree(it.input)["options"].size() == 2 })
         assertEquals(1, provider.requests.count { it.stage == AnalysisStage.PROPOSE })
@@ -165,20 +165,20 @@ class DefaultWishAnalyzerTests {
         assertNull(result.validated.output.proposal)
         assertEquals(1, optionWishCounts(result.validated.output).single().notServed)
         assertTrue(result.validated.output.notServed.isEmpty())
-        assertEquals(2, provider.requests.size)
+        assertEquals(3, provider.requests.size)
     }
 
     @Test
     fun `classification retries once with the same input and remaining shared budget`() {
         val nanos = AtomicLong()
         val provider = RecordingProvider { request, _ ->
-            nanos.addAndGet(Duration.ofSeconds(if (request.stage == AnalysisStage.CLASSIFY && !request.retry) 45 else 5).toNanos())
+            nanos.addAndGet(Duration.ofSeconds(if (request.stage == AnalysisStage.CLASSIFY && !request.retry) 20 else 5).toNanos())
             if (request.stage == AnalysisStage.CLASSIFY && !request.retry) success("{")
             else if (request.stage == AnalysisStage.CLASSIFY) success(classification(request)) else success(proposal())
         }
         assertIs<AnalysisResult.Success>(analyzer(provider, nanoTime = nanos::get).analyze(listOf(option), listOf(wish)))
-        assertEquals(listOf(false, true, false), provider.requests.map { it.retry })
-        assertEquals(listOf(20L, 15L, 10L), provider.budgets.map { it.seconds })
+        assertEquals(listOf(false, true, false, true, false), provider.requests.map { it.retry })
+        assertEquals(listOf(20L, 20L, 20L, 15L, 10L), provider.budgets.map { it.seconds })
         assertEquals(provider.requests[0].input, provider.requests[1].input)
     }
 
@@ -215,7 +215,8 @@ class DefaultWishAnalyzerTests {
                         mapOf("text" to "Card demand", "wish_id" to failed.first().id, "quote" to failed.first().text),
                         mapOf("text" to "Card demand", "wish_id" to succeeded.first().id, "quote" to succeeded.first().text),
                     )))
-                } else if (mapper.readTree(request.input)["wishes"][0]["wish_id"].asString() in failed.map { it.id.toString() }) {
+                } else if (mapper.readTree(request.input)["wishes"].toList().map { it["wish_id"].asString() }.toSet() in
+                    listOf(wishes.take(2), wishes.takeLast(2)).map { batch -> batch.map { it.id.toString() }.toSet() }) {
                     when (failure) {
                         AnalysisFailure.INVALID_JSON -> success("{")
                         AnalysisFailure.INVALID_OUTPUT -> success("{\"wishes\":[],\"verdicts\":[]}")
@@ -234,7 +235,7 @@ class DefaultWishAnalyzerTests {
             }.map { it.path })
             assertTrue(result.validated.flags.any { it.rule == AnalysisValidationRule.V1 })
             assertEquals(succeeded.first().id, result.validated.output.proposal!!.rationale.single().wishId)
-            assertEquals(5, provider.requests.count { it.stage == AnalysisStage.CLASSIFY })
+            assertEquals(8, provider.requests.count { it.stage == AnalysisStage.CLASSIFY })
             assertEquals(2, provider.requests.count { it.retry })
             assertEquals(1, provider.requests.count { it.stage == AnalysisStage.PROPOSE })
         }
@@ -292,7 +293,7 @@ class DefaultWishAnalyzerTests {
         assertEquals(wish.text, result.validated.output.proposal!!.rationale.single().quote)
         assertEquals(AnalysisValidationRule.MODEL_WRITTEN_NUMBER, result.validated.flags.single().rule)
         assertEquals(1, optionWishCounts(result.validated.output).single().compatible)
-        assertEquals(2, provider.requests.size)
+        assertEquals(3, provider.requests.size)
     }
 
     @Test
@@ -301,7 +302,7 @@ class DefaultWishAnalyzerTests {
             if (request.stage == AnalysisStage.CLASSIFY) success(classification(request)) else ProviderResult.Failure(AnalysisFailure.PROVIDER_FAILURE)
         }
         assertFailure(AnalysisFailure.PROVIDER_FAILURE, analyzer(provider).analyze(listOf(option), listOf(wish)))
-        assertEquals(2, provider.requests.size)
+        assertEquals(3, provider.requests.size)
     }
 
     @Test
@@ -348,7 +349,7 @@ class DefaultWishAnalyzerTests {
             }
             assertFailure(AnalysisFailure.TIMEOUT,
                 analyzer(provider, nanoTime = nanos::get).analyze(listOf(option), listOf(wish)))
-            assertEquals(if (expiredStage == AnalysisStage.CLASSIFY) 1 else 2, provider.requests.size)
+            assertEquals(if (expiredStage == AnalysisStage.CLASSIFY) 1 else 3, provider.requests.size)
         }
     }
 
@@ -439,7 +440,7 @@ class DefaultWishAnalyzerTests {
             success(mapper.writeValueAsString(root))
         }
         assertFailure(AnalysisFailure.INVALID_OUTPUT, analyzer(provider).analyze(options, wishes))
-        assertEquals(1, provider.requests.size)
+        assertEquals(3, provider.requests.size)
     }
 
     @Test
@@ -499,12 +500,12 @@ class DefaultWishAnalyzerTests {
             if (request.stage == AnalysisStage.CLASSIFY && !request.retry) success("{")
             else if (request.stage == AnalysisStage.CLASSIFY) success(classification(request)) else success(proposal())
         }
-        val analyzer = analyzer(provider, AnalysisProperties("test", dailyRunCap = 3), clock)
+        val analyzer = analyzer(provider, AnalysisProperties("test", dailyRunCap = 5), clock)
         assertIs<AnalysisResult.Success>(analyzer.analyze(listOf(option), listOf(wish)))
         assertFailure(AnalysisFailure.RUN_LIMIT_REACHED, analyzer.analyze(listOf(option), listOf(wish)))
         clock.time = now.plusSeconds(86400)
         assertIs<AnalysisResult.Success>(analyzer.analyze(listOf(option), listOf(wish)))
-        assertEquals(6, provider.requests.size)
+        assertEquals(10, provider.requests.size)
     }
 
     @Test

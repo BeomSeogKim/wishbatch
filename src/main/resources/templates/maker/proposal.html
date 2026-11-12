@@ -51,6 +51,15 @@
         <p>Run analysis to compare these wishes with your feasible options.</p>
     </div>
     <th:block th:if="${stored != null}">
+        <section class="notice notice-info" aria-label="Second reading">
+            <th:block th:if="${secondReading != null}">
+                <p><strong>Two readings · agreement <span th:text="${agreementRate}">0%</span></strong>
+                    (<span th:text="${secondReading.agreedWishCount}">0</span> of <span th:text="${secondReading.comparedWishCount}">0</span> wishes).</p>
+                <p>Agreement means both readings matched on request type and every option verdict. Disagreements need your eyes and stay in Depends until you decide.</p>
+                <p th:unless="${secondReading.batchCompositionChanged}">Only one wish was available. Both readings used the same context.</p>
+            </th:block>
+            <p th:if="${secondReading == null}">No second reading is recorded for this result. Re-run analysis to compare two readings and see an agreement rate.</p>
+        </section>
         <section th:if="${proposedOption != null}" class="proposal-hero" aria-labelledby="proposed-option">
             <p class="eyebrow">Proposed batch · for your review</p>
             <h2 id="proposed-option" th:text="${proposedOption.name}">Postcard set</h2>
@@ -89,7 +98,7 @@
         <form id="analysis-form" method="post" th:action="@{/w/{token}/maker/proposal(token=${token})}">
             <button id="analysis-submit" class="button button-secondary" type="submit" th:disabled="${!hasVisibleWishes}"
                     th:text="${stored == null ? 'Run analysis' : 'Re-run analysis'}">Re-run analysis</button>
-            <p class="field-help">A live analysis usually takes about thirty seconds. The current result stays here while you wait.</p>
+            <p class="field-help">Two readings and a proposal share a sixty-second time limit. The current result stays here while you wait.</p>
             <p id="analysis-working" class="notice notice-info" role="status" aria-live="polite" hidden>Reading wishes and checking evidence… Please keep this page open.</p>
         </form>
     </div>
@@ -151,6 +160,11 @@
                 </details>
             </section>
             <div th:replace="~{maker/proposal-fragments :: wishGroup('not-a-request', 'Not a request', 'These wishes do not express a product request and do not count toward interest.', ${nonRequestWishes})}"></div>
+        </section>
+        <section th:if="${proposedOption == null}" class="preview-section" aria-labelledby="review-wishes">
+            <h2 id="review-wishes">Review each wish.</h2>
+            <p>You can decide whether a wish is Compatible or Not served for any option.</p>
+            <div th:replace="~{maker/proposal-fragments :: wishList(${allWishes})}"></div>
         </section>
         <section class="preview-section proposal-meta" aria-labelledby="run-details">
             <div class="section-heading"><h2 id="run-details">About this analysis.</h2></div>

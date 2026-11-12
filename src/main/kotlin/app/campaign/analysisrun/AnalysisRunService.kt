@@ -9,6 +9,9 @@ import app.campaign.port.AnalysisOutput
 import app.campaign.port.AnalysisResult
 import app.campaign.port.AnalysisValidationFlag
 import app.campaign.port.WishAnalyzer
+import app.campaign.review.WishReviewOverride
+import app.campaign.review.WishReviewService
+import app.campaign.review.reviewedAnalysis
 import app.campaign.rules.analysisInputHash
 import app.campaign.workspace.WorkspaceNotFoundException
 import jakarta.persistence.EntityManager
@@ -23,6 +26,8 @@ data class StoredAnalysisRun(
     val output: AnalysisOutput,
     val flags: List<AnalysisValidationFlag>,
     val newWishCount: Int,
+    val originalOutput: AnalysisOutput = output,
+    val overrides: List<WishReviewOverride> = emptyList(),
 )
 
 sealed interface AnalysisRunResult {
@@ -41,6 +46,7 @@ class AnalysisRunService(
     private val analyzer: WishAnalyzer,
     private val mapper: JsonMapper,
     private val seed: StoredSeedAnalysis,
+    private val reviews: WishReviewService,
 ) {
     fun latest(token: String): StoredAnalysisRun? {
         val workspace = workspace(token)
@@ -117,11 +123,14 @@ class AnalysisRunService(
         val output = mapper.readValue(run.resultJson, AnalysisOutput::class.java)
         val included = output.wishes.map { it.wishId }.toSet()
         val since = if (run.isSeed) workspace.createdAt else run.createdAt
+        val overrides = reviews.history(workspace.id, run.id)
         return StoredAnalysisRun(
             run = run,
-            output = output,
+            output = reviewedAnalysis(output, overrides),
             flags = run.validationFlags.map { mapper.readValue(it, AnalysisValidationFlag::class.java) },
             newWishCount = wishes(workspace).count { !it.hidden && it.id !in included && !it.createdAt.isBefore(since) },
+            originalOutput = output,
+            overrides = overrides,
         )
     }
 

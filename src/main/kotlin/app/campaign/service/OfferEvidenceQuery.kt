@@ -3,6 +3,8 @@ package app.campaign.service
 import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.WishKind
 import app.campaign.port.AnalysisOutput
+import app.campaign.review.WishReviewService
+import app.campaign.review.reviewedAnalysis
 import app.campaign.rules.optionWishCounts
 import app.campaign.store.AnalysisRunRepository
 import app.campaign.store.OfferRepository
@@ -22,11 +24,13 @@ class OfferEvidenceQuery(
     private val runs: AnalysisRunRepository,
     private val wishes: WishRepository,
     private val mapper: JsonMapper,
+    private val reviews: WishReviewService,
 ) {
     fun findByOffer(workspaceId: UUID, offerId: UUID): OfferEvidence? {
         val offer = offers.findByIdAndWorkspaceId(offerId, workspaceId) ?: return null
         val run = runs.findByIdAndWorkspaceId(offer.analysisRunId, workspaceId) ?: return null
-        val output = mapper.readValue(run.resultJson, AnalysisOutput::class.java)
+        val original = mapper.readValue(run.resultJson, AnalysisOutput::class.java)
+        val output = reviewedAnalysis(original, reviews.history(workspaceId, run.id))
         val proposal = output.proposal?.takeIf { it.optionId == offer.optionId } ?: return null
         val count = optionWishCounts(output).singleOrNull { it.optionId == offer.optionId } ?: return null
         val requests = output.wishes.filter { it.kind == WishKind.REQUEST }.map { it.wishId }.toSet()

@@ -4,6 +4,8 @@
 <article th:fragment="wish(row)" class="card proposal-wish" th:id="'wish-' + ${row.wish.id}" tabindex="-1">
     <p class="eyebrow" th:text="${row.wish.displayName ?: 'Anonymous fan'}">Fan</p>
     <blockquote><p th:text="${row.wish.text}">The full source wish.</p></blockquote>
+    <p th:if="${row.needsYourEyes}" class="notice notice-info"><strong>Needs your eyes</strong> · The readings disagree. Disagreements stay in Depends for the affected option until you decide.</p>
+    <p th:each="reading : ${row.readingLabels}" class="muted" th:text="${reading}">First reading: Compatible</p>
     <p><strong th:text="${row.reason}">Reason for this verdict.</strong></p>
     <p th:if="${row.wish.hidden}" class="muted">Hidden since this analysis.</p>
     <ul class="proposal-needs" th:unless="${row.needs.isEmpty()}">
@@ -14,6 +16,34 @@
         </li>
     </ul>
     <p th:if="${row.needs.isEmpty()}" class="muted">No grounded purchase needs were extracted.</p>
+    <p th:each="decision : ${row.decisions}" class="muted">
+        <strong>Maker override</strong> · <span th:text="${options[decision.optionId].name}">Option</span>:
+        <span th:text="${decision.verdict.name() == 'COMPATIBLE' ? 'Compatible' : 'Not served'}">Compatible</span>.
+        <span th:text="${decision.reason}">Reason</span>
+        <time th:datetime="${decision.createdAt}" th:text="${@makerDisplay.time(decision.createdAt)}">Time</time>
+    </p>
+    <div class="proposal-review">
+        <h4>Review this wish</h4>
+        <form method="post" th:action="@{/w/{token}/maker/proposal/review(token=${token})}">
+            <input type="hidden" name="run" th:value="${stored.run.id}">
+            <input type="hidden" name="wish" th:value="${row.wish.id}">
+            <label th:for="'review-option-' + ${row.wish.id}">Option</label>
+            <select name="option" th:id="'review-option-' + ${row.wish.id}">
+                <option th:each="entry : ${options}" th:value="${entry.key}" th:text="${entry.value.name}"
+                        th:selected="${proposedOption != null && entry.key == proposedOption.id}">Option</option>
+            </select>
+            <label th:for="'review-verdict-' + ${row.wish.id}">Your decision</label>
+            <select name="verdict" required th:id="'review-verdict-' + ${row.wish.id}">
+                <option value="" disabled selected>Choose a decision</option>
+                <option value="COMPATIBLE">Compatible</option>
+                <option value="INCOMPATIBLE">Not served</option>
+            </select>
+            <label th:for="'review-reason-' + ${row.wish.id}">Reason for your decision</label>
+            <input name="reason" type="text" required maxlength="500" th:id="'review-reason-' + ${row.wish.id}">
+            <button class="button button-secondary" type="submit">Save decision</button>
+            <p class="field-help">Your decision updates review counts for this option. The original analysis and earlier decisions stay saved.</p>
+        </form>
+    </div>
 </article>
 <section th:fragment="wishGroup(groupId, title, explanation, rows)" class="proposal-group" th:id="${groupId}">
     <h3><span th:text="${title}">Compatible</span> <span class="badge badge-neutral" th:text="${rows.size()}">0</span></h3>

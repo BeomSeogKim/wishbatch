@@ -221,7 +221,7 @@ class ProposalControllerTests(
         assertContains(html, "datetime=\"2090-01-01T00:00:00Z\"")
         assertFalse(html.contains("Stored synthetic reference"))
         assertContains(html, "Reading wishes and checking evidence")
-        assertContains(html, "about thirty seconds")
+        assertContains(html, "sixty-second time limit")
         assertContains(html, "addEventListener('submit'")
         assertContains(html, "setAttribute('aria-busy', 'true')")
         assertContains(html, "document.getElementById('analysis-submit').disabled = true")
