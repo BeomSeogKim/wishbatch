@@ -381,6 +381,25 @@ class FanPaymentControllerTests @Autowired constructor(
     }
 
     @Test
+    fun `capacity warning distinguishes full offer from a smaller available quantity`() {
+        val full = fixture(capacity = 3)
+        val fullHold = pledge(full, PledgeState.AUTHORIZED, 3)
+        scriptHoldRead(fullHold)
+        val fullHtml = mvc.get("${full.path}/offer").andReturn().response.contentAsString
+        assertContains(fullHtml, "This offer is full and is not available for more pledges.")
+        assertFalse(fullHtml.contains("Try a smaller quantity."))
+        assertFalse(fullHtml.contains("id=\"paypal-button-container\""))
+
+        val limited = fixture(capacity = 3)
+        val limitedHold = pledge(limited, PledgeState.AUTHORIZED, 2)
+        scriptHoldRead(limitedHold)
+        val limitedHtml = mvc.get("${limited.path}/offer") { param("quantity", "2") }
+            .andReturn().response.contentAsString
+        assertContains(limitedHtml, "There is not enough capacity for this quantity. Try a smaller quantity.")
+        assertFalse(limitedHtml.contains("id=\"paypal-button-container\""))
+    }
+
+    @Test
     fun `missing PayPal credentials keep the offer readable and checkout unavailable`() {
         val fixture = fixture()
         for (clientId in listOf("", "synthetic-client")) {

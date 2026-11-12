@@ -297,6 +297,9 @@ class MakerMoneyControllerTests @Autowired constructor(
             "2026-01-01T12:15:00Z", "Needs attention", "Campaign and payment timeline", "disabled=\"disabled\"",
             "Open fan offer page (new tab)", "Open public result (new tab)").forEach { assertContains(html, it) }
         assertContains(html, "Jan 1, 2026 at 00:15:00 UTC")
+        assertContains(html, "data-live-field=\"timeLeft\"")
+        assertContains(html, "data-live-field=\"deadlineLabel\"")
+        assertContains(html, "View campaign counts and recorded history")
         assertFalse(Regex(">\\s*2026-01-01T").containsMatchIn(html))
         assertFalse(html.contains(">DRAFT<"))
         assertFalse(html.contains("Simulate next capture failure"))
@@ -406,6 +409,13 @@ class MakerMoneyControllerTests @Autowired constructor(
         listOf("Not funded", "Cancelled by maker", "Hold released by PayPal", "2 units with released holds",
             "auth-cancel", "USD 0.00").forEach { assertContains(html, it) }
         assertFalse(html.contains("Confirm production"))
+        val dashboard = page(fixture.workspace.token, "campaign")
+        assertContains(dashboard, "Scheduled close")
+        assertContains(dashboard, "Confirmation deadline")
+        assertTrue(Regex("<p hidden=\"hidden\">Time left:[\\s\\S]*?in the pledge window[\\s\\S]*?</p>").containsMatchIn(dashboard))
+        assertContains(dashboard, "<p hidden=\"hidden\">Time left:")
+        assertContains(dashboard, "data-live-field=\"timeLeft\"")
+        assertContains(dashboard, "View campaign counts and recorded history")
     }
 
     @Test
@@ -456,7 +466,10 @@ class MakerMoneyControllerTests @Autowired constructor(
         val below = fixture()
         publish(below)
         clock.current = clock.current.plusSeconds(901)
-        assertContains(page(below.workspace.token, "campaign"), "Not funded")
+        val closed = page(below.workspace.token, "campaign")
+        assertContains(closed, "Not funded")
+        assertContains(closed, "Scheduled close")
+        assertContains(closed, "<p hidden=\"hidden\">Time left:")
         assertContains(page(below.workspace.token, "result"), "Threshold not met")
         val ready = fixture()
         publish(ready)

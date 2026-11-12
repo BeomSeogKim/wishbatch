@@ -52,16 +52,16 @@
                     </div>
                     <div class="card">
                         <h2>Real deadlines</h2>
-                        <p>Time left: <strong data-live-field="timeLeft" th:text="${campaign.timeLeft.toHours() + 'h ' + campaign.timeLeft.toMinutesPart() + 'm ' + campaign.timeLeft.toSecondsPart() + 's'}">
+                        <p th:hidden="${terminal}">Time left: <strong data-live-field="timeLeft" th:text="${campaign.timeLeft.toHours() + 'h ' + campaign.timeLeft.toMinutesPart() + 'm ' + campaign.timeLeft.toSecondsPart() + 's'}">
                             </strong> <span data-live-field="deadlineLabel" th:text="${campaign.state.name() == 'AWAITING_CONFIRMATION' ? 'to confirm production' : 'in the pledge window'}">
                             </span>.</p>
                         <p>Opened: <time th:datetime="${campaign.openedAt}" th:text="${@makerDisplay.time(campaign.openedAt)}">
                             </time>
                         </p>
-                        <p>Closes: <time data-live-field="closesAt" th:datetime="${campaign.closesAt}" th:text="${@makerDisplay.time(campaign.closesAt)}">
+                        <p><span th:text="${terminal ? 'Scheduled close' : 'Closes'}">Closes</span>: <time data-live-field="closesAt" th:datetime="${campaign.closesAt}" th:text="${@makerDisplay.time(campaign.closesAt)}">
                             </time>
                         </p>
-                        <p>Confirm by: <time data-live-field="confirmDeadline" th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}">
+                        <p><span th:text="${terminal ? 'Confirmation deadline' : 'Confirm by'}">Confirm by</span>: <time data-live-field="confirmDeadline" th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}">
                             </time>
                         </p>
                         <p>Times are UTC. <a th:href="@{/w/{token}/maker/campaign(token=${token})}">Refresh current state</a>

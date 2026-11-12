@@ -55,7 +55,11 @@ class OfferController(
                 } else {
                     model.addAttribute("quoteError", when (result.value.decision) {
                         CapacityDecision.INVALID_QUANTITY -> "Choose a quantity within this offer's limit."
-                        else -> "There is not enough capacity for this quantity. Try a smaller quantity."
+                        else -> if (campaign?.capacityLeft == 0L) {
+                            "This offer is full and is not available for more pledges."
+                        } else {
+                            "There is not enough capacity for this quantity. Try a smaller quantity."
+                        }
                     })
                 }
             }
