@@ -5,10 +5,14 @@ import app.campaign.model.Option
 import app.campaign.model.Wish
 import app.campaign.model.Workspace
 import app.campaign.port.AnalysisFailure
+import app.campaign.port.AnalysisObserver
 import app.campaign.port.AnalysisOutput
 import app.campaign.port.AnalysisResult
 import app.campaign.port.AnalysisValidationFlag
 import app.campaign.port.WishAnalyzer
+import app.campaign.progress.AnalysisProgressStore
+import app.campaign.progress.AnalysisProgressView
+import app.campaign.progress.AnalysisWork
 import app.campaign.provenance.DecisionRecordService
 import app.campaign.review.WishReviewOverride
 import app.campaign.review.WishReviewService
@@ -18,9 +22,13 @@ import app.campaign.workspace.WorkspaceNotFoundException
 import jakarta.persistence.EntityManager
 import jakarta.persistence.LockModeType
 import org.springframework.stereotype.Service
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import tools.jackson.databind.json.JsonMapper
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 
 data class StoredAnalysisRun(
     val run: AnalysisRun,
@@ -40,8 +48,13 @@ sealed interface AnalysisRunResult {
     data object NoVisibleWishes : AnalysisRunResult
 }
 
+sealed interface AnalysisPreparation {
+    data class Ready(val work: AnalysisWork, val job: AnalysisProgressView) : AnalysisPreparation
+    data class Existing(val job: AnalysisProgressView) : AnalysisPreparation
+    data class Rejected(val result: AnalysisRunResult) : AnalysisPreparation
+}
+
 @Service
-@Transactional(readOnly = true)
 class AnalysisRunService(
     private val entityManager: EntityManager,
     private val analyzer: WishAnalyzer,
@@ -49,7 +62,12 @@ class AnalysisRunService(
     private val seed: StoredSeedAnalysis,
     private val reviews: WishReviewService,
     private val records: DecisionRecordService,
+    private val progress: AnalysisProgressStore,
+    manager: PlatformTransactionManager,
 ) {
+    private val transaction = TransactionTemplate(manager)
+
+    @Transactional(readOnly = true)
     fun latest(token: String): StoredAnalysisRun? {
         val workspace = workspace(token)
         val run = entityManager.createQuery(
@@ -60,6 +78,7 @@ class AnalysisRunService(
         return decode(workspace, run)
     }
 
+    @Transactional(readOnly = true)
     fun find(token: String, id: UUID): StoredAnalysisRun? {
         val workspace = workspace(token)
         val run = entityManager.createQuery(
@@ -69,41 +88,83 @@ class AnalysisRunService(
         return decode(workspace, run)
     }
 
+    @Transactional(readOnly = true)
     fun liveRunCount(token: String): Long = liveRunCount(workspace(token))
 
-    @Transactional
-    fun run(token: String): AnalysisRunResult {
-        // Intake uses this same lock, keeping the snapshot and quota stable during the call.
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    fun run(token: String): AnalysisRunResult = when (val prepared = prepare(token)) {
+        is AnalysisPreparation.Ready -> execute(prepared.work)
+        is AnalysisPreparation.Existing -> AnalysisRunResult.Failed(AnalysisFailure.RUN_LIMIT_REACHED)
+        is AnalysisPreparation.Rejected -> prepared.result
+    }
+
+    fun prepare(token: String): AnalysisPreparation = requireNotNull(transaction.execute {
         val workspace = workspace(token, lock = true)
-        if (liveRunCount(workspace) >= 10) return AnalysisRunResult.Failed(AnalysisFailure.RUN_LIMIT_REACHED)
+        progress.active(workspace.id)?.let { return@execute AnalysisPreparation.Existing(progress.view(it)) }
+        if (liveRunCount(workspace) >= 10) {
+            return@execute AnalysisPreparation.Rejected(AnalysisRunResult.Failed(AnalysisFailure.RUN_LIMIT_REACHED))
+        }
         val wishes = wishes(workspace).filterNot { it.hidden }
-        if (wishes.isEmpty()) return AnalysisRunResult.NoVisibleWishes
+        if (wishes.isEmpty()) return@execute AnalysisPreparation.Rejected(AnalysisRunResult.NoVisibleWishes)
         val options = entityManager.createQuery(
             "select o from Option o where o.workspaceId = :workspaceId order by o.name", Option::class.java,
         ).setParameter("workspaceId", workspace.id).resultList
-        val result = analyzer.analyze(options, wishes)
-        if (result !is AnalysisResult.Failure ||
-            result.reason !in setOf(AnalysisFailure.NOT_CONFIGURED, AnalysisFailure.RUN_LIMIT_REACHED)
-        ) {
-            val quota = entityManager.find(AnalysisRunQuota::class.java, workspace.id)
-                ?: AnalysisRunQuota(workspace.id).also(entityManager::persist)
-            quota.liveRuns++
+        val quota = entityManager.find(AnalysisRunQuota::class.java, workspace.id)
+            ?: AnalysisRunQuota(workspace.id).also(entityManager::persist)
+        // Reserve before releasing the workspace lock, including jobs waiting in the bounded queue.
+        quota.liveRuns++
+        val job = progress.create(workspace.id, analysisInputHash(options, wishes), wishes.map { it.id })
+        AnalysisPreparation.Ready(AnalysisWork(job.id, workspace.id, options, wishes), progress.view(job))
+    })
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    fun execute(work: AnalysisWork): AnalysisRunResult {
+        if (!progress.begin(work)) return AnalysisRunResult.Failed(AnalysisFailure.PROVIDER_FAILURE)
+        val incomplete = AtomicBoolean()
+        val result = try {
+            analyzer.analyzeTracked(work.options, work.wishes, AnalysisObserver {
+                if (!progress.observe(work, it)) incomplete.set(true)
+            })
+        } catch (_: Exception) {
+            AnalysisResult.Failure(AnalysisFailure.PROVIDER_FAILURE)
         }
-        return when (result) {
-            is AnalysisResult.Failure -> AnalysisRunResult.Failed(result.reason, result.flags)
-            is AnalysisResult.Success -> {
-                val output = result.validated.output
-                if (result.inputHash != analysisInputHash(options, wishes) ||
-                    output.optionIds.toSet() != options.map { it.id }.toSet() ||
-                    output.wishes.map { it.wishId }.toSet() != wishes.map { it.id }.toSet()
-                ) {
-                    AnalysisRunResult.Failed(AnalysisFailure.INVALID_OUTPUT)
-                } else {
-                    AnalysisRunResult.Completed(decode(workspace, persist(workspace, result, wishes, isSeed = false)))
-                }
-            }
+        return try {
+            finish(work, result, incomplete.get())
+        } catch (_: Exception) {
+            // Failed persistence leaves the previous immutable analysis and provenance intact.
+            finish(work, AnalysisResult.Failure(AnalysisFailure.PROVIDER_FAILURE), incomplete.get())
         }
     }
+
+    fun abandon(work: AnalysisWork): AnalysisRunResult =
+        finish(work, AnalysisResult.Failure(AnalysisFailure.RUN_LIMIT_REACHED))
+
+    private fun finish(
+        work: AnalysisWork,
+        result: AnalysisResult,
+        checkpointIncomplete: Boolean = false,
+    ): AnalysisRunResult = requireNotNull(transaction.execute {
+        val workspace = entityManager.find(Workspace::class.java, work.workspaceId, LockModeType.PESSIMISTIC_WRITE)
+        val checked = if (result is AnalysisResult.Success &&
+            (result.inputHash != analysisInputHash(work.options, work.wishes) ||
+                result.validated.output.optionIds.toSet() != work.options.map { it.id }.toSet() ||
+                result.validated.output.wishes.map { it.wishId }.toSet() != work.wishes.map { it.id }.toSet())
+        ) AnalysisResult.Failure(AnalysisFailure.INVALID_OUTPUT) else result
+        if (checked is AnalysisResult.Failure &&
+            checked.reason in setOf(AnalysisFailure.NOT_CONFIGURED, AnalysisFailure.RUN_LIMIT_REACHED)
+        ) entityManager.find(AnalysisRunQuota::class.java, workspace.id).liveRuns--
+        when (checked) {
+            is AnalysisResult.Failure -> {
+                progress.finish(work, checked, checkpointIncomplete = checkpointIncomplete)
+                AnalysisRunResult.Failed(checked.reason, checked.flags)
+            }
+            is AnalysisResult.Success -> {
+                val saved = persist(workspace, checked, work.wishes, isSeed = false)
+                progress.finish(work, checked, saved.id, checkpointIncomplete)
+                AnalysisRunResult.Completed(decode(workspace, saved))
+            }
+        }
+    })
 
     @Transactional
     fun attachSeed(workspace: Workspace, options: List<Option>, wishes: List<Wish>) {
@@ -127,7 +188,7 @@ class AnalysisRunService(
     private fun decode(workspace: Workspace, run: AnalysisRun): StoredAnalysisRun {
         val output = mapper.readValue(run.resultJson, AnalysisOutput::class.java)
         val included = output.wishes.map { it.wishId }.toSet()
-        val since = if (run.isSeed) workspace.createdAt else run.createdAt
+        val since = if (run.isSeed) workspace.createdAt else progress.snapshotAt(workspace.id, run.id) ?: run.createdAt
         val overrides = reviews.history(workspace.id, run.id)
         return StoredAnalysisRun(
             run = run,

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Analysis progress', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <header class="page-heading">
+        <a th:href="@{/w/{token}/maker/proposal(token=${token})}">Back to proposal</a>
+        <h1>Analysis progress</h1>
+        <p class="lead">Follow completed reading batches and evidence checks.</p>
+        <p>Processed wishes are provisional and counted once across both readings. Compatible counts appear only after the merged result passes validation. These are stated wishes, never authorizations or paid units.</p>
+    </header>
+    <p th:if="${progressError != null}" role="alert" th:text="${progressError}"></p>
+    <section class="preview-section">
+        <form method="post" th:action="@{/w/{token}/maker/analysis-progress(token=${token})}">
+            <button id="analysis-progress-start" type="submit" class="button button-primary" th:disabled="${active}">Start live analysis</button>
+        </form>
+        <p>Your last valid analysis remains available if a new attempt fails or is interrupted.</p>
+        <p th:if="${job == null}">No live progress recorded yet.</p>
+    </section>
+    <section th:if="${job != null}" id="analysis-progress" class="preview-section"
+             th:attr="data-poll-url=@{/w/{token}/maker/analysis-progress/{id}(token=${token},id=${job.id})},data-status=${job.status},data-proposal-url=@{/w/{token}/maker/proposal(token=${token})}">
+        <h2>Recorded progress</h2>
+        <p id="progress-status" role="status" th:text="${job.status}">QUEUED</p>
+        <p><strong id="progress-processed" th:text="${job.processedWishes}">0</strong> of <strong th:text="${job.totalWishes}">0</strong> distinct wishes processed (provisional).</p>
+        <p><strong id="progress-batches" th:text="${job.completedBatches}">0</strong> reading batches completed.</p>
+        <p id="progress-feedback" role="status"></p>
+        <p id="progress-failure" th:attr="hidden=${job.status == 'FAILED' || job.status == 'INTERRUPTED' ? null : 'hidden'}">This attempt did not complete. Your last valid analysis is still available.</p>
+        <p><a th:href="@{/w/{token}/maker/analysis-progress(token=${token},job=${job.id})}">Refresh recorded progress</a></p>
+        <p id="progress-checkpoint-warning" th:attr="hidden=${job.checkpointIncomplete ? null : 'hidden'}">Some progress checkpoints could not be recorded. Recorded validation counts may be incomplete. Your last valid analysis remains available.</p>
+        <h3>Validation actions</h3>
+        <p>Counts record actual validator flags, including rejected attempts. V2 records ungrounded evidence removed; a flag does not count a fan or payment.</p>
+        <ul id="progress-validation"><li th:each="entry : ${job.validationCounts}" th:text="${entry.key + ': ' + entry.value}"></li></ul>
+        <h3>Checkpoint history</h3>
+        <ol id="progress-events">
+            <li th:each="event : ${job.events}"><span th:text="${event.sequence + '. ' + event.stage}"></span><span th:if="${event.reading != null}" th:text="${' · reading ' + event.reading}"></span><span th:if="${event.batch != null}" th:text="${' · batch ' + event.batch + '/' + event.totalBatches}"></span><span th:text="${' · ' + event.processedWishes + ' distinct wishes processed'}"></span><span th:each="entry : ${event.validationCounts}" th:text="${' · ' + entry.key + ': ' + entry.value}"></span></li>
+        </ol>
+        <section id="progress-final" th:attr="hidden=${job.status == 'COMPLETED' ? null : 'hidden'}">
+            <h3>Validated merged counts</h3>
+            <div class="table-scroll"><table>
+                <caption>Distinct wishes per option from the final validated result.</caption>
+                <thead><tr><th scope="col">Option</th><th scope="col">Compatible</th><th scope="col">Depends</th><th scope="col">Not served</th><th scope="col">Not a request</th></tr></thead>
+                <tbody><tr th:each="option : ${options}" th:attr="data-option-id=${option.id}" th:with="counts=${finalCounts[option.id]}"><th scope="row" th:text="${option.name}"></th><td data-count="compatible" th:text="${counts?.compatible}"></td><td data-count="depends" th:text="${counts?.depends}"></td><td data-count="notServed" th:text="${counts?.notServed}"></td><td data-count="notARequest" th:text="${counts?.notARequest}"></td></tr></tbody>
+            </table></div>
+            <a id="progress-review" th:attr="hidden=${job.runId != null ? null : 'hidden'}" th:href="@{/w/{token}/maker/proposal(token=${token},run=${job.runId})}">Review this analysis</a>
+        </section>
+        <details><summary>Input snapshot</summary><p>Input hash: <code th:text="${job.inputHash}"></code></p><p th:text="${job.sourceWishIds.size() + ' source wishes in this snapshot.'}"></p></details>
+        <script defer th:src="@{/js/analysis-progress.js}"></script>
+    </section>
+</main>
+</body>
+</html>

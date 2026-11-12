@@ -196,6 +196,26 @@ class WebSecurityFilterTests {
     }
 
     @Test
+    fun `progress start requires CSRF and shares the existing analysis rate bucket`() {
+        val filter = WebSecurityFilter()
+        val session = session(filter)
+        val progress = "/w/example/maker/analysis-progress"
+        assertEquals(403, dispatch(filter, request("POST", progress)).response.status)
+        assertEquals(403, dispatch(filter, authorized("POST", progress, session).apply {
+            addHeader("Sec-Fetch-Site", "cross-site")
+        }).response.status)
+        assertTrue(dispatch(filter, authorized("POST", progress, session)).called)
+        assertTrue(dispatch(filter, authorized("POST", "/w/example/maker/proposal", session)).called)
+        assertTrue(dispatch(filter, authorized("POST", progress, session)).called)
+        val limited = dispatch(filter, authorized("POST", progress, session))
+        assertEquals(429, limited.response.status)
+        assertEquals("60", limited.response.getHeader("Retry-After"))
+        assertEquals(429, dispatch(filter, authorized("POST", "/w/example/maker/proposal", session)).response.status)
+        assertTrue(dispatch(filter, request("GET", "$progress/job")).called)
+        assertTrue(dispatch(filter, authorized("POST", "$progress/other", session)).called)
+    }
+
+    @Test
     fun `session CSRF tokens contain 256 random bits remain stable and differ across sessions`() {
         val filter = WebSecurityFilter()
         val first = session(filter)

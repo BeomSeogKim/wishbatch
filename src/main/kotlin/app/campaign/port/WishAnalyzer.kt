@@ -127,6 +127,20 @@ sealed interface AnalysisResult {
     data class Failure(val reason: AnalysisFailure, val flags: List<AnalysisValidationFlag> = emptyList()) : AnalysisResult
 }
 
+/** Events describe completed work; repeated readings can contain the same wish IDs. */
+data class AnalysisProgressEvent(
+    val stage: String,
+    val reading: Int? = null,
+    val batch: Int? = null,
+    val totalBatches: Int? = null,
+    val processedWishIds: List<UUID> = emptyList(),
+    val flags: List<AnalysisValidationFlag> = emptyList(),
+)
+
+fun interface AnalysisObserver {
+    fun onProgress(event: AnalysisProgressEvent)
+}
+
 /**
  * Callers select the wishes to include before analysis. Read only the fields covered by
  * app.campaign.rules.analysisInputHash; callers and implementations use that shared function.
@@ -139,6 +153,10 @@ sealed interface AnalysisResult {
  */
 fun interface WishAnalyzer {
     fun analyze(options: List<Option>, wishes: List<Wish>): AnalysisResult
+
+    /** Existing adapters can analyze without reporting intermediate work. */
+    fun analyzeTracked(options: List<Option>, wishes: List<Wish>, observer: AnalysisObserver): AnalysisResult =
+        analyze(options, wishes)
 
     /** Classify one wish without proposing a batch; at most one call within fifteen seconds. */
     fun classify(option: Option, wish: Wish): AnalysisResult = AnalysisResult.Failure(AnalysisFailure.NOT_CONFIGURED)

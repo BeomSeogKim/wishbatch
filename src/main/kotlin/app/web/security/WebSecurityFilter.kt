@@ -13,7 +13,7 @@ class WebSecurityFilter : OncePerRequestFilter() {
     private val random = SecureRandom()
     private val demos = RequestRateLimiter(5, Duration.ofMinutes(10))
     private val analyses = RequestRateLimiter(3, Duration.ofMinutes(1))
-    private val analysisPath = Regex("/w/[^/]+/maker/proposal")
+    private val analysisPath = Regex("/w/[^/]+/maker/(proposal|analysis-progress)")
 
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
         response.setHeader("X-Content-Type-Options", "nosniff")

@@ -4,6 +4,8 @@ import app.campaign.model.Option
 import app.campaign.model.Wish
 import app.campaign.port.AnalysisFailure
 import app.campaign.port.AnalysisOutput
+import app.campaign.port.AnalysisObserver
+import app.campaign.port.AnalysisProgressEvent
 import app.campaign.port.AnalysisResult
 import app.campaign.port.AnalysisValidationFlag
 import app.campaign.port.AnalysisValidationResult
@@ -78,7 +80,18 @@ class DefaultWishAnalyzer(
         }
     }
 
-    override fun analyze(options: List<Option>, wishes: List<Wish>): AnalysisResult {
+    override fun analyze(options: List<Option>, wishes: List<Wish>): AnalysisResult =
+        analyzeTracked(options, wishes, AnalysisObserver {})
+
+    override fun analyzeTracked(options: List<Option>, wishes: List<Wish>, observer: AnalysisObserver): AnalysisResult {
+        val progressLock = Any()
+        fun report(event: AnalysisProgressEvent) = synchronized(progressLock) {
+            try {
+                observer.onProgress(event)
+            } catch (_: Exception) {
+                // A progress checkpoint must not discard a valid analysis or trigger extra calls.
+            }
+        }
         val started = nanoTime()
         fun remaining() = Duration.ofNanos(Duration.ofSeconds(60).toNanos() - (nanoTime() - started))
         if (properties.apiKey.isBlank()) return AnalysisResult.Failure(AnalysisFailure.NOT_CONFIGURED)
@@ -97,11 +110,16 @@ class DefaultWishAnalyzer(
         try {
             val readings = mutableListOf<AnalysisOutput>()
             var batchFailure = AnalysisFailure.INVALID_OUTPUT
-            for (batches in listOf(wishes.chunked(properties.batchSize), secondReadingBatches(wishes))) {
-                val tasks = batches.map { batch ->
+            for ((reading, batches) in listOf(wishes.chunked(properties.batchSize), secondReadingBatches(wishes)).withIndex()) {
+                val tasks = batches.mapIndexed { index, batch ->
                     executor.submit<StageResult> {
-                        generate(AnalysisRequest(AnalysisPrompt.input(mapper, options, batch),
-                            AnalysisStages.schema(options, AnalysisStage.CLASSIFY), false), options, batch, ::remaining)
+                        val result = generate(AnalysisRequest(AnalysisPrompt.input(mapper, options, batch),
+                            AnalysisStages.schema(options, AnalysisStage.CLASSIFY), false), options, batch, ::remaining,
+                            onValidation = { validationFlags -> report(AnalysisProgressEvent("CLASSIFY_VALIDATED",
+                                reading + 1, index + 1, batches.size, flags = validationFlags)) })
+                        report(AnalysisProgressEvent("BATCH_COMPLETED", reading + 1, index + 1, batches.size,
+                            processedWishIds = result.output?.wishes.orEmpty().map { it.wishId }))
+                        result
                     }.also { futures += it }
                 }
                 val outputs = mutableListOf<AnalysisOutput>()
@@ -113,7 +131,9 @@ class DefaultWishAnalyzer(
                     if (result.output == null) batchFailure = result.failure else outputs += result.output
                 }
                 if (outputs.isEmpty()) {
-                    flags += wishes.map { unanalyzed(it) }
+                    val missing = wishes.map { unanalyzed(it) }
+                    flags += missing
+                    report(AnalysisProgressEvent("READING_FAILED", reading + 1, flags = missing))
                     return AnalysisResult.Failure(batchFailure, flags.distinct())
                 }
                 readings += AnalysisOutput(
@@ -124,14 +144,18 @@ class DefaultWishAnalyzer(
             val merged = SecondReadingMerger.merge(options, wishes, readings[0], readings[1])
             val analyzedIds = merged.wishes.map { it.wishId }.toSet()
             val analyzedWishes = wishes.filter { it.id in analyzedIds }
-            flags += wishes.filter { it.id !in analyzedIds }.map { unanalyzed(it) }
+            val missing = wishes.filter { it.id !in analyzedIds }.map { unanalyzed(it) }
+            flags += missing
+            report(AnalysisProgressEvent("READINGS_MERGED", processedWishIds = analyzedIds.toList(), flags = missing))
             if (analyzedWishes.isEmpty()) return AnalysisResult.Failure(batchFailure, flags.distinct())
             val proposalInput = AnalysisStages.proposalInput(mapper, options, merged)
             if (proposalInput.length > 160000) return AnalysisResult.Failure(AnalysisFailure.INVALID_OUTPUT, flags)
+            report(AnalysisProgressEvent("PROPOSAL_STARTED"))
             val proposalTask = executor.submit<StageResult> { generate(AnalysisRequest(
                 proposalInput,
                 AnalysisStages.schema(options, AnalysisStage.PROPOSE), false, AnalysisStage.PROPOSE, 2048,
-            ), options, analyzedWishes, ::remaining, merged) }
+            ), options, analyzedWishes, ::remaining, merged,
+                onValidation = { validationFlags -> report(AnalysisProgressEvent("PROPOSAL_VALIDATED", flags = validationFlags)) }) }
             futures += proposalTask
             val proposalBudget = remaining().toNanos()
             if (proposalBudget <= 0) return AnalysisResult.Failure(AnalysisFailure.TIMEOUT, flags)
@@ -187,6 +211,7 @@ class DefaultWishAnalyzer(
         remaining: () -> Duration,
         classified: AnalysisOutput? = null,
         attempts: Int = 2,
+        onValidation: (List<AnalysisValidationFlag>) -> Unit = {},
     ): StageResult {
         val flags = mutableListOf<AnalysisValidationFlag>()
         var failure = AnalysisFailure.INVALID_OUTPUT
@@ -228,6 +253,7 @@ class DefaultWishAnalyzer(
                         failure = AnalysisFailure.INVALID_JSON
                         null
                     }
+                    if (validated != null) onValidation(validated.flags)
                     if (remaining().toNanos() <= 0) return StageResult(failure = AnalysisFailure.TIMEOUT, flags = flags)
                     when (validated) {
                         is AnalysisValidationResult.Accepted -> return StageResult(validated.output, result.model,

@@ -37,6 +37,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
 import java.time.Instant
@@ -145,6 +146,7 @@ class ProposalControllerTests(
     }
 
     @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun `all typed failures redirect and retain the previous evidence`() {
         val token = workspaces.create().token
         val original = assertNotNull(runs.latest(token))
@@ -187,6 +189,7 @@ class ProposalControllerTests(
     }
 
     @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun `new wish notice and no visible wishes state are explicit`() {
         val token = workspaces.create().token
         assertContains(page(token), "<strong>0</strong> visible wishes added")
@@ -204,6 +207,7 @@ class ProposalControllerTests(
     }
 
     @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun `live success posts redirects and exposes a clear waiting state`() {
         val token = workspaces.create().token
         val original = assertNotNull(runs.latest(token))

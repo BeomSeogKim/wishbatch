@@ -5,8 +5,11 @@ import app.campaign.model.Wish
 import app.campaign.model.WishKind
 import app.campaign.model.WishSource
 import app.campaign.port.AnalysisFailure
+import app.campaign.port.AnalysisObserver
+import app.campaign.port.AnalysisProgressEvent
 import app.campaign.port.AnalysisResult
 import app.campaign.port.AnalysisValidationRule
+import app.campaign.port.WishAnalyzer
 import app.campaign.rules.analysisInputHash
 import app.campaign.rules.optionWishCounts
 import org.junit.jupiter.api.Test
@@ -37,6 +40,90 @@ class DefaultWishAnalyzerTests {
     private val workspaceId = UUID(0, 1)
     private val option = Option(workspaceId, "Cards", "postcard", emptyMap(), emptyMap(), 100, "USD", 5, 20, "Two weeks", "US")
     private val wish = Wish(workspaceId, "I want cards under 12.34 dollars", WishSource.ONSITE, createdAt = now)
+
+    @Test
+    fun `tracked default preserves existing fake behavior without inventing progress`() {
+        val failure = AnalysisResult.Failure(AnalysisFailure.NOT_CONFIGURED)
+        val fake = WishAnalyzer { _, _ -> failure }
+        val events = mutableListOf<AnalysisProgressEvent>()
+        assertEquals(failure, fake.analyzeTracked(listOf(option), listOf(wish), AnalysisObserver(events::add)))
+        assertTrue(events.isEmpty())
+    }
+
+    @Test
+    fun `completed batch progress is observable before an earlier batch finishes`() {
+        val firstEntered = CountDownLatch(1)
+        val releaseFirst = CountDownLatch(1)
+        val secondCompleted = CountDownLatch(1)
+        val second = Wish(workspaceId, "More cards", WishSource.ONSITE, createdAt = now)
+        val events = CopyOnWriteArrayList<AnalysisProgressEvent>()
+        val provider = RecordingProvider { request, _ ->
+            if (request.stage == AnalysisStage.CLASSIFY) {
+                val ids = mapper.readTree(request.input)["wishes"].toList().map { it["wish_id"].asString() }
+                if (ids == listOf(wish.id.toString())) {
+                    firstEntered.countDown()
+                    check(releaseFirst.await(5, TimeUnit.SECONDS))
+                }
+                success(classification(request))
+            } else success(proposal())
+        }
+        val observer = AnalysisObserver { event ->
+            events += event
+            if (event.stage == "BATCH_COMPLETED" && event.reading == 1 && event.batch == 2) secondCompleted.countDown()
+        }
+        Executors.newSingleThreadExecutor().use { executor ->
+            val result = executor.submit<AnalysisResult> {
+                analyzer(provider, AnalysisProperties("test", batchSize = 1, concurrency = 2))
+                    .analyzeTracked(listOf(option), listOf(wish, second), observer)
+            }
+            try {
+                assertTrue(firstEntered.await(5, TimeUnit.SECONDS))
+                assertTrue(secondCompleted.await(5, TimeUnit.SECONDS))
+                assertEquals(listOf(second.id), events.single { it.stage == "BATCH_COMPLETED" }.processedWishIds)
+                assertFalse(result.isDone)
+            } finally {
+                releaseFirst.countDown()
+            }
+            assertIs<AnalysisResult.Success>(result.get(5, TimeUnit.SECONDS))
+        }
+        val batches = events.filter { it.stage == "BATCH_COMPLETED" }
+        assertEquals(listOf(2, 1), batches.filter { it.reading == 1 }.map { it.batch })
+        assertEquals(setOf(wish.id, second.id), batches.flatMap { it.processedWishIds }.toSet())
+        assertEquals(4, batches.sumOf { it.processedWishIds.size })
+        assertEquals(2, events.single { it.stage == "READINGS_MERGED" }.processedWishIds.size)
+    }
+
+    @Test
+    fun `progress retains actual discarded quote actions from both readings and rejected proposal attempts`() {
+        val provider = RecordingProvider { request, _ ->
+            if (request.stage == AnalysisStage.CLASSIFY) {
+                success(classification(request, price = true).replace("under 12.34 dollars", "invented source quote"))
+            } else if (!request.retry) {
+                success(proposal().replace("\"proposal\":", "\"proposal\":[{},{}],\"ignored\":"))
+            } else success(proposal())
+        }
+        val events = CopyOnWriteArrayList<AnalysisProgressEvent>()
+        val result = assertIs<AnalysisResult.Success>(analyzer(provider)
+            .analyzeTracked(listOf(option), listOf(wish), AnalysisObserver(events::add)))
+        assertEquals(2, events.count { it.stage == "CLASSIFY_VALIDATED" })
+        assertEquals(2, events.filter { it.stage == "CLASSIFY_VALIDATED" }.sumOf { event ->
+            event.flags.count { it.rule == AnalysisValidationRule.V2 }
+        })
+        assertEquals(2, events.count { it.stage == "PROPOSAL_VALIDATED" })
+        assertEquals(1, events.flatMap { it.flags }.count { it.rule == AnalysisValidationRule.V5 })
+        assertEquals(1, result.validated.flags.count { it.rule == AnalysisValidationRule.V2 })
+        assertEquals(4, provider.requests.size)
+    }
+
+    @Test
+    fun `failed progress checkpoints do not change result or provider budget`() {
+        val provider = RecordingProvider()
+        val result = analyzer(provider).analyzeTracked(listOf(option), listOf(wish), AnalysisObserver {
+            throw IllegalStateException("Checkpoint unavailable")
+        })
+        assertIs<AnalysisResult.Success>(result)
+        assertEquals(3, provider.requests.size)
+    }
 
     @Test
     fun `single wish classification uses only one small classification call and validates every verdict`() {
