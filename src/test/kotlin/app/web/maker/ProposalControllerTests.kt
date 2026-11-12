@@ -80,7 +80,7 @@ class ProposalControllerTests(
         val html = page(workspace.token)
         assertEquals(before, analyzer.calls.size)
         assertContains(html, "Sandbox demo. No real money moves.")
-        assertContains(html, "Stored synthetic reference")
+        assertContains(html, "Precomputed analysis · saved model output, not a new model call in this workspace.")
         assertContains(html, "Run evidence and validation flags")
         assertContains(html, stored.run.model)
         assertContains(html, stored.run.createdAt.toString())
@@ -111,7 +111,7 @@ class ProposalControllerTests(
         assertContains(html, "more depend on a condition")
         assertContains(html, "Live analysis progress")
         assertContains(html, "Review follow-up questions for the latest analysis")
-        assertContains(html, "data-workbench-label-link")
+        assertContains(html, "data-interest-group-link")
         assertContains(html, "#wish-workbench")
         for (wishId in stored.output.questionsForMaker.flatMap { it.wishIds }) {
             assertContains(html, "href=\"#wish-$wishId\"")
@@ -129,9 +129,14 @@ class ProposalControllerTests(
             param("run", original.run.id.toString())
         }.andExpect { status { isOk() } }.andReturn().response.contentAsString
 
-        assertContains(html, "Stored synthetic reference")
+        assertContains(html, "Precomputed analysis · saved model output, not a new model call in this workspace.")
         assertContains(html, "offer?run=${original.run.id}")
         assertContains(html, "glosses?run=${original.run.id}")
+        assertContains(html, "replies?run=${original.run.id}")
+        for (evidence in original.output.proposal!!.rationale) {
+            assertContains(html, "href=\"#wish-${evidence.wishId}\"")
+            assertContains(html, "id=\"wish-${evidence.wishId}\"")
+        }
         assertContains(html, "Review follow-up questions for the latest analysis")
         assertFalse(html.contains("No newer proposal."))
         assertContains(page(token), "No newer proposal.")
@@ -288,13 +293,17 @@ class ProposalControllerTests(
     }
 
     @Test
-    fun `not served links preserve run and option filters`() {
+    fun `not served group links target exact source wishes in the selected run`() {
         val token = workspaces.create().token
         val stored = runs.latest(token)!!
         val html = page(token)
         assertContains(html, "run=${stored.run.id}")
-        assertContains(html, "optionId=${stored.output.proposal!!.optionId}")
-        assertContains(html, "label=INCOMPATIBLE")
+        val wishIds = stored.output.verdicts.filter {
+            it.optionId == stored.output.proposal!!.optionId && it.verdict == CompatibilityVerdict.INCOMPATIBLE &&
+                stored.output.wishes.single { wish -> wish.wishId == it.wishId }.kind == WishKind.REQUEST
+        }.map { it.wishId }
+        assertTrue(wishIds.isNotEmpty())
+        assertGroupSources(html, "Not served", wishIds)
     }
 
     @Test
@@ -340,12 +349,10 @@ class ProposalControllerTests(
                 notServed = emptyList(), questionsForMaker = emptyList(),
             ))
             val html = page(token)
-            val summary = html.substringAfter("aria-label=\"Wish groups for this proposal\"").substringBefore("<dl class=")
-            assertEquals(if (size == 0) 0 else 3, Regex("<blockquote>").findAll(summary).count())
-            assertEquals(if (size == 0) 4 else 3, Regex("<strong>$size</strong>").findAll(summary).count())
-            assertContains(summary, "Interested in this offer")
-            assertContains(summary, "Excluded by price")
-            assertContains(summary, "label=INCOMPATIBLE")
+            assertGroupSources(html, "Interested in this offer", groups.getValue("COMPATIBLE").map { it.id })
+            assertGroupSources(html, "Depend on a condition", groups.getValue("CONDITIONAL").map { it.id })
+            assertGroupSources(html, "Excluded by price", emptyList())
+            assertGroupSources(html, "Not served", groups.getValue("INCOMPATIBLE").map { it.id })
             assertContains(html, "aria-label=\"Proposal sections\"")
         }
     }
@@ -368,6 +375,29 @@ class ProposalControllerTests(
                 status { isNotFound() }
                 view { name("error/not-found") }
             }
+        }
+    }
+
+    private fun assertGroupSources(html: String, label: String, wishIds: List<UUID>) {
+        val summary = html.substringAfter("aria-label=\"Wish groups for this proposal\"")
+            .substringBefore("This does not publish an offer.")
+        val group = assertNotNull(Regex("<div>\\s*<strong>(\\d+)</strong>\\s*<a\\s+([^>]+)>${Regex.escape(label)}</a>(.*?)</div>",
+            RegexOption.DOT_MATCHES_ALL).find(summary), label)
+        assertEquals(wishIds.size, group.groupValues[1].toInt(), label)
+        val attributes = group.groupValues[2]
+        val ids = Regex("data-wish-ids=\"([^\"]*)\"").find(attributes)?.groupValues?.get(1).orEmpty()
+            .split(',').filter { it.isNotEmpty() }.map(UUID::fromString)
+        assertEquals(wishIds.toSet(), ids.toSet(), label)
+        assertEquals(wishIds.size, ids.size, label)
+        if (wishIds.isEmpty()) {
+            assertContains(attributes, "href=\"#wish-workbench\"")
+            assertContains(group.groupValues[3], "No wishes in this group.")
+            assertFalse(group.groupValues[3].contains("<blockquote>"))
+        } else {
+            val representative = assertNotNull(Regex("href=\"#wish-([^\"]+)\"").find(attributes)).groupValues[1]
+            assertTrue(UUID.fromString(representative) in wishIds)
+            assertContains(group.groupValues[3], "<blockquote>")
+            wishIds.forEach { assertContains(html, "id=\"wish-$it\"") }
         }
     }
 

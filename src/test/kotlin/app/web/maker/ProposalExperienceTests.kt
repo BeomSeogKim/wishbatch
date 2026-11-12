@@ -3,6 +3,7 @@ package app.web.maker
 import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.followup.FollowupDraftAttempt
 import app.campaign.model.AnalysisRun
+import app.campaign.replies.ReplyBatch
 import app.campaign.workspace.WorkspaceService
 import app.testing.InMemoryWishAnalyzer
 import jakarta.persistence.EntityManager
@@ -100,5 +101,35 @@ class ProposalExperienceTests(
         assertContains(html, "Counts unavailable · historical or changed evidence")
         assertContains(html, "/maker/replies?run=${stored.run.id}")
         assertContains(html, "/maker/glosses?run=${stored.run.id}")
+    }
+
+    @Test
+    fun `reply helper counts are unavailable when current run replies need refreshing`() {
+        val workspace = workspaces.create()
+        val stored = assertNotNull(runs.latest(workspace.token))
+        val batch = entities.find(ReplyBatch::class.java, stored.run.id)
+            ?: ReplyBatch(stored.run.id, workspace.id, "outdated-evidence").also(entities::persist)
+        batch.evidenceHash = "outdated-evidence"
+        entities.flush()
+        val before = analyzer.calls.size
+        val html = mvc.get("/w/${workspace.token}/maker/proposal")
+            .andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "Counts unavailable · historical or changed evidence")
+        assertContains(html, "/maker/replies?run=${stored.run.id}")
+        assertEquals(before, analyzer.calls.size)
+    }
+
+    @Test
+    fun `reply helper counts are unavailable when current run source evidence changes`() {
+        val workspace = workspaces.create()
+        val stored = assertNotNull(runs.latest(workspace.token))
+        workspaces.addWish(workspace.token, "Please add a fox postcard.")
+        val before = analyzer.calls.size
+        val html = mvc.get("/w/${workspace.token}/maker/proposal")
+            .andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "Counts unavailable · historical or changed evidence")
+        assertFalse(html.contains("0 groups · 0 saved replies · 0 approved"))
+        assertContains(html, "/maker/replies?run=${stored.run.id}")
+        assertEquals(before, analyzer.calls.size)
     }
 }

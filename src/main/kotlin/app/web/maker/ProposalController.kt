@@ -203,7 +203,9 @@ class ProposalController(
             else "${questions.questions.size} questions · ${questions.questions.count { it.approved }} approved"
         val replyState = try {
             val page = replies.maker(token, runId)
-            "${page.groups.size} groups · ${page.groups.count { it.draft != null }} saved replies · " +
+            if (page.runId != runId || page.status in setOf("REFRESH_REQUIRED", "REANALYSIS_REQUIRED"))
+                "Counts unavailable · historical or changed evidence"
+            else "${page.groups.size} groups · ${page.groups.count { it.draft != null }} saved replies · " +
                 "${page.groups.count { it.approved }} approved · ${page.status.lowercase().replace('_', ' ')}"
         } catch (_: InvalidReplyEvidenceException) {
             "Counts unavailable · historical or changed evidence"
