@@ -1,7 +1,12 @@
 package app.campaign.review
 
 import app.campaign.model.AnalysisRun
+import app.campaign.followup.FollowupAnswerRecord
+import app.campaign.followup.FollowupQuestion
+import app.campaign.followup.FollowupQuestions
 import app.campaign.model.CompatibilityVerdict
+import app.campaign.model.Option
+import app.campaign.model.Wish
 import app.campaign.model.WishKind
 import app.campaign.model.Workspace
 import app.campaign.port.AnalysisOutput
@@ -61,9 +66,63 @@ class WishReviewService(
             trimmed, clock.instant(), (previous?.revision ?: 0) + 1,
         ).also(entityManager::persist)
     }
+
+    /** Derives a decision only from persisted answers to approved questions. */
+    @Transactional
+    fun recordFanResolution(token: String, answerId: UUID): WishReviewOverride? {
+        val workspace = entityManager.createQuery(
+            "select w from Workspace w where w.token = :token", Workspace::class.java,
+        ).setParameter("token", token).setLockMode(LockModeType.PESSIMISTIC_WRITE)
+            .resultList.singleOrNull() ?: throw WorkspaceNotFoundException()
+        val answer = entityManager.find(FollowupAnswerRecord::class.java, answerId)
+            ?.takeIf { it.workspaceId == workspace.id } ?: throw WorkspaceNotFoundException()
+        val question = entityManager.find(FollowupQuestion::class.java, answer.questionId)
+            ?: throw WorkspaceNotFoundException()
+        if (!question.approved || question.workspaceId != workspace.id || question.runId != answer.runId ||
+            question.optionId != answer.optionId || answer.wishId !in question.wishIds || answer.choice !in question.choices
+        ) throw InvalidWishReviewException()
+        val wish = entityManager.find(Wish::class.java, answer.wishId)
+            ?.takeIf { it.workspaceId == workspace.id && !it.hidden } ?: throw WorkspaceNotFoundException()
+        val run = entityManager.createQuery(
+            "select r from AnalysisRun r where r.workspaceId = :workspaceId " +
+                "order by r.isSeed asc, r.createdAt desc, r.id desc", AnalysisRun::class.java,
+        ).setParameter("workspaceId", workspace.id).setMaxResults(1).resultList.singleOrNull()
+            ?.takeIf { it.id == answer.runId } ?: throw InvalidWishReviewException()
+        val history = history(workspace.id, run.id)
+        history.singleOrNull { it.answerId == answerId }?.let { return it }
+        val previous = history.filter { it.wishId == wish.id && it.optionId == answer.optionId }.maxByOrNull { it.revision }
+        if (previous?.source == "MAKER") throw InvalidWishReviewException()
+        if (previous?.source == "FAN_ANSWER") return previous
+        val original = mapper.readValue(run.resultJson, AnalysisOutput::class.java)
+        val effective = reviewedAnalysis(original, history)
+        val option = entityManager.find(Option::class.java, answer.optionId)
+            ?.takeIf { it.workspaceId == workspace.id } ?: throw WorkspaceNotFoundException()
+        val questions = entityManager.createQuery(
+            "select q from FollowupQuestion q where q.workspaceId = :workspaceId and q.runId = :runId " +
+                "and q.optionId = :optionId and q.approved = true", FollowupQuestion::class.java,
+        ).setParameter("workspaceId", workspace.id).setParameter("runId", run.id)
+            .setParameter("optionId", option.id).resultList
+        val answers = entityManager.createQuery(
+            "select a from FollowupAnswerRecord a where a.workspaceId = :workspaceId and a.runId = :runId " +
+                "and a.optionId = :optionId and a.wishId = :wishId", FollowupAnswerRecord::class.java,
+        ).setParameter("workspaceId", workspace.id).setParameter("runId", run.id)
+            .setParameter("optionId", option.id).setParameter("wishId", wish.id).resultList
+        val resolution = try {
+            FollowupQuestions.resolve(run.id, wish.id, questions.map { it.approvedQuestion() },
+                answers.map { it.answer() }, option, effective)
+        } catch (_: IllegalArgumentException) {
+            throw InvalidWishReviewException()
+        }
+        if (resolution.verdict == CompatibilityVerdict.CONDITIONAL) return null
+        return WishReviewOverride(
+            workspace.id, run.id, wish.id, option.id, resolution.verdict,
+            CompatibilityVerdict.CONDITIONAL, "Fan confirmed the allowed variants for the recorded conditions.",
+            clock.instant(), (previous?.revision ?: 0) + 1, source = "FAN_ANSWER", answerId = answer.id,
+        ).also(entityManager::persist)
+    }
 }
 
-/** Projects maker decisions without rewriting the stored run. */
+/** Projects recorded decisions without rewriting the stored run. */
 fun reviewedAnalysis(output: AnalysisOutput, history: List<WishReviewOverride>): AnalysisOutput {
     if (history.isEmpty()) return output
     val latest = history.groupBy { it.wishId to it.optionId }.mapValues { (_, rows) -> rows.maxBy { it.revision } }

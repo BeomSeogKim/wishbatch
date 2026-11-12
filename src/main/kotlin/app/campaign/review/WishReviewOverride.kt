@@ -11,7 +11,7 @@ import jakarta.persistence.UniqueConstraint
 import java.time.Instant
 import java.util.UUID
 
-/** Append-only maker decisions preserve the model snapshot and earlier decisions. */
+/** Append-only decisions preserve the model snapshot, source, and earlier decisions. */
 @Entity
 @Table(name = "wish_review_overrides", uniqueConstraints = [
     UniqueConstraint(columnNames = ["runId", "wishId", "optionId", "revision"]),
@@ -28,4 +28,5 @@ class WishReviewOverride(
     @Column(nullable = false) val revision: Long,
     @Column(nullable = false) val source: String = "MAKER",
     @Id val id: UUID = UUID.randomUUID(),
+    val answerId: UUID? = null,
 )

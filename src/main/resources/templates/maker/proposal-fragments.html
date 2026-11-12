@@ -17,7 +17,7 @@
     </ul>
     <p th:if="${row.needs.isEmpty()}" class="muted">No grounded purchase needs were extracted.</p>
     <p th:each="decision : ${row.decisions}" class="muted">
-        <strong>Maker override</strong> · <span th:text="${options[decision.optionId].name}">Option</span>:
+        <strong th:text="${decision.source == 'FAN_ANSWER' ? 'Fan answer' : 'Maker override'}">Maker override</strong> · <span th:text="${options[decision.optionId].name}">Option</span>:
         <span th:text="${decision.verdict.name() == 'COMPATIBLE' ? 'Compatible' : 'Not served'}">Compatible</span>.
         <span th:text="${decision.reason}">Reason</span>
         <time th:datetime="${decision.createdAt}" th:text="${@makerDisplay.time(decision.createdAt)}">Time</time>

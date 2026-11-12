@@ -12,6 +12,7 @@ import app.campaign.workspace.WorkspaceService
 import app.campaign.service.CampaignQueries
 import app.campaign.service.ServiceResult
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpSession
 import org.springframework.stereotype.Controller
 import org.springframework.stereotype.Component
 import org.springframework.ui.Model
@@ -52,12 +53,13 @@ class WishController(
     private val campaigns: WishCampaignAvailability? = null,
 ) {
     @GetMapping("/w/{token}")
-    fun wish(@PathVariable token: String, model: Model, response: HttpServletResponse): String {
+    fun wish(@PathVariable token: String, model: Model, response: HttpServletResponse, session: HttpSession): String {
         if (workspaces.findByToken(token) == null) return notFound(response)
         model.addAttribute("token", token)
         model.addAttribute("maker", workspaces.scenario(token).definition.maker)
         model.addAttribute("recentWishes", workspaces.listWishes(token, includeHidden = false).asReversed().take(5))
         model.addAttribute("campaignOpen", campaigns?.isOpen(token) ?: false)
+        model.addAttribute("lastWishId", session.getAttribute("followup.wish.$token"))
         if (!model.containsAttribute("wishForm")) model.addAttribute("wishForm", WishForm())
         return "fan/wish"
     }
@@ -69,6 +71,7 @@ class WishController(
         @RequestParam(defaultValue = "") displayName: String,
         redirect: RedirectAttributes,
         response: HttpServletResponse,
+        session: HttpSession,
     ): String {
         if (workspaces.findByToken(token) == null) return notFound(response)
         val saved = try {
@@ -89,6 +92,8 @@ class WishController(
             null
         }
         if (saved != null) {
+            session.setAttribute("followup.wish.$token", saved.id)
+            redirect.addFlashAttribute("submittedWishId", saved.id)
             val note = runCatching { matchNote(token, saved) }.getOrNull()
             if (note != null) redirect.addFlashAttribute("wishMatchNote", note)
         }

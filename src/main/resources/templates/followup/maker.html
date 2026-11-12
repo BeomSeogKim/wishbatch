@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Follow-up questions', ~{::main})}">
+<body>
+<main id="main" class="shell form-stack">
+    <header class="page-heading">
+        <p class="eyebrow">Clarify stated interest</p>
+        <h1>Review follow-up questions</h1>
+        <p>Review or edit each draft before fans see it. Choices must come from the option's allowed variants.</p>
+        <p>Answers clarify wishes. They are not orders, authorizations, or completed payments.</p>
+        <a th:href="@{/w/{token}/maker/proposal(token=${token})}">Back to proposal</a>
+    </header>
+    <p th:if="${questionError}" class="notice notice-error" role="alert" th:text="${questionError}">Drafting unavailable.</p>
+    <p th:if="${questionsDrafted == true}" class="notice notice-info" role="status">Drafting finished. Review the questions below before approving them.</p>
+    <p th:if="${questionApproved == true}" class="notice notice-info" role="status">Question approved. Fans with a matching wish can now answer it.</p>
+    <section th:if="${page.runId == null or page.option == null}" class="card">
+        <h2>No proposed option to clarify</h2>
+        <p>Review an analysis with a proposed option before drafting follow-up questions.</p>
+    </section>
+    <section th:if="${page.option != null}" class="card form-stack">
+        <h2 th:text="${page.option.name}">Proposed option</h2>
+        <p>Draft at most three short questions for wishes labelled Depends. Unrelated conditions still need review.</p>
+        <p th:if="${page.failure != null}" class="notice notice-info">Question drafting was unavailable for this analysis. Existing questions are unchanged.</p>
+        <div th:if="${#lists.isEmpty(page.questions)}">
+            <p class="empty-state">No follow-up questions are saved for this analysis.</p>
+            <p th:if="${page.drafted and page.failure == null}">No supported variant questions were found. Other conditions still need maker review.</p>
+            <form th:if="${!page.drafted and page.failure == null}" th:action="@{/w/{token}/maker/questions(token=${token})}" method="post">
+                <button class="button button-primary" type="submit">Draft follow-up questions</button>
+            </form>
+        </div>
+    </section>
+    <section th:each="question : ${page.questions}" class="card form-stack" th:attr="aria-labelledby=${'question-title-' + question.id}">
+        <h2 th:id="${'question-title-' + question.id}" th:text="${question.text}">Follow-up question</h2>
+        <p class="field-help"><span th:text="${#lists.size(question.wishIds)}">0</span> wishes share this condition. These are stated wishes, not orders.</p>
+        <div th:if="${question.approved}">
+            <p class="status-pill">Approved for fans</p>
+            <ul><li th:each="choice : ${question.choices}" th:text="${choice}">Allowed choice</li></ul>
+            <p class="field-help">An approved question stays fixed so saved answers keep their meaning.</p>
+        </div>
+        <form th:unless="${question.approved}" th:action="@{/w/{token}/maker/questions/{id}/approve(token=${token},id=${question.id})}" method="post" class="form-stack">
+            <div class="field">
+                <label th:for="${'question-text-' + question.id}">Question for fans</label>
+                <input th:id="${'question-text-' + question.id}" name="text" maxlength="240" required th:value="${question.text}">
+            </div>
+            <fieldset class="field">
+                <legend>Allowed choices</legend>
+                <p class="field-help">Keep at least two choices. Fans choose a variant that meets this condition.</p>
+                <label th:each="choice : ${page.option.allowedVariants[question.variantKey]}">
+                    <input type="checkbox" name="choices" th:value="${choice}" th:checked="${#lists.contains(question.choices, choice)}">
+                    <span th:text="${choice}">Allowed variant</span>
+                </label>
+            </fieldset>
+            <button class="button button-primary" type="submit">Approve question</button>
+        </form>
+        <details th:if="${question.approved}">
+            <summary>Wish question links</summary>
+            <p class="field-help">Each link opens questions for that wish. Share it only with the fan who left the wish.</p>
+            <ul><li th:each="wish, row : ${question.wishIds}"><a th:href="@{/w/{token}/questions(token=${token},wish=${wish})}" th:text="${'Wish ' + row.count}">Wish questions</a></li></ul>
+        </details>
+    </section>
+</main>
+</body>
+</html>

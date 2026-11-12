@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Question could not be saved', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <section class="card form-stack">
+        <h1>Question could not be saved</h1>
+        <p class="notice notice-error" role="alert" th:text="${followupError}">Return to the question page and choose an approved option.</p>
+        <p>Use your browser's Back button to return to the question page.</p>
+    </section>
+</main>
+</body>
+</html>

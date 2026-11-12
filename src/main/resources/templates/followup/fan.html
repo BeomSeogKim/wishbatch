@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Questions about your wish', ~{::main})}">
+<body>
+<main id="main" class="shell form-stack">
+    <header class="page-heading">
+        <p class="eyebrow">A little clarification</p>
+        <h1>Questions about your wish</h1>
+        <p>The maker approved these choices. Choose a variant only if it meets the condition in your wish.</p>
+        <p>Your answer is stated interest, not an order. Nothing is charged. Other conditions may remain Depends.</p>
+        <a th:href="@{/w/{token}(token=${token})}">Back to wishes</a>
+    </header>
+    <p th:if="${answerSaved == true}" class="notice notice-info" role="status">Your answer is saved with its source. The wish is resolved by code when every required condition is covered.</p>
+    <section th:if="${#lists.isEmpty(questions)}" class="card">
+        <h2>No questions waiting</h2>
+        <p>There are no approved follow-up questions for this wish right now.</p>
+    </section>
+    <section th:each="question : ${questions}" class="card form-stack" th:with="answer=${answersByQuestion[question.id]}">
+        <h2 th:text="${question.text}">Follow-up question</h2>
+        <div th:if="${answer != null}" class="notice notice-info">
+            <p>Your saved answer: <strong th:text="${answer.choice}">Allowed choice</strong></p>
+            <p class="field-help">Source: fan answer. This does not change an offer or start a payment.</p>
+        </div>
+        <form th:if="${answer == null}" th:action="@{/w/{token}/questions/{id}(token=${token},id=${question.id})}" method="post" class="form-stack">
+            <input type="hidden" name="wish" th:value="${wishId}">
+            <fieldset class="field">
+                <legend>Which allowed variant meets this condition?</legend>
+                <label th:each="choice : ${question.choices}">
+                    <input type="radio" name="choice" th:value="${choice}" required>
+                    <span th:text="${choice}">Allowed choice</span>
+                </label>
+            </fieldset>
+            <p class="field-help">If none of these choices meets your condition, leave this question unanswered.</p>
+            <button class="button button-primary" type="submit">Save my answer</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>
