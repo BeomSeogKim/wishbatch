@@ -26,6 +26,10 @@ val CAMPAIGN_TRANSITIONS: Set<CampaignTransition> = setOf(
     CampaignTransition(CampaignState.SETTLING, CampaignState.NOT_FUNDED, CampaignReason.CAPTURE_SHORTFALL),
 )
 
+/**
+ * Failed captures allow voiding the remaining authorization. Failed voids and refunds allow
+ * retries, and pending refunds may later fail during provider reconciliation.
+ */
 val PLEDGE_TRANSITIONS: Set<PledgeTransition> = setOf(
     PledgeTransition(PledgeState.CREATED, PledgeState.AUTHORIZED),
     PledgeTransition(PledgeState.CREATED, PledgeState.ABANDONED),
@@ -39,7 +43,13 @@ val PLEDGE_TRANSITIONS: Set<PledgeTransition> = setOf(
     PledgeTransition(PledgeState.CAPTURED, PledgeState.REFUND_FAILED),
     PledgeTransition(PledgeState.CAPTURE_PENDING, PledgeState.CAPTURED),
     PledgeTransition(PledgeState.CAPTURE_PENDING, PledgeState.CAPTURE_FAILED),
+    PledgeTransition(PledgeState.CAPTURE_FAILED, PledgeState.VOIDED),
+    PledgeTransition(PledgeState.CAPTURE_FAILED, PledgeState.VOID_FAILED),
+    PledgeTransition(PledgeState.VOID_FAILED, PledgeState.VOIDED),
     PledgeTransition(PledgeState.REFUND_PENDING, PledgeState.REFUNDED),
+    PledgeTransition(PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED),
+    PledgeTransition(PledgeState.REFUND_FAILED, PledgeState.REFUNDED),
+    PledgeTransition(PledgeState.REFUND_FAILED, PledgeState.REFUND_PENDING),
 )
 
 /** Reject illegal edges and reasons; return the target for assignment after guarded work succeeds. */

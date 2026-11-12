@@ -51,7 +51,10 @@ class TransitionTests {
             PledgeState.AUTHORIZED to setOf(PledgeState.CAPTURED, PledgeState.CAPTURE_PENDING, PledgeState.CAPTURE_FAILED, PledgeState.VOIDED, PledgeState.VOID_FAILED),
             PledgeState.CAPTURED to setOf(PledgeState.REFUNDED, PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED),
             PledgeState.CAPTURE_PENDING to setOf(PledgeState.CAPTURED, PledgeState.CAPTURE_FAILED),
-            PledgeState.REFUND_PENDING to setOf(PledgeState.REFUNDED),
+            PledgeState.CAPTURE_FAILED to setOf(PledgeState.VOIDED, PledgeState.VOID_FAILED),
+            PledgeState.VOID_FAILED to setOf(PledgeState.VOIDED),
+            PledgeState.REFUND_PENDING to setOf(PledgeState.REFUNDED, PledgeState.REFUND_FAILED),
+            PledgeState.REFUND_FAILED to setOf(PledgeState.REFUNDED, PledgeState.REFUND_PENDING),
         )
         assertEquals(expected.flatMap { (from, targets) -> targets.map { PledgeTransition(from, it) } }.toSet(), PLEDGE_TRANSITIONS)
         for (from in PledgeState.entries) {
