@@ -52,9 +52,9 @@
         </section>
     </th:block>
     <div class="proposal-actions">
-        <p th:if="${stored != null}" th:class="${stored.newWishCount > 0 ? 'notice notice-info' : 'muted'}">
+        <p th:if="${stored != null and stored.newWishCount > 0}" class="notice notice-info">
             <strong th:text="${stored.newWishCount}">0</strong><th:block th:text="${stored.newWishCount == 1 ? ' visible wish added after this analysis.' : ' visible wishes added after this analysis.'}"> visible wishes added after this analysis.</th:block>
-            <span th:if="${stored.newWishCount > 0}">Re-run to include their words in the proposal.</span>
+            <span>Re-run to include their words in the proposal.</span>
         </p>
         <form id="analysis-form" method="post" th:action="@{/w/{token}/maker/proposal(token=${token})}">
             <p th:if="${stored != null}" id="analysis-warning" class="notice notice-warning">A successful live run replaces the current analysis. Saved reply and fan-question drafts do not carry over; draft them again for the new analysis.</p>
@@ -145,9 +145,10 @@
                 <p th:if="${stored.run.isSeed && stored.run.model == 'synthetic-reference'}">Stored synthetic reference · legacy fixture, not a live model result.</p>
                 <p th:if="${stored.run.isSeed && stored.run.model != 'synthetic-reference'}">Precomputed analysis · saved model output, not a new model call in this workspace.</p>
                 <p th:unless="${stored.run.isSeed}">Live analysis · saved result from this workspace.</p>
+                <p th:if="${stored.run.isSeed}">Sample wishes are imported when the workspace is created; their received times reflect that import.</p>
                 <dl class="details-list">
                     <div><dt>Recorded model</dt><dd th:text="${stored.run.model}">Model</dd></div>
-                    <div><dt>Recorded completion</dt><dd><time th:datetime="${stored.run.createdAt}" th:text="${@humanDisplay.time(stored.run.createdAt)}">Completion time</time></dd></div>
+                    <div><dt th:text="${stored.run.isSeed ? (stored.run.model == 'synthetic-reference' ? 'Recorded fixture time' : 'Precomputed sample run completed') : 'Recorded completion'}">Recorded completion</dt><dd><time th:datetime="${stored.run.createdAt}" th:text="${@humanDisplay.time(stored.run.createdAt)}">Completion time</time></dd></div>
                 </dl>
             </section>
             <section th:replace="~{maker/proposal-fragments :: runMetrics(${stored.originalOutput.metrics}, ${null})}"></section>

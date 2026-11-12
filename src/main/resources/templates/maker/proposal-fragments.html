@@ -17,9 +17,9 @@
         <th:block th:if="${metrics.tokenUsage != null}">
             <p th:text="${metrics.usageComplete ? 'Complete returned token usage.' : 'Partial returned token usage; some measurements are unavailable.'}">Usage completeness</p>
             <dl class="details-list">
-                <div><dt>Input tokens</dt><dd th:text="${metrics.tokenUsage.inputTokens != null ? metrics.tokenUsage.inputTokens : 'Unavailable'}">Unavailable</dd></div>
-                <div><dt>Output tokens</dt><dd th:text="${metrics.tokenUsage.outputTokens != null ? metrics.tokenUsage.outputTokens : 'Unavailable'}">Unavailable</dd></div>
-                <div><dt>Reasoning tokens (reported separately)</dt><dd th:text="${metrics.tokenUsage.reasoningTokens != null ? metrics.tokenUsage.reasoningTokens : 'Unavailable'}">Unavailable</dd></div>
+                <div><dt>Input tokens</dt><dd th:text="${metrics.tokenUsage.inputTokens != null ? #numbers.formatInteger(metrics.tokenUsage.inputTokens, 1, 'COMMA') : 'Unavailable'}">Unavailable</dd></div>
+                <div><dt>Output tokens</dt><dd th:text="${metrics.tokenUsage.outputTokens != null ? #numbers.formatInteger(metrics.tokenUsage.outputTokens, 1, 'COMMA') : 'Unavailable'}">Unavailable</dd></div>
+                <div><dt>Reasoning tokens (reported separately)</dt><dd th:text="${metrics.tokenUsage.reasoningTokens != null ? #numbers.formatInteger(metrics.tokenUsage.reasoningTokens, 1, 'COMMA') : 'Unavailable'}">Unavailable</dd></div>
             </dl>
         </th:block>
     </th:block>

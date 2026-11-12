@@ -12,7 +12,7 @@
         <h2 id="wish-heading">Your wish, in your words</h2>
         <blockquote th:if="${trace.wish != null}" th:text="${trace.wish}"></blockquote>
         <p th:if="${trace.wish == null}" th:text="${trace.wishExplanation}"></p>
-        <p th:if="${trace.evidenceCount != null}">Selected supporting evidence: <span th:text="${trace.evidenceCount}"></span> <span th:text="${trace.evidenceCount == 1 ? 'wish' : 'wishes'}"></span>. This sample is not the total interested count.</p>
+        <p th:if="${trace.evidenceCount != null}">Selected supporting evidence: <span th:text="${trace.evidenceCount}"></span> <span th:text="${trace.evidenceCount == 1 ? 'wish' : 'wishes'}"></span>. This recorded evidence sample is not the total interested count. It may differ from the quotes shown on the offer.</p>
     </section>
     <section class="card" aria-labelledby="reading-heading">
         <h2 id="reading-heading">How it was read</h2>

@@ -62,6 +62,8 @@ class ProposalExperienceTests(
         val summary = html.substringAfter("aria-label=\"Wish groups for this proposal\"").substringBefore("This does not publish an offer.")
         assertFalse(summary.contains("<details"))
         assertContains(summary, "<blockquote>")
+        assertContains(html, "Precomputed sample run completed")
+        assertContains(html, "their received times reflect that import")
         assertContains(html, "120-second time limit")
         assertContains(html, "Catalog cost reference:")
         assertFalse(html.contains("Current offer price"))
@@ -98,16 +100,19 @@ class ProposalExperienceTests(
         val workspace = workspaces.create()
         val stored = assertNotNull(runs.latest(workspace.token))
         val output = stored.originalOutput.copy(metrics = AnalysisMetrics(57.408,
-            AnalysisTokenUsage(120, 80, null), usageComplete = false, failureCategory = "TIMEOUT"))
+            AnalysisTokenUsage(12000, 8000, null), usageComplete = false, failureCategory = "TIMEOUT"))
         entities.persist(AnalysisRun(workspace.id, "test-recorded-success", stored.run.inputHash,
             mapper.writeValueAsString(output), createdAt = stored.run.createdAt.plusSeconds(1)))
         entities.flush()
         val html = mvc.get("/w/${workspace.token}/maker/proposal").andExpect { status { isOk() } }
             .andReturn().response.contentAsString
         assertContains(html, "Live analysis · saved result from this workspace.")
+        assertContains(html, "Recorded completion")
+        assertFalse(html.contains("Precomputed sample run completed"))
         assertContains(html, "Partial returned token usage")
-        assertContains(html, "<dd>120</dd>")
-        assertContains(html, "<dd>80</dd>")
+        assertContains(html, "<dd>Unavailable</dd>")
+        assertContains(html, "<dd>12,000</dd>")
+        assertContains(html, "<dd>8,000</dd>")
         assertContains(html, "57.41 seconds")
         assertFalse(html.contains("Recorded failure category"))
         assertEquals("TIMEOUT", runs.latest(workspace.token)!!.originalOutput.metrics!!.failureCategory)

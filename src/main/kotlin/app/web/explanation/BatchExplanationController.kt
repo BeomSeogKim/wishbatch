@@ -62,7 +62,7 @@ class BatchExplanationController(
             CampaignState.OPEN -> "Open: fans can seek authorization holds while the offer is available."
             CampaignState.AWAITING_CONFIRMATION -> "Awaiting confirmation: the maker must confirm before capture."
             CampaignState.SETTLING -> "Settling: PayPal payments and any required reversals are being processed."
-            CampaignState.FUNDED -> "Funded: the campaign previously reached its paid minimum."
+            CampaignState.FUNDED -> "Funded: the campaign reached its paid minimum at settlement."
             CampaignState.NOT_FUNDED -> "Not funded: refunds and hold releases are attempted; some may still be pending or need attention."
         })
         model.addAttribute("paidShortfall", campaign.state == CampaignState.FUNDED && campaign.counts.paid < offer.minBatch)

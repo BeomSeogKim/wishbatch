@@ -206,7 +206,7 @@ class ProposalControllerTests(
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun `new wish notice and no visible wishes state are explicit`() {
         val token = workspaces.create().token
-        assertContains(page(token), "<strong>0</strong> visible wishes added")
+        assertFalse(page(token).contains("visible wishes added after this analysis"))
         workspaces.addWish(token, "Please include a fox.")
         assertContains(page(token), "<strong>1</strong> visible wish added")
         assertContains(page(token), "Re-run to include their words")

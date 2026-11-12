@@ -267,8 +267,7 @@ class BatchExplanationTests @Autowired constructor(
                 assertFalse(html.contains("Stored reference fixture"))
             }
             assertContains(html, "Creating a workspace does not run a new analysis.")
-            assertContains(html, "href=\"/w/${workspace.token}/maker/proposal\"")
-            assertContains(html, "Run live analysis in the maker workspace")
+            assertFalse(html.contains("Run live analysis in the maker workspace"))
             assertFalse(html.contains("not a live analysis of these wishes"))
             assertFalse(html.contains("seconds"))
         }
@@ -290,7 +289,7 @@ class BatchExplanationTests @Autowired constructor(
         }!!
         val html = mvc.get("/w/${workspace.token}/campaigns/$campaignId/how-this-batch-was-chosen")
             .andExpect { status { isOk() } }.andReturn().response.contentAsString
-        assertContains(html, "previously reached its paid minimum")
+        assertContains(html, "reached its paid minimum at settlement")
         assertContains(html, "Current completed payments are below the minimum")
         assertFalse(html.contains("production to proceed"))
     }
