@@ -155,13 +155,13 @@ class PayPalClientTests {
     }
 
     @Test
-    fun `capture and read accept documented statuses without treating partial refunds as complete`() {
+    fun `capture and read preserve partial refunds separately from pending payments`() {
         token()
         val statuses = mapOf(
             "COMPLETED" to PaymentStatus.COMPLETED,
             "PENDING" to PaymentStatus.PENDING,
             "DECLINED" to PaymentStatus.DECLINED,
-            "PARTIALLY_REFUNDED" to PaymentStatus.PENDING,
+            "PARTIALLY_REFUNDED" to PaymentStatus.PARTIALLY_REFUNDED,
             "REFUNDED" to PaymentStatus.REFUNDED,
             "FAILED" to PaymentStatus.FAILED,
         )

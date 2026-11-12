@@ -12,7 +12,7 @@ import java.util.UUID
 
 /** Status belongs to the returned resource: an order COMPLETED is not a completed capture. */
 enum class PaymentStatus {
-    CREATED, APPROVED, COMPLETED, PENDING, DECLINED, CAPTURED, REFUNDED,
+    CREATED, APPROVED, COMPLETED, PENDING, DECLINED, CAPTURED, REFUNDED, PARTIALLY_REFUNDED,
     VOIDED, EXPIRED, ALREADY_CAPTURED, FAILED, TRANSPORT_FAILURE,
 }
 
@@ -55,6 +55,7 @@ data class AuthorizationDetails(
     val captureId: CaptureId? = null,
 )
 
+/** The original capture amount does not identify the retained balance after a partial refund. */
 data class CaptureDetails(
     val captureId: CaptureId,
     val amount: Money,

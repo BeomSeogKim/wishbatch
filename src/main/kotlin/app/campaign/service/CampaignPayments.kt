@@ -85,23 +85,37 @@ class CampaignPayments(
         }
     }
 
-    fun refreshPaidCapture(pledge: Pledge) {
+    fun refreshPaidCapture(pledge: Pledge): PaymentStatus? {
         if (pledge.captureId == null) {
             pledge.lastError = "CAPTURE_UNCONFIRMED"
             save(pledge)
-            return
+            return null
         }
         val result = readCapture(pledge)
         if (result is PaymentResult.Received && result.resource.captureId.value == pledge.captureId &&
             result.resource.amount == money(pledge) &&
             (result.resource.authorizationId == null || result.resource.authorizationId.value == pledge.authorizationId) &&
-            result.status in setOf(PaymentStatus.COMPLETED, PaymentStatus.REFUNDED)) {
-            pledge.lastError = null
-            if (result.status == PaymentStatus.REFUNDED) move(pledge, PledgeState.REFUNDED) else save(pledge)
+            result.status in setOf(PaymentStatus.COMPLETED, PaymentStatus.REFUNDED, PaymentStatus.PARTIALLY_REFUNDED)) {
+            when (result.status) {
+                PaymentStatus.REFUNDED -> {
+                    pledge.lastError = null
+                    move(pledge, PledgeState.REFUNDED)
+                }
+                PaymentStatus.PARTIALLY_REFUNDED -> {
+                    pledge.lastError = "REMAINING_AMOUNT_UNCONFIRMED"
+                    move(pledge, PledgeState.PARTIALLY_REFUNDED)
+                }
+                else -> {
+                    if (pledge.state == PledgeState.CAPTURED) pledge.lastError = null
+                    save(pledge)
+                }
+            }
+            return result.status
         } else {
             // A failed read cannot erase a previously completed payment or prove a full refund.
             pledge.lastError = "CAPTURE_UNCONFIRMED"
             save(pledge)
+            return null
         }
     }
 
@@ -222,6 +236,11 @@ class CampaignPayments(
                     move(pledge, PledgeState.CAPTURED)
                     move(pledge, PledgeState.REFUNDED)
                 }
+                PaymentStatus.PARTIALLY_REFUNDED -> {
+                    pledge.lastError = "REMAINING_AMOUNT_UNCONFIRMED"
+                    move(pledge, PledgeState.CAPTURED)
+                    move(pledge, PledgeState.PARTIALLY_REFUNDED)
+                }
                 PaymentStatus.DECLINED, PaymentStatus.FAILED -> {
                     pledge.lastError = result.status.name
                     captureFailed(pledge)
@@ -295,6 +314,14 @@ class CampaignPayments(
     }
 
     fun refund(pledge: Pledge) {
+        if (pledge.state == PledgeState.PARTIALLY_REFUNDED) {
+            refreshPaidCapture(pledge)
+            return
+        }
+        if (pledge.refundId == null && (pledge.state in setOf(PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED) ||
+            attempted(pledge, PaymentAction.REFUND))) {
+            if (refreshPaidCapture(pledge) != PaymentStatus.COMPLETED) return
+        }
         var result = if (pledge.refundId != null) {
             call(pledge, PaymentAction.READ_REFUND, "GET /v2/payments/refunds/${pledge.refundId}", pledge.refundId) { gateway, key ->
                 gateway.readRefund(RefundId(pledge.refundId!!), key)

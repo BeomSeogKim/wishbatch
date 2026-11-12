@@ -498,6 +498,32 @@ class MakerMoneyControllerTests @Autowired constructor(
     }
 
     @Test
+    fun `funded partial refund shows shortfall and unconfirmed remainder without refund writes`() {
+        val fixture = fixture()
+        val before = gateway.calls.size
+        publish(fixture)
+        authorize(fixture, "partial", 3)
+        val capture = CaptureDetails(CaptureId("cap-partial"), Money(3000, "USD"), AuthorizationId("auth-partial"))
+        gateway.captureResults.add(PaymentResult.Received(capture, PaymentStatus.COMPLETED))
+        healthyProviderReads(fixture)
+        action(fixture, "confirm", confirmation(1, 3, 3000))
+        gateway.readCaptureResults.add(PaymentResult.Received(capture, PaymentStatus.PARTIALLY_REFUNDED))
+
+        val html = page(fixture.workspace.token, "result")
+
+        assertContains(html, "Partial refund observed. Remaining amount is unconfirmed. Needs attention.")
+        assertContains(html, "Completed payments are now below the minimum after settlement.")
+        assertContains(html, "0 units with completed payments retained")
+        assertContains(html, "0 units with completed refunds")
+        assertContains(html, "Retry unresolved payments")
+        gateway.readCaptureResults.add(PaymentResult.Received(capture, PaymentStatus.PARTIALLY_REFUNDED))
+        action(fixture, "retry")
+        val calls = gateway.calls.drop(before)
+        assertTrue(calls.none { it is PaymentCall.RefundCapture || it is PaymentCall.VoidAuthorization })
+        assertEquals(1, calls.filterIsInstance<PaymentCall.Capture>().size)
+    }
+
+    @Test
     fun `all routes reject unknown workspaces and foreign analysis cannot be used`() {
         val fixture = fixture()
         val other = fixture()

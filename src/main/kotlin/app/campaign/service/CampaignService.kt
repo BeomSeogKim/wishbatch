@@ -275,6 +275,8 @@ class CampaignService(
     }
 
     private fun refreshProviderTruth(context: Context) {
+        context.pledges.filter { it.state == PledgeState.PARTIALLY_REFUNDED && payments.recheckDue(it, PaymentAction.READ_CAPTURE) }
+            .forEach { payments.refreshPaidCapture(it) }
         when (context.campaign.state) {
             CampaignState.OPEN, CampaignState.AWAITING_CONFIRMATION -> context.pledges
                 .filter { it.state in setOf(PledgeState.AUTHORIZED, PledgeState.CAPTURE_PENDING) }
@@ -285,8 +287,9 @@ class CampaignService(
                     }
                 }
             CampaignState.FUNDED -> context.pledges
-                .filter { it.state == PledgeState.CAPTURED && payments.recheckDue(it, PaymentAction.READ_CAPTURE) }
-                .forEach(payments::refreshPaidCapture)
+                .filter { it.state in setOf(PledgeState.CAPTURED, PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED) &&
+                    payments.recheckDue(it, PaymentAction.READ_CAPTURE) }
+                .forEach { payments.refreshPaidCapture(it) }
             else -> Unit
         }
     }
@@ -330,10 +333,11 @@ class CampaignService(
                 if (payments.recheckDue(pledge, PaymentAction.VOID)) payments.void(pledge)
             }
             if (pledge.state == PledgeState.CAPTURED && context.campaign.state == CampaignState.NOT_FUNDED &&
-                payments.recheckDue(pledge, PaymentAction.REFUND)) {
+                payments.recheckDue(pledge, PaymentAction.REFUND, PaymentAction.READ_CAPTURE)) {
                 payments.refund(pledge)
-            } else if (refreshPending && pledge.state in setOf(PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED) &&
-                payments.recheckDue(pledge, PaymentAction.REFUND, PaymentAction.READ_REFUND)) {
+            } else if (refreshPending && context.campaign.state == CampaignState.NOT_FUNDED &&
+                pledge.state in setOf(PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED) &&
+                payments.recheckDue(pledge, PaymentAction.REFUND, PaymentAction.READ_REFUND, PaymentAction.READ_CAPTURE)) {
                 payments.refund(pledge)
             }
             if (pledge.state == PledgeState.CREATED && !payments.attempted(pledge, PaymentAction.AUTHORIZE)) {
@@ -445,5 +449,6 @@ class CampaignService(
     private fun rejected(reason: Rejection) = ServiceResult.Rejected(reason)
     private data class Context(val campaign: Campaign, val offer: Offer, val pledges: List<Pledge>)
     private val terminalStates = setOf(CampaignState.FUNDED, CampaignState.NOT_FUNDED)
-    private val attentionStates = setOf(PledgeState.CAPTURE_PENDING, PledgeState.REFUND_PENDING, PledgeState.VOID_FAILED, PledgeState.REFUND_FAILED)
+    private val attentionStates = setOf(PledgeState.CAPTURE_PENDING, PledgeState.REFUND_PENDING, PledgeState.VOID_FAILED,
+        PledgeState.REFUND_FAILED, PledgeState.PARTIALLY_REFUNDED)
 }

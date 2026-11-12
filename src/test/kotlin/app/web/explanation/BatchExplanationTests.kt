@@ -5,9 +5,14 @@ import app.campaign.model.AnalysisRun
 import app.campaign.model.Campaign
 import app.campaign.model.CampaignState
 import app.campaign.model.CompatibilityVerdict
+import app.campaign.model.Money
 import app.campaign.model.Offer
 import app.campaign.model.Pledge
 import app.campaign.model.PledgeState
+import app.campaign.port.AuthorizationDetails
+import app.campaign.port.AuthorizationId
+import app.campaign.port.PaymentResult
+import app.campaign.port.PaymentStatus
 import app.campaign.port.ProposalEvidence
 import app.campaign.rules.optionWishCounts
 import app.campaign.workspace.WorkspaceService
@@ -44,6 +49,7 @@ class BatchExplanationTests @Autowired constructor(
     private val entityManager: EntityManager,
     private val mapper: JsonMapper,
     private val mvc: MockMvc,
+    private val payments: InMemoryPaymentGateway,
     transactionManager: PlatformTransactionManager,
 ) {
     private val transactions = TransactionTemplate(transactionManager)
@@ -128,6 +134,7 @@ class BatchExplanationTests @Autowired constructor(
             ProposalEvidence("", seedWish.id, "invented words"),
             ProposalEvidence("", seedWish.id, validQuote),
         )))
+        val authorizationId = AuthorizationId("explanation-authorization-${workspace.id}")
         transactions.executeWithoutResult {
             val run = AnalysisRun(workspace.id, "synthetic", "hash", mapper.writeValueAsString(output), createdAt = now)
             entityManager.persist(run)
@@ -138,10 +145,14 @@ class BatchExplanationTests @Autowired constructor(
                 closesAt = now.plusSeconds(900), confirmDeadline = now.plusSeconds(44100))
             entityManager.persist(campaign)
             entityManager.persist(Pledge(campaign.id, 2, 400, "USD", PledgeState.AUTHORIZED,
-                payerEmailMasked = "buyer-secret@example.com", createdAt = now))
+                authorizationId = authorizationId.value, payerEmailMasked = "buyer-secret@example.com", createdAt = now))
             entityManager.persist(Pledge(campaign.id, 1, 200, "USD", PledgeState.CAPTURED,
                 payerEmailMasked = "other-buyer@example.com", createdAt = now))
         }
+        val authorization = PaymentResult.Received(AuthorizationDetails(
+            authorizationId, Money(400, "USD"), now.plusSeconds(86_400),
+        ), PaymentStatus.CREATED)
+        payments.readAuthorizationResults.add(authorization)
         val html = mvc.get("/w/${workspace.token}/how-this-batch-was-chosen")
             .andExpect { status { isOk() } }.andReturn().response.contentAsString
         assertContains(HtmlUtils.htmlUnescape(html), validQuote)
@@ -154,6 +165,7 @@ class BatchExplanationTests @Autowired constructor(
         listOf("private@example.com", "Private Name", "buyer-secret@example.com", "other-buyer@example.com",
             "invented words").forEach { assertFalse(html.contains(it)) }
         workspaces.setWishHidden(workspace.token, seedWish.id, true)
+        payments.readAuthorizationResults.add(authorization)
         val hiddenHtml = mvc.get("/w/${workspace.token}/how-this-batch-was-chosen")
             .andExpect { status { isOk() } }.andReturn().response.contentAsString
         assertFalse(HtmlUtils.htmlUnescape(hiddenHtml).contains(validQuote))

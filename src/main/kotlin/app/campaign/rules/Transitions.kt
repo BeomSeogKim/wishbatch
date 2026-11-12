@@ -44,6 +44,7 @@ val PLEDGE_TRANSITIONS: Set<PledgeTransition> = setOf(
     PledgeTransition(PledgeState.CAPTURED, PledgeState.REFUNDED),
     PledgeTransition(PledgeState.CAPTURED, PledgeState.REFUND_PENDING),
     PledgeTransition(PledgeState.CAPTURED, PledgeState.REFUND_FAILED),
+    PledgeTransition(PledgeState.CAPTURED, PledgeState.PARTIALLY_REFUNDED),
     PledgeTransition(PledgeState.CAPTURE_PENDING, PledgeState.CAPTURED),
     PledgeTransition(PledgeState.CAPTURE_PENDING, PledgeState.CAPTURE_FAILED),
     PledgeTransition(PledgeState.CAPTURE_FAILED, PledgeState.CAPTURED),
@@ -55,8 +56,11 @@ val PLEDGE_TRANSITIONS: Set<PledgeTransition> = setOf(
     PledgeTransition(PledgeState.VOID_FAILED, PledgeState.VOIDED),
     PledgeTransition(PledgeState.REFUND_PENDING, PledgeState.REFUNDED),
     PledgeTransition(PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED),
+    PledgeTransition(PledgeState.REFUND_PENDING, PledgeState.PARTIALLY_REFUNDED),
     PledgeTransition(PledgeState.REFUND_FAILED, PledgeState.REFUNDED),
     PledgeTransition(PledgeState.REFUND_FAILED, PledgeState.REFUND_PENDING),
+    PledgeTransition(PledgeState.REFUND_FAILED, PledgeState.PARTIALLY_REFUNDED),
+    PledgeTransition(PledgeState.PARTIALLY_REFUNDED, PledgeState.REFUNDED),
 )
 
 /** Reject illegal edges and reasons; return the target for assignment after guarded work succeeds. */

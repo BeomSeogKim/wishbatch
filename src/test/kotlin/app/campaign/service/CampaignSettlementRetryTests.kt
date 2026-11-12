@@ -117,6 +117,7 @@ class CampaignSettlementRetryTests @Autowired constructor(
         assertEquals(PledgeState.REFUND_FAILED, view(fixture).pledges.single().state)
         assertEquals(1, gateway.fake.calls.size)
         clock.current = clock.current.plusSeconds(60)
+        gateway.fake.readCaptureResults.add(PaymentResult.Received(capture(fixture), PaymentStatus.COMPLETED))
         gateway.fake.refundCaptureResults.add(PaymentResult.Received(refund(fixture), PaymentStatus.COMPLETED))
         val refunded = view(fixture)
         assertEquals(PledgeState.REFUNDED, refunded.pledges.single().state)
@@ -211,6 +212,133 @@ class CampaignSettlementRetryTests @Autowired constructor(
         val capture = gateway.fake.calls.filterIsInstance<PaymentCall.Capture>().single()
         assertEquals(AuthorizationId(approved.authorizationId!!), capture.authorizationId)
         assertEquals(idempotencyKey(approved.id, PaymentAction.CAPTURE), capture.idempotencyKey)
+    }
+
+    @Test
+    fun `funded partial refund is read only and never counts the full payment or a full refund`() {
+        val fixture = fixture(PledgeState.CAPTURED, CampaignState.FUNDED)
+        gateway.fake.readCaptureResults.add(PaymentResult.Received(capture(fixture), PaymentStatus.PARTIALLY_REFUNDED))
+
+        val partial = view(fixture)
+
+        assertEquals(CampaignState.FUNDED, partial.state)
+        assertEquals(0L, partial.counts.paid)
+        assertEquals(0L, partial.result.refundedUnits)
+        assertEquals(PledgeState.PARTIALLY_REFUNDED, partial.pledges.single().state)
+        assertEquals(fixture.pledge.id, partial.needsAttention.single().pledgeId)
+        assertTrue(campaigns.findById(fixture.ref.campaignId).orElseThrow().needsAttention)
+
+        for (status in listOf(PaymentStatus.PARTIALLY_REFUNDED, PaymentStatus.COMPLETED)) {
+            gateway.fake.readCaptureResults.add(PaymentResult.Received(capture(fixture), status))
+            val repeated = view(fixture)
+            assertEquals(PledgeState.PARTIALLY_REFUNDED, repeated.pledges.single().state)
+            assertEquals(0L, repeated.counts.paid)
+            assertEquals(0L, repeated.result.refundedUnits)
+        }
+        gateway.fake.readCaptureResults.add(PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE))
+        val unconfirmed = view(fixture)
+        assertEquals(PledgeState.PARTIALLY_REFUNDED, unconfirmed.pledges.single().state)
+        assertEquals(0L, unconfirmed.counts.paid)
+        assertEquals(0L, unconfirmed.result.refundedUnits)
+        clock.current = clock.current.plusSeconds(60)
+        gateway.fake.readCaptureResults.add(PaymentResult.Received(capture(fixture), PaymentStatus.REFUNDED))
+        val refunded = view(fixture)
+        assertEquals(CampaignState.FUNDED, refunded.state)
+        assertEquals(PledgeState.REFUNDED, refunded.pledges.single().state)
+        assertEquals(0L, refunded.counts.paid)
+        assertEquals(1L, refunded.result.refundedUnits)
+        assertEquals("FUNDED_PAYMENT_SHORTFALL", refunded.needsAttention.single().reason)
+        view(fixture)
+        assertTrue(gateway.fake.calls.all { it is PaymentCall.ReadCapture })
+    }
+
+    @Test
+    fun `capture transport failure preserves a previously fully completed payment`() {
+        val fixture = fixture(PledgeState.CAPTURED, CampaignState.FUNDED)
+        gateway.fake.readCaptureResults.add(PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE))
+        val failedRead = view(fixture)
+        assertEquals(PledgeState.CAPTURED, failedRead.pledges.single().state)
+        assertEquals(1L, failedRead.counts.paid)
+        assertEquals(fixture.pledge.id, failedRead.needsAttention.single().pledgeId)
+        clock.current = clock.current.plusSeconds(60)
+        gateway.fake.readCaptureResults.add(PaymentResult.Received(capture(fixture), PaymentStatus.COMPLETED))
+        val confirmed = view(fixture)
+        assertEquals(1L, confirmed.counts.paid)
+        assertTrue(confirmed.needsAttention.isEmpty())
+        assertTrue(gateway.fake.calls.all { it is PaymentCall.ReadCapture })
+    }
+
+    @Test
+    fun `resource reconciliation resolves an external refund after failed or ambiguous refund without its ID`() {
+        for (failure in listOf(PaymentStatus.FAILED, PaymentStatus.TRANSPORT_FAILURE)) {
+            val fixture = fixture(PledgeState.CAPTURED)
+            val before = gateway.fake.calls.size
+            gateway.fake.refundCaptureResults.add(PaymentResult.Failed(failure))
+            val failed = view(fixture)
+            assertTrue(failed.pledges.single().state in setOf(PledgeState.REFUND_FAILED, PledgeState.REFUND_PENDING))
+            assertEquals(null, failed.pledges.single().refundId)
+            assertEquals(0L, failed.result.refundedUnits)
+            view(fixture)
+            assertEquals(before + 1, gateway.fake.calls.size)
+
+            clock.current = clock.current.plusSeconds(60)
+            gateway.fake.readCaptureResults.add(PaymentResult.Received(capture(fixture), PaymentStatus.REFUNDED))
+            val resolved = view(fixture)
+            assertEquals(PledgeState.REFUNDED, resolved.pledges.single().state)
+            assertEquals(0L, resolved.counts.paid)
+            assertEquals(1L, resolved.result.refundedUnits)
+            assertTrue(resolved.needsAttention.isEmpty())
+            view(fixture)
+            view(fixture)
+            val calls = gateway.fake.calls.drop(before)
+            assertEquals(1, calls.filterIsInstance<PaymentCall.RefundCapture>().size)
+            assertEquals(1, calls.filterIsInstance<PaymentCall.ReadCapture>().size)
+            assertTrue(calls.none { it is PaymentCall.Capture || it is PaymentCall.VoidAuthorization })
+        }
+    }
+
+    @Test
+    fun `failed capture read cannot prove a full refund or replay the failed refund`() {
+        val fixture = fixture(PledgeState.CAPTURED)
+        gateway.fake.refundCaptureResults.add(PaymentResult.Failed(PaymentStatus.FAILED))
+        view(fixture)
+        clock.current = clock.current.plusSeconds(60)
+        gateway.fake.readCaptureResults.add(PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE))
+        val unresolved = view(fixture)
+        assertEquals(PledgeState.REFUND_FAILED, unresolved.pledges.single().state)
+        assertEquals(0L, unresolved.result.refundedUnits)
+        assertEquals(1, gateway.fake.calls.filterIsInstance<PaymentCall.RefundCapture>().size)
+        val callsAfterFailure = gateway.fake.calls.size
+        view(fixture)
+        assertEquals(callsAfterFailure, gateway.fake.calls.size)
+
+        clock.current = clock.current.plusSeconds(60)
+        gateway.fake.readCaptureResults.add(PaymentResult.Received(capture(fixture), PaymentStatus.COMPLETED))
+        gateway.fake.refundCaptureResults.add(PaymentResult.Received(refund(fixture), PaymentStatus.COMPLETED))
+        val refunded = view(fixture)
+        assertEquals(PledgeState.REFUNDED, refunded.pledges.single().state)
+        assertEquals(1L, refunded.result.refundedUnits)
+        val writes = gateway.fake.calls.filterIsInstance<PaymentCall.RefundCapture>()
+        assertEquals(2, writes.size)
+        assertEquals(setOf(idempotencyKey(fixture.pledge.id, PaymentAction.REFUND)), writes.map { it.idempotencyKey }.toSet())
+    }
+
+    @Test
+    fun `not funded partial refund requires attention without guessing a remainder refund`() {
+        val fixture = fixture(PledgeState.CAPTURED)
+        gateway.fake.refundCaptureResults.add(PaymentResult.Failed(PaymentStatus.FAILED))
+        view(fixture)
+        clock.current = clock.current.plusSeconds(60)
+        gateway.fake.readCaptureResults.add(PaymentResult.Received(capture(fixture), PaymentStatus.PARTIALLY_REFUNDED))
+        val partial = view(fixture)
+        assertEquals(PledgeState.PARTIALLY_REFUNDED, partial.pledges.single().state)
+        assertEquals(0L, partial.counts.paid)
+        assertEquals(0L, partial.result.refundedUnits)
+        assertEquals(fixture.pledge.id, partial.needsAttention.single().pledgeId)
+        gateway.fake.readCaptureResults.add(PaymentResult.Received(capture(fixture), PaymentStatus.PARTIALLY_REFUNDED))
+        view(fixture)
+        assertEquals(1, gateway.fake.calls.filterIsInstance<PaymentCall.RefundCapture>().size)
+        assertTrue(gateway.fake.calls.none { it is PaymentCall.Capture || it is PaymentCall.VoidAuthorization })
     }
 
     private fun fixture(state: PledgeState, campaignState: CampaignState = CampaignState.NOT_FUNDED): Fixture {

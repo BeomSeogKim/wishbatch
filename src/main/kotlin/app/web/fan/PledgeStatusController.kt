@@ -49,6 +49,7 @@ class PledgeStatusController(
             PledgeState.CAPTURE_FAILED -> "Any remaining hold must be released. Check this page again for the release status."
             PledgeState.VOIDED -> "No further payment is due for this pledge. Your bank or card determines when the hold disappears."
             PledgeState.REFUNDED -> "PayPal and your bank or card determine when the refund appears."
+            PledgeState.PARTIALLY_REFUNDED -> "A partial refund was observed. The remaining amount is unconfirmed and needs attention. Check this page again for a verified full refund."
             PledgeState.REFUND_PENDING -> "Check this page again for the refund result."
             PledgeState.VOID_FAILED, PledgeState.REFUND_FAILED -> "The payment needs attention. Check this page again; release or refund has not been confirmed."
         })

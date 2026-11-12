@@ -169,7 +169,8 @@ class PayPalClient internal constructor(
     private fun captureStatus(body: JsonNode) = when (body.requiredText("status")) {
         "COMPLETED" -> PaymentStatus.COMPLETED
         "DECLINED" -> PaymentStatus.DECLINED
-        "PARTIALLY_REFUNDED", "PENDING" -> PaymentStatus.PENDING
+        "PARTIALLY_REFUNDED" -> PaymentStatus.PARTIALLY_REFUNDED
+        "PENDING" -> PaymentStatus.PENDING
         "REFUNDED" -> PaymentStatus.REFUNDED
         "FAILED" -> PaymentStatus.FAILED
         else -> error("Unexpected capture status")

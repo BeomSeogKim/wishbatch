@@ -443,6 +443,7 @@ class CampaignServiceTests @Autowired constructor(
         assertEquals(CampaignState.NOT_FUNDED, campaigns.findById(fixture.campaign.id).orElseThrow().state)
         refundSuccess(first)
         voidSuccess(failed)
+        healthyCapture(first)
         val result = success(service.reconcile(fixture.ref))
         assertEquals(PledgeState.REFUNDED, result.pledges.single { it.id == first.id }.state)
         assertEquals(2, gateway.fake.calls.filterIsInstance<PaymentCall.Capture>().size)
