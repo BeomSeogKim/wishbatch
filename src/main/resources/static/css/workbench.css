@@ -1,0 +1,28 @@
+[data-wish-workbench] { margin-block: var(--space-8); min-width: 0; }
+[data-wish-workbench] [hidden] { display: none !important; }
+[data-workbench-grid] { height: 560px; width: 100%; margin-block: var(--space-4); }
+[data-workbench-grid] .ag-cell { display: flex; align-items: center; line-height: 1.4; }
+[data-workbench-grid] .ag-cell-wrapper, [data-workbench-grid] .ag-cell-value { min-width: 0; width: 100%; }
+.workbench-compact { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; }
+.workbench-wish { border: 0; padding: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; width: 100%; }
+.workbench-chip { display: inline-block; border-radius: var(--radius-small); padding: 3px 7px; font-size: 12px; line-height: 1.4; background: var(--surface-soft); color: var(--muted); }
+.workbench-chip-COMPATIBLE { background: var(--accent-soft); color: var(--accent); }
+.workbench-chip-CONDITIONAL, .workbench-chip-flag { background: var(--hold-soft); color: var(--hold); }
+.workbench-chip-INCOMPATIBLE { background: var(--danger-soft); color: var(--danger); }
+.workbench-table-scroll { overflow-x: auto; margin-block: var(--space-4); }
+[data-workbench-table] { min-width: 960px; width: 100%; }
+[data-workbench-table] td { vertical-align: top; overflow-wrap: anywhere; max-width: 28rem; }
+[data-workbench-table] q, [data-workbench-table] .workbench-label { display: block; margin-bottom: var(--space-3); }
+[data-workbench-table] q, [data-workbench-detail] q { white-space: pre-wrap; }
+[data-workbench-filters], .workbench-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: end; }
+[data-workbench-filters] label, .workbench-actions label { display: grid; gap: var(--space-2); }
+[data-workbench-status] { margin-block: var(--space-4); }
+[data-workbench-detail] { margin-block: var(--space-4); padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
+[data-workbench-detail] summary { cursor: pointer; color: var(--accent); }
+[data-workbench-detail-content] { overflow-wrap: anywhere; }
+[data-workbench-detail-content] p { white-space: pre-wrap; }
+[data-workbench-detail-content] q { display: block; border-left: 3px solid var(--accent); padding-left: var(--space-3); }
+@media (max-width: 600px) {
+    [data-workbench-filters] label, .workbench-actions label { width: 100%; }
+    [data-workbench-grid] { height: 500px; }
+}

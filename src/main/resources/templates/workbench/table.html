@@ -2,23 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 <section id="wish-workbench" th:fragment="workbench" data-wish-workbench aria-labelledby="wish-workbench-heading">
-    <style>
-        [data-wish-workbench] { margin-block: var(--space-8); }
-        [data-wish-workbench] [hidden] { display: none !important; }
-        [data-workbench-grid] { height: 620px; width: 100%; margin-block: var(--space-4); }
-        [data-workbench-grid] .ag-cell-wrap-text { line-height: 1.45; padding-block: var(--space-2); white-space: pre-wrap; }
-        .workbench-table-scroll { overflow-x: auto; margin-block: var(--space-4); }
-        [data-workbench-table] { min-width: 960px; width: 100%; }
-        [data-workbench-table] td { vertical-align: top; overflow-wrap: anywhere; max-width: 28rem; }
-        [data-workbench-table] q, [data-workbench-table] .workbench-label { display: block; margin-bottom: var(--space-3); }
-        [data-workbench-table] q { white-space: pre-wrap; }
-        [data-workbench-filters], .workbench-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: end; }
-        [data-workbench-filters] label, .workbench-actions label { display: grid; gap: var(--space-2); }
-        [data-workbench-status] { margin-block: var(--space-4); }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/workbench.css}">
     <h2 id="wish-workbench-heading">Wish review workbench</h2>
     <p>Every source wish, with labels for each feasible option. These are statements of interest, never purchases.</p>
-    <p>Use Tab to move between controls; in the grid use arrow keys to move and Space to select a row. The table also works without scripts.</p>
+    <p>Use Tab to move between controls; in the grid use arrow keys to move and Space to select a row and Enter on a wish to open its full details. The table also works without scripts.</p>
     <p th:if="${workbenchNotice != null}" class="notice notice-info" role="status" th:text="${workbenchNotice}"></p>
     <form method="get" th:action="@{/w/{token}/maker/proposal/wishes(token=${token})}" data-workbench-filters>
         <input th:if="${workbench.stored != null}" type="hidden" name="run" th:value="${workbench.stored.run.id}">
@@ -41,6 +28,7 @@
         <label>Search <input type="search" name="q" maxlength="500" th:value="${workbenchFilter.q}"></label>
         <label>Sort
             <select name="sort">
+                <option value="flags" data-workbench-priority hidden>Flagged first</option>
                 <option value="id" th:selected="${workbenchFilter.sort == 'id'}">Wish ID</option>
                 <option value="text" th:selected="${workbenchFilter.sort == 'text'}">Wish text</option>
                 <option value="source" th:selected="${workbenchFilter.sort == 'source'}">Source</option>
@@ -48,7 +36,7 @@
                 <option value="label" th:selected="${workbenchFilter.sort == 'label'}">Label</option>
             </select>
         </label>
-        <button class="button button-secondary" type="submit">Apply filters</button>
+        <button class="button button-secondary" type="submit" data-workbench-apply>Apply filters</button>
     </form>
     <p data-workbench-evidence-filter hidden role="status"><span data-workbench-evidence-description>Evidence filter active</span> <button type="button" data-workbench-clear-evidence>Clear evidence filter</button></p>
     <p data-workbench-status role="status" aria-live="polite"><span th:text="${visibleIds.size()}">0</span> wishes shown.
@@ -86,9 +74,9 @@
                     <td><input type="checkbox" name="wishIds" th:value="${row.id}" th:attr="aria-label='Select wish ' + ${row.id}" th:disabled="${workbench.stored == null || !workbench.stored.output.wishes.![wishId].contains(row.id)}"></td>
                     <td data-field="id" th:text="${row.id}"></td>
                     <td data-field="text" th:text="${row.text}"></td>
-                    <td data-field="labels"><span class="workbench-label" th:each="item : ${row.labels}" th:attr="data-option-id=${item.optionId},data-label=${item.label}" th:text="${item.optionName} + ': ' + ${item.displayLabel} + ' - ' + ${item.reason}"></span></td>
+                    <td data-field="labels"><span class="workbench-label" th:each="item : ${row.labels}" th:attr="data-option-id=${item.optionId},data-label=${item.label},data-reason=${item.reason},data-display-label=${item.displayLabel}" th:text="${item.optionName} + ': ' + ${item.displayLabel} + ' - ' + ${item.reason}"></span></td>
                     <td data-field="evidence"><q th:each="quote : ${row.evidence}" th:text="${quote}"></q><span th:if="${row.evidenceUnavailable}">Some analysis evidence is unavailable: no exact source quote.</span><span th:if="${row.evidence.isEmpty() && !row.evidenceUnavailable}">No exact source quote recorded</span></td>
-                    <td data-field="flags"><span th:each="flag : ${row.flags}" th:text="${flag} + ' '"></span><span th:if="${row.flags.isEmpty()}">No row flags recorded</span></td>
+                    <td data-field="flags"><span data-workbench-flag th:each="flag : ${row.flags}" th:text="${flag} + ' '"></span><span th:if="${row.flags.isEmpty()}">No row flags recorded</span></td>
                     <td data-field="source" th:text="${row.source}"></td>
                     <td data-field="language" th:text="${row.language}"></td>
                     <td data-field="hidden" th:text="${row.hidden ? 'Hidden' : 'Visible'}"></td>
@@ -98,6 +86,10 @@
             </table>
         </div>
     </form>
+    <details data-workbench-detail hidden>
+        <summary>Full wish evidence and review history</summary>
+        <div data-workbench-detail-content></div>
+    </details>
     <th:block th:replace="~{fragments/data-tools :: grid}"></th:block>
     <script defer th:src="@{/js/wish-workbench.js}"></script>
 </section>

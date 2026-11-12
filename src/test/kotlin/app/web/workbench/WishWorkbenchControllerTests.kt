@@ -85,6 +85,30 @@ class WishWorkbenchControllerTests(
     }
 
     @Test
+    fun `label query fallback scopes the selected run and option without scripts`() {
+        val workspace = workspaces.create()
+        val stored = assertNotNull(runs.latest(workspace.token))
+        val verdict = stored.output.verdicts.first { it.verdict == CompatibilityVerdict.COMPATIBLE }
+        val expected = stored.output.verdicts.filter {
+            it.optionId == verdict.optionId && it.verdict == verdict.verdict
+        }.map { it.wishId.toString() }.toSet()
+        val html = mvc.get(path(workspace.token)) {
+            param("run", stored.run.id.toString())
+            param("optionId", verdict.optionId.toString())
+            param("label", verdict.verdict.name)
+        }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+        val rows = Regex("<tr[^>]*data-wish-id=\"([^\"]+)\"[^>]*>").findAll(html).toList()
+        assertEquals(expected, rows.filterNot { "hidden" in it.value }.map { it.groupValues[1] }.toSet())
+        assertEquals(workspaces.listWishes(workspace.token).size, rows.size)
+        assertContains(html, "value=\"${stored.run.id}\"")
+        assertContains(html, "value=\"${verdict.optionId}\" selected")
+        assertContains(html, "value=\"COMPATIBLE\" selected")
+        assertContains(html, "Apply filters")
+        assertContains(html, "data-workbench-table")
+        assertContains(html, "name=\"_csrf\"")
+    }
+
+    @Test
     fun `fallback form accepts the hidden csrf token and deduplicates selected wish ids`() {
         val workspace = workspaces.create()
         val run = assertNotNull(runs.latest(workspace.token))
