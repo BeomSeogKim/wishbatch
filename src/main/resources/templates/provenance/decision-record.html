@@ -31,7 +31,7 @@
             </ul>
             <ol>
                 <li th:each="entry : ${pledge.entries}">
-                    <h4 th:text="${entry.kind == 'WISH' ? 'Fan words' : (entry.kind == 'VERDICT' ? 'Reading for this offer' : (entry.kind == 'OFFER' ? 'Agreed offer' : 'Payment checkpoint'))}"></h4>
+                    <h4 th:text="${entry.kind == 'WISH' ? 'Fan words' : (entry.kind == 'VERDICT' ? 'Reading for this offer' : (entry.kind == 'READING' ? 'Single-wish format assessment' : (entry.kind == 'OFFER' ? 'Agreed offer' : 'Payment checkpoint')))}"></h4>
                     <details>
                         <summary>Snapshot and hashes</summary>
                         <pre th:text="${entry.payload.toPrettyString()}"></pre>
@@ -55,7 +55,7 @@
         <h2 id="sources-title">Source snapshots</h2>
         <p th:if="${#lists.isEmpty(record.sources)}">No analysis or offer snapshots were recorded.</p>
         <details class="card" th:each="source : ${record.sources}">
-            <summary><span th:text="${source.sourceType == 'OFFER' ? 'Offer' : (source.sourceType == 'REVIEW' ? 'Reviewed reading' : 'Analysis')}"></span> <span th:text="${@humanDisplay.shortId(source.sourceId)}" th:title="${source.sourceId}"></span></summary>
+            <summary><span th:text="${source.sourceType == 'OFFER' ? 'Offer' : (source.sourceType == 'REVIEW' ? 'Reviewed reading' : (source.sourceType == 'OFFER_WISH_READING' ? 'Single-wish format assessment' : 'Analysis'))}"></span> <span th:text="${@humanDisplay.shortId(source.sourceId)}" th:title="${source.sourceId}"></span></summary>
             <p th:if="${!source.intact}">Stored source hash failed integrity verification.</p>
             <p>SHA-256 (terms hash for an offer): <code th:text="${source.hash}"></code></p>
             <pre th:text="${source.payload.toPrettyString()}"></pre>
