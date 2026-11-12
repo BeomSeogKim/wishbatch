@@ -1,5 +1,9 @@
 # Wishbatch
 
+[Demo video (2 min 51 sec)](https://youtu.be/pqCL7ZykxYA) ·
+[Try the sandbox](https://wishbatch.onrender.com/) ·
+[Testing guide](https://wishbatch.onrender.com/guide)
+
 Fans ask for different things; a maker needs one batch they can actually make.
 Wishbatch groups free-text wishes into a feasible offer, then checks whether
 enough fans complete payment before production can proceed.
@@ -112,37 +116,45 @@ never holds funds or guarantees production or delivery.
 The offline suite covers domain transitions and money rules, persistence,
 analysis validation and quotas, PayPal HTTP mappings/retries, reconciliation,
 server-rendered pages, and checkout JavaScript. Tests use fakes or stubs and no
-provider credentials. Local HTTP checks cover workspace creation, stored
-proposal review, offer publication, and missing-key behavior.
+provider credentials. On 2026-11-12, a fresh anonymous public clone at
+`24423a5` started
+without credentials using JDK 21 and `./gradlew bootRun`; a new workspace
+displayed the stored postcard proposal. The corrected Compose command in the
+[running guide](docs/running.md#docker-compose-and-postgresql) also created a
+PostgreSQL workspace with the stored proposal.
 
-On 2026-11-12, local browser regression against the real PayPal sandbox passed
-for the golden path, fan withdrawal, maker cancellation, and simulated capture
-failure with refund and hold release. The three fan match notes, funded shipping
-list, and absence of buyer details from the public result were also checked.
-The final golden path ran from 09:27:25 to 09:28:51 UTC (86 seconds), including
-sandbox buyer login, the question checklist, price re-check, and one approval
-for three units. Provider IDs: order `9KP58052BW620264K`, authorization
-`7AD27064JG066074U`, and capture `0CL32219XT8853311`.
+An earlier check on 2026-11-12 reported that the [hosted build](https://wishbatch.onrender.com/) passed the
+testing guide's golden path in 2 minutes 28 seconds, from 10:24:38 to 10:27:06
+UTC, including wish/evidence review, price checking, maker questions, sandbox
+buyer login, one approval for three units, and maker confirmation. Stated
+interest/authorized/paid counts were 35/0/0, then 35/3/0, then 35/0/3.
+PayPal resource reads confirmed authorization `7AS89111M3656645V` was `CAPTURED`
+and capture `5XK54784NT246113H` was `COMPLETED` and final for USD 19.50;
+order `28535449WY198563R` appears in the application timeline. No open hold
+remained for this pledge.
 
-On 2026-11-12, the [hosted build](https://wishbatch.onrender.com/) also passed
-manual browser checks against the real PayPal sandbox: the testing guide's
-golden path in 3 minutes 57 seconds, with stated interest/authorized/paid counts
-of 35/0/0, then 35/3/0, then 35/0/3 (order `432219113X527942D`, authorization
-`20G563625P294205M`, capture `3A2814222C960462D`); cancellation with voided
-authorization `3UX98650262422353`; live reanalysis in about 25 seconds; and
-state retained across a page reload. Cold start after idle and persistence
-across a service restart were not checked.
+On 2026-11-12, a local build based on `24423a5` with the guide correction in
+this branch authorized three units and completed sandbox capture. The result
+showed 35 stated wishes, zero authorized units, and three paid units. The
+application timeline reported order `4F5949598S139022U`, authorization
+`14864534L7609122X`, and completed capture `6F1406275R7653342`.
 
-These were manual browser checks, not automated provider tests in the
-repository or independent first-time-user studies. Live reanalysis was not
-repeated in the local regression; its golden path used the labeled stored
-analysis. Webhooks are not implemented.
+These are manual checks, not automated provider tests or independent
+first-time-user studies. Cancellation, withdrawal, refund, live reanalysis,
+cold start after idle, and persistence across a service restart were not
+repeated in this verification. The hosted guide and wishes page differed from
+the current repository's wording; deployment of that exact source revision
+was not established. The later local guide correction has not been verified on
+the hosted build. Webhooks are not implemented.
 
 [Evaluation](docs/evaluation.md) scores forty synthetic wishes (35 requests,
 three options, 105 correlated request/option pairs), using one stored run and
 three fresh runs. All choose postcards. Proposed-option Compatible precision
 is 16/16, 16/16, 15/15, and 15/15; recall is 16/16, 16/16, 15/16, and 15/16
-(93.75-100%). Retained exact quotes are 77/77, 79/79, 79/79, and 78/78.
+(93.75-100%). Retained exact quotes are 78/78, 79/79, 79/79, and 78/78.
+The checked-in evaluation summary still describes an earlier stored artifact;
+see the [evaluation caveat](docs/evaluation.md#results) and reproduce the scores
+against the current files.
 The reference labels were written by a language model, not human adjudicators;
 this is a small product-designed set, not a held-out benchmark. Fresh analysis
 times were 23.213, 25.172, and 27.212 seconds, excluding startup and maker review.

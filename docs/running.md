@@ -46,13 +46,15 @@ automatically. Inject any service credentials into the process environment.
 Install Docker with Compose and start its engine. For a fresh database, run:
 
 ```sh
-docker compose run --build --rm --service-ports app \
-  --spring.jpa.hibernate.ddl-auto=update
+docker compose run --build --rm --service-ports \
+  -e SPRING_JPA_HIBERNATE_DDL_AUTO=update app
 ```
 
 This starts PostgreSQL, waits for its health check, builds the app, and runs it
 in the foreground on <http://localhost:8200/>. The explicit Hibernate setting
-creates/updates the disposable database tables. The unmodified
+creates/updates the disposable database tables. Pass it as an environment
+variable: the image's entrypoint does not forward command arguments to Java.
+The unmodified
 `docker compose up --build` starts the server but does not initialize PostgreSQL
 tables: on an empty volume, creating a demo fails. No schema migrations are
 provided. Do not use automatic schema updates as a production migration plan.
@@ -90,9 +92,9 @@ and approve the PayPal authorization. The maker can confirm production once
 authorized units reach the minimum, even before closing. Confirmation captures
 payments; enough completed units fund the batch. A shortfall refunds captures
 and voids remaining holds. The [README's sandbox evidence](../README.md#evidence-and-limits)
-records local and hosted manual browser checks on 2026-11-12, including provider
-IDs and their separate timings and limits. These were not automated repository
-tests; hosted cold start and persistence across a service restart remain unchecked.
+records fresh-clone and hosted manual browser checks on 2026-11-12, including
+provider IDs, timing, and limits. These were not automated repository tests;
+hosted cold start and persistence across a service restart remain unchecked.
 
 To expose the labeled capture-failure simulation on the maker dashboard:
 

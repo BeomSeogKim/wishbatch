@@ -63,6 +63,11 @@ complete disagreements are in [results.json](../evaluation/results.json).
 The stored artifact is [the application's seed run](../src/main/resources/seed/analysis-run.json).
 Fresh validated outputs and numeric telemetry are in [runs](../evaluation/runs).
 
+The checked-in results file and table below use an earlier stored seed artifact.
+Scoring the current seed with the command below gives 78/78 exact quotes for
+the stored run; the three fresh-run scores are unchanged. Do not treat the
+stored-run row as a score of the current seed until the results are regenerated.
+
 | Run | Requests | Compatible precision | Compatible recall | Exact quotes | Different wishes: proposed / any option | Analysis seconds | Input / output tokens | Reasoning tokens |
 |---|---|---|---|---|---|---|---|---|
 | Stored seed | 40/40 | 16/16 (100%) | 16/16 (100%) | 77/77 (100%) | 0 / 1 | Unavailable | Unavailable | Unavailable |

@@ -56,6 +56,7 @@ class GuideControllerTests(@Autowired private val mvc: MockMvc) {
         assertContains(steps, "Keep the demo minimum at 3 units")
         assertContains(steps, "in a new tab")
         assertContains(steps, "capture can still fail")
+        assertContains(steps, "review the capture summary, select the acknowledgment checkbox")
         assertContains(steps, "Update total")
         assertContains(steps, "15 minutes")
         assertContains(html, "Stated interest counts wishes classified as requests")
