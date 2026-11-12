@@ -8,6 +8,7 @@ import app.campaign.model.WishKind
 import app.campaign.port.AnalysisOutput
 import app.campaign.port.WishNeed
 import java.util.UUID
+import java.util.Locale
 
 data class FollowupDraft(
     val text: String,
@@ -47,10 +48,18 @@ object FollowupQuestions {
 
     fun matchesVariantNeed(option: Option, key: String, need: WishNeed): Boolean {
         if (need.strength == NeedStrength.PREFERENCE || need.attribute != attributeForVariantKey(key)) return false
-        if (key != "color") return true
-        val colorNamed = Regex("(?iuU)\\b(?:color|colour)\\b").containsMatchIn(need.value + " " + need.quote)
-        return colorNamed || option.allowedVariants[key].orEmpty().any { choice ->
-            Regex("(?iuU)(?<![\\p{L}\\p{N}])${Regex.escape(choice)}(?![\\p{L}\\p{N}])").containsMatchIn(need.value)
+        val qualifiers = when (key) {
+            "finish", "paper" -> listOf("finish", "paper")
+            "color" -> listOf("color", "colour")
+            else -> listOf(key)
+        }
+        fun normalized(text: String) = text.trim().replace(Regex("(?U)\\s+"), " ").lowercase(Locale.ROOT)
+        val value = normalized(need.value)
+        return option.allowedVariants[key].orEmpty().any { choice ->
+            val variant = normalized(choice)
+            val names = listOf(variant) + qualifiers.flatMap { listOf("$variant $it", "$it $variant") }
+            value in names && Regex("(?iuU)(?<![\\p{L}\\p{N}])${Regex.escape(choice)}(?![\\p{L}\\p{N}])")
+                .containsMatchIn(need.quote)
         }
     }
 
@@ -109,9 +118,11 @@ object FollowupQuestions {
             val question = requireNotNull(relevant[answer.questionId]) { "Answer is outside this wish" }
             require(answer.wishId == wishId && answer.choice in question.draft.choices) { "Answer must select an approved choice" }
         }
-        val required = wish.needs.filter { it.strength != NeedStrength.PREFERENCE }.groupBy { it.attribute }
-        val answered = answers.map { relevant.getValue(it.questionId).draft.attribute }.toSet()
-        val complete = required.isNotEmpty() && required.values.all { it.size == 1 } && answered.containsAll(required.keys)
+        val required = wish.needs.filter { it.strength != NeedStrength.PREFERENCE }
+        val complete = required.isNotEmpty() && required.groupBy { it.attribute }.values.all { it.size == 1 } &&
+            required.all { need -> answers.any { answer ->
+                matchesVariantNeed(option, relevant.getValue(answer.questionId).draft.variantKey, need)
+            } }
         return FollowupResolution(runId, wishId, option.id,
             if (complete) CompatibilityVerdict.COMPATIBLE else CompatibilityVerdict.CONDITIONAL, answers.toList())
     }

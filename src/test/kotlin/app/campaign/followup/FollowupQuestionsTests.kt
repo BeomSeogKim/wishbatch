@@ -101,6 +101,22 @@ class FollowupQuestionsTests {
     }
 
     @Test
+    fun `sole waterproof finish condition cannot be resolved by a matte or glossy answer`() {
+        val waterproof = output.copy(wishes = listOf(output.wishes.single().copy(needs = listOf(
+            WishNeed(NeedStrength.HARD, NeedAttribute.FINISH, "waterproof", "must be waterproof"),
+        ))))
+        assertFailsWith<IllegalArgumentException> { FollowupQuestions.approve(run, listOf(draft), option, waterproof) }
+        assertEquals(CompatibilityVerdict.CONDITIONAL,
+            FollowupQuestions.resolve(run, wish, emptyList(), emptyList(), option, waterproof).verdict)
+        for ((value, quote) in listOf("matte" to "must be waterproof", "matte and waterproof" to "must be matte and waterproof")) {
+            val unsupported = waterproof.copy(wishes = listOf(waterproof.wishes.single().copy(needs = listOf(
+                WishNeed(NeedStrength.HARD, NeedAttribute.FINISH, value, quote),
+            ))))
+            assertFailsWith<IllegalArgumentException> { FollowupQuestions.validate(listOf(draft), option, unsupported) }
+        }
+    }
+
+    @Test
     fun `variant values from an unrelated attribute cannot resolve a condition`() {
         val invalid = draft.copy(variantKey = "size", choices = listOf("small", "large"))
         assertFailsWith<IllegalArgumentException> { FollowupQuestions.validate(listOf(invalid), option, output) }
@@ -113,6 +129,12 @@ class FollowupQuestionsTests {
         val paperOutput = output.copy(optionIds = listOf(paper.id), verdicts = listOf(output.verdicts.single().copy(optionId = paper.id)))
         val paperDraft = draft.copy(variantKey = "paper", choices = listOf("matte", "satin"))
         FollowupQuestions.validate(listOf(paperDraft), paper, paperOutput)
+        for (value in listOf("matte", "matte finish", "finish matte", "matte paper", "paper matte")) {
+            val aliased = paperOutput.copy(wishes = listOf(paperOutput.wishes.single().copy(needs = listOf(
+                finish.copy(value = value, quote = "Only matte paper"),
+            ))))
+            FollowupQuestions.validate(listOf(paperDraft), paper, aliased)
+        }
 
         val color = Option(option.workspaceId, "Cotton pouch", "pouch", emptyMap(),
             mapOf("color" to listOf("natural", "blue")), 500, "USD", 3, 10, "Maker terms", "US")

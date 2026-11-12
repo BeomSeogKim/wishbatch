@@ -167,7 +167,7 @@ class FollowupServiceTests @Autowired constructor(
 
     @Test
     fun `partial answer replay after another answer completes the wish is idempotent`() {
-        val fixture = fixture(extraNeed = WishNeed(NeedStrength.HARD, NeedAttribute.SIZE, "small", "Only matte"))
+        val fixture = fixture(extraNeed = WishNeed(NeedStrength.HARD, NeedAttribute.SIZE, "small", "small size"))
         followups.draft(fixture.token)
         val questions = followups.makerPage(fixture.token).questions
         assertEquals(2, questions.size)
@@ -283,6 +283,17 @@ class FollowupServiceTests @Autowired constructor(
         assertTrue(followups.draft(unconfigured.token) is FollowupDraftResult.Drafted)
     }
 
+    @Test
+    fun `sole unsupported finish condition cannot enter the approved fan answer path`() {
+        val fixture = fixture(unsupportedFinish = true)
+        assertEquals(FollowupDraftResult.Failed(AnalysisFailure.INVALID_OUTPUT), followups.draft(fixture.token))
+        assertTrue(followups.makerPage(fixture.token).questions.isEmpty())
+        assertTrue(followups.fanQuestions(fixture.token, fixture.wish).isEmpty())
+        assertTrue(reviews.history(fixture.run.workspaceId, fixture.run.id).isEmpty())
+        assertEquals(1, optionWishCounts(runs.find(fixture.token, fixture.run.id)!!.output).single().depends)
+        assertEquals(fixture.output, runs.find(fixture.token, fixture.run.id)!!.originalOutput)
+    }
+
     private fun draft(fixture: Fixture): FollowupQuestion {
         followups.draft(fixture.token)
         return followups.makerPage(fixture.token).questions.single()
@@ -290,7 +301,7 @@ class FollowupServiceTests @Autowired constructor(
 
     private data class Fixture(val token: String, val run: AnalysisRun, val option: Option, val wish: UUID, val output: AnalysisOutput)
 
-    private fun fixture(extraNeed: WishNeed? = null, secondWish: Boolean = false): Fixture {
+    private fun fixture(extraNeed: WishNeed? = null, secondWish: Boolean = false, unsupportedFinish: Boolean = false): Fixture {
         val workspace = workspaces.create()
         val originalOption = workspaces.listOptions(workspace.token).single { it.allowedVariants.containsKey("finish") }
         val option = if (extraNeed?.attribute == NeedAttribute.SIZE) transaction.execute {
@@ -298,9 +309,16 @@ class FollowupServiceTests @Autowired constructor(
                 originalOption.allowedVariants + ("size" to listOf("small", "large")),
                 500, "USD", 3, 10, "Maker delivery terms", "US").also { entityManager.persist(it) }
         }!! else originalOption
-        val wish = workspaces.addWish(workspace.token, "Only matte")
+        val text = when {
+            unsupportedFinish -> "must be waterproof"
+            extraNeed?.attribute == NeedAttribute.SIZE -> "Only matte, small size"
+            else -> "Only matte"
+        }
+        val wish = workspaces.addWish(workspace.token, text)
         val wishes = listOf(wish) + if (secondWish) listOf(workspaces.addWish(workspace.token, "Only matte")) else emptyList()
-        val needs = listOf(WishNeed(NeedStrength.HARD, NeedAttribute.FINISH, "matte", "Only matte")) + listOfNotNull(extraNeed)
+        val finish = if (unsupportedFinish) WishNeed(NeedStrength.HARD, NeedAttribute.FINISH, "waterproof", "must be waterproof")
+            else WishNeed(NeedStrength.HARD, NeedAttribute.FINISH, "matte", "Only matte")
+        val needs = listOf(finish) + listOfNotNull(extraNeed)
         val output = AnalysisOutput(wishes.map { AnalyzedWish(it.id, WishKind.REQUEST, needs) },
             wishes.map { WishVerdict(it.id, option.id, CompatibilityVerdict.CONDITIONAL, "Confirm finish.") },
             Proposal(option.id, emptyMap(), emptyList()), null, emptyList(), emptyList(), emptyList(), listOf(option.id))

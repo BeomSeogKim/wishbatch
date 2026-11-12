@@ -194,7 +194,7 @@ class DefaultFollowupDrafterTests {
         val provider = RecordingProvider()
         val manyWishes = (1..200).map {
             output.wishes.single().copy(wishId = UUID.randomUUID(), needs = output.wishes.single().needs.map { need ->
-                need.copy(value = "v".repeat(500), quote = "q".repeat(500))
+                need.copy(quote = "Only matte " + "q".repeat(500))
             })
         }
         val large = output.copy(wishes = manyWishes, verdicts = manyWishes.map {

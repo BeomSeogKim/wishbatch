@@ -6,6 +6,7 @@ import app.campaign.followup.FollowupQuestion
 import app.campaign.followup.FollowupQuestions
 import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.Option
+import app.campaign.model.NeedStrength
 import app.campaign.model.Wish
 import app.campaign.model.WishKind
 import app.campaign.model.Workspace
@@ -95,6 +96,10 @@ class WishReviewService(
         if (previous?.source == "FAN_ANSWER") return previous
         val original = mapper.readValue(run.resultJson, AnalysisOutput::class.java)
         val effective = reviewedAnalysis(original, history)
+        val needs = effective.wishes.singleOrNull { it.wishId == wish.id }?.needs.orEmpty()
+            .filter { it.strength != NeedStrength.PREFERENCE }
+        fun normalized(text: String) = text.trim().replace(Regex("(?U)\\s+"), " ")
+        if (needs.any { it.quote.isBlank() || !normalized(wish.text).contains(normalized(it.quote)) }) return null
         val option = entityManager.find(Option::class.java, answer.optionId)
             ?.takeIf { it.workspaceId == workspace.id } ?: throw WorkspaceNotFoundException()
         val questions = entityManager.createQuery(
