@@ -14,6 +14,7 @@ import app.campaign.store.*
 import app.testing.PaymentCall
 import java.time.Clock
 import java.time.Instant
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.random.Random
@@ -41,6 +42,7 @@ class InvariantSequenceTest @Autowired constructor(
     private val pledges: PledgeRepository,
     private val events: EventRepository,
     private val gateway: SequenceGateway,
+    private val clock: SequenceClock,
     private val mapper: ObjectMapper,
 ) {
     private val now = Instant.parse("2026-01-01T00:00:00Z")
@@ -49,6 +51,7 @@ class InvariantSequenceTest @Autowired constructor(
     fun `fixed sequences preserve payment and count invariants`() {
         repeat(16) { seed ->
             gateway.reset()
+            clock.current = now
             val workspace = workspaces.saveAndFlush(Workspace("sequence-$seed-${UUID.randomUUID()}", now))
             val option = options.saveAndFlush(Option(workspace.id, "Print", "print", emptyMap(), emptyMap(),
                 100, "USD", 1, 20, "Two weeks", "US"))
@@ -150,6 +153,8 @@ class InvariantSequenceTest @Autowired constructor(
                 }
                 val recoveryAt = actionCount + random.nextInt(1, 4)
                 while (actionCount < 64) {
+                    // Allow each retry to pass the provider backoff cap without sleeping.
+                    clock.current = clock.current.plusSeconds(3601)
                     if (actionCount == recoveryAt) {
                         gateway.cleanupFails = false
                         gateway.pendingCompletes = true
@@ -189,10 +194,14 @@ class InvariantSequenceTest @Autowired constructor(
         val authorization = assertIs<PaymentResult.Received<AuthorizationDetails>>(
             provider.authorizeOrder(order, "authorize"),
         ).resource.authorizationId
+        assertEquals(PaymentStatus.CREATED, provider.readAuthorization(authorization, "read-auth").status)
         val capture = assertIs<PaymentResult.Received<CaptureDetails>>(provider.capture(authorization, "capture"))
+        assertEquals(PaymentStatus.CAPTURED, provider.readAuthorization(authorization, "read-auth").status)
+        assertEquals(PaymentStatus.COMPLETED, provider.readCapture(capture.resource.captureId, "read-capture").status)
         assertEquals(capture, provider.capture(authorization, "capture"))
         val refund = assertIs<PaymentResult.Received<RefundDetails>>(provider.refundCapture(capture.resource.captureId, "refund"))
         assertEquals(refund, provider.refundCapture(capture.resource.captureId, "refund"))
+        assertEquals(PaymentStatus.REFUNDED, provider.readCapture(capture.resource.captureId, "read-capture").status)
         assertEquals(1, provider.captureEffects[authorization.value])
         assertEquals(1, provider.refundEffects[capture.resource.captureId.value])
         provider.refundCapture(capture.resource.captureId, "different-refund")
@@ -204,6 +213,13 @@ class InvariantSequenceTest @Autowired constructor(
     @TestConfiguration
     class Config {
         @Bean @Primary fun sequenceGateway() = SequenceGateway()
-        @Bean @Primary fun sequenceClock(): Clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC)
+        @Bean @Primary fun sequenceClock() = SequenceClock()
     }
+}
+
+class SequenceClock : Clock() {
+    var current: Instant = Instant.parse("2026-01-01T00:00:00Z")
+    override fun instant(): Instant = current
+    override fun getZone(): ZoneId = ZoneOffset.UTC
+    override fun withZone(zone: ZoneId): Clock = Clock.fixed(current, zone)
 }

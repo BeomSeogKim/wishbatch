@@ -45,8 +45,8 @@ class SequenceGateway : PaymentGateway {
 
     override fun authorizeOrder(orderId: OrderId, idempotencyKey: String): PaymentResult<AuthorizationDetails> {
         val id = AuthorizationId(orderId.value.replaceFirst("order-", "auth-"))
+        if (id.value !in amounts) activeHolds.add(id.value)
         amounts[id.value] = amounts.getValue(orderId.value)
-        activeHolds.add(id.value)
         fake.authorizeOrderResults.add(PaymentResult.Received(AuthorizationDetails(id, amounts.getValue(id.value),
             Instant.parse("2026-01-02T00:00:00Z"), orderId), PaymentStatus.CREATED))
         return fake.authorizeOrder(orderId, idempotencyKey)
@@ -56,7 +56,11 @@ class SequenceGateway : PaymentGateway {
         val capture = captures[authorizationId.value]
         fake.readAuthorizationResults.add(PaymentResult.Received(AuthorizationDetails(authorizationId,
             amounts.getValue(authorizationId.value), null, captureId = capture?.captureId),
-            if (capture == null) PaymentStatus.CREATED else PaymentStatus.CAPTURED))
+            when {
+                capture != null -> PaymentStatus.CAPTURED
+                authorizationId.value in activeHolds -> PaymentStatus.CREATED
+                else -> PaymentStatus.VOIDED
+            }))
         return fake.readAuthorization(authorizationId, idempotencyKey)
     }
 
@@ -103,12 +107,16 @@ class SequenceGateway : PaymentGateway {
 
     override fun readCapture(captureId: CaptureId, idempotencyKey: String): PaymentResult<CaptureDetails> {
         val capture = captures.values.single { it.captureId == captureId }
-        if (pendingCompletes) {
+        if (pendingCompletes && captureId.value !in completedCaptures) {
             completedCaptures.add(captureId.value)
             activeHolds.remove(capture.authorizationId!!.value)
         }
-        fake.readCaptureResults.add(PaymentResult.Received(capture,
-            if (pendingCompletes) PaymentStatus.COMPLETED else captureStatus))
+        val status = when (captureId.value) {
+            in completedRefunds -> PaymentStatus.REFUNDED
+            in completedCaptures -> PaymentStatus.COMPLETED
+            else -> PaymentStatus.PENDING
+        }
+        fake.readCaptureResults.add(PaymentResult.Received(capture, status))
         return fake.readCapture(captureId, idempotencyKey)
     }
 
