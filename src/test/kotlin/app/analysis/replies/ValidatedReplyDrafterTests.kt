@@ -83,6 +83,20 @@ class ValidatedReplyDrafterTests {
     }
 
     @Test
+    fun `distinct analysis reasons may create more than eight bounded reply groups`() {
+        val groups = (1..40).map { number -> group.copy(groupId = "g$number",
+            sources = listOf(ReplySource(UUID(0, number.toLong()), "An exact request")),
+            reasons = listOf(ReplySafety.notServedExplanation)) }
+        val provider = RecordingProvider { ProviderResult.Success("model", mapper.writeValueAsString(mapOf(
+            "replies" to groups.map { mapOf("group_id" to it.groupId, "reason_index" to 0, "source_indices" to listOf(0)) },
+        ))) }
+        val result = assertIs<ReplyDraftResult.Success>(drafter(provider).draft(groups))
+        assertEquals(groups.map { it.groupId }.toSet(), result.bodies.keys)
+        assertTrue(result.bodies.values.all { it == ReplySafety.body(ReplySafety.notServedExplanation) })
+        assertEquals(1, provider.requests.size)
+    }
+
+    @Test
     fun `numeric commercial dated and future reasons never reach provider`() {
         val provider = RecordingProvider()
         for (reason in listOf("We offer 12 items.", "The price is low.", "Available Friday.",
@@ -133,7 +147,8 @@ class ValidatedReplyDrafterTests {
     fun `oversized and invalid inputs are rejected before provider use`() {
         val provider = RecordingProvider()
         val drafter = drafter(provider)
-        val invalid = listOf(emptyList(), listOf(group, group), (0..8).map { group.copy(groupId = "g$it") },
+        val invalid = listOf(emptyList(), listOf(group, group), (0..40).map { group.copy(groupId = "g$it") },
+            listOf(group.copy(sources = (0..200).map { ReplySource(UUID(0, it.toLong()), "Exact request") })),
             listOf(group.copy(sources = emptyList())),
             listOf(group.copy(sources = listOf(ReplySource(UUID(0, 1), "x".repeat(501))))))
         for (input in invalid) {

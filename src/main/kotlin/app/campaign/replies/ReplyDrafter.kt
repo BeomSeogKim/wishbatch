@@ -14,10 +14,12 @@ fun interface ReplyDrafter {
     fun draft(groups: List<ReplyEvidenceGroup>): ReplyDraftResult
 }
 
-/** Only these bounded explanations may be reused, and only when the validated analysis cites them exactly. */
+/** Bodies reuse only bounded explanations; free-form analysis prose is never copied into a reply. */
 object ReplySafety {
+    const val notServedExplanation = "This wish is classified as not served by the proposed batch."
     val greetings = listOf("Thank you for sharing your wish. ", "Thanks for your wish. ", "")
     private val explanations = setOf(
+        notServedExplanation,
         "Requested format differs from this batch.",
         "This batch uses a different format.",
         "This batch has a different finish.",

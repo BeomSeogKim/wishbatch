@@ -12,7 +12,7 @@ import java.util.UUID
 class ReplyBatch(
     @Id val runId: UUID,
     @Column(nullable = false) val workspaceId: UUID,
-    @Column(nullable = false, length = 64) val evidenceHash: String,
+    @Column(nullable = false, length = 64) var evidenceHash: String,
     @Column(nullable = false) var status: String = "GENERATING",
     @Column(nullable = false, columnDefinition = "text") var draftsJson: String = "{}",
     var model: String? = null,

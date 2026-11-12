@@ -26,7 +26,8 @@ class ValidatedReplyDrafter(
     private val calls = AtomicInteger()
 
     override fun draft(groups: List<ReplyEvidenceGroup>): ReplyDraftResult {
-        if (groups.isEmpty() || groups.size > 8 || groups.map { it.groupId }.toSet().size != groups.size ||
+        if (groups.isEmpty() || groups.size > 40 || groups.sumOf { it.sources.size } > 200 ||
+            groups.map { it.groupId }.toSet().size != groups.size ||
             groups.any { it.groupId.length > 128 || it.sources.isEmpty() || it.sources.size > 200 ||
                 it.sources.any { source -> source.quote.isBlank() || source.quote.length > 500 } }
         ) return ReplyDraftResult.Failure("INVALID_INPUT")

@@ -19,7 +19,8 @@ import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
-class InvalidReplyEvidenceException : RuntimeException()
+open class InvalidReplyEvidenceException : RuntimeException()
+private class StaleReplyEvidenceException : InvalidReplyEvidenceException()
 class UnsafeReplyException : RuntimeException()
 
 data class MakerReplyGroup(val evidence: ReplyEvidenceGroup, val draft: String?, val approved: Boolean)
@@ -43,7 +44,14 @@ class ReplyService(
 
     fun maker(token: String, runId: UUID): MakerReplies = within(readTransaction) {
         lock(token)
-        view(snapshot(token, runId))
+        try {
+            view(snapshot(token, runId))
+        } catch (_: StaleReplyEvidenceException) {
+            val latestId = runs.latest(token)?.run?.id ?: throw WorkspaceNotFoundException()
+            val latest = try { snapshot(token, latestId) } catch (_: StaleReplyEvidenceException) { null }
+            MakerReplies(latestId, latest?.hash.orEmpty(),
+                if (latest == null) "REANALYSIS_REQUIRED" else "REFRESH_REQUIRED", emptyList())
+        }
     }
 
     fun generate(token: String, runId: UUID, evidenceHash: String): MakerReplies {
@@ -51,9 +59,18 @@ class ReplyService(
             lock(token)
             val snapshot = snapshot(token, runId)
             if (snapshot.hash != evidenceHash) throw InvalidReplyEvidenceException()
-            if (snapshot.groups.isEmpty() || entityManager.find(ReplyBatch::class.java, runId) != null) null
+            val batch = entityManager.find(ReplyBatch::class.java, runId)
+            if (snapshot.groups.isEmpty() || (batch?.evidenceHash == snapshot.hash && batch.status != "STALE")) null
             else {
-                entityManager.persist(ReplyBatch(runId, snapshot.workspaceId, snapshot.hash))
+                if (batch == null) entityManager.persist(ReplyBatch(runId, snapshot.workspaceId, snapshot.hash))
+                else {
+                    batch.evidenceHash = snapshot.hash
+                    batch.status = "GENERATING"
+                    batch.draftsJson = "{}"
+                    batch.model = null
+                    entityManager.createQuery("delete from ReplyApproval a where a.workspaceId = :workspace and a.runId = :run")
+                        .setParameter("workspace", snapshot.workspaceId).setParameter("run", runId).executeUpdate()
+                }
                 snapshot
             }
         }
@@ -67,6 +84,8 @@ class ReplyService(
             within {
                 lock(token)
                 val batch = entityManager.find(ReplyBatch::class.java, runId)
+                // A newer explicit refresh owns this batch; an older provider result must not overwrite it.
+                if (batch.evidenceHash != reserved.hash) return@within
                 val current = runCatching { snapshot(token, runId) }.getOrNull()
                 val success = result as? ReplyDraftResult.Success
                 if (current == null || current.hash != reserved.hash) batch.status = "STALE"
@@ -134,10 +153,10 @@ class ReplyService(
     private fun snapshot(token: String, runId: UUID): Snapshot {
         val workspace = workspaces.findByToken(token) ?: throw WorkspaceNotFoundException()
         val stored = runs.find(token, runId) ?: throw WorkspaceNotFoundException()
-        if (runs.latest(token)?.run?.id != runId) throw InvalidReplyEvidenceException()
+        if (runs.latest(token)?.run?.id != runId) throw StaleReplyEvidenceException()
         val wishes = workspaces.listWishes(token, includeHidden = false)
         val options = workspaces.listOptions(token)
-        if (analysisInputHash(options, wishes) != stored.run.inputHash) throw InvalidReplyEvidenceException()
+        if (analysisInputHash(options, wishes) != stored.run.inputHash) throw StaleReplyEvidenceException()
         val output = stored.output
         val proposal = output.proposal
         val sources = wishes.associateBy { it.id }
@@ -150,10 +169,16 @@ class ReplyService(
                             ?.let { it.verdict == CompatibilityVerdict.INCOMPATIBLE && it.reason == group.reason } != true
                 }
             ) throw InvalidReplyEvidenceException()
+            val unchanged = group.wishIds.all { id ->
+                stored.originalOutput.verdicts.singleOrNull { it.wishId == id && it.optionId == proposal.optionId }
+                    ?.let { it.verdict == CompatibilityVerdict.INCOMPATIBLE && it.reason == group.reason } == true &&
+                    stored.overrides.none { it.wishId == id && it.optionId == proposal.optionId }
+            }
             ReplyEvidenceGroup(
                 hash(mapper.writeValueAsString(listOf(runId.toString(), group.reason, group.wishIds.sorted().map(UUID::toString)))),
                 group.wishIds.sorted().map { ReplySource(it, sources.getValue(it).text) },
-                listOf(group.reason),
+                listOf(if (!ReplySafety.isSafeReason(group.reason) && unchanged)
+                    ReplySafety.notServedExplanation else group.reason),
             )
         }
         val expected = output.verdicts.filter {
@@ -161,7 +186,7 @@ class ReplyService(
                 output.wishes.singleOrNull { wish -> wish.wishId == it.wishId }?.kind == WishKind.REQUEST
         }.map { it.wishId }.toSet()
         if (seen != expected) throw InvalidReplyEvidenceException()
-        val fingerprint = hash(mapper.writeValueAsString(listOf(stored.run.inputHash, output, groups)))
+        val fingerprint = hash(mapper.writeValueAsString(listOf(stored.run.inputHash, output, stored.overrides, groups)))
         return Snapshot(workspace.id, runId, fingerprint, groups)
     }
 
@@ -170,7 +195,7 @@ class ReplyService(
         val valid = batch?.takeIf { it.workspaceId == snapshot.workspaceId && it.evidenceHash == snapshot.hash }
         val drafts = valid?.takeIf { it.status == "DRAFTED" }?.let { mapper.readTree(it.draftsJson) }
         return MakerReplies(snapshot.runId, snapshot.hash, if (snapshot.groups.isEmpty()) "EMPTY"
-            else valid?.status ?: if (batch == null) "READY" else "STALE", snapshot.groups.map { group ->
+            else valid?.status?.takeUnless { it == "STALE" } ?: if (batch == null) "READY" else "REFRESH_REQUIRED", snapshot.groups.map { group ->
             val approved = entityManager.find(ReplyApproval::class.java, approvalId(snapshot.runId, group.groupId))
                 ?.takeIf { it.workspaceId == snapshot.workspaceId && it.evidenceHash == snapshot.hash }
             MakerReplyGroup(group, approved?.body ?: drafts?.path(group.groupId)?.asString(), approved != null)

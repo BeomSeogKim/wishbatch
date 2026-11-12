@@ -23,7 +23,7 @@ internal object ReplyPrompt {
             "type" to "object", "properties" to fields.toMap(), "required" to fields.map { it.first },
             "additionalProperties" to false,
         )
-        return obj("replies" to mapOf("type" to "array", "maxItems" to 8, "items" to obj(
+        return obj("replies" to mapOf("type" to "array", "maxItems" to 40, "items" to obj(
             "group_id" to string, "reason_index" to integer,
             "source_indices" to mapOf("type" to "array", "maxItems" to 3, "items" to integer),
         )))

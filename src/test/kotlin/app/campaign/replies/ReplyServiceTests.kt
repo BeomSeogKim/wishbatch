@@ -108,6 +108,122 @@ class ReplyServiceTests(
     }
 
     @Test
+    fun `free form original classifications produce bounded replies without copying explanations`() {
+        val fixture = fixture(reasons = listOf("Requested wall display is outside the selected paper product.",
+            "Requested glossy surface is absent from the matte catalog."))
+        replyTransport()
+        val view = replies.maker(fixture.token, fixture.run.id)
+        assertTrue(view.groups.all { it.evidence.reasons == listOf(ReplySafety.notServedExplanation) })
+        assertEquals(0, drafter.calls)
+        val generated = replies.generate(fixture.token, fixture.run.id, view.evidenceHash)
+        assertEquals("DRAFTED", generated.status)
+        assertTrue(generated.groups.all { it.draft == ReplySafety.body(ReplySafety.notServedExplanation) })
+        val group = generated.groups.first()
+        assertNull(replies.approvedForWish(fixture.token, fixture.run.id, fixture.wishes.first()))
+        approve(fixture, group, group.draft!!)
+        val approved = assertNotNull(replies.approvedForWish(fixture.token, fixture.run.id, fixture.wishes.first()))
+        assertEquals(group.evidence.sources.single { it.wishId == fixture.wishes.first() }.quote, approved.quote)
+        assertEquals(group.draft, approved.body)
+    }
+
+    @Test
+    fun `effective changes need explicit regeneration and fresh approval even for unchanged groups`() {
+        val fixture = fixture()
+        val original = drafted(fixture)
+        val first = original.groups.first()
+        approve(fixture, first, first.draft!!)
+        val option = runs.find(fixture.token, fixture.run.id)!!.output.proposal!!.optionId
+        reviews.decide(fixture.token, fixture.run.id, fixture.wishes.last(), option,
+            CompatibilityVerdict.COMPATIBLE, "This format matches.")
+        val refresh = replies.maker(fixture.token, fixture.run.id)
+        assertEquals("REFRESH_REQUIRED", refresh.status)
+        assertEquals(1, drafter.calls)
+        assertEquals(first.evidence.groupId, refresh.groups.single().evidence.groupId)
+        assertTrue(refresh.groups.all { it.draft == null && !it.approved })
+        assertNull(replies.approvedForWish(fixture.token, fixture.run.id, fixture.wishes.first()))
+        assertFailsWith<InvalidReplyEvidenceException> {
+            replies.generate(fixture.token, fixture.run.id, original.evidenceHash)
+        }
+        val rebuilt = replies.generate(fixture.token, fixture.run.id, refresh.evidenceHash)
+        assertEquals("DRAFTED", rebuilt.status)
+        assertEquals(2, drafter.calls)
+        assertTrue(rebuilt.groups.none { it.approved })
+        approve(fixture, rebuilt.groups.single(), rebuilt.groups.single().draft!!)
+        assertNotNull(replies.approvedForWish(fixture.token, fixture.run.id, fixture.wishes.first()))
+    }
+
+    @Test
+    fun `older provider completion cannot overwrite a newer explicit refresh`() {
+        val fixture = fixture()
+        drafter.boundary = ReplyDrafter { groups ->
+            drafter.boundary = null
+            val option = runs.find(fixture.token, fixture.run.id)!!.output.proposal!!.optionId
+            reviews.decide(fixture.token, fixture.run.id, fixture.wishes.last(), option,
+                CompatibilityVerdict.COMPATIBLE, "This format matches.")
+            val current = replies.maker(fixture.token, fixture.run.id)
+            assertEquals("DRAFTED", replies.generate(fixture.token, fixture.run.id, current.evidenceHash).status)
+            ReplyDraftResult.Success(groups.associate { it.groupId to ReplySafety.body(it.reasons.single()) }, "older-model")
+        }
+        val result = drafted(fixture)
+        assertEquals("DRAFTED", result.status)
+        assertEquals(1, result.groups.size)
+        assertEquals(2, drafter.calls)
+    }
+
+    @Test
+    fun `a draft interrupted by changed input can be refreshed when that input becomes valid again`() {
+        val fixture = fixture()
+        var added: UUID? = null
+        drafter.boundary = ReplyDrafter { groups ->
+            added = workspaces.addWish(fixture.token, "An additional request during drafting").id
+            ReplyDraftResult.Success(groups.associate { it.groupId to ReplySafety.body(it.reasons.single()) }, "offline-test")
+        }
+        assertEquals("REANALYSIS_REQUIRED", drafted(fixture).status)
+        workspaces.setWishHidden(fixture.token, added!!, true)
+        drafter.boundary = null
+        val refresh = replies.maker(fixture.token, fixture.run.id)
+        assertEquals("REFRESH_REQUIRED", refresh.status)
+        assertTrue(refresh.groups.all { it.draft == null && !it.approved })
+        assertEquals("DRAFTED", replies.generate(fixture.token, fixture.run.id, refresh.evidenceHash).status)
+        assertEquals(2, drafter.calls)
+    }
+
+    @Test
+    fun `new input requires reanalysis and an old link can explicitly draft from the latest valid run`() {
+        val fixture = fixture()
+        val original = drafted(fixture)
+        approve(fixture, original.groups.first(), original.groups.first().draft!!)
+        val added = workspaces.addWish(fixture.token, "A new source after analysis")
+        val stale = replies.maker(fixture.token, fixture.run.id)
+        assertEquals("REANALYSIS_REQUIRED", stale.status)
+        assertTrue(stale.groups.isEmpty())
+        assertEquals("", stale.evidenceHash)
+        assertEquals(1, drafter.calls)
+        val stored = runs.find(fixture.token, fixture.run.id)!!
+        val options = workspaces.listOptions(fixture.token)
+        val output = stored.originalOutput.copy(
+            wishes = stored.output.wishes + AnalyzedWish(added.id, WishKind.REQUEST, emptyList()),
+            verdicts = stored.output.verdicts + options.map {
+                WishVerdict(added.id, it.id, CompatibilityVerdict.COMPATIBLE, "This format matches.")
+            },
+        )
+        val latest = AnalysisRun(fixture.run.workspaceId, "offline-test",
+            analysisInputHash(options, workspaces.listWishes(fixture.token, false)), mapper.writeValueAsString(output),
+            createdAt = Instant.parse("2091-01-01T00:00:00Z"))
+        transaction.executeWithoutResult { em.persist(latest) }
+        val refresh = replies.maker(fixture.token, fixture.run.id)
+        assertEquals("REFRESH_REQUIRED", refresh.status)
+        assertEquals(latest.id, refresh.runId)
+        assertTrue(refresh.groups.isEmpty())
+        assertEquals(1, drafter.calls)
+        assertNull(replies.approvedForWish(fixture.token, fixture.run.id, fixture.wishes.first()))
+        val generated = replies.generate(fixture.token, refresh.runId, refresh.evidenceHash)
+        assertEquals("DRAFTED", generated.status)
+        assertTrue(generated.groups.none { it.approved })
+        assertEquals(2, drafter.calls)
+    }
+
+    @Test
     fun `unsupported maker text commercial terms numeric dates and future promises cannot be approved`() {
         val fixture = fixture()
         val view = drafted(fixture)
@@ -223,7 +339,10 @@ class ReplyServiceTests(
         approve(fixture, group, group.evidence.reasons.single())
         assertTrue(replies.maker(fixture.token, fixture.run.id).groups.any { it.approved })
         workspaces.addWish(fixture.token, "A new source after analysis")
-        mvc.get(path) { param("run", fixture.run.id.toString()) }.andExpect { status { isConflict() } }
+        val stale = mvc.get(path) { param("run", fixture.run.id.toString()) }
+            .andExpect { status { isOk() } }.andReturn().modelAndView!!.model["replies"] as MakerReplies
+        assertEquals("REANALYSIS_REQUIRED", stale.status)
+        assertTrue(stale.groups.isEmpty())
 
         val empty = fixture(empty = true)
         assertEquals("EMPTY", replies.maker(empty.token, empty.run.id).status)
@@ -327,7 +446,11 @@ class ReplyServiceTests(
     }
 
     private data class Fixture(val token: String, val run: AnalysisRun, val wishes: List<UUID>)
-    private fun fixture(empty: Boolean = false, sessions: List<MockHttpSession>? = null): Fixture {
+    private fun fixture(
+        empty: Boolean = false,
+        sessions: List<MockHttpSession>? = null,
+        reasons: List<String> = listOf("This batch uses a different format.", "This batch has a different finish."),
+    ): Fixture {
         val workspace = workspaces.create()
         val added = listOf("I asked for a poster under $12 <script>fanMarker()</script>",
             "Another fan private phrase: a poster please", "Different group private phrase: glossy finish").mapIndexed { index, text ->
@@ -343,7 +466,6 @@ class ReplyServiceTests(
         val wishes = workspaces.listWishes(workspace.token, false)
         val options = workspaces.listOptions(workspace.token)
         val option = seed.output.proposal!!.optionId
-        val reasons = listOf("This batch uses a different format.", "This batch has a different finish.")
         val groups = if (empty) emptyList() else listOf(NotServedGroup("Format", added.take(2), reasons[0]),
             NotServedGroup("Finish", added.takeLast(1), reasons[1]))
         val output = AnalysisOutput(wishes.map { AnalyzedWish(it.id, WishKind.REQUEST, emptyList()) },
