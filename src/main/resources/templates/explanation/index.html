@@ -27,7 +27,11 @@
     <section class="card">
         <h2>What AI did</h2>
         <th:block th:if="${evidence != null and evidence.isSeed}">
-            <p>Precomputed for this sample by the same analysis pipeline<span th:if="${analysisRecordedAt != null}"> on <time th:datetime="${analysisRecordedAt}" th:text="${@humanDisplay.time(analysisRecordedAt)}"></time></span>. Creating a workspace does not run a new analysis.</p>
+            <p th:if="${analysisModel != null and analysisModel != 'synthetic-reference'}">Stored model run on synthetic inputs. Precomputed for this sample by the same analysis pipeline. Model: <span th:text="${analysisModel}"></span>.</p>
+            <p th:if="${analysisModel == 'synthetic-reference'}">Stored reference fixture with synthetic inputs. This legacy example is not a recorded provider model run.</p>
+            <p th:if="${analysisModel == null}">Stored analysis; model provenance is unavailable.</p>
+            <p th:if="${analysisRecordedAt != null}">Recorded <time th:datetime="${analysisRecordedAt}" th:text="${@humanDisplay.time(analysisRecordedAt)}"></time>.</p>
+            <p>Creating a workspace does not run a new analysis.</p>
             <p th:if="${analysisRecordedAt == null}">The recorded analysis time is unavailable.</p>
             <p><a class="button button-secondary" th:href="@{/w/{token}/maker/proposal(token=${token})}">Run live analysis in the maker workspace</a></p>
         </th:block>

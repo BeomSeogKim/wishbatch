@@ -68,7 +68,9 @@ class BatchExplanationController(
         model.addAttribute("paidShortfall", campaign.state == CampaignState.FUNDED && campaign.counts.paid < offer.minBatch)
         model.addAttribute("paymentAttention", campaign.needsAttention.isNotEmpty())
         model.addAttribute("evidence", evidence.evidence(workspaceId, offer.analysisRunId, offer.optionId))
-        model.addAttribute("analysisRecordedAt", analyses.find(token, offer.analysisRunId)?.run?.createdAt)
+        val attachedRun = analyses.find(token, offer.analysisRunId)?.run
+        model.addAttribute("analysisRecordedAt", attachedRun?.createdAt)
+        model.addAttribute("analysisModel", attachedRun?.model)
         return "explanation/index"
     }
 

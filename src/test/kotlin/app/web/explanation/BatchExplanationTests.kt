@@ -100,7 +100,7 @@ class BatchExplanationTests @Autowired constructor(
             assertContains(html, "<dt>Compatible</dt><dd>$compatible</dd>")
             assertContains(html, "<dt>Depends</dt><dd>${counts.depends}</dd>")
             assertContains(html, "<dt>Not served</dt><dd>$notServed</dd>")
-            assertContains(html, "Precomputed for this sample by the same analysis pipeline")
+            assertContains(html, "Creating a workspace does not run a new analysis.")
             assertEquals(compatible, optionWishCounts(runs.find(workspace.token, stored.run.id)!!.output)
                 .single { it.optionId == option }.compatible)
         }
@@ -206,13 +206,13 @@ class BatchExplanationTests @Autowired constructor(
     }
 
     @Test
-    fun `sample timestamps follow the attached run on current and historical routes`() {
+    fun `sample provenance follows attached provider and legacy runs on both routes`() {
         val workspace = workspaces.create()
         val stored = requireNotNull(runs.latest(workspace.token))
         val option = requireNotNull(stored.output.proposal).optionId
         val attachedAt = Instant.parse("2025-12-01T12:34:00Z")
         val historicalId = transactions.execute {
-            val historicalRun = AnalysisRun(workspace.id, stored.run.model, stored.run.inputHash,
+            val historicalRun = AnalysisRun(workspace.id, "synthetic-reference", stored.run.inputHash,
                 stored.run.resultJson, isSeed = true, createdAt = attachedAt)
             entityManager.persist(historicalRun)
             fun campaign(runId: UUID, title: String, opened: Instant): UUID {
@@ -224,20 +224,35 @@ class BatchExplanationTests @Autowired constructor(
                     .also(entityManager::persist).id
             }
             val historical = campaign(historicalRun.id, "Historical sample", now.minusSeconds(3600))
-            campaign(stored.run.id, "Current sample", now)
+            val providerRun = AnalysisRun(workspace.id, "example-provider-model", stored.run.inputHash,
+                stored.run.resultJson, isSeed = true, createdAt = now)
+            entityManager.persist(providerRun)
+            campaign(providerRun.id, "Current sample", now)
             historical
         }!!
-        for ((path, recordedAt) in listOf(
-            "/w/${workspace.token}/how-this-batch-was-chosen" to stored.run.createdAt,
-            "/w/${workspace.token}/campaigns/$historicalId/how-this-batch-was-chosen" to attachedAt,
+        for ((path, recordedAt, modelName) in listOf(
+            Triple("/w/${workspace.token}/how-this-batch-was-chosen", now, "example-provider-model"),
+            Triple("/w/${workspace.token}/campaigns/$historicalId/how-this-batch-was-chosen", attachedAt, "synthetic-reference"),
         )) {
             val html = mvc.get(path).andExpect {
                 status { isOk() }
-                model { attribute("analysisRecordedAt", recordedAt) }
+                model {
+                    attribute("analysisRecordedAt", recordedAt)
+                    attribute("analysisModel", modelName)
+                }
             }.andReturn().response.contentAsString
             assertContains(html, "datetime=\"$recordedAt\"")
             assertContains(html, app.web.layout.HumanDisplay().time(recordedAt))
-            assertContains(html, "Precomputed for this sample by the same analysis pipeline")
+            if (modelName == "synthetic-reference") {
+                assertContains(html, "Stored reference fixture with synthetic inputs")
+                assertFalse(html.contains("Stored model run on synthetic inputs"))
+                assertFalse(html.contains("Precomputed for this sample by the same analysis pipeline"))
+            } else {
+                assertContains(html, "Stored model run on synthetic inputs")
+                assertContains(html, "Precomputed for this sample by the same analysis pipeline")
+                assertContains(html, ">example-provider-model</span>")
+                assertFalse(html.contains("Stored reference fixture"))
+            }
             assertContains(html, "Creating a workspace does not run a new analysis.")
             assertContains(html, "href=\"/w/${workspace.token}/maker/proposal\"")
             assertContains(html, "Run live analysis in the maker workspace")
@@ -289,7 +304,7 @@ class BatchExplanationTests @Autowired constructor(
             assertContains(HtmlUtils.htmlUnescape(html), quote)
             assertContains(html, "Anonymous synthetic wish")
             assertContains(html, "stored analysis of synthetic demo wishes")
-            assertContains(html, "Precomputed for this sample by the same analysis pipeline")
+            assertContains(html, "Creating a workspace does not run a new analysis.")
             assertFalse(html.contains("AI grouped wishes against the maker's feasible options"))
             assertContains(html, "Production and delivery are the maker's responsibility.")
         }
