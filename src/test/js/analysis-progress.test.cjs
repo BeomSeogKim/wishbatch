@@ -103,3 +103,40 @@ test('terminal server-rendered pages make no polling request', () => {
         assert.equal(app.timers.length, 0);
     }
 });
+
+test('proposal busy status only follows a non-prevented analysis submission and resets on return', () => {
+    const template = fs.readFileSync(path.join(__dirname, '../../main/resources/templates/maker/proposal.html'), 'utf8');
+    const inline = template.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
+    assert.match(template, /id="analysis-working"[^>]*hidden><\/p>/);
+    const handlers = {};
+    const windowHandlers = {};
+    const tasks = [];
+    const form = {attrs: {}, addEventListener: (type, fn) => { handlers[type] = fn; },
+        setAttribute(name, value) { this.attrs[name] = value; }, removeAttribute(name) { delete this.attrs[name]; }};
+    const button = {disabled: false, textContent: 'Run it live'};
+    const working = {hidden: true, textContent: ''};
+    const elements = {'analysis-form': form, 'analysis-submit': button, 'analysis-working': working};
+    const context = {document: {addEventListener() {}, getElementById: id => elements[id]},
+        window: {location: {hash: ''}, addEventListener: (type, fn) => { windowHandlers[type] = fn; }},
+        queueMicrotask: fn => tasks.push(fn)};
+    vm.runInNewContext(inline, context);
+    handlers.submit({target: {}, defaultPrevented: false});
+    assert.equal(tasks.length, 0);
+    const canceled = {target: form, defaultPrevented: false};
+    handlers.submit(canceled);
+    canceled.defaultPrevented = true;
+    tasks.shift()();
+    assert.equal(working.textContent, '');
+    assert.equal(button.disabled, false);
+    handlers.submit({target: form, defaultPrevented: false});
+    tasks.shift()();
+    assert.match(working.textContent, /Reading wishes/);
+    assert.equal(working.hidden, false);
+    assert.equal(form.attrs['aria-busy'], 'true');
+    windowHandlers.pageshow();
+    assert.equal(working.textContent, '');
+    assert.equal(working.hidden, true);
+    assert.equal(button.disabled, false);
+    assert.equal(button.textContent, 'Run it live');
+    assert.equal(form.attrs['aria-busy'], undefined);
+});

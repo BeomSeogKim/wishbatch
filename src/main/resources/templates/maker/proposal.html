@@ -28,6 +28,10 @@
             <p class="eyebrow">Proposed batch · for your review</p>
             <h2 id="proposed-option" th:text="${proposedOption.name}">Postcard set</h2>
             <p th:text="${optionFormat}">Format</p>
+            <p>Recorded analysis: <span th:text="${stored.originalOutput.wishes.size()}"></span> <span th:text="${stored.originalOutput.wishes.size() == 1 ? 'wish' : 'wishes'}"></span> <span th:text="${stored.run.isSeed and stored.run.model == 'synthetic-reference' ? 'in reference' : 'read'}"></span>
+                <span th:if="${secondReading != null}" th:text="${' · ' + secondReading.comparedWishCount + (secondReading.comparedWishCount == 1 ? ' paired second reading' : ' paired second readings')}"></span>
+                <span th:if="${stored.originalOutput.metrics != null}" th:text="${' · ' + #numbers.formatDecimal(stored.originalOutput.metrics.elapsedSeconds, 1, 2) + ' seconds'}"></span>.
+            </p>
             <div class="proposal-summary" aria-label="Wish groups for this proposal">
                 <div th:each="group : ${groupSummaries}">
                     <strong th:text="${group.count}">0</strong>
@@ -61,7 +65,7 @@
             <button th:if="${proposedOption == null}" id="analysis-submit" class="button button-secondary" type="submit" th:disabled="${!hasVisibleWishes}"
                     th:text="${stored == null ? 'Run analysis' : 'Run it live'}">Run it live</button>
             <p id="analysis-limit" class="field-help">Two readings and a proposal share a 120-second time limit. The current result stays here while you wait.</p>
-            <p id="analysis-working" class="notice notice-info" role="status" aria-live="polite" hidden>Reading wishes and checking evidence… Please keep this page open.</p>
+            <p id="analysis-working" class="notice notice-info" role="status" aria-live="polite" hidden></p>
         </form>
         <a th:href="@{/w/{token}/maker/analysis-progress(token=${token})}">Live analysis progress</a>
     </div>
@@ -195,11 +199,28 @@
         }
         window.addEventListener('hashchange', revealSourceWish);
         revealSourceWish();
-        document.getElementById('analysis-form').addEventListener('submit', function () {
-            document.getElementById('analysis-submit').disabled = true;
-            document.getElementById('analysis-submit').textContent = 'Analyzing…';
-            document.getElementById('analysis-working').hidden = false;
-            this.setAttribute('aria-busy', 'true');
+        const analysisForm = document.getElementById('analysis-form');
+        const analysisButton = document.getElementById('analysis-submit');
+        const analysisWorking = document.getElementById('analysis-working');
+        const initialButtonText = analysisButton.textContent;
+        const initiallyDisabled = analysisButton.disabled;
+        analysisForm.addEventListener('submit', event => {
+            if (event.target !== analysisForm) return;
+            queueMicrotask(() => {
+                if (event.defaultPrevented) return;
+                analysisButton.disabled = true;
+                analysisButton.textContent = 'Analyzing…';
+                analysisWorking.hidden = false;
+                analysisWorking.textContent = 'Reading wishes and checking evidence… Please keep this page open.';
+                analysisForm.setAttribute('aria-busy', 'true');
+            });
+        });
+        window.addEventListener('pageshow', () => {
+            analysisButton.disabled = initiallyDisabled;
+            analysisButton.textContent = initialButtonText;
+            analysisWorking.hidden = true;
+            analysisWorking.textContent = '';
+            analysisForm.removeAttribute('aria-busy');
         });
     </script>
 </main>

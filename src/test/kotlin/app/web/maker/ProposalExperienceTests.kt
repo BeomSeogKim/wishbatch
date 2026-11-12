@@ -62,6 +62,8 @@ class ProposalExperienceTests(
         val summary = html.substringAfter("aria-label=\"Wish groups for this proposal\"").substringBefore("This does not publish an offer.")
         assertFalse(summary.contains("<details"))
         assertContains(summary, "<blockquote>")
+        assertContains(html, "Recorded analysis:")
+        assertContains(html, "paired second readings")
         assertContains(html, "Precomputed sample run completed")
         assertContains(html, "their received times reflect that import")
         assertContains(html, "120-second time limit")
@@ -114,6 +116,7 @@ class ProposalExperienceTests(
         assertContains(html, "<dd>12,000</dd>")
         assertContains(html, "<dd>8,000</dd>")
         assertContains(html, "57.41 seconds")
+        assertContains(html.substringAfter("Recorded analysis:").substringBefore("</p>"), "57.41 seconds")
         assertFalse(html.contains("Recorded failure category"))
         assertEquals("TIMEOUT", runs.latest(workspace.token)!!.originalOutput.metrics!!.failureCategory)
     }
