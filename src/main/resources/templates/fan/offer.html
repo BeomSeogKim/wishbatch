@@ -42,6 +42,7 @@
                     <p th:if="${quote != null and quote.allowed}" class="offer-hold-note">Authorize a hold now. You are not charged yet.</p>
                     <h2 class="h3">Choose your quantity</h2>
                     <form class="offer-quantity-form" method="get" th:action="@{/w/{token}/offer(token=${token})}">
+                        <input th:if="${wishId != null}" type="hidden" name="wishId" th:value="${wishId}">
                         <div class="field">
                             <label for="quantity">Quantity</label>
                             <select id="quantity" name="quantity" aria-describedby="quantity-help">
@@ -62,7 +63,7 @@
                     <p class="offer-payment-summary">Enough holds + maker confirmation → attempt payment. A payment shortfall → refunds and hold releases are requested. Capture can fail; timing depends on PayPal and your bank or card.</p>
                     <p th:unless="${paypalReady}" class="notice notice-info">PayPal sandbox checkout is not configured. Please try again later.</p>
                     <div th:if="${quote != null and quote.allowed and paypalReady}" id="pledge-checkout"
-                         th:attr="data-create-url=@{/w/{token}/api/pledges(token=${token})},data-quantity=${quantity},data-campaign-id=${campaign.id}">
+                         th:attr="data-create-url=@{/w/{token}/api/pledges(token=${token})},data-quantity=${quantity},data-campaign-id=${campaign.id},data-wish-id=${wishId}">
                         <p id="pledge-feedback" role="status" aria-live="polite">Continue with PayPal to authorize this amount in the sandbox.</p>
                         <a id="pledge-status-link" hidden>Check pledge status</a>
                         <div id="paypal-button-container"></div>

@@ -25,6 +25,7 @@ import app.campaign.port.PaymentStatus
 import app.campaign.port.Proposal
 import app.campaign.port.VoidDetails
 import app.campaign.provenance.DecisionRecordService
+import app.campaign.provenance.DecisionRecordQuery
 import app.campaign.service.CampaignPersistence
 import app.campaign.service.CampaignRef
 import app.campaign.service.CampaignQueries
@@ -103,6 +104,7 @@ class FanPaymentControllerTests @Autowired constructor(
     private val evidence: OfferEvidenceQuery,
     private val terms: TermsSealQuery,
     private val records: DecisionRecordService,
+    private val recordQuery: DecisionRecordQuery,
     private val persistence: CampaignPersistence,
     private val entities: EntityManager,
 ) {
@@ -163,6 +165,10 @@ class FanPaymentControllerTests @Autowired constructor(
         assertEquals(id, call.request.pledgeId)
         assertEquals(PledgeState.CREATED, pledges.findById(id).orElseThrow().state)
         assertNull(pledges.findById(id).orElseThrow().wishId)
+        val statusHtml = mvc.get("${fixture.path}/pledges/$id").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        assertContains(statusHtml, "${fixture.path}/pledges/$id/trace")
+        assertContains(statusHtml, requireNotNull(recordQuery.findPledgeByToken(fixture.workspace.token, id)?.lastHash))
 
         gateway.authorizeOrderResults.add(received(AuthorizationDetails(
             AuthorizationId("synthetic-authorization"), Money(400, "USD"), start.plusSeconds(86_400),
@@ -222,8 +228,11 @@ class FanPaymentControllerTests @Autowired constructor(
         val fixture = fixture()
         val wish = wishes.saveAndFlush(Wish(fixture.workspace.id, "A print for my desk", WishSource.ONSITE, createdAt = start))
         val session = MockHttpSession().apply { setAttribute("followup.wish.${fixture.workspace.token}", wish.id) }
-        mvc.get("${fixture.path}/offer") { param("wishId", wish.id.toString()) }
+        val offerHtml = mvc.get("${fixture.path}/offer") { param("wishId", wish.id.toString()) }
             .andExpect { status { isOk() }; model { attribute("wishId", wish.id) } }
+            .andReturn().response.contentAsString
+        assertContains(offerHtml, "data-wish-id=\"${wish.id}\"")
+        assertContains(offerHtml, "name=\"wishId\" value=\"${wish.id}\"")
         mvc.get("${fixture.path}/offer") { this.session = session }
             .andExpect { status { isOk() }; model { attribute("wishId", wish.id) } }
         val html = mvc.get(fixture.path) { this.session = session }.andReturn().response.contentAsString
@@ -576,7 +585,9 @@ class FanPaymentControllerTests @Autowired constructor(
         assertContains(disclosure, "<summary>Withdraw this pledge</summary>")
         assertContains(disclosure, "name=\"confirmed\"")
         assertContains(disclosure, "required")
-        assertContains(html, "A link from this pledge to a wish is not available.")
+        assertContains(html, "Trace my pledge")
+        assertContains(html, "Latest record entry hash")
+        assertContains(html, requireNotNull(recordQuery.findPledgeByToken(fixture.workspace.token, pledge.id)?.lastHash))
         assertFalse(html.contains("Amounts use minor units"))
     }
 

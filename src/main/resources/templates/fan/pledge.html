@@ -28,7 +28,9 @@
             <p>The campaign outcome and your payment status are separate. Your payment status is shown above.</p>
         </th:block>
         <a th:href="@{/w/{token}/offer(token=${token})}">Review the offer and sealed terms</a>
-        <p class="muted">A link from this pledge to a wish is not available.</p>
+        <p><a th:href="@{/w/{token}/pledges/{id}/trace(token=${token},id=${pledge.id})}">Trace my pledge</a></p>
+        <details th:if="${pledgeRecordHash != null}"><summary>Latest record entry hash</summary><p th:text="${pledgeRecordHash}"></p></details>
+        <p th:if="${pledgeRecordHash == null}" class="muted">Record entry unavailable.</p>
     </section>
     <details th:if="${canWithdraw}" class="card pledge-withdraw">
         <summary>Withdraw this pledge</summary>

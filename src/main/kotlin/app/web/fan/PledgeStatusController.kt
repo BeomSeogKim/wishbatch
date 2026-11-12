@@ -2,6 +2,7 @@ package app.web.fan
 
 import app.campaign.model.PledgeState
 import app.campaign.outcome.outcomeStep
+import app.campaign.provenance.DecisionRecordQuery
 import app.campaign.trail.MoneyTrail
 import app.campaign.service.CampaignService
 import app.campaign.service.PledgeReferences
@@ -27,6 +28,7 @@ class PledgeStatusController(
     private val service: CampaignService,
     private val references: PledgeReferences,
     private val trail: MoneyTrail,
+    private val records: DecisionRecordQuery,
 ) {
     @GetMapping("/w/{token}/pledges/{id}")
     fun pledge(@PathVariable token: String, @PathVariable id: String, model: Model, response: HttpServletResponse): String {
@@ -38,6 +40,7 @@ class PledgeStatusController(
         }
         model.addAttribute("token", token)
         model.addAttribute("pledge", lookup.pledge)
+        model.addAttribute("pledgeRecordHash", records.findPledgeByToken(token, pledgeId)?.lastHash)
         model.addAttribute("canWithdraw", lookup.canWithdraw)
         model.addAttribute("sentence", pledgeSentence(lookup.pledge.state, messages))
         model.addAttribute("showAuthorizationExpiry", lookup.pledge.state == PledgeState.AUTHORIZED &&

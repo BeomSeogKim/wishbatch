@@ -2,6 +2,7 @@ package app.campaign.provenance
 
 import app.campaign.followup.FollowupAnswerRecord
 import app.campaign.followup.FollowupQuestion
+import app.campaign.followup.FollowupReviewRecorded
 import app.campaign.model.NeedAttribute
 import app.campaign.model.AnalysisRun
 import app.campaign.model.Campaign
@@ -23,6 +24,7 @@ import app.campaign.review.WishReviewOverride
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.web.servlet.MockMvc
@@ -49,6 +51,7 @@ class DecisionRecordTests @Autowired constructor(
     private val query: DecisionRecordQuery,
     private val mapper: JsonMapper,
     private val mvc: MockMvc,
+    private val publisher: ApplicationEventPublisher,
 ) {
     private val now = Instant.parse("2026-01-01T00:00:00Z")
 
@@ -402,7 +405,7 @@ class DecisionRecordTests @Autowired constructor(
             CompatibilityVerdict.COMPATIBLE, CompatibilityVerdict.CONDITIONAL, "Fan confirmed both conditions.", now, 1,
             source = "FAN_ANSWER", answerId = answers.last().id).also(entities::persist)
         val originalRun = fixture.run.resultJson
-        records.recordWishReview(review, answers, questions)
+        publisher.publishEvent(FollowupReviewRecorded(review, answers, questions))
         records.recordWishReview(review, answers.reversed(), questions.reversed())
         snapshot(fixture)
         val document = document(fixture)
