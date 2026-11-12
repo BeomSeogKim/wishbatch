@@ -1,0 +1,444 @@
+{
+  "schemaVersion": 1,
+  "method": {
+    "authorType": "language-model evaluator; not human labels",
+    "blindness": "Written and frozen using wish text, option catalog and label definitions before inspecting any stored or fresh analysis output. No model-output-driven revisions.",
+    "independenceLimit": "Output-blind reference, not an independent human adjudication; related language-model judgments can share biases.",
+    "decisionRules": [
+      "A requested product format is treated as a requirement unless acceptable alternatives are stated. Soft preferences do not gate compatibility.",
+      "CONDITIONAL means a required variant choice, sale price or missing information remains unresolved. Catalog unitCost is production cost, not sale price.",
+      "Non-requests have no option verdicts and are never compatible positives. One wish counts once regardless of quantity."
+    ],
+    "sourceSha256": {
+      "options.json": "b81e2cd52cefbb0db29ed329260657fae2449a118754cecc233b9ecfdfd32df8",
+      "wishes.json": "bfcee1327b31b93267e12f5a6f8aff1ac5a0e0d175f6605d5dd67997c9146b16"
+    }
+  },
+  "optionKeys": [
+    "postcard-set",
+    "a5-print",
+    "sticker-sheet"
+  ],
+  "wishes": [
+    {
+      "wishKey": "w01",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "The requested postcard format is treated as required; other paper formats are not assumed substitutes."
+    },
+    {
+      "wishKey": "w02",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "The requested five-postcard collection is treated as required, rather than generic paper interest."
+    },
+    {
+      "wishKey": "w03",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "A stated intention to buy an A6 postcard set does not establish interest in another format."
+    },
+    {
+      "wishKey": "w04",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "Five different postcard scenes are requested, rather than a single print or stickers."
+    },
+    {
+      "wishKey": "w05",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "The requested postcard gift is treated as a format requirement."
+    },
+    {
+      "wishKey": "w06",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "The requested postcard collection is treated as a format requirement."
+    },
+    {
+      "wishKey": "w07",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "The hard set-price limit is below USD 15; catalog unitCost is not a sale price."
+    },
+    {
+      "wishKey": "w08",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "The USD 12 delivered-price ceiling cannot be checked without offer and delivery prices."
+    },
+    {
+      "wishKey": "w09",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "The USD 10 set-price ceiling cannot be checked against production cost alone."
+    },
+    {
+      "wishKey": "w10",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "Two sets together must cost at most USD 24; offer prices are unknown."
+    },
+    {
+      "wishKey": "w11",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "Glossy is explicitly optional; either permitted postcard finish works."
+    },
+    {
+      "wishKey": "w12",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "Matte is explicitly optional; either permitted postcard finish works."
+    },
+    {
+      "wishKey": "w13",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "Orin is explicitly optional, so unspecified artwork does not gate the postcard purchase."
+    },
+    {
+      "wishKey": "w14",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "Arrival next month is explicitly optional, not a delivery deadline."
+    },
+    {
+      "wishKey": "w15",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "COMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "Postcards and stickers are accepted alternatives; a print is not an expressed alternative."
+    },
+    {
+      "wishKey": "w16",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "COMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "Postcards and an A5 print are accepted alternatives; stickers are not."
+    },
+    {
+      "wishKey": "w17",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "COMPATIBLE",
+        "sticker-sheet": "COMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "All three catalog formats are explicitly acceptable."
+    },
+    {
+      "wishKey": "w18",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "Three postcard sets fit the catalog pledge limit; quantities do not multiply the wish count."
+    },
+    {
+      "wishKey": "w19",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "Two postcard sets fit the catalog pledge limit; other formats are not requested."
+    },
+    {
+      "wishKey": "w20",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "COMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "One five-card set is requested, not five sets."
+    },
+    {
+      "wishKey": "w21",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "CONDITIONAL",
+        "sticker-sheet": "CONDITIONAL"
+      },
+      "reasonableDisagreement": true,
+      "reason": "The acceptable desk footprint is unknown; sticker dimensions are also unspecified."
+    },
+    {
+      "wishKey": "w22",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "CONDITIONAL",
+        "sticker-sheet": "CONDITIONAL"
+      },
+      "reasonableDisagreement": true,
+      "reason": "The acceptable small size and the availability of the pond artwork are unspecified."
+    },
+    {
+      "wishKey": "w23",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "CONDITIONAL",
+        "sticker-sheet": "CONDITIONAL"
+      },
+      "reasonableDisagreement": true,
+      "reason": "Pocket and journal dimensions are unknown; a single print or sticker sheet may not count as a collection."
+    },
+    {
+      "wishKey": "w24",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "A Tavi card is mandatory but character inclusion is not fixed in the catalog."
+    },
+    {
+      "wishKey": "w25",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "An Orin card is mandatory but character inclusion is not fixed in the catalog."
+    },
+    {
+      "wishKey": "w26",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "CONDITIONAL",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "A Pipkin lantern card is phrased as a purchase condition; artwork is unspecified."
+    },
+    {
+      "wishKey": "w27",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "Canada delivery conflicts with every option shipping only to the US."
+    },
+    {
+      "wishKey": "w28",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "A UK receiving address conflicts with every option shipping only to the US."
+    },
+    {
+      "wishKey": "w29",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "Australia delivery with no forwarding conflicts with US-only shipping."
+    },
+    {
+      "wishKey": "w30",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "An A2-or-larger wall poster is required; no catalog option is that format."
+    },
+    {
+      "wishKey": "w31",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "Only an A1 poster is wanted; no catalog option meets it."
+    },
+    {
+      "wishKey": "w32",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "Wearable apparel is required and paper goods are expressly rejected."
+    },
+    {
+      "wishKey": "w33",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": false,
+      "reason": "Acrylic stands are requested; no catalog option provides them."
+    },
+    {
+      "wishKey": "w34",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "CONDITIONAL",
+        "sticker-sheet": "INCOMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "Only an A5 print fits; the hard satin requirement depends on selecting the allowed satin variant."
+    },
+    {
+      "wishKey": "w35",
+      "kind": "REQUEST",
+      "verdicts": {
+        "postcard-set": "INCOMPATIBLE",
+        "a5-print": "INCOMPATIBLE",
+        "sticker-sheet": "COMPATIBLE"
+      },
+      "reasonableDisagreement": true,
+      "reason": "Adhesive is mandatory; the sticker format supplies it, while postcards and prints do not."
+    },
+    {
+      "wishKey": "w36",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reasonableDisagreement": false,
+      "reason": "Praise contains no product request."
+    },
+    {
+      "wishKey": "w37",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reasonableDisagreement": false,
+      "reason": "Thanks and praise contain no product request."
+    },
+    {
+      "wishKey": "w38",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reasonableDisagreement": false,
+      "reason": "Explicitly not shopping; encouragement is not a product request."
+    },
+    {
+      "wishKey": "w39",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reasonableDisagreement": false,
+      "reason": "An instruction to the analysis system is not a product request."
+    },
+    {
+      "wishKey": "w40",
+      "kind": "NOT_A_REQUEST",
+      "verdicts": {},
+      "reasonableDisagreement": false,
+      "reason": "An instruction to override analysis is not a product request."
+    }
+  ]
+}

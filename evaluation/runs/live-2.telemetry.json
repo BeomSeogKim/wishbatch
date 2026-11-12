@@ -1,0 +1,78 @@
+{
+  "status": "success",
+  "processExitCode": 0,
+  "processWallMs": 29808,
+  "analysisLatencyMs": 25172,
+  "configuration": {
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "low",
+    "batchSize": 4,
+    "concurrency": 10,
+    "dailyCallCap": 30
+  },
+  "usageResponses": 11,
+  "tokens": {
+    "input": 18239,
+    "output": 13142,
+    "reasoning": 59
+  },
+  "calls": [
+    {
+      "stage": "CLASSIFY",
+      "latencyMs": 3851,
+      "result": "Success"
+    },
+    {
+      "stage": "CLASSIFY",
+      "latencyMs": 10543,
+      "result": "Success"
+    },
+    {
+      "stage": "CLASSIFY",
+      "latencyMs": 10625,
+      "result": "Success"
+    },
+    {
+      "stage": "CLASSIFY",
+      "latencyMs": 10687,
+      "result": "Success"
+    },
+    {
+      "stage": "CLASSIFY",
+      "latencyMs": 10768,
+      "result": "Success"
+    },
+    {
+      "stage": "CLASSIFY",
+      "latencyMs": 10873,
+      "result": "Success"
+    },
+    {
+      "stage": "CLASSIFY",
+      "latencyMs": 11065,
+      "result": "Success"
+    },
+    {
+      "stage": "CLASSIFY",
+      "latencyMs": 11164,
+      "result": "Success"
+    },
+    {
+      "stage": "CLASSIFY",
+      "latencyMs": 11435,
+      "result": "Success"
+    },
+    {
+      "stage": "CLASSIFY",
+      "latencyMs": 15996,
+      "result": "Success"
+    },
+    {
+      "stage": "PROPOSE",
+      "latencyMs": 9046,
+      "result": "Success"
+    }
+  ],
+  "usageLimit": "Decoded responses only; HTTP failures and timeouts may have unreported usage. Reasoning is included in output tokens.",
+  "analysisSha256": "97697a0d8aa90217c0877dd303f3dcc0dfa378b20a00ca01a49b1cf5c3bb90dc"
+}

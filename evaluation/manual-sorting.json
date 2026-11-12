@@ -1,0 +1,255 @@
+{
+  "status": "not measured yet",
+  "optionKey": "postcard-set",
+  "seedSha256": {
+    "options.json": "b81e2cd52cefbb0db29ed329260657fae2449a118754cecc233b9ecfdfd32df8",
+    "wishes.json": "bfcee1327b31b93267e12f5a6f8aff1ac5a0e0d175f6605d5dd67997c9146b16"
+  },
+  "sorter": null,
+  "startedAt": null,
+  "elapsedSeconds": null,
+  "disagreementCount": null,
+  "disagreementWishKeys": null,
+  "wishes": [
+    {
+      "wishKey": "w01",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w02",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w03",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w04",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w05",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w06",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w07",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w08",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w09",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w10",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w11",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w12",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w13",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w14",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w15",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w16",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w17",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w18",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w19",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w20",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w21",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w22",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w23",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w24",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w25",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w26",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w27",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w28",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w29",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w30",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w31",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w32",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w33",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w34",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w35",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w36",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w37",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w38",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w39",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    },
+    {
+      "wishKey": "w40",
+      "serves": null,
+      "reason": null,
+      "disagreesWithReference": null
+    }
+  ]
+}

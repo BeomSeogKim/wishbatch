@@ -1,0 +1,1130 @@
+{
+  "referenceSha256": "65ed3c779e86124ee2d9e267a0ff9ac5b11abe602d2629f64bfbdb875725279e",
+  "runs": [
+    {
+      "model": "gpt-6.1-sol",
+      "completedAt": "2026-11-12T08:10:04.430487Z",
+      "inputHash": "0f35018b7eedb2e3aeda035e1af859c19466dc88a869ed06103a8137b44592c0",
+      "wishCount": 40,
+      "referenceRequestCount": 35,
+      "requestAgreement": {
+        "numerator": 40,
+        "denominator": 40,
+        "value": 1.0
+      },
+      "requestConfusionReferenceRowsModelColumns": {
+        "REQUEST": {
+          "REQUEST": 35,
+          "NOT_A_REQUEST": 0
+        },
+        "NOT_A_REQUEST": {
+          "REQUEST": 0,
+          "NOT_A_REQUEST": 5
+        }
+      },
+      "proposedOption": "postcard-set",
+      "proposedOptionMetrics": {
+        "compatiblePrecision": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "compatibleRecall": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "truePositive": 16,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "verdictConfusionReferenceRowsModelColumns": {
+          "COMPATIBLE": {
+            "COMPATIBLE": 16,
+            "CONDITIONAL": 0,
+            "INCOMPATIBLE": 0
+          },
+          "CONDITIONAL": {
+            "COMPATIBLE": 0,
+            "CONDITIONAL": 10,
+            "INCOMPATIBLE": 0
+          },
+          "INCOMPATIBLE": {
+            "COMPATIBLE": 0,
+            "CONDITIONAL": 0,
+            "INCOMPATIBLE": 9
+          }
+        },
+        "verdictComparableRequests": 35,
+        "referenceRequestsMissingModelVerdict": 0
+      },
+      "allOptions": {
+        "a5-print": {
+          "compatiblePrecision": {
+            "numerator": 2,
+            "denominator": 2,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 2,
+            "denominator": 2,
+            "value": 1.0
+          },
+          "truePositive": 2,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 2,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 3,
+              "INCOMPATIBLE": 1
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 29
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        },
+        "postcard-set": {
+          "compatiblePrecision": {
+            "numerator": 16,
+            "denominator": 16,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 16,
+            "denominator": 16,
+            "value": 1.0
+          },
+          "truePositive": 16,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 16,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 10,
+              "INCOMPATIBLE": 0
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 9
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        },
+        "sticker-sheet": {
+          "compatiblePrecision": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1.0
+          },
+          "truePositive": 3,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 3,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 3,
+              "INCOMPATIBLE": 0
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 29
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        }
+      },
+      "exactQuotes": {
+        "numerator": 77,
+        "denominator": 77,
+        "value": 1.0
+      },
+      "nonExactQuotes": [],
+      "differentWishCount": 1,
+      "differences": [
+        {
+          "wishKey": "w23",
+          "text": "Maybe a pocket-size collection of these drawings? I want something I can tuck into my journal, but I haven't measured it.",
+          "reasonableDisagreement": true,
+          "reference": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "postcard-set": "CONDITIONAL",
+              "a5-print": "CONDITIONAL",
+              "sticker-sheet": "CONDITIONAL"
+            },
+            "reason": "Pocket and journal dimensions are unknown; a single print or sticker sheet may not count as a collection."
+          },
+          "model": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "a5-print": "INCOMPATIBLE",
+              "postcard-set": "CONDITIONAL",
+              "sticker-sheet": "CONDITIONAL"
+            },
+            "reasons": {
+              "a5-print": "One design is not a collection of drawings.",
+              "postcard-set": "Would A6 fit the pocket and journal?",
+              "sticker-sheet": "Does it collect multiple drawings and fit the pocket and journal?"
+            }
+          }
+        }
+      ],
+      "proposedOptionDifferentWishCount": 0,
+      "proposedOptionDifferentWishKeys": [],
+      "validationFlags": [
+        {
+          "rule": "V6",
+          "path": "not_served",
+          "message": "Groups rebuilt from incompatible verdicts."
+        }
+      ],
+      "artifact": "src/main/resources/seed/analysis-run.json",
+      "artifactSha256": "31e4b855a8f30b4e94444e2665fa67c9fd3852b80b74828c4f9efb25140faa2b",
+      "telemetry": null
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "completedAt": "2026-11-12T08:32:01.385118Z",
+      "inputHash": "0f35018b7eedb2e3aeda035e1af859c19466dc88a869ed06103a8137b44592c0",
+      "wishCount": 40,
+      "referenceRequestCount": 35,
+      "requestAgreement": {
+        "numerator": 40,
+        "denominator": 40,
+        "value": 1.0
+      },
+      "requestConfusionReferenceRowsModelColumns": {
+        "REQUEST": {
+          "REQUEST": 35,
+          "NOT_A_REQUEST": 0
+        },
+        "NOT_A_REQUEST": {
+          "REQUEST": 0,
+          "NOT_A_REQUEST": 5
+        }
+      },
+      "proposedOption": "postcard-set",
+      "proposedOptionMetrics": {
+        "compatiblePrecision": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "compatibleRecall": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "truePositive": 16,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "verdictConfusionReferenceRowsModelColumns": {
+          "COMPATIBLE": {
+            "COMPATIBLE": 16,
+            "CONDITIONAL": 0,
+            "INCOMPATIBLE": 0
+          },
+          "CONDITIONAL": {
+            "COMPATIBLE": 0,
+            "CONDITIONAL": 10,
+            "INCOMPATIBLE": 0
+          },
+          "INCOMPATIBLE": {
+            "COMPATIBLE": 0,
+            "CONDITIONAL": 0,
+            "INCOMPATIBLE": 9
+          }
+        },
+        "verdictComparableRequests": 35,
+        "referenceRequestsMissingModelVerdict": 0
+      },
+      "allOptions": {
+        "a5-print": {
+          "compatiblePrecision": {
+            "numerator": 2,
+            "denominator": 2,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 2,
+            "denominator": 2,
+            "value": 1.0
+          },
+          "truePositive": 2,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 2,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 3,
+              "INCOMPATIBLE": 1
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 29
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        },
+        "postcard-set": {
+          "compatiblePrecision": {
+            "numerator": 16,
+            "denominator": 16,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 16,
+            "denominator": 16,
+            "value": 1.0
+          },
+          "truePositive": 16,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 16,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 10,
+              "INCOMPATIBLE": 0
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 9
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        },
+        "sticker-sheet": {
+          "compatiblePrecision": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1.0
+          },
+          "truePositive": 3,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 3,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 3,
+              "INCOMPATIBLE": 0
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 29
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        }
+      },
+      "exactQuotes": {
+        "numerator": 79,
+        "denominator": 79,
+        "value": 1.0
+      },
+      "nonExactQuotes": [],
+      "differentWishCount": 1,
+      "differences": [
+        {
+          "wishKey": "w23",
+          "text": "Maybe a pocket-size collection of these drawings? I want something I can tuck into my journal, but I haven't measured it.",
+          "reasonableDisagreement": true,
+          "reference": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "postcard-set": "CONDITIONAL",
+              "a5-print": "CONDITIONAL",
+              "sticker-sheet": "CONDITIONAL"
+            },
+            "reason": "Pocket and journal dimensions are unknown; a single print or sticker sheet may not count as a collection."
+          },
+          "model": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "a5-print": "INCOMPATIBLE",
+              "postcard-set": "CONDITIONAL",
+              "sticker-sheet": "CONDITIONAL"
+            },
+            "reasons": {
+              "a5-print": "A single design is not a collection of drawings.",
+              "postcard-set": "Would A6 cards fit inside the journal?",
+              "sticker-sheet": "Does it collect multiple drawings, and would it fit the journal?"
+            }
+          }
+        }
+      ],
+      "proposedOptionDifferentWishCount": 0,
+      "proposedOptionDifferentWishKeys": [],
+      "validationFlags": [
+        {
+          "rule": "V6",
+          "path": "not_served",
+          "message": "Groups rebuilt from incompatible verdicts."
+        }
+      ],
+      "artifact": "evaluation/runs/live-1.json",
+      "artifactSha256": "7a12f443ecfdf51ab9ca9558881ec0f88ad5560fa735dcfa4480cebb8c8fe25f",
+      "telemetry": {
+        "status": "success",
+        "processExitCode": 0,
+        "processWallMs": 28014,
+        "analysisLatencyMs": 23213,
+        "configuration": {
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "low",
+          "batchSize": 4,
+          "concurrency": 10,
+          "dailyCallCap": 30
+        },
+        "usageResponses": 11,
+        "tokens": {
+          "input": 18396,
+          "output": 12679,
+          "reasoning": 0
+        },
+        "calls": [
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 4504,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 11819,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 12105,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 12116,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 12122,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 12258,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 12314,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 12630,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 13679,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 14030,
+            "result": "Success"
+          },
+          {
+            "stage": "PROPOSE",
+            "latencyMs": 9057,
+            "result": "Success"
+          }
+        ],
+        "usageLimit": "Decoded responses only; HTTP failures and timeouts may have unreported usage. Reasoning is included in output tokens.",
+        "analysisSha256": "7a12f443ecfdf51ab9ca9558881ec0f88ad5560fa735dcfa4480cebb8c8fe25f"
+      }
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "completedAt": "2026-11-12T08:33:04.157331Z",
+      "inputHash": "0f35018b7eedb2e3aeda035e1af859c19466dc88a869ed06103a8137b44592c0",
+      "wishCount": 40,
+      "referenceRequestCount": 35,
+      "requestAgreement": {
+        "numerator": 40,
+        "denominator": 40,
+        "value": 1.0
+      },
+      "requestConfusionReferenceRowsModelColumns": {
+        "REQUEST": {
+          "REQUEST": 35,
+          "NOT_A_REQUEST": 0
+        },
+        "NOT_A_REQUEST": {
+          "REQUEST": 0,
+          "NOT_A_REQUEST": 5
+        }
+      },
+      "proposedOption": "postcard-set",
+      "proposedOptionMetrics": {
+        "compatiblePrecision": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0
+        },
+        "compatibleRecall": {
+          "numerator": 15,
+          "denominator": 16,
+          "value": 0.9375
+        },
+        "truePositive": 15,
+        "falsePositive": 0,
+        "falseNegative": 1,
+        "verdictConfusionReferenceRowsModelColumns": {
+          "COMPATIBLE": {
+            "COMPATIBLE": 15,
+            "CONDITIONAL": 1,
+            "INCOMPATIBLE": 0
+          },
+          "CONDITIONAL": {
+            "COMPATIBLE": 0,
+            "CONDITIONAL": 10,
+            "INCOMPATIBLE": 0
+          },
+          "INCOMPATIBLE": {
+            "COMPATIBLE": 0,
+            "CONDITIONAL": 0,
+            "INCOMPATIBLE": 9
+          }
+        },
+        "verdictComparableRequests": 35,
+        "referenceRequestsMissingModelVerdict": 0
+      },
+      "allOptions": {
+        "a5-print": {
+          "compatiblePrecision": {
+            "numerator": 2,
+            "denominator": 2,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 2,
+            "denominator": 2,
+            "value": 1.0
+          },
+          "truePositive": 2,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 2,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 3,
+              "INCOMPATIBLE": 1
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 29
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        },
+        "postcard-set": {
+          "compatiblePrecision": {
+            "numerator": 15,
+            "denominator": 15,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 15,
+            "denominator": 16,
+            "value": 0.9375
+          },
+          "truePositive": 15,
+          "falsePositive": 0,
+          "falseNegative": 1,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 15,
+              "CONDITIONAL": 1,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 10,
+              "INCOMPATIBLE": 0
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 9
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        },
+        "sticker-sheet": {
+          "compatiblePrecision": {
+            "numerator": 2,
+            "denominator": 2,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 2,
+            "denominator": 3,
+            "value": 0.6666666666666666
+          },
+          "truePositive": 2,
+          "falsePositive": 0,
+          "falseNegative": 1,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 2,
+              "CONDITIONAL": 1,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 3,
+              "INCOMPATIBLE": 0
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 29
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        }
+      },
+      "exactQuotes": {
+        "numerator": 79,
+        "denominator": 79,
+        "value": 1.0
+      },
+      "nonExactQuotes": [],
+      "differentWishCount": 2,
+      "differences": [
+        {
+          "wishKey": "w15",
+          "text": "Postcards or a sticker sheet would both make me happy. I just want a little piece of the lantern market to keep around.",
+          "reasonableDisagreement": true,
+          "reference": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "postcard-set": "COMPATIBLE",
+              "a5-print": "INCOMPATIBLE",
+              "sticker-sheet": "COMPATIBLE"
+            },
+            "reason": "Postcards and stickers are accepted alternatives; a print is not an expressed alternative."
+          },
+          "model": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "a5-print": "INCOMPATIBLE",
+              "postcard-set": "CONDITIONAL",
+              "sticker-sheet": "CONDITIONAL"
+            },
+            "reasons": {
+              "a5-print": "A print is neither of the requested formats.",
+              "postcard-set": "Accepted format; does the artwork depict the lantern market?",
+              "sticker-sheet": "Accepted format; does the artwork depict the lantern market?"
+            }
+          }
+        },
+        {
+          "wishKey": "w23",
+          "text": "Maybe a pocket-size collection of these drawings? I want something I can tuck into my journal, but I haven't measured it.",
+          "reasonableDisagreement": true,
+          "reference": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "postcard-set": "CONDITIONAL",
+              "a5-print": "CONDITIONAL",
+              "sticker-sheet": "CONDITIONAL"
+            },
+            "reason": "Pocket and journal dimensions are unknown; a single print or sticker sheet may not count as a collection."
+          },
+          "model": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "a5-print": "INCOMPATIBLE",
+              "postcard-set": "CONDITIONAL",
+              "sticker-sheet": "CONDITIONAL"
+            },
+            "reasons": {
+              "a5-print": "Single design does not provide a collection of drawings.",
+              "postcard-set": "Would A6 cards fit the journal and intended pocket?",
+              "sticker-sheet": "Does it collect these drawings, and would it fit the journal?"
+            }
+          }
+        }
+      ],
+      "proposedOptionDifferentWishCount": 1,
+      "proposedOptionDifferentWishKeys": [
+        "w15"
+      ],
+      "validationFlags": [
+        {
+          "rule": "V6",
+          "path": "not_served",
+          "message": "Groups rebuilt from incompatible verdicts."
+        }
+      ],
+      "artifact": "evaluation/runs/live-2.json",
+      "artifactSha256": "97697a0d8aa90217c0877dd303f3dcc0dfa378b20a00ca01a49b1cf5c3bb90dc",
+      "telemetry": {
+        "status": "success",
+        "processExitCode": 0,
+        "processWallMs": 29808,
+        "analysisLatencyMs": 25172,
+        "configuration": {
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "low",
+          "batchSize": 4,
+          "concurrency": 10,
+          "dailyCallCap": 30
+        },
+        "usageResponses": 11,
+        "tokens": {
+          "input": 18239,
+          "output": 13142,
+          "reasoning": 59
+        },
+        "calls": [
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 3851,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 10543,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 10625,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 10687,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 10768,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 10873,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 11065,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 11164,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 11435,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 15996,
+            "result": "Success"
+          },
+          {
+            "stage": "PROPOSE",
+            "latencyMs": 9046,
+            "result": "Success"
+          }
+        ],
+        "usageLimit": "Decoded responses only; HTTP failures and timeouts may have unreported usage. Reasoning is included in output tokens.",
+        "analysisSha256": "97697a0d8aa90217c0877dd303f3dcc0dfa378b20a00ca01a49b1cf5c3bb90dc"
+      }
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "completedAt": "2026-11-12T08:33:54.627418Z",
+      "inputHash": "0f35018b7eedb2e3aeda035e1af859c19466dc88a869ed06103a8137b44592c0",
+      "wishCount": 40,
+      "referenceRequestCount": 35,
+      "requestAgreement": {
+        "numerator": 40,
+        "denominator": 40,
+        "value": 1.0
+      },
+      "requestConfusionReferenceRowsModelColumns": {
+        "REQUEST": {
+          "REQUEST": 35,
+          "NOT_A_REQUEST": 0
+        },
+        "NOT_A_REQUEST": {
+          "REQUEST": 0,
+          "NOT_A_REQUEST": 5
+        }
+      },
+      "proposedOption": "postcard-set",
+      "proposedOptionMetrics": {
+        "compatiblePrecision": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0
+        },
+        "compatibleRecall": {
+          "numerator": 15,
+          "denominator": 16,
+          "value": 0.9375
+        },
+        "truePositive": 15,
+        "falsePositive": 0,
+        "falseNegative": 1,
+        "verdictConfusionReferenceRowsModelColumns": {
+          "COMPATIBLE": {
+            "COMPATIBLE": 15,
+            "CONDITIONAL": 1,
+            "INCOMPATIBLE": 0
+          },
+          "CONDITIONAL": {
+            "COMPATIBLE": 0,
+            "CONDITIONAL": 10,
+            "INCOMPATIBLE": 0
+          },
+          "INCOMPATIBLE": {
+            "COMPATIBLE": 0,
+            "CONDITIONAL": 0,
+            "INCOMPATIBLE": 9
+          }
+        },
+        "verdictComparableRequests": 35,
+        "referenceRequestsMissingModelVerdict": 0
+      },
+      "allOptions": {
+        "a5-print": {
+          "compatiblePrecision": {
+            "numerator": 2,
+            "denominator": 2,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 2,
+            "denominator": 2,
+            "value": 1.0
+          },
+          "truePositive": 2,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 2,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 3,
+              "INCOMPATIBLE": 1
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 29
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        },
+        "postcard-set": {
+          "compatiblePrecision": {
+            "numerator": 15,
+            "denominator": 15,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 15,
+            "denominator": 16,
+            "value": 0.9375
+          },
+          "truePositive": 15,
+          "falsePositive": 0,
+          "falseNegative": 1,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 15,
+              "CONDITIONAL": 1,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 10,
+              "INCOMPATIBLE": 0
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 9
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        },
+        "sticker-sheet": {
+          "compatiblePrecision": {
+            "numerator": 2,
+            "denominator": 2,
+            "value": 1.0
+          },
+          "compatibleRecall": {
+            "numerator": 2,
+            "denominator": 3,
+            "value": 0.6666666666666666
+          },
+          "truePositive": 2,
+          "falsePositive": 0,
+          "falseNegative": 1,
+          "verdictConfusionReferenceRowsModelColumns": {
+            "COMPATIBLE": {
+              "COMPATIBLE": 2,
+              "CONDITIONAL": 1,
+              "INCOMPATIBLE": 0
+            },
+            "CONDITIONAL": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 3,
+              "INCOMPATIBLE": 0
+            },
+            "INCOMPATIBLE": {
+              "COMPATIBLE": 0,
+              "CONDITIONAL": 0,
+              "INCOMPATIBLE": 29
+            }
+          },
+          "verdictComparableRequests": 35,
+          "referenceRequestsMissingModelVerdict": 0
+        }
+      },
+      "exactQuotes": {
+        "numerator": 78,
+        "denominator": 78,
+        "value": 1.0
+      },
+      "nonExactQuotes": [],
+      "differentWishCount": 2,
+      "differences": [
+        {
+          "wishKey": "w15",
+          "text": "Postcards or a sticker sheet would both make me happy. I just want a little piece of the lantern market to keep around.",
+          "reasonableDisagreement": true,
+          "reference": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "postcard-set": "COMPATIBLE",
+              "a5-print": "INCOMPATIBLE",
+              "sticker-sheet": "COMPATIBLE"
+            },
+            "reason": "Postcards and stickers are accepted alternatives; a print is not an expressed alternative."
+          },
+          "model": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "a5-print": "INCOMPATIBLE",
+              "postcard-set": "CONDITIONAL",
+              "sticker-sheet": "CONDITIONAL"
+            },
+            "reasons": {
+              "a5-print": "Neither of the requested formats is an art print.",
+              "postcard-set": "Does the artwork depict the lantern market?",
+              "sticker-sheet": "Does the artwork depict the lantern market?"
+            }
+          }
+        },
+        {
+          "wishKey": "w23",
+          "text": "Maybe a pocket-size collection of these drawings? I want something I can tuck into my journal, but I haven't measured it.",
+          "reasonableDisagreement": true,
+          "reference": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "postcard-set": "CONDITIONAL",
+              "a5-print": "CONDITIONAL",
+              "sticker-sheet": "CONDITIONAL"
+            },
+            "reason": "Pocket and journal dimensions are unknown; a single print or sticker sheet may not count as a collection."
+          },
+          "model": {
+            "kind": "REQUEST",
+            "verdicts": {
+              "a5-print": "INCOMPATIBLE",
+              "postcard-set": "CONDITIONAL",
+              "sticker-sheet": "CONDITIONAL"
+            },
+            "reasons": {
+              "a5-print": "A single design does not provide a collection of drawings.",
+              "postcard-set": "Would A6 fit the pocket and journal?",
+              "sticker-sheet": "Does the sheet contain multiple drawings and fit the journal?"
+            }
+          }
+        }
+      ],
+      "proposedOptionDifferentWishCount": 1,
+      "proposedOptionDifferentWishKeys": [
+        "w15"
+      ],
+      "validationFlags": [
+        {
+          "rule": "V6",
+          "path": "not_served",
+          "message": "Groups rebuilt from incompatible verdicts."
+        }
+      ],
+      "artifact": "evaluation/runs/live-3.json",
+      "artifactSha256": "1d26cb78a86f337b49fe55a5583a11fcbba0f1c24f9f3668022e7db007dcc403",
+      "telemetry": {
+        "status": "success",
+        "processExitCode": 0,
+        "processWallMs": 32054,
+        "analysisLatencyMs": 27212,
+        "configuration": {
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "low",
+          "batchSize": 4,
+          "concurrency": 10,
+          "dailyCallCap": 30
+        },
+        "usageResponses": 11,
+        "tokens": {
+          "input": 18216,
+          "output": 13113,
+          "reasoning": 77
+        },
+        "calls": [
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 3556,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 10379,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 10407,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 10533,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 10643,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 10933,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 10970,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 11548,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 11587,
+            "result": "Success"
+          },
+          {
+            "stage": "CLASSIFY",
+            "latencyMs": 16914,
+            "result": "Success"
+          },
+          {
+            "stage": "PROPOSE",
+            "latencyMs": 10170,
+            "result": "Success"
+          }
+        ],
+        "usageLimit": "Decoded responses only; HTTP failures and timeouts may have unreported usage. Reasoning is included in output tokens.",
+        "analysisSha256": "1d26cb78a86f337b49fe55a5583a11fcbba0f1c24f9f3668022e7db007dcc403"
+      }
+    }
+  ]
+}
