@@ -1,6 +1,5 @@
 package app.web.security
 
-import app.web.errors.helperToken
 import app.web.errors.wantsHtml
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.Ordered
@@ -35,7 +34,7 @@ class PrivateRequestErrors {
             AnnotatedElementUtils.hasAnnotation(handler.beanType, ResponseBody::class.java) ||
             ResponseEntity::class.java.isAssignableFrom(handler.method.returnType)
         if (!responseBody && wantsHtml(request)) {
-            return ModelAndView("error/helper", mapOf("token" to helperToken(request)), HttpStatus.BAD_REQUEST)
+            return ModelAndView("error/4xx", mapOf("demoGuide" to null), HttpStatus.BAD_REQUEST)
         }
         return ResponseEntity.badRequest().body(mapOf("message" to "This request could not be read. Check the form and try again."))
     }

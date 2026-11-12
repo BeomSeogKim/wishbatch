@@ -36,10 +36,18 @@ class HelperPageErrorsTests @Autowired constructor(private val mvc: MockMvc) {
             "/w/example/maker/campaign/bad/charts",
         ).forEach { path ->
             mvc.get(path).andExpect {
-                status { isBadRequest() }; view { name("error/helper") }
+                status { isBadRequest() }; view { name("error/4xx") }
                 content { contentTypeCompatibleWith(MediaType.TEXT_HTML) }
-            }.andReturn().response.contentAsString.let { assertContains(it, "Request incomplete") }
+            }.andReturn().response.contentAsString.let { assertContains(it, "We could not open this page.") }
         }
+        val token = "a".repeat(43)
+        val marker = "synthetic-private-value"
+        val body = mvc.get("/w/$token/maker/replies?run=$marker").andExpect {
+            status { isBadRequest() }; view { name("error/4xx") }
+        }.andReturn().response.contentAsString
+        assertFalse(body.contains(token))
+        assertFalse(body.contains(marker))
+        assertContains(body, "Return home")
         mvc.get("/w/example/maker/offer/price-check?run=bad&unitPrice=1").andExpect {
             status { isBadRequest() }; content { contentTypeCompatibleWith(MediaType.APPLICATION_JSON) }
         }
@@ -49,8 +57,8 @@ class HelperPageErrorsTests @Autowired constructor(private val mvc: MockMvc) {
     fun `missing parameters render html for browsers and json for api clients`() {
         listOf("questions", "maker/glosses", "maker/replies", "maker/offer-draft").forEach { path ->
             mvc.get("/w/example/$path") { accept = MediaType.TEXT_HTML }.andExpect {
-                status { isBadRequest() }; view { name("error/helper") }
-            }.andReturn().response.contentAsString.let { assertContains(it, "Request incomplete") }
+                status { isBadRequest() }; view { name("error/4xx") }
+            }.andReturn().response.contentAsString.let { assertContains(it, "We could not open this page.") }
             mvc.get("/w/example/$path") { accept = MediaType.APPLICATION_JSON }.andExpect {
                 status { isBadRequest() }; content { contentTypeCompatibleWith(MediaType.APPLICATION_JSON) }
             }

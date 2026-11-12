@@ -31,8 +31,7 @@ class HelperPageErrors {
         if (!wantsHtml(request)) {
             return ResponseEntity.badRequest().body(mapOf("message" to "This request could not be read. Check the form and try again."))
         }
-        val variables = request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as? Map<*, *>
-        return ModelAndView("error/helper", mapOf("token" to variables?.get("token")), org.springframework.http.HttpStatus.BAD_REQUEST)
+        return ModelAndView("error/4xx", mapOf("demoGuide" to null), org.springframework.http.HttpStatus.BAD_REQUEST)
     }
 }
 
