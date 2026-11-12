@@ -29,7 +29,8 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
             RegexOption.DOT_MATCHES_ALL
         )
         assertTrue(demoForm.containsMatchIn(html))
-        assertContains(html, "href=\"#testing\"")
+        assertEquals(3, Regex("href=\"/guide\"[^>]*>[^<]*(?:Read the testing guide|Testing guide)", RegexOption.IGNORE_CASE).findAll(html).count())
+        assertContains(html, "href=\"/#how-it-works\"")
         assertContains(html, "id=\"testing\"")
     }
 

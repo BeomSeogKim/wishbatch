@@ -122,6 +122,25 @@ class WorkspaceServiceTests @Autowired constructor(
     }
 
     @Test
+    fun `import trims lines and reports length paste and workspace limits`() {
+        val workspace = service.create()
+        repeat(159) { service.addWish(workspace.token, "Existing $it") }
+        service.setWishHidden(workspace.token, catalog.wishId(workspace.id, "w01"), true)
+        val lines = listOf("  Imported wish  ", " ", "x".repeat(501), "Another wish") +
+            List(96) { "" } + listOf("Beyond paste limit")
+        val result = service.addImportedWishes(workspace.token, lines.joinToString("\n"))
+        assertEquals(ImportedWishResult(1, 1, 1, 1), result)
+        assertEquals(3, result.skipped)
+        entityManager.flush()
+        entityManager.clear()
+        val imported = service.listWishes(workspace.token).single { it.text == "Imported wish" }
+        assertEquals(WishSource.IMPORTED, imported.source)
+        assertNull(imported.displayName)
+        assertEquals(200, service.listWishes(workspace.token).size)
+        assertFailsWith<WorkspaceNotFoundException> { service.addImportedWishes("missing", "") }
+    }
+
+    @Test
     fun `hidden wishes persist and can be unhidden without changing the other workspace`() {
         val first = service.create()
         val second = service.create()

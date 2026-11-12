@@ -17,6 +17,10 @@ class WorkspaceNotFoundException : NoSuchElementException("Workspace not found")
 class WishNotFoundException : NoSuchElementException("Wish not found")
 class WishLimitReachedException : IllegalStateException("Workspace already contains 200 wishes")
 
+data class ImportedWishResult(val added: Int, val tooLong: Int, val overLimit: Int, val overPasteLimit: Int) {
+    val skipped: Int get() = tooLong + overLimit + overPasteLimit
+}
+
 @Service
 @Transactional(readOnly = true)
 class WorkspaceService(
@@ -101,6 +105,38 @@ class WorkspaceService(
             displayName = trimmedName,
             createdAt = clock.instant(),
         ).also(entityManager::persist)
+    }
+
+    @Transactional
+    fun addImportedWishes(token: String, text: String): ImportedWishResult {
+        val workspace = lookup(token, lock = true) ?: throw WorkspaceNotFoundException()
+        val count = entityManager.createQuery(
+            "select count(w) from Wish w where w.workspaceId = :workspaceId", Long::class.javaObjectType,
+        ).setParameter("workspaceId", workspace.id).singleResult
+        var added = 0
+        var tooLong = 0
+        var overLimit = 0
+        var overPasteLimit = 0
+        text.lineSequence().forEachIndexed { index, line ->
+            val wish = line.trim()
+            if (wish.isNotEmpty()) {
+                when {
+                    index >= 100 -> overPasteLimit++
+                    wish.length > 500 -> tooLong++
+                    count + added >= 200 -> overLimit++
+                    else -> {
+                        entityManager.persist(Wish(
+                            workspaceId = workspace.id,
+                            text = wish,
+                            source = WishSource.IMPORTED,
+                            createdAt = clock.instant(),
+                        ))
+                        added++
+                    }
+                }
+            }
+        }
+        return ImportedWishResult(added, tooLong, overLimit, overPasteLimit)
     }
 
     @Transactional

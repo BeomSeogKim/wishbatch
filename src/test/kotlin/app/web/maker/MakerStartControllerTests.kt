@@ -115,9 +115,29 @@ class MakerStartControllerTests(
         assertContains(html, "&lt;b&gt;Fan&lt;/b&gt;")
         assertFalse(html.contains("<script>"))
         assertFalse(html.contains("<progress"))
-        assertFalse(html.contains("<textarea"))
+        assertContains(html, "<textarea")
         assertContains(html, "not contact permission or purchase consent")
         assertContains(html, "Review proposal")
+    }
+
+    @Test
+    fun `bulk paste redirects and displays import results`() {
+        val token = workspaces.create().token
+        val result = mvc.post("/w/$token/maker/wishes") {
+            param("comments", " First wish \n\n${"x".repeat(501)}")
+        }.andExpect {
+            status { is3xxRedirection() }
+            redirectedUrl("/w/$token/maker/wishes")
+        }.andReturn()
+        val html = mvc.get("/w/$token/maker/wishes") {
+            flashAttr("importResult", result.flashMap["importResult"]!!)
+        }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "Added 1; skipped 1: 1 over 500 characters")
+        assertContains(html, "First wish")
+        mvc.post("/w/missing/maker/wishes") { param("comments", "Wish") }.andExpect {
+            status { isNotFound() }
+            view { name("error/not-found") }
+        }
     }
 
     @Test

@@ -26,8 +26,7 @@ class WishController(
 ) {
     @GetMapping("/w/{token}")
     fun wish(@PathVariable token: String, model: Model, response: HttpServletResponse): String {
-        if (workspaces.findByToken(token) == null) return notFound(model, response)
-        model.addAttribute("workspaceFound", true)
+        if (workspaces.findByToken(token) == null) return notFound(response)
         model.addAttribute("token", token)
         model.addAttribute("maker", catalog.definition.maker)
         model.addAttribute("recentWishes", workspaces.listWishes(token, includeHidden = false).asReversed().take(5))
@@ -42,10 +41,9 @@ class WishController(
         @RequestParam(defaultValue = "") text: String,
         @RequestParam(defaultValue = "") displayName: String,
         redirect: RedirectAttributes,
-        model: Model,
         response: HttpServletResponse,
     ): String {
-        if (workspaces.findByToken(token) == null) return notFound(model, response)
+        if (workspaces.findByToken(token) == null) return notFound(response)
         try {
             workspaces.addWish(token, text, displayName)
             redirect.addFlashAttribute("wishSubmitted", true)
@@ -63,9 +61,8 @@ class WishController(
         return "redirect:/w/$token"
     }
 
-    private fun notFound(model: Model, response: HttpServletResponse): String {
+    private fun notFound(response: HttpServletResponse): String {
         response.status = HttpServletResponse.SC_NOT_FOUND
-        model.addAttribute("workspaceFound", false)
-        return "fan/wish"
+        return "error/not-found"
     }
 }

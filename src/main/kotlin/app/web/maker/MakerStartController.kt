@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Currency
@@ -51,13 +52,23 @@ class MakerStartController(private val workspaces: WorkspaceService) {
         return "maker/wishes"
     }
 
-    @PostMapping("/w/{token}/maker/wishes")
+    @PostMapping("/w/{token}/maker/wishes", params = ["wishId", "hidden"])
     fun setWishHidden(
         @PathVariable token: String,
         @RequestParam wishId: UUID,
         @RequestParam hidden: Boolean,
     ): String {
         workspaces.setWishHidden(token, wishId, hidden)
+        return "redirect:/w/$token/maker/wishes"
+    }
+
+    @PostMapping("/w/{token}/maker/wishes", params = ["comments"])
+    fun importWishes(
+        @PathVariable token: String,
+        @RequestParam comments: String,
+        redirectAttributes: RedirectAttributes,
+    ): String {
+        redirectAttributes.addFlashAttribute("importResult", workspaces.addImportedWishes(token, comments))
         return "redirect:/w/$token/maker/wishes"
     }
 

@@ -3,12 +3,6 @@
       th:replace="~{layout/base :: page('Leave a wish', ~{::main})}">
 <body>
 <main id="main" class="shell">
-    <section th:unless="${workspaceFound}" class="empty-state">
-        <h1>Page not found</h1>
-        <p>We could not find this page. Check the link or return to the home page.</p>
-        <a class="button button-secondary" th:href="@{/}">Go home</a>
-    </section>
-    <th:block th:if="${workspaceFound}">
         <header class="page-heading">
             <p class="eyebrow">A little inspiration</p>
             <h1>What would you love to see?</h1>
@@ -66,7 +60,6 @@
                 wishLength.textContent = wishText.value.length;
             });
         </script>
-    </th:block>
 </main>
 </body>
 </html>

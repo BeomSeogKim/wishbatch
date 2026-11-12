@@ -22,14 +22,14 @@
     </a>
     <nav class="header-links" aria-label="Main navigation">
         <a th:href="@{/#how-it-works}">How it works</a>
-        <a th:href="@{/#testing}">Testing guide</a>
+        <a th:href="@{/guide}">Testing guide</a>
     </nav>
 </header>
 <div class="sandbox-notice"><span class="sandbox-dot" aria-hidden="true"></span><span th:text="#{sandbox.notice}">Sandbox demo. No real money moves.</span></div>
 <main th:replace="${content}"></main>
 <footer class="site-footer shell">
     <div><strong th:text="${productName}">Wishbatch</strong><span> A little clarity before you create.</span></div>
-    <nav aria-label="Footer navigation"><a th:href="@{/styleguide}">Design system</a><a th:href="@{/#testing}">Testing guide</a></nav>
+    <nav aria-label="Footer navigation"><a th:href="@{/styleguide}">Design system</a><a th:href="@{/guide}">Testing guide</a></nav>
 </footer>
 </body>
 </html>

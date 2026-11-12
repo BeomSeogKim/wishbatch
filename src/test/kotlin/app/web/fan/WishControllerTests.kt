@@ -184,11 +184,11 @@ class WishControllerTests @Autowired constructor(
     @Test
     fun `unknown tokens return the same safe not found page for reading and submitting`() {
         for (token in listOf("missing", "x".repeat(43))) {
-            val read = mvc.get("/w/$token").andExpect { status { isNotFound() } }
+            val read = mvc.get("/w/$token").andExpect { status { isNotFound() }; view { name("error/not-found") } }
                 .andReturn().response.contentAsString
             val submit = mvc.post("/w/$token") { param("text", "") }
-                .andExpect { status { isNotFound() } }.andReturn().response.contentAsString
-            assertContains(read, "Page not found")
+                .andExpect { status { isNotFound() }; view { name("error/not-found") } }.andReturn().response.contentAsString
+            assertContains(read, "This page is unavailable.")
             assertContains(read, "Sandbox demo. No real money moves.")
             assertFalse(read.contains("name=\"text\""))
             assertEquals(read, submit)
