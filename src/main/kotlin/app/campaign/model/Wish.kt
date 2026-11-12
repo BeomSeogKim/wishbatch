@@ -6,6 +6,7 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.annotations.ColumnDefault
 import java.time.Instant
 import java.util.UUID
 
@@ -27,4 +28,8 @@ class Wish(
     var hidden: Boolean = false,
     @Id
     val id: UUID = UUID.randomUUID(),
+    /** Additional imported occurrences, never additional fans or ordered units. */
+    @Column(nullable = false)
+    @ColumnDefault("0")
+    var duplicateCount: Int = 0,
 )

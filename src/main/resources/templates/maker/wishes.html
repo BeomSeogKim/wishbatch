@@ -17,11 +17,12 @@
         <form class="form-stack wish-import" th:action="@{/w/{token}/maker/wishes(token=${token})}" method="post">
             <label for="comments">Import wishes (one per line, up to 100 lines)</label>
             <p class="notice notice-info">Imported comments inform analysis only. They are not contact permission or purchase consent.</p>
+            <p>Repeated text and spacing-only differences merge into one wish. Duplicate occurrences do not count as additional fans or orders. Each line must be at most 500 characters.</p>
             <textarea id="comments" name="comments" rows="6"></textarea>
             <button class="button button-secondary" type="submit">Import wishes</button>
         </form>
         <p th:if="${importResult != null}" role="status"
-           th:text="|Added ${importResult.added}; skipped ${importResult.skipped}: ${importResult.tooLong} over 500 characters, ${importResult.overLimit} over the 200-wish limit, ${importResult.overPasteLimit} beyond the first 100 lines.|"></p>
+           th:text="|Retained ${importResult.added}; merged ${importResult.merged}; skipped ${importResult.skipped}: ${importResult.tooLong} over 500 characters, ${importResult.overLimit} over the 200-wish limit, ${importResult.overPasteLimit} beyond the first 100 lines.|"></p>
         <div th:if="${wishes.isEmpty()}" class="empty-state">
             <h2>No wishes yet.</h2>
             <p>Collect a fan wish before requesting a proposal.</p>
@@ -33,11 +34,12 @@
         <div th:unless="${wishes.isEmpty()}" class="table-scroll" tabindex="0" role="region" aria-label="Fan wishes">
             <table class="wish-table">
                 <caption>Fan wishes, including hidden wishes</caption>
-                <thead><tr><th scope="col">Display name</th><th scope="col">Wish</th><th scope="col">Source</th><th scope="col">Received (UTC)</th><th scope="col">Visibility</th></tr></thead>
+                <thead><tr><th scope="col">Display name</th><th scope="col">Wish</th><th scope="col">Source</th><th scope="col">Duplicate occurrences</th><th scope="col">Received (UTC)</th><th scope="col">Visibility</th></tr></thead>
                 <tbody><tr th:each="wish : ${wishes}" th:id="${'wish-' + wish.id}">
                     <th scope="row" th:text="${wish.displayName ?: 'Anonymous fan'}">Fan</th>
                     <td th:text="${wish.text}">Wish text</td>
                     <td><span class="badge badge-neutral" th:text="${wish.source.name() == 'ONSITE' ? 'On-site' : 'Imported'}">Imported</span></td>
+                    <td th:text="${wish.duplicateCount}">0</td>
                     <td><time th:datetime="${wish.createdAt}" th:text="${@makerDisplay.time(wish.createdAt)}">Time</time></td>
                     <td>
                         <span class="badge badge-neutral" th:text="${wish.hidden ? 'Hidden' : 'Visible'}">Visible</span>

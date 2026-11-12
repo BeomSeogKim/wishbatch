@@ -156,7 +156,7 @@ class MakerStartControllerTests(
     fun `bulk paste redirects and displays import results`() {
         val token = workspaces.create().token
         val result = mvc.securePost("/w/$token/maker/wishes") {
-            param("comments", " First wish \n\n${"x".repeat(501)}")
+            param("comments", " First wish \nFirst   wish\nFirst wish\n\n${"x".repeat(501)}")
         }.andExpect {
             status { is3xxRedirection() }
             redirectedUrl("/w/$token/maker/wishes")
@@ -164,8 +164,14 @@ class MakerStartControllerTests(
         val html = mvc.get("/w/$token/maker/wishes") {
             flashAttr("importResult", result.flashMap["importResult"]!!)
         }.andExpect { status { isOk() } }.andReturn().response.contentAsString
-        assertContains(html, "Added 1; skipped 1: 1 over 500 characters")
+        assertContains(html, "Retained 1; merged 2; skipped 1: 1 over 500 characters")
         assertContains(html, "First wish")
+        assertContains(html, "Duplicate occurrences")
+        assertContains(html, "<td>2</td>")
+        assertContains(html, "Duplicate occurrences do not count as additional fans or orders.")
+        assertContains(html, "Imported comments inform analysis only.")
+        assertContains(html, "not contact permission or purchase consent")
+        assertEquals(41, workspaces.listWishes(token).size)
         mvc.securePost("/w/missing/maker/wishes") { param("comments", "Wish") }.andExpect {
             status { isNotFound() }
             view { name("error/not-found") }

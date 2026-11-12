@@ -124,7 +124,7 @@ class WorkspaceServiceTests @Autowired constructor(
     }
 
     @Test
-    fun `import trims lines and reports length paste and workspace limits`() {
+    fun `import preserves lines and reports length paste and workspace limits`() {
         val workspace = service.create()
         repeat(159) { service.addWish(workspace.token, "Existing $it") }
         service.setWishHidden(workspace.token, catalog.wishId(workspace.id, "w01"), true)
@@ -135,7 +135,7 @@ class WorkspaceServiceTests @Autowired constructor(
         assertEquals(3, result.skipped)
         entityManager.flush()
         entityManager.clear()
-        val imported = service.listWishes(workspace.token).single { it.text == "Imported wish" }
+        val imported = service.listWishes(workspace.token).single { it.text == "  Imported wish  " }
         assertEquals(WishSource.IMPORTED, imported.source)
         assertNull(imported.displayName)
         assertEquals(200, service.listWishes(workspace.token).size)

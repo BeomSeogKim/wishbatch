@@ -1,6 +1,7 @@
 package app.campaign.workspace
 
 import app.campaign.analysisrun.AnalysisRunService
+import app.campaign.importing.wishDuplicateKey
 import app.campaign.model.Option
 import app.campaign.model.Wish
 import app.campaign.model.WishSource
@@ -18,7 +19,13 @@ class WorkspaceNotFoundException : NoSuchElementException("Workspace not found")
 class WishNotFoundException : NoSuchElementException("Wish not found")
 class WishLimitReachedException : IllegalStateException("Workspace already contains 200 wishes")
 
-data class ImportedWishResult(val added: Int, val tooLong: Int, val overLimit: Int, val overPasteLimit: Int) {
+data class ImportedWishResult(
+    val added: Int,
+    val tooLong: Int,
+    val overLimit: Int,
+    val overPasteLimit: Int,
+    val merged: Int = 0,
+) {
     val skipped: Int get() = tooLong + overLimit + overPasteLimit
 }
 
@@ -119,38 +126,48 @@ class WorkspaceService(
     @Transactional
     fun addImportedWishes(token: String, text: String): ImportedWishResult {
         val workspace = lookup(token, lock = true) ?: throw WorkspaceNotFoundException()
-        val count = entityManager.createQuery(
-            "select count(w) from Wish w where w.workspaceId = :workspaceId", Long::class.javaObjectType,
-        ).setParameter("workspaceId", workspace.id).singleResult
+        val existing = listWishes(token)
+        val retained = existing.groupBy { wishDuplicateKey(it.text) }.mapValues { it.value.first() }.toMutableMap()
         var added = 0
+        var merged = 0
         var tooLong = 0
         var overLimit = 0
         var overPasteLimit = 0
         text.lineSequence().forEachIndexed { index, line ->
-            val wish = line.trim()
-            if (wish.isNotEmpty()) {
-                when {
-                    index >= 100 -> overPasteLimit++
-                    wish.length > 500 -> tooLong++
-                    count + added >= 200 -> overLimit++
-                    else -> {
-                        entityManager.persist(Wish(
-                            workspaceId = workspace.id,
-                            text = wish,
-                            source = WishSource.IMPORTED,
-                            createdAt = clock.instant(),
-                        ))
-                        added++
+            when {
+                line.isBlank() -> Unit
+                index >= 100 -> overPasteLimit++
+                line.length > 500 -> tooLong++
+                else -> {
+                    val key = wishDuplicateKey(line)
+                    val duplicate = retained[key]
+                    when {
+                        duplicate != null -> {
+                            duplicate.duplicateCount++
+                            merged++
+                        }
+                        existing.size + added >= 200 -> overLimit++
+                        else -> {
+                            val wish = Wish(
+                                workspaceId = workspace.id,
+                                text = line,
+                                source = WishSource.IMPORTED,
+                                createdAt = clock.instant(),
+                            )
+                            entityManager.persist(wish)
+                            retained[key] = wish
+                            added++
+                        }
                     }
                 }
             }
         }
-        return ImportedWishResult(added, tooLong, overLimit, overPasteLimit)
+        return ImportedWishResult(added, tooLong, overLimit, overPasteLimit, merged)
     }
 
     @Transactional
     fun setWishHidden(token: String, wishId: UUID, hidden: Boolean): Wish {
-        val workspace = lookup(token) ?: throw WorkspaceNotFoundException()
+        val workspace = lookup(token, lock = true) ?: throw WorkspaceNotFoundException()
         val wish = entityManager.createQuery(
             "select w from Wish w where w.workspaceId = :workspaceId and w.id = :wishId", Wish::class.java,
         ).setParameter("workspaceId", workspace.id).setParameter("wishId", wishId)
