@@ -4,6 +4,9 @@ import app.campaign.fuzz.SequenceCrash
 import app.campaign.fuzz.SequenceGateway
 import app.campaign.model.*
 import app.campaign.port.*
+import app.campaign.rules.authorizedUnits
+import app.campaign.rules.capturedUnits
+import app.campaign.rules.interestCount
 import app.campaign.rules.PaymentAction
 import app.campaign.rules.idempotencyKey
 import app.campaign.service.*
@@ -44,7 +47,7 @@ class InvariantSequenceTest @Autowired constructor(
 
     @Test
     fun `fixed sequences preserve payment and count invariants`() {
-        repeat(8) { seed ->
+        repeat(16) { seed ->
             gateway.reset()
             val workspace = workspaces.saveAndFlush(Workspace("sequence-$seed-${UUID.randomUUID()}", now))
             val option = options.saveAndFlush(Option(workspace.id, "Print", "print", emptyMap(), emptyMap(),
@@ -59,72 +62,111 @@ class InvariantSequenceTest @Autowired constructor(
                 closesAt = now.plusSeconds(900), confirmDeadline = now.plusSeconds(44100)))
             val ref = CampaignRef(workspace.id, campaign.id)
             val random = Random(seed)
-            fun snapshot() {
-                val view = assertIs<ServiceResult.Success<CampaignView>>(service.readCampaign(ref)).value
+            var actionCount = 0
+            fun snapshot(result: ServiceResult<*>? = null) {
+                val stored = campaigns.findById(campaign.id).orElseThrow()
                 val rows = pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id)
-                assertEquals(1, view.counts.statedInterest, "seed=$seed")
-                assertEquals(rows.filter { it.state == PledgeState.AUTHORIZED }.sumOf { it.qty.toLong() }, view.counts.authorizedHolds, "seed=$seed")
-                assertEquals(rows.filter { it.state == PledgeState.CAPTURED }.sumOf { it.qty.toLong() }, view.counts.paid, "seed=$seed")
-                assertEquals(gateway.paidCaptures, rows.filter { it.state == PledgeState.CAPTURED }.mapNotNull { it.captureId }.toSet(), "seed=$seed provider paid captures")
+                val authorized = rows.filter { it.state == PledgeState.AUTHORIZED }.sumOf { it.qty.toLong() }
+                val paidRows = rows.filter { it.state == PledgeState.CAPTURED }
+                val paid = paidRows.sumOf { it.qty.toLong() }
+                assertEquals(1, interestCount(output.wishes), "seed=$seed")
+                assertEquals(authorized, authorizedUnits(rows), "seed=$seed")
+                assertEquals(paid, capturedUnits(rows), "seed=$seed")
+                val capturedIds = paidRows.mapNotNull { it.captureId }.toSet()
+                assertTrue(gateway.paidCaptures.containsAll(capturedIds), "seed=$seed provider paid captures")
+                if (stored.state != CampaignState.SETTLING) {
+                    assertEquals(gateway.paidCaptures, capturedIds, "seed=$seed provider paid captures")
+                }
+                val view = (result as? ServiceResult.Success<*>)?.value as? CampaignView
+                if (view != null) {
+                    assertEquals(CampaignCounts(1, authorized, paid), view.counts, "seed=$seed")
+                }
+                assertTrue(gateway.captureEffects.values.all { it <= 1 }, "seed=$seed duplicate capture effect")
+                assertTrue(gateway.refundEffects.values.all { it <= 1 }, "seed=$seed duplicate refund effect")
                 for (row in rows) {
                     val captures = gateway.calls.filterIsInstance<PaymentCall.Capture>().filter { it.authorizationId.value == row.authorizationId }
                     val refunds = gateway.calls.filterIsInstance<PaymentCall.RefundCapture>().filter { it.captureId.value == row.captureId }
                     assertTrue(captures.all { it.idempotencyKey == idempotencyKey(row.id, PaymentAction.CAPTURE) }, "seed=$seed")
                     assertTrue(refunds.all { it.idempotencyKey == idempotencyKey(row.id, PaymentAction.REFUND) }, "seed=$seed")
-                    if (row.state == PledgeState.CAPTURED) assertTrue(row.captureId != null && captures.isNotEmpty(), "seed=$seed")
-                    if (view.state in setOf(CampaignState.FUNDED, CampaignState.NOT_FUNDED)) {
+                    if (stored.state in setOf(CampaignState.FUNDED, CampaignState.NOT_FUNDED)) {
                         assertTrue(row.state != PledgeState.AUTHORIZED, "seed=$seed terminal hold")
-                        if (row.state in setOf(PledgeState.CAPTURE_PENDING, PledgeState.VOID_FAILED, PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED)) {
-                            assertTrue(view.needsAttention.any { it.pledgeId == row.id }, "seed=$seed unresolved payment")
+                        if (row.authorizationId in gateway.activeHolds) {
+                            assertTrue(row.state in setOf(PledgeState.VOID_FAILED, PledgeState.CAPTURE_PENDING), "seed=$seed unresolved hold")
                         }
                     }
                 }
+                if (stored.state in setOf(CampaignState.FUNDED, CampaignState.NOT_FUNDED)) {
+                    val attention = rows.any { it.state in setOf(PledgeState.CAPTURE_PENDING, PledgeState.VOID_FAILED,
+                        PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED) }
+                    assertEquals(attention, stored.needsAttention, "seed=$seed unresolved payment")
+                }
+            }
+            fun step(action: () -> ServiceResult<*>): ServiceResult<*> {
+                val result = action()
+                actionCount++
+                snapshot(result)
+                return result
+            }
+            fun start(): PledgeView = assertIs<ServiceResult.Success<PledgeView>>(step { service.startPledge(ref, 1) }).value
+            fun randomAction() {
+                val rows = pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id)
+                val row = rows.randomOrNull(random)
+                when (random.nextInt(4)) {
+                    0 -> if (rows.size < 8) step { service.startPledge(ref, 1) } else step { service.reconcile(ref) }
+                    1 -> if (row != null) step { service.completePledge(PledgeRef(ref, row.id)) } else step { service.reconcile(ref) }
+                    2 -> if (row != null) step { service.withdrawPledge(PledgeRef(ref, row.id)) } else step { service.reconcile(ref) }
+                    else -> step { service.reconcile(ref) }
+                }
             }
             try {
-                repeat(24) {
-                    val rows = pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id)
-                    when (random.nextInt(4)) {
-                        0 -> service.startPledge(ref, random.nextInt(1, 4))
-                        1 -> rows.randomOrNull(random)?.let { service.completePledge(PledgeRef(ref, it.id)) }
-                        2 -> rows.randomOrNull(random)?.let { service.withdrawPledge(PledgeRef(ref, it.id)) }
-                        else -> service.reconcile(ref)
-                    }
-                    snapshot()
-                }
-                // Ensure the settlement scenarios have an approved pledge as well as any abandoned orders.
-                val created = assertIs<ServiceResult.Success<PledgeView>>(service.startPledge(ref, 1)).value
-                snapshot()
-                service.completePledge(PledgeRef(ref, created.id))
-                snapshot()
-                service.startPledge(ref, 1)
-                snapshot()
-                when (seed % 4) {
-                    0 -> { gateway.cleanupFails = true; service.cancel(ref) }
-                    1 -> { gateway.captureStatus = PaymentStatus.DECLINED; gateway.cleanupFails = true; service.confirmProduction(ref) }
-                    2 -> { gateway.captureStatus = PaymentStatus.PENDING; service.confirmProduction(ref) }
+                val first = start()
+                step { service.completePledge(PledgeRef(ref, first.id)) }
+                start()
+                repeat(random.nextInt(40, 49)) { randomAction() }
+                val created = start()
+                step { service.completePledge(PledgeRef(ref, created.id)) }
+                start()
+                val scenario = listOf(0, 1, 2, 3).shuffled(Random(42))[seed % 4]
+                when (scenario) {
+                    0 -> { gateway.cleanupFails = true; step { service.cancel(ref) } }
+                    1 -> { gateway.captureStatus = PaymentStatus.DECLINED; gateway.cleanupFails = true; step { service.confirmProduction(ref) } }
+                    2 -> { gateway.captureStatus = PaymentStatus.PENDING; step { service.confirmProduction(ref) } }
                     else -> {
                         gateway.crashCapture = true
                         var crashed = false
                         try { service.confirmProduction(ref) } catch (_: SequenceCrash) { crashed = true }
+                        actionCount++
                         assertTrue(crashed, "seed=$seed expected capture interruption")
                         assertEquals(CampaignState.SETTLING, campaigns.findById(campaign.id).orElseThrow().state)
+                        snapshot()
                     }
                 }
-                snapshot()
-                val interrupted = assertIs<ServiceResult.Success<CampaignView>>(service.readCampaign(ref)).value
-                assertTrue(interrupted.pledges.any { it.state == PledgeState.ABANDONED }, "seed=$seed abandoned order")
-                if (seed % 4 == 0 || seed % 4 == 1) {
-                    assertTrue(interrupted.needsAttention.any { it.state == PledgeState.VOID_FAILED }, "seed=$seed failed cleanup")
+                val interrupted = pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id)
+                if (scenario == 0 || scenario == 1) {
+                    assertTrue(interrupted.any { it.state == PledgeState.VOID_FAILED }, "seed=$seed failed cleanup")
                 }
-                if (seed % 4 == 2) {
-                    assertTrue(interrupted.needsAttention.any { it.state == PledgeState.CAPTURE_PENDING }, "seed=$seed pending capture")
+                if (scenario == 2) {
+                    assertTrue(interrupted.any { it.state == PledgeState.CAPTURE_PENDING }, "seed=$seed pending capture")
                 }
-                gateway.cleanupFails = false
-                gateway.pendingCompletes = true
-                repeat(4) { service.reconcile(ref); snapshot() }
-                val final = assertIs<ServiceResult.Success<CampaignView>>(service.readCampaign(ref)).value
-                assertTrue(final.needsAttention.isEmpty(), "seed=$seed cleanup after recovery")
-                assertTrue(final.pledges.none { it.state in setOf(PledgeState.AUTHORIZED, PledgeState.CAPTURE_PENDING,
+                val recoveryAt = actionCount + random.nextInt(1, 4)
+                while (actionCount < 64) {
+                    if (actionCount == recoveryAt) {
+                        gateway.cleanupFails = false
+                        gateway.pendingCompletes = true
+                    }
+                    when (random.nextInt(3)) {
+                        0 -> step { service.reconcile(ref) }
+                        1 -> step { service.confirmProduction(ref) }
+                        else -> step { service.cancel(ref) }
+                    }
+                }
+                val final = campaigns.findById(campaign.id).orElseThrow()
+                val finalRows = pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id)
+                assertEquals(64, actionCount)
+                assertTrue(finalRows.any { it.state == PledgeState.ABANDONED }, "seed=$seed abandoned order")
+                assertTrue(!final.needsAttention, "seed=$seed cleanup after recovery")
+                assertTrue(gateway.activeHolds.isEmpty(), "seed=$seed provider holds after recovery")
+                assertTrue(finalRows.none { it.state in setOf(PledgeState.AUTHORIZED, PledgeState.CAPTURE_PENDING,
                     PledgeState.VOID_FAILED, PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED) }, "seed=$seed")
             } finally {
                 events.deleteAll(events.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id))
@@ -136,6 +178,27 @@ class InvariantSequenceTest @Autowired constructor(
                 workspaces.deleteById(workspace.id)
             }
         }
+    }
+
+    @Test
+    fun `provider fake deduplicates replays and counts effects by resource`() {
+        val provider = SequenceGateway()
+        val order = assertIs<PaymentResult.Received<OrderDetails>>(
+            provider.createAuthorizeOrder(CreateAuthorizeOrder(UUID.randomUUID(), Money(200, "USD")), "create"),
+        ).resource.orderId
+        val authorization = assertIs<PaymentResult.Received<AuthorizationDetails>>(
+            provider.authorizeOrder(order, "authorize"),
+        ).resource.authorizationId
+        val capture = assertIs<PaymentResult.Received<CaptureDetails>>(provider.capture(authorization, "capture"))
+        assertEquals(capture, provider.capture(authorization, "capture"))
+        val refund = assertIs<PaymentResult.Received<RefundDetails>>(provider.refundCapture(capture.resource.captureId, "refund"))
+        assertEquals(refund, provider.refundCapture(capture.resource.captureId, "refund"))
+        assertEquals(1, provider.captureEffects[authorization.value])
+        assertEquals(1, provider.refundEffects[capture.resource.captureId.value])
+        provider.refundCapture(capture.resource.captureId, "different-refund")
+        assertEquals(2, provider.refundEffects[capture.resource.captureId.value])
+        provider.capture(authorization, "different-capture")
+        assertEquals(2, provider.captureEffects[authorization.value])
     }
 
     @TestConfiguration

@@ -13,11 +13,14 @@ class SequenceGateway : PaymentGateway {
     private val amounts = mutableMapOf<String, Money>()
     private val captures = mutableMapOf<String, CaptureDetails>()
     private val refunds = mutableMapOf<String, RefundDetails>()
-    private val captureKeys = mutableMapOf<String, String>()
-    private val refundKeys = mutableMapOf<String, String>()
+    private val captureResponses = mutableMapOf<String, PaymentResult<CaptureDetails>>()
+    private val refundResponses = mutableMapOf<String, PaymentResult<RefundDetails>>()
+    val captureEffects = mutableMapOf<String, Int>()
+    val refundEffects = mutableMapOf<String, Int>()
     private val completedCaptures = mutableSetOf<String>()
     private val completedRefunds = mutableSetOf<String>()
     val paidCaptures: Set<String> get() = completedCaptures - completedRefunds
+    val activeHolds = mutableSetOf<String>()
     var captureStatus = PaymentStatus.COMPLETED
     var cleanupFails = false
     var crashCapture = false
@@ -26,8 +29,9 @@ class SequenceGateway : PaymentGateway {
 
     fun reset() {
         fake = InMemoryPaymentGateway()
-        amounts.clear(); captures.clear(); refunds.clear(); captureKeys.clear(); refundKeys.clear()
-        completedCaptures.clear(); completedRefunds.clear()
+        amounts.clear(); captures.clear(); refunds.clear(); captureResponses.clear(); refundResponses.clear()
+        captureEffects.clear(); refundEffects.clear()
+        completedCaptures.clear(); completedRefunds.clear(); activeHolds.clear()
         captureStatus = PaymentStatus.COMPLETED
         cleanupFails = false; crashCapture = false; pendingCompletes = false
     }
@@ -42,6 +46,7 @@ class SequenceGateway : PaymentGateway {
     override fun authorizeOrder(orderId: OrderId, idempotencyKey: String): PaymentResult<AuthorizationDetails> {
         val id = AuthorizationId(orderId.value.replaceFirst("order-", "auth-"))
         amounts[id.value] = amounts.getValue(orderId.value)
+        activeHolds.add(id.value)
         fake.authorizeOrderResults.add(PaymentResult.Received(AuthorizationDetails(id, amounts.getValue(id.value),
             Instant.parse("2026-01-02T00:00:00Z"), orderId), PaymentStatus.CREATED))
         return fake.authorizeOrder(orderId, idempotencyKey)
@@ -56,15 +61,19 @@ class SequenceGateway : PaymentGateway {
     }
 
     override fun capture(authorizationId: AuthorizationId, idempotencyKey: String): PaymentResult<CaptureDetails> {
-        val oldKey = captureKeys.putIfAbsent(authorizationId.value, idempotencyKey)
-        check(oldKey == null || oldKey == idempotencyKey)
-        val result = if (captureStatus == PaymentStatus.DECLINED) PaymentResult.Failed(PaymentStatus.DECLINED) else {
-            val details = captures.getOrPut(authorizationId.value) {
-                CaptureDetails(CaptureId("capture-${authorizationId.value}"), amounts.getValue(authorizationId.value), authorizationId)
-            }
-            PaymentResult.Received(details, captureStatus)
+        val result = captureResponses[idempotencyKey] ?: if (captureStatus == PaymentStatus.DECLINED) {
+            PaymentResult.Failed(PaymentStatus.DECLINED).also { captureResponses[idempotencyKey] = it }
+        } else {
+            captureEffects.merge(authorizationId.value, 1, Int::plus)
+            val details = CaptureDetails(CaptureId("capture-${authorizationId.value}-${captureEffects.getValue(authorizationId.value)}"),
+                amounts.getValue(authorizationId.value), authorizationId)
+            captures[authorizationId.value] = details
+            PaymentResult.Received(details, captureStatus).also { captureResponses[idempotencyKey] = it }
         }
-        if (result is PaymentResult.Received && result.status == PaymentStatus.COMPLETED) completedCaptures.add(result.resource.captureId.value)
+        if (result is PaymentResult.Received && result.status == PaymentStatus.COMPLETED) {
+            completedCaptures.add(result.resource.captureId.value)
+            activeHolds.remove(authorizationId.value)
+        }
         fake.captureResults.add(result)
         val response = fake.capture(authorizationId, idempotencyKey)
         if (crashCapture && result is PaymentResult.Received) { crashCapture = false; throw SequenceCrash() }
@@ -74,16 +83,18 @@ class SequenceGateway : PaymentGateway {
     override fun voidAuthorization(authorizationId: AuthorizationId, idempotencyKey: String): PaymentResult<VoidDetails> {
         fake.voidAuthorizationResults.add(if (cleanupFails) PaymentResult.Failed(PaymentStatus.FAILED)
             else PaymentResult.Received(VoidDetails(authorizationId), PaymentStatus.VOIDED))
-        return fake.voidAuthorization(authorizationId, idempotencyKey)
+        val response = fake.voidAuthorization(authorizationId, idempotencyKey)
+        if (response is PaymentResult.Received) activeHolds.remove(authorizationId.value)
+        return response
     }
 
     override fun refundCapture(captureId: CaptureId, idempotencyKey: String): PaymentResult<RefundDetails> {
-        val oldKey = refundKeys.putIfAbsent(captureId.value, idempotencyKey)
-        check(oldKey == null || oldKey == idempotencyKey)
         val capture = captures.values.single { it.captureId == captureId }
-        val result = if (cleanupFails) PaymentResult.Failed(PaymentStatus.FAILED) else {
-            val refund = refunds.getOrPut(captureId.value) { RefundDetails(RefundId("refund-${captureId.value}"), capture.amount, captureId) }
-            PaymentResult.Received(refund, PaymentStatus.COMPLETED)
+        val result = refundResponses[idempotencyKey] ?: if (cleanupFails) PaymentResult.Failed(PaymentStatus.FAILED) else {
+            refundEffects.merge(captureId.value, 1, Int::plus)
+            val refund = RefundDetails(RefundId("refund-${captureId.value}-${refundEffects.getValue(captureId.value)}"), capture.amount, captureId)
+            refunds[captureId.value] = refund
+            PaymentResult.Received(refund, PaymentStatus.COMPLETED).also { refundResponses[idempotencyKey] = it }
         }
         if (result is PaymentResult.Received) completedRefunds.add(captureId.value)
         fake.refundCaptureResults.add(result)
@@ -92,7 +103,10 @@ class SequenceGateway : PaymentGateway {
 
     override fun readCapture(captureId: CaptureId, idempotencyKey: String): PaymentResult<CaptureDetails> {
         val capture = captures.values.single { it.captureId == captureId }
-        if (pendingCompletes) completedCaptures.add(captureId.value)
+        if (pendingCompletes) {
+            completedCaptures.add(captureId.value)
+            activeHolds.remove(capture.authorizationId!!.value)
+        }
         fake.readCaptureResults.add(PaymentResult.Received(capture,
             if (pendingCompletes) PaymentStatus.COMPLETED else captureStatus))
         return fake.readCapture(captureId, idempotencyKey)
