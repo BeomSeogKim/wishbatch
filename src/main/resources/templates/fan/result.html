@@ -2,7 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page('Campaign result', ~{::main})}">
 <body>
-<main id="main" class="shell fan-page">
+<main id="main" class="shell fan-page pledge-experience" th:classappend="${resultAvailable} ? 'is-settled'">
+    <link rel="stylesheet" th:href="@{/css/ux-pledge.css}">
     <h1 th:text="${resultTitle}">Campaign result</h1>
     <p th:text="${resultReason}"></p>
     <th:block th:if="${campaign != null}">
@@ -20,7 +21,7 @@
             <p>Delivery terms: <span th:text="${campaign.offer.deliveryTerms}"></span></p>
         </section>
     </th:block>
-    <p><a th:href="@{/w/{token}/offer(token=${token})}">View offer</a></p>
+    <p><a class="button button-primary" th:href="@{/w/{token}/offer(token=${token})}">Review offer and sealed terms</a></p>
     <p><a th:href="@{/w/{token}(token=${token})}">Back to wishes</a></p>
 </main>
 </body>

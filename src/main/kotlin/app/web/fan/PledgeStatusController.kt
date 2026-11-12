@@ -39,20 +39,21 @@ class PledgeStatusController(
         model.addAttribute("token", token)
         model.addAttribute("pledge", lookup.pledge)
         model.addAttribute("canWithdraw", lookup.canWithdraw)
-        model.addAttribute("amount", displayMoney(lookup.pledge.amount, lookup.pledge.currency))
         model.addAttribute("sentence", pledgeSentence(lookup.pledge.state, messages))
+        model.addAttribute("showAuthorizationExpiry", lookup.pledge.state == PledgeState.AUTHORIZED &&
+            lookup.pledge.authorizationExpiresAt != null)
         model.addAttribute("outcomeStep", outcomeStep(lookup.pledge.state).name)
         model.addAttribute("next", when (lookup.pledge.state) {
             PledgeState.CREATED -> "Check this status before trying again if you already approved in PayPal. Otherwise, return to the offer to try again."
             PledgeState.ABANDONED -> "Return to the offer to try again if it is still open."
-            PledgeState.AUTHORIZED -> "Payment may be captured if the minimum is reached and the maker confirms before the deadline. Otherwise the hold will be released."
-            PledgeState.CAPTURED -> "Check the campaign result for production and the maker's delivery terms. If too few payments complete, completed payments are refunded."
+            PledgeState.AUTHORIZED -> "Payment may be captured if the minimum is reached and the maker confirms before the deadline. Otherwise a hold release is requested; timing depends on PayPal and your bank or card."
+            PledgeState.CAPTURED -> "Check the campaign result and the maker's delivery terms. Your payment is complete; production and delivery are not guaranteed."
             PledgeState.CAPTURE_PENDING -> "Check this page again for PayPal's confirmed payment status. Pending payments do not count as paid."
-            PledgeState.CAPTURE_FAILED -> "Any remaining hold must be released. Check this page again for the release status."
+            PledgeState.CAPTURE_FAILED -> "A release of any remaining hold is requested. Check this page again for confirmation; timing depends on PayPal and your bank or card."
             PledgeState.VOIDED -> "No further payment is due for this pledge. Your bank or card determines when the hold disappears."
             PledgeState.REFUNDED -> "PayPal and your bank or card determine when the refund appears."
             PledgeState.PARTIALLY_REFUNDED -> "A partial refund was observed. The remaining amount is unconfirmed and needs attention. Check this page again for a verified full refund."
-            PledgeState.REFUND_PENDING -> "Check this page again for the refund result."
+            PledgeState.REFUND_PENDING -> "A refund has been requested. Check this page again for confirmation; timing depends on PayPal and your bank or card."
             PledgeState.VOID_FAILED, PledgeState.REFUND_FAILED -> "The payment needs attention. Check this page again; release or refund has not been confirmed."
         })
         model.addAttribute("trailEntries", trail.pledge(token, pledgeId).orEmpty())

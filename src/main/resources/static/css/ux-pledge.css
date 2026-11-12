@@ -1,0 +1,27 @@
+.pledge-experience .counts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin-block: var(--space-4);
+}
+.pledge-experience .count { min-width: 0; padding: var(--space-3); }
+.pledge-experience .count-label { font-size: .875rem; }
+.pledge-experience .count-value { font-size: 1.75rem; }
+.pledge-experience .count-caption, .pledge-experience .count-target { font-size: .75rem; }
+.pledge-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.pledge-experience summary { cursor: pointer; font-weight: 600; }
+.pledge-experience details > :not(summary) { margin-top: var(--space-4); }
+.pledge-experience.is-settled .count-authorized {
+    background: var(--surface-soft);
+    border-color: var(--line);
+}
+.pledge-experience.is-settled .count-authorized .count-label,
+.pledge-experience.is-settled .count-authorized .count-value { color: var(--muted); }
+.pledge-experience.is-settled .count-authorized progress,
+.pledge-experience.is-settled .count-authorized .count-target { display: none; }
+@media (max-width: 480px) {
+    .pledge-experience .pledge-summary { padding: var(--space-4); }
+    .pledge-experience .count { padding: var(--space-2); }
+    .pledge-experience .count-label { font-size: .75rem; }
+    .pledge-experience .count-caption { min-height: 0; font-size: .6875rem; line-height: 1.4; }
+    .pledge-actions .button { width: 100%; }
+}

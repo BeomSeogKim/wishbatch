@@ -2,45 +2,55 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page('Pledge status', ~{::main})}">
 <body>
-<main id="main" class="shell fan-page">
+<main id="main" class="shell fan-page pledge-experience" th:classappend="${resultAvailable} ? 'is-settled'">
+    <link rel="stylesheet" th:href="@{/css/ux-pledge.css}">
     <h1>Pledge status</h1>
     <p th:if="${error != null}" class="notice notice-error" role="alert" th:text="${error}"></p>
     <p th:if="${notice != null}" class="notice notice-info" role="status" th:text="${notice}"></p>
-    <section class="card" aria-label="Your pledge">
+    <section class="card pledge-summary" aria-label="Your pledge and batch progress">
         <h2 th:text="${campaign.offer.title}"></h2>
         <p class="notice notice-info" th:text="${sentence}"></p>
-        <dl class="term-list">
-            <dt>Quantity</dt><dd th:text="${pledge.quantity}"></dd>
-            <dt>Amount</dt><dd th:text="${amount}"></dd>
-            <dt th:if="${pledge.authorizationExpiresAt != null}">Authorization expiry (UTC)</dt>
-            <dd th:if="${pledge.authorizationExpiresAt != null}" th:text="${@makerDisplay.time(pledge.authorizationExpiresAt)}"></dd>
-        </dl>
-        <h2>What happens next</h2>
+        <p><strong th:text="${@humanDisplay.money(pledge.amount, pledge.currency)}"></strong> · Quantity <span th:text="${pledge.quantity}"></span></p>
+        <div th:replace="~{fragments/components :: counts(${campaign.counts.statedInterest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}"></div>
+        <nav class="pledge-actions" aria-label="Next steps">
+            <a class="button button-primary" th:href="@{/w/{token}/result(token=${token})}" th:text="${resultAvailable} ? 'See campaign result' : 'See campaign progress'">See campaign progress</a>
+            <a class="button button-secondary" th:href="@{/w/{token}/pledges/{id}(token=${token},id=${pledge.id})}">Refresh status</a>
+        </nav>
+    </section>
+    <section class="card" aria-labelledby="pledge-next">
+        <h2 id="pledge-next">What happens next</h2>
         <p th:text="${next}"></p>
         <p>Delivery terms: <span th:text="${campaign.offer.deliveryTerms}"></span></p>
-        <form th:if="${canWithdraw}" method="post" th:action="@{/w/{token}/pledges/{id}(token=${token},id=${pledge.id})}">
+        <p th:if="${showAuthorizationExpiry}">Hold expires: <time th:datetime="${pledge.authorizationExpiresAt}" th:text="${@humanDisplay.time(pledge.authorizationExpiresAt)}"></time></p>
+        <th:block th:if="${resultAvailable}">
+            <h3 th:text="${resultTitle}"></h3>
+            <p th:text="${resultReason}"></p>
+            <p>The campaign outcome and your payment status are separate. Your payment status is shown above.</p>
+        </th:block>
+        <a th:href="@{/w/{token}/offer(token=${token})}">Review the offer and sealed terms</a>
+        <p class="muted">A link from this pledge to a wish is not available.</p>
+    </section>
+    <details th:if="${canWithdraw}" class="card pledge-withdraw">
+        <summary>Withdraw this pledge</summary>
+        <form method="post" th:action="@{/w/{token}/pledges/{id}(token=${token},id=${pledge.id})}">
             <input type="hidden" name="action" value="withdraw">
-            <p id="withdraw-help">Withdrawing asks PayPal to release your hold. When the amount reappears depends on your bank or card.</p>
+            <p id="withdraw-help">Withdrawing asks PayPal to release your hold. Timing depends on PayPal and your bank or card.</p>
             <label class="checkbox-field">
                 <input type="checkbox" name="confirmed" value="true" required aria-describedby="withdraw-help">
                 I confirm that I want to withdraw this pledge.
             </label>
             <button type="submit" class="button button-danger">Withdraw my pledge</button>
         </form>
-        <a th:href="@{/w/{token}/pledges/{id}(token=${token},id=${pledge.id})}">Refresh status</a>
-    </section>
-    <div class="card">
-        <p>Times are local recording checkpoints, not PayPal settlement times. Amounts use minor units.</p>
+    </details>
+    <details class="card pledge-record">
+        <summary>Recorded payment checkpoints</summary>
+        <p>Times are local recording checkpoints, not PayPal settlement times.</p>
         <div th:replace="~{trail/table :: table(${trailEntries})}"></div>
-    </div>
-    <section th:replace="~{fan/outcome-map :: map(${outcomeStep}, ${sentence})}"></section>
-    <section th:if="${resultAvailable}" class="card" aria-label="Campaign result">
-        <h2 th:text="${resultTitle}"></h2>
-        <p th:text="${resultReason}"></p>
-        <p>The campaign outcome and your payment status are separate. Your payment status is shown above.</p>
-        <a th:href="@{/w/{token}/result(token=${token})}">View public result</a>
-    </section>
-    <p><a th:href="@{/w/{token}/offer(token=${token})}">Back to the offer</a></p>
+    </details>
+    <details class="card">
+        <summary>How payments move</summary>
+        <section th:replace="~{fan/outcome-map :: map(${outcomeStep}, ${sentence})}"></section>
+    </details>
 </main>
 </body>
 </html>

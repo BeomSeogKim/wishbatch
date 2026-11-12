@@ -489,10 +489,36 @@ class FanPaymentControllerTests @Autowired constructor(
             assertFalse(html.contains("authorization-${pledge.id}"))
             assertFalse(html.contains("??pledge."))
             assertEquals(state == PledgeState.AUTHORIZED, html.contains("Withdraw my pledge"))
+            assertEquals(state == PledgeState.AUTHORIZED, html.contains("Hold expires:"))
+            assertFalse(html.contains("completed payments are refunded"))
         }
         val reads = gateway.calls.drop(firstCall)
         assertEquals(2, reads.size)
         assertTrue(reads.all { it is PaymentCall.ReadAuthorization })
+    }
+
+    @Test
+    fun `successful hold leads with batch progress and useful actions before confirmed withdrawal`() {
+        val fixture = fixture()
+        val pledge = pledge(fixture, PledgeState.AUTHORIZED, quantity = 2)
+        scriptHoldRead(pledge)
+        val html = mvc.get("${fixture.path}/pledges/${pledge.id}").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        val counts = html.indexOf("aria-label=\"Campaign counts\"")
+        val campaignLink = html.indexOf("See campaign progress")
+        val withdraw = html.indexOf("Withdraw my pledge")
+        assertTrue(counts >= 0 && campaignLink > counts && withdraw > campaignLink)
+        assertContains(html, "href=\"${fixture.path}/result\"")
+        assertContains(html, "aria-label=\"Authorized units toward minimum batch\"")
+        assertContains(html, "value=\"2\"")
+        val disclosure = html.substringAfter("<details class=\"card pledge-withdraw\"")
+            .substringBefore("</details>")
+        assertTrue(disclosure.startsWith(">"))
+        assertContains(disclosure, "<summary>Withdraw this pledge</summary>")
+        assertContains(disclosure, "name=\"confirmed\"")
+        assertContains(disclosure, "required")
+        assertContains(html, "A link from this pledge to a wish is not available.")
+        assertFalse(html.contains("Amounts use minor units"))
     }
 
     @Test
@@ -504,7 +530,7 @@ class FanPaymentControllerTests @Autowired constructor(
         val html = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
         assertContains(html, "Withdraw my pledge")
         assertContains(html, "name=\"confirmed\"")
-        assertContains(html, "When the amount reappears depends on your bank or card.")
+        assertContains(html, "Timing depends on PayPal and your bank or card.")
         assertIs<PaymentCall.ReadAuthorization>(gateway.calls.drop(firstCall).single())
         val unconfirmed = mvc.securePost(path) { param("action", "withdraw") }.andExpect {
             status { is3xxRedirection() }; redirectedUrl(path)
@@ -557,6 +583,7 @@ class FanPaymentControllerTests @Autowired constructor(
             }.andReturn().response.contentAsString
             if (state == CampaignState.FUNDED || state == CampaignState.NOT_FUNDED) {
                 for (label in listOf("Stated interest", "Authorized holds", "Paid")) assertContains(html, label)
+                assertContains(html, "pledge-experience is-settled")
                 assertContains(html.lowercase(), if (state == CampaignState.FUNDED) "funded" else "not funded")
                 if (state == CampaignState.FUNDED) {
                     assertContains(html, "The paid minimum was met at settlement.")
