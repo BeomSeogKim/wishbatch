@@ -51,6 +51,7 @@ class StartupTests {
                 "--PAYPAL_BASE_URL=$baseUrl",
                 "--PAYPAL_CLIENT_ID=",
                 "--PAYPAL_CLIENT_SECRET=",
+                "--PAYPAL_WEBHOOK_ID=",
                 "--LLM_API_KEY=",
                 "--LLM_SEED_RUN=false",
             )

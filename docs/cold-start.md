@@ -70,6 +70,13 @@ that work. Reported memory is a post-response sample, not peak memory.
 
 ### Local result (2026-11-12)
 
+Both settings used source commit
+`24423a565b044a4e6f4d7c4eb7e559a61782a915`, verified from the comparison
+build's recorded VCS revision, and the Dockerfile at that commit. The measured
+executable JAR had SHA-256
+`c98feedf256b5ba93ff7833327ac4d6eff2143beb3d883b11576535eafee1944`.
+Later application features are outside this measurement baseline.
+
 | Runtime setting | Spring startup | Container creation to full first page | First request | Memory after response |
 |---|---:|---:|---:|---:|
 | Original memory flags | 241.302 s | 278.388 s | 17.006 s | 283.8 MiB |
