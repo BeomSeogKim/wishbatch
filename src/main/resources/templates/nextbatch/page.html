@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Possible following batch', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <header class="page-heading">
+        <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${stored?.run?.id})}">Back to proposal</a>
+        <h1>Possible following batch</h1>
+        <p>These options could serve requests not served by the proposed option. This is an analysis to review, not a promise of another batch.</p>
+        <p>Counts are unique visible requests classified as not served by the proposed option and compatible with each candidate. They are stated interest, not orders or people. Conditions and missing evidence still need review.</p>
+    </header>
+    <section th:if="${nextBatch == null || !nextBatch.hasProposal}">
+        <h2>No proposal to compare</h2>
+        <p>A proposal is needed before other options can be compared.</p>
+    </section>
+    <section th:if="${nextBatch != null && nextBatch.hasProposal && nextBatch.candidates.isEmpty()}">
+        <h2>No matching candidates</h2>
+        <p>No other analyzed option is compatible with a visible request classified as not served by the proposal.</p>
+    </section>
+    <section th:if="${nextBatch != null && nextBatch.hasProposal}" th:each="candidate : ${nextBatch.candidates}">
+        <h2 th:text="${candidate.option.name}">Option</h2>
+        <p><strong th:text="${candidate.evidence.size()}">0</strong> compatible requests from the not-served group</p>
+        <ul>
+            <li th:each="evidence : ${candidate.evidence}">
+                <span th:if="${evidence.quotes.isEmpty()}">Exact supporting quote unavailable in current evidence.</span>
+                <ul th:unless="${evidence.quotes.isEmpty()}"><li th:each="quote : ${evidence.quotes}"><q th:text="${quote}">Quote</q></li></ul>
+            </li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>
