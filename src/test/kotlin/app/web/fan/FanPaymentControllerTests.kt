@@ -23,6 +23,7 @@ import app.campaign.port.Proposal
 import app.campaign.port.VoidDetails
 import app.campaign.service.CampaignRef
 import app.campaign.service.CampaignQueries
+import app.campaign.service.OfferEvidenceQuery
 import app.campaign.service.PledgeRef
 import app.campaign.service.PledgeReferences
 import app.campaign.service.Rejection
@@ -88,6 +89,7 @@ class FanPaymentControllerTests @Autowired constructor(
     private val references: PledgeReferences,
     private val workspaceService: WorkspaceService,
     private val queries: CampaignQueries,
+    private val evidence: OfferEvidenceQuery,
 ) {
     private val start = Instant.parse("2026-01-01T00:00:00Z")
     private val ownedWorkspaces = mutableListOf<UUID>()
@@ -363,7 +365,7 @@ class FanPaymentControllerTests @Autowired constructor(
         val fixture = fixture()
         for (clientId in listOf("", "synthetic-client")) {
             val controller = OfferController(workspaceService, queries,
-                PayPalProperties(PayPalProperties.SANDBOX_URL, clientId, ""))
+                PayPalProperties(PayPalProperties.SANDBOX_URL, clientId, ""), evidence)
             val model = ExtendedModelMap()
             assertEquals("fan/offer", controller.offer(fixture.workspace.token, 1, model, MockHttpServletResponse()))
             assertEquals(false, model["paypalReady"])

@@ -26,6 +26,9 @@
                 <dt>Confirmation deadline (UTC)</dt><dd><time th:datetime="${campaign.confirmDeadline}" th:text="${campaign.confirmDeadline}"></time></dd>
             </dl>
         </section>
+        <th:block th:if="${offerEvidence != null}">
+            <section th:replace="~{fan/offer-evidence :: why(${offerEvidence})}"></section>
+        </th:block>
         <div th:replace="~{fragments/components :: counts(${campaign.counts.statedInterest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}"></div>
         <section th:if="${campaignOpen}" class="card" aria-label="Authorize a pledge">
             <h2>Choose your quantity</h2>

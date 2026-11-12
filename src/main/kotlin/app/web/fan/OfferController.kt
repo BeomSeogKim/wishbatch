@@ -2,6 +2,7 @@ package app.web.fan
 
 import app.campaign.rules.CapacityDecision
 import app.campaign.service.CampaignQueries
+import app.campaign.service.OfferEvidenceQuery
 import app.campaign.service.ServiceResult
 import app.campaign.workspace.WorkspaceService
 import app.paypal.PayPalProperties
@@ -18,6 +19,7 @@ class OfferController(
     private val workspaces: WorkspaceService,
     private val campaigns: CampaignQueries,
     private val paypal: PayPalProperties,
+    private val evidence: OfferEvidenceQuery,
 ) {
     @GetMapping("/w/{token}/offer")
     fun offer(
@@ -26,7 +28,7 @@ class OfferController(
         model: Model,
         response: HttpServletResponse,
     ): String {
-        if (workspaces.findByToken(token) == null) return fanNotFound(response)
+        val workspace = workspaces.findByToken(token) ?: return fanNotFound(response)
         val campaign = when (val result = campaigns.currentCampaign(token)) {
             is ServiceResult.Success -> result.value
             is ServiceResult.Rejected -> return fanNotFound(response)
@@ -39,6 +41,9 @@ class OfferController(
         model.addAttribute("paypalReady", paypal.configured)
         model.addAttribute("paypalClientId", if (paypal.configured) paypal.clientId else "")
         campaign?.let { model.addAttribute("unitPrice", displayMoney(it.offer.unitPrice, it.offer.currency)) }
+        model.addAttribute("offerEvidence", campaign?.let {
+            evidence.findByOffer(workspace.id, it.offer.id)?.let(OfferEvidenceView::from)
+        })
         when (val result = campaigns.quote(token, quantity)) {
             is ServiceResult.Success -> {
                 model.addAttribute("quote", result.value)
