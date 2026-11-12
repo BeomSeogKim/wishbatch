@@ -51,6 +51,7 @@
             <li><a th:href="@{/w/{token}/maker/questions(token=${token})}">Review follow-up questions</a></li>
             <li><a th:href="@{/w/{token}/maker/decision-record(token=${token})}">Review decision record</a></li>
             <li th:if="${overview.booksAt != null}"><a th:href="@{/w/{token}/maker/books(token=${token},campaignId=${overview.campaignId})}">Review payment books</a></li>
+            <li><a th:href="@{/w/{token}/maker/reliability-drills(token=${token})}">Reliability drills / simulated examples</a></li>
         </ul>
     </section>
     <p><a th:href="@{/w/{token}/maker(token=${token})}">Back to maker workspace</a></p>

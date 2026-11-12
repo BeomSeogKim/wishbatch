@@ -66,6 +66,7 @@ class MakerOverviewTests @Autowired constructor(
         val html = mvc.get("/w/${workspace.token}/maker/overview").andExpect { status { isOk() } }.andReturn().response.contentAsString
         assertContains(html, "Unknown (no analysis)")
         assertContains(html, "No campaign has been recorded")
+        assertContains(html, "<a href=\"/w/${workspace.token}/maker/reliability-drills\">Reliability drills / simulated examples</a>")
         assertFalse(html.contains("maker/books?"))
         mvc.get("/w/${"x".repeat(43)}/maker/overview").andExpect { status { isNotFound() } }
     }
