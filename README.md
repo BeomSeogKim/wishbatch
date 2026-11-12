@@ -50,9 +50,10 @@ Community for review tables and charts.
 
 ## Where AG Grid and AG Charts are used
 
-- **Wish review:** AG Grid supports sorting, filtering, row detail, and selecting
-  wishes for bulk maker decisions. The original wishes and server-rendered table
-  remain available.
+- **Wish review:** AG Grid supports row detail, bulk maker decisions, and
+  individual option-label filters. Export the filtered, sorted view to CSV when
+  the interactive grid is available. Original wishes and the server-rendered
+  table remain available.
 - **Demand and campaign charts:** AG Charts plots interest at candidate prices,
   compares options, and displays campaign counts and recorded history inline.
   Selecting a demand point or option bar filters the active wish workbench; exact
