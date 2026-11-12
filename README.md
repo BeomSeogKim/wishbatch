@@ -48,6 +48,16 @@ grant access to maker actions; use disposable synthetic data.
 The stack uses Kotlin and Spring Boot, with AG Grid Community and AG Charts
 Community for review tables and charts.
 
+## Where AG Grid and AG Charts are used
+
+- **Wish review:** AG Grid supports sorting, filtering, and selecting wishes
+  for maker review. The original wishes and server-rendered table remain available.
+- **Price-demand explorer:** AG Charts plots interest at candidate prices and
+  compares options. Selecting a point or bar filters the wish workbench when it
+  is active; exact data and evidence remain available in tables.
+- **Books check:** AG Grid presents local and PayPal observations for each
+  pledge, with sorting, filtering, and links to the money trail.
+
 ## Getting started
 
 Install JDK 21 and run from the repository root:
