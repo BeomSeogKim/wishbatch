@@ -80,7 +80,7 @@ class CaptureSimulationControllerTests @Autowired constructor(
                     "pledgeCount" to "1", "units" to "3", "amount" to "3000").forEach { (key, value) -> param(key, value) }
             }.andExpect { status { is3xxRedirection() }; redirectedUrl("$base/result") }
             val result = mvc.get("$base/result").andExpect { status { isOk() } }.andReturn().response.contentAsString
-            assertContains(result, "Capture shortfall")
+            assertContains(result, "Completed payments below minimum")
             assertContains(result, "Simulated capture failure")
             assertEquals(0, gateway.calls.count { it is PaymentCall.Capture })
         } finally {
