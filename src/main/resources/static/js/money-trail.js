@@ -6,15 +6,30 @@
     const fallback = root.querySelector('[data-comparison-fallback]');
     const headers = Array.from(table.tHead.rows[0].cells, cell => cell.textContent.trim());
     const rows = Array.from(table.tBodies[0].rows, row =>
-        Object.fromEntries(Array.from(row.cells, (cell, index) => [String(index), cell.textContent.trim()])));
+        Object.fromEntries(Array.from(row.cells).flatMap((cell, index) => [
+            [String(index), cell.textContent.trim()], [index + 'Title', cell.title || ''],
+            [index + 'Details', cell.querySelector?.('details')],
+        ])));
     try {
         grid.hidden = false;
-        grid.style.height = '32rem';
         const api = window.agGrid.createGrid(grid, {
-            columnDefs: headers.map((header, index) => ({ headerName: header, field: String(index), minWidth: index === 5 ? 350 : 150 })),
+            columnDefs: headers.map((header, index) => ({ headerName: header, field: String(index), minWidth: index === 5 ? 350 : 150,
+                pinned: header === 'Match at check' ? 'left' : undefined,
+                wrapText: true, autoHeight: true,
+                cellRenderer: params => {
+                    const details = params.data[index + 'Details'];
+                    if (details) return details.cloneNode(true);
+                    const span = document.createElement('span');
+                    span.textContent = params.value;
+                    span.title = params.data[index + 'Title'];
+                    return span;
+                } })),
             rowData: rows,
             defaultColDef: { sortable: true, filter: true, resizable: true },
-            theme: window.agGrid.themeQuartz.withParams({ fontFamily: 'inherit' }),
+            theme: window.agGrid.themeQuartz.withParams({ fontFamily: 'inherit', browserColorScheme: 'dark',
+                backgroundColor: 'var(--surface)', foregroundColor: 'var(--ink)', headerBackgroundColor: 'var(--surface-soft)',
+                headerTextColor: 'var(--ink)', borderColor: 'var(--line)' }),
+            domLayout: 'autoHeight',
             loadThemeGoogleFonts: false,
             pagination: true,
             paginationPageSize: 20,

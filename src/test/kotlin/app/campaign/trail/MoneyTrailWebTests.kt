@@ -107,7 +107,15 @@ class MoneyTrailWebTests @Autowired constructor(
             BooksCheck(checkId, campaign.id, now, now, listOf(BooksPledgeRow(pledge.id, 1, 650, "USD", snapshot, snapshot))),
         ), createdAt = now, id = checkId))
         val path = "/w/${owner.token}/maker/campaigns/${campaign.id}/trail"
-        mvc.get(path).andExpect { status { isOk() }; content { string(org.hamcrest.Matchers.containsString("Payment confirmed")) }; content { string(org.hamcrest.Matchers.containsString("<table")) } }
+        val html = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertTrue(html.contains("Payment confirmed"))
+        assertTrue(html.contains("USD 6.50"))
+        assertTrue(html.contains("1 Jan 2026, 00:00 UTC"))
+        assertTrue(html.contains("title=\"${pledge.id}\""))
+        assertTrue(html.contains("${pledge.id.toString().take(8)}…"))
+        assertTrue(html.contains("<details><summary>Provider resource details</summary>"))
+        assertFalse(html.contains("650 USD minor units"))
+        assertFalse(html.contains(">2026-01-01T00:00:00Z<"))
         mvc.get(path).andExpect { content { string(org.hamcrest.Matchers.containsString("checkId=${check.id}")); string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("private-json-marker"))) } }
         mvc.get(path).andExpect { content { string(org.hamcrest.Matchers.containsString("CAPTURE: =cap-1")); string(org.hamcrest.Matchers.containsString("MATCH")); string(org.hamcrest.Matchers.containsString("Not checked")); string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("old-auth"))) } }
         mvc.get("/w/${owner.token}/maker/campaigns/${campaign.id}/comparison.csv").andExpect {

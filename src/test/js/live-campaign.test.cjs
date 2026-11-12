@@ -29,7 +29,7 @@ function browser({hidden = false, readyState = 'complete', hasRoot = true} = {})
     const listeners = {};
     const fields = Object.fromEntries(['statedInterest', 'authorizedHolds', 'paid', 'progressUnits',
         'progressMinimum', 'progressBasis', 'capacityLeft', 'state', 'timeLeft', 'deadlineLabel',
-        'closesAt', 'confirmDeadline', 'observedAt', 'message', 'warning', 'attention'].map(field =>
+        'closesAt', 'confirmDeadline', 'observedAt', 'message', 'warning', 'attention', 'holdCaption'].map(field =>
         [field, {textContent: 'server-' + field}]));
     const values = {quantity: '2', total: 'USD 12.00', campaignId: 'campaign-a', pledgeCount: '2',
         units: '3', amount: '1200', acknowledged: true, termsSeal: 'sealed-terms'};
@@ -42,6 +42,8 @@ function browser({hidden = false, readyState = 'complete', hasRoot = true} = {})
             return [buttons[index]];
         }
     }]));
+    const holdCard = {classList: {toggle(name, active) { this.active = active; }}};
+    const holdProgress = {hidden: false};
     const reload = {hidden: true};
     const root = {
         dataset: {statusUrl: '/w/workspace-a/api/campaign-status', campaignId: 'campaign-a',
@@ -49,6 +51,8 @@ function browser({hidden = false, readyState = 'complete', hasRoot = true} = {})
             confirmationVersion: 'initial-summary'},
         querySelectorAll(selector) {
             if (selector === '[data-live-reload]') return [reload];
+            if (selector === '[data-live-hold-card]') return [holdCard];
+            if (selector === '[data-live-hold-progress]') return [holdProgress];
             const field = selector.match(/^\[data-live-field="([a-zA-Z]+)"\]$/);
             if (field) return [fields[field[1]]];
             const action = selector.match(/^\[data-live-action="([a-z]+)"\]$/);
@@ -69,6 +73,7 @@ function browser({hidden = false, readyState = 'complete', hasRoot = true} = {})
         setTimeout(callback, delay) { timers.set(++timerId, {callback, due: now + delay}); return timerId; },
         clearTimeout(id) { timers.delete(id); }
     };
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../main/resources/static/js/human-display.js'), 'utf8'), context);
     vm.runInNewContext(script, context);
     async function flush() { for (let i = 0; i < 8; i++) await Promise.resolve(); }
     async function respond(body = status(), code = 200) {
@@ -96,7 +101,7 @@ function browser({hidden = false, readyState = 'complete', hasRoot = true} = {})
         listeners.visibilitychange();
         await flush();
     }
-    return {fields, actions, buttons, inputs, values, root, reload, requests, listeners, timers,
+    return {fields, holdCard, holdProgress, actions, buttons, inputs, values, root, reload, requests, listeners, timers,
         respond, advance, visibility, flush};
 }
 
@@ -110,7 +115,9 @@ test('updates separate decimal counts losslessly using text and server-relative 
     assert.equal(page.fields.paid.textContent, '0');
     assert.equal(page.fields.capacityLeft.textContent, '7');
     assert.equal(page.fields.progressBasis.textContent, 'authorized holds');
-    assert.equal(page.fields.observedAt.textContent, new Date(origin).toISOString());
+    assert.equal(page.fields.observedAt.textContent, '1 Jan 2026, 12:00 UTC');
+    assert.equal(page.fields.closesAt.textContent, '1 Jan 2026, 12:01 UTC');
+    assert.equal(page.fields.confirmDeadline.textContent, '1 Jan 2026, 13:00 UTC');
     assert.equal(page.fields.timeLeft.textContent, '0h 1m 0s');
     await page.advance(1000);
     assert.equal(page.fields.timeLeft.textContent, '0h 0m 59s');
@@ -176,7 +183,10 @@ test('identity and terminal changes hide money actions without ever re-enabling 
     assert.ok(Object.values(page.actions).every(action => action.hidden));
     assert.ok(page.buttons.every(button => button.disabled));
     assert.equal(page.reload.hidden, false);
-    assert.equal(page.fields.state.textContent, 'Funded (historical settlement)');
+    assert.equal(page.fields.state.textContent, 'Funded');
+    assert.equal(page.fields.timeLeft.textContent, 'No active deadline');
+    assert.equal(page.holdCard.classList.active, false);
+    assert.equal(page.holdProgress.hidden, true);
     assert.match(page.fields.warning.textContent, /below the minimum/);
     assert.match(page.fields.attention.textContent, /need attention/);
     assert.equal(page.fields.progressBasis.textContent, 'paid');

@@ -7,10 +7,10 @@
         <p class="count-value" data-live-field="statedInterest" th:text="${campaign.counts.statedInterest}"></p>
         <p class="count-caption">Wishes classified as requests. These are not orders.</p>
     </div>
-    <div class="count count-authorized">
+    <div class="count" data-live-hold-card th:classappend="${campaign.state.name() == 'FUNDED' or campaign.state.name() == 'NOT_FUNDED' ? '' : 'count-authorized'}">
         <p class="count-label">Authorized holds</p>
         <p class="count-value" data-live-field="authorizedHolds" th:text="${campaign.counts.authorizedHolds}"></p>
-        <p class="count-caption">Units with a payment hold. Not paid yet.</p>
+        <p class="count-caption" data-live-field="holdCaption" th:text="${campaign.state.name() == 'FUNDED' or campaign.state.name() == 'NOT_FUNDED' ? 'Current holds after settlement. Review payment records.' : 'Units with a payment hold. Not paid yet.'}"></p>
     </div>
     <div class="count count-paid">
         <p class="count-label">Paid</p>
@@ -19,12 +19,12 @@
     </div>
 </section>
 <section th:fragment="progress(campaign)" class="card" aria-label="Campaign progress">
-    <p>Campaign: <strong data-live-field="state" th:text="${@makerDisplay.words(campaign.state)}"></strong></p>
+    <p>Campaign: <strong data-live-field="state" th:text="${@humanDisplay.state(campaign.state)}"></strong></p>
     <p><strong data-live-field="progressUnits" th:text="${campaign.progress.units}"></strong> /
         <span data-live-field="progressMinimum" th:text="${campaign.progress.minimum}"></span> units toward the minimum
         (<span data-live-field="progressBasis" th:text="${campaign.state.name() == 'OPEN' or campaign.state.name() == 'AWAITING_CONFIRMATION' ? 'authorized holds' : 'paid'}"></span>).</p>
-    <p>Time left: <strong data-live-field="timeLeft" th:text="${campaign.timeLeft.toHours() + 'h ' + campaign.timeLeft.toMinutesPart() + 'm ' + campaign.timeLeft.toSecondsPart() + 's'}"></strong>
-        <span data-live-field="deadlineLabel" th:text="${campaign.state.name() == 'AWAITING_CONFIRMATION' ? 'to confirm production' : 'in the pledge window'}"></span>.</p>
+    <p>Time left: <strong data-live-field="timeLeft" th:text="${campaign.state.name() == 'OPEN' or campaign.state.name() == 'AWAITING_CONFIRMATION' ? campaign.timeLeft.toHours() + 'h ' + campaign.timeLeft.toMinutesPart() + 'm ' + campaign.timeLeft.toSecondsPart() + 's' : 'No active deadline'}"></strong>
+        <span data-live-field="deadlineLabel" th:text="${campaign.state.name() == 'AWAITING_CONFIRMATION' ? 'to confirm production' : (campaign.state.name() == 'OPEN' ? 'in the pledge window' : '')}"></span>.</p>
 </section>
 <section th:fragment="freshness" class="preview-section" aria-label="Campaign refresh">
     <p data-live-field="warning" th:text="${campaign != null and campaign.state.name() == 'FUNDED' and campaign.counts.paid < campaign.offer.minBatch ? 'The campaign was funded at settlement, but current paid units are below the minimum. Review payments before proceeding.' : ''}"></p>

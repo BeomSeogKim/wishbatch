@@ -7,7 +7,7 @@
     <div th:unless="${#lists.isEmpty(entries)}" class="table-scroll checkpoint-table-scroll" tabindex="0" role="region" aria-label="Recorded payment checkpoints">
         <table>
             <thead><tr><th>Pledge ID</th><th>Checkpoint time (UTC)</th><th>Status</th><th>Provider ID</th><th>Amount</th></tr></thead>
-            <tbody><tr th:each="entry : ${entries}"><td th:text="${entry.pledgeId}"></td><td th:text="${entry.checkpoint}"></td><td th:text="${entry.status}"></td><td th:text="${entry.providerId ?: 'Unknown'}"></td><td th:text="${entry.amount}"></td></tr></tbody>
+            <tbody><tr th:each="entry : ${entries}"><td th:title="${entry.pledgeId}" th:text="${@humanDisplay.shortId(entry.pledgeId)}"></td><td th:text="${@humanDisplay.time(entry.checkpoint)}"></td><td th:text="${@humanDisplay.state(entry.status)}"></td><td th:title="${entry.providerId}" th:text="${@humanDisplay.shortId(entry.providerId)}"></td><td th:text="${@humanDisplay.trailMoney(entry.amount)}"></td></tr></tbody>
         </table>
     </div>
 </section>

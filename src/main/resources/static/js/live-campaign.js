@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    const display = window.WishbatchDisplay;
+
     function start() {
         const root = document.querySelector('[data-live-campaign]');
         if (!root) return;
@@ -57,7 +59,8 @@
                     else poll();
                 }
             } else {
-                text('timeLeft', '0h 0m 0s');
+                text('timeLeft', 'No active deadline');
+                text('deadlineLabel', '');
             }
             clockTimer = setTimeout(tick, 1000);
         }
@@ -67,7 +70,7 @@
                 snapshot = next;
                 invalidate(['pledge', 'confirmation', 'campaign']);
                 text('message', 'No published campaign is available. Refresh to review this workspace.');
-                text('observedAt', next.observedAt);
+                text('observedAt', display.time(next.observedAt));
                 return;
             }
             const campaign = next.campaign;
@@ -95,16 +98,22 @@
             receivedAt = Date.now();
             text('statedInterest', counts.statedInterest);
             text('authorizedHolds', counts.authorizedHolds);
+            const terminal = campaign.state === 'FUNDED' || campaign.state === 'NOT_FUNDED';
+            root.querySelectorAll('[data-live-hold-card]').forEach(node => {
+                node.classList.toggle('count-authorized', !terminal);
+            });
+            root.querySelectorAll('[data-live-hold-progress]').forEach(node => { node.hidden = terminal; });
+            text('holdCaption', terminal ? 'Current holds after settlement. Review payment records.' :
+                'Units with a payment hold. Not paid yet.');
             text('paid', counts.paid);
             text('progressUnits', progress.units);
             text('progressMinimum', progress.minimum);
             text('progressBasis', progress.basis === 'PAID' ? 'paid' : 'authorized holds');
             text('capacityLeft', campaign.capacityLeft);
-            text('state', campaign.state === 'FUNDED' ? 'Funded (historical settlement)' :
-                campaign.state.toLowerCase().replace(/_/g, ' ').replace(/^./, value => value.toUpperCase()));
-            text('closesAt', campaign.closesAt || 'Not set');
-            text('confirmDeadline', campaign.confirmDeadline || 'Not set');
-            text('observedAt', next.observedAt);
+            text('state', display.state(campaign.state));
+            text('closesAt', display.time(campaign.closesAt));
+            text('confirmDeadline', display.time(campaign.confirmDeadline));
+            text('observedAt', display.time(next.observedAt));
             text('warning', campaign.fundedPaidShortfall ?
                 'The campaign was funded at settlement, but current paid units are below the minimum. Review payments before production.' : '');
             text('attention', campaign.needsAttention ? 'Payments need attention. Refresh to review the current details.' : '');

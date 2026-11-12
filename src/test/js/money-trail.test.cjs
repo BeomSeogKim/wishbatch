@@ -9,8 +9,8 @@ function setup(agGrid) {
     const grid = { hidden: true, style: {}, before(element) { this.button = element; } };
     const fallback = { hidden: false };
     const table = {
-        tHead: { rows: [{ cells: [{ textContent: 'Pledge ID' }, { textContent: 'Status' }] }] },
-        tBodies: [{ rows: [{ cells: [{ textContent: '=unsafe' }, { textContent: 'MATCH' }] }] }],
+        tHead: { rows: [{ cells: [{ textContent: 'Pledge ID' }, { textContent: 'Match at check' }] }] },
+        tBodies: [{ rows: [{ cells: [{ textContent: '=unsafe' }, { textContent: 'Match' }] }] }],
     };
     const root = { querySelector(selector) {
         return { '[data-comparison-table]': table, '[data-comparison-grid]': grid,
@@ -34,7 +34,9 @@ test('grid enhances the table and protects exported formula values', () => {
     const { grid, fallback } = setup(agGrid);
     assert.equal(grid.hidden, false);
     assert.equal(fallback.hidden, true);
-    assert.equal(options.rowData[0]['1'], 'MATCH');
+    assert.equal(options.rowData[0]['1'], 'Match');
+    assert.equal(options.columnDefs[1].pinned, 'left');
+    assert.equal(options.domLayout, 'autoHeight');
     grid.button.handler();
     assert.equal(exportParams.processCellCallback({ value: ' =1+1' }), "' =1+1");
     assert.equal(exportParams.processCellCallback({ value: 'normal' }), 'normal');
