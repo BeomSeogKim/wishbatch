@@ -162,7 +162,7 @@ progress::-moz-progress-bar { background: var(--progress-color); border-radius: 
 .lead { font-size: 1.15rem; color: var(--muted); margin-top: 24px; }
 .page-heading .sample-label { margin-top: 18px; }
 .preview-nav { display: flex; flex-wrap: wrap; gap: 12px 24px; padding-bottom: 28px; font-size: .8rem; }
-.preview-section { padding-block: 48px; border-top: 1px solid var(--line); }
+.preview-section { padding-block: 48px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
 .preview-section > .section-heading { margin-bottom: 28px; }
 .swatch-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; }
 .swatch { min-height: 96px; border-radius: var(--radius-small); padding: 16px; font-size: .75rem; font-weight: 650; border: 1px solid var(--line); }
@@ -174,6 +174,7 @@ progress::-moz-progress-bar { background: var(--progress-color); border-radius: 
 .danger-swatch { background: var(--danger-soft); color: var(--danger); }
 .two-column { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .card { padding: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow-wrap: anywhere; }
+.card pre { max-width: 100%; overflow-x: auto; }
 .card > h3 + p, .card > .eyebrow + h3 { margin-top: 16px; }
 .card > p:not(.eyebrow), .muted { color: var(--muted); }
 .details-list { margin: 24px 0 0; }
