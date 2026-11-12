@@ -93,7 +93,7 @@ class MakerStartControllerTests(
     }
 
     @Test
-    fun `wishes show escaped intake source time and visible interest without payment progress`() {
+    fun `wishes show raw visible intake separately from classified interest without payment progress`() {
         val token = workspaces.create().token
         val wish = workspaces.addWish(token, "<script>alert('wish')</script>", "<b>Fan</b>")
         workspaces.addWish(token, "An anonymous wish")
@@ -105,7 +105,10 @@ class MakerStartControllerTests(
 
         assertShell(html)
         assertRail(html, token, "wishes")
-        assertContains(html, "Stated interest")
+        assertContains(html, "<p class=\"count-label\">Visible wishes</p>")
+        assertContains(html, "<p class=\"count-value\">42</p>")
+        assertContains(html, "Includes comments that may not be product requests.")
+        assertFalse(html.contains("<p class=\"count-label\">Stated interest</p>"))
         assertContains(html, "Wishes are not orders.")
         assertContains(html, "On-site")
         assertContains(html, "Imported")
