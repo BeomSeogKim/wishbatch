@@ -6,9 +6,9 @@ function initializeBooksLedger() {
     const fields = ['pledge', 'units', 'amount', 'localBefore', 'providerBefore', 'matchBefore', 'localAfter', 'providerAfter', 'matchAfter'];
     const display = window.WishbatchDisplay;
     const columnDefs = Array.from(table.tHead.rows[0].cells, (cell, index) => ({
-        field: fields[index], headerName: cell.textContent.trim(), minWidth: index === 4 || index === 7 ? 350 : 150,
+        field: fields[index], headerName: cell.textContent.trim(), flex: index === 4 || index === 7 ? 2 : 1, minWidth: index === 4 || index === 7 ? 130 : 85,
         ...(index === 1 ? { filter: 'agNumberColumnFilter' } : {}),
-        ...(index === 5 ? { pinned: 'left' } : {}),
+        ...([5, 8].includes(index) ? { pinned: index === 5 ? 'left' : 'right', lockPinned: true } : {}),
         ...([3, 5, 6, 8].includes(index) ? { valueFormatter: params => display.state(params.value) } : {}),
         ...(index === 0 ? { valueFormatter: params => display.shortId(params.value), tooltipField: 'pledge' } : {}),
         ...([4, 7].includes(index) ? { tooltipField: fields[index] } : {})

@@ -6,21 +6,25 @@ const path = require('node:path');
 
 const script = fs.readFileSync(path.join(__dirname, '../../main/resources/static/js/pledge.js'), 'utf8');
 
-function browser({sdk = true, responses = [], csrf = true} = {}) {
+function browser({sdk = true, responses = [], csrf = true, quotePage = null} = {}) {
     const elements = Object.fromEntries([
-        'pledge-checkout', 'pledge-feedback', 'pledge-status-link', 'quantity', 'paypal-button-container'
+        'pledge-checkout', 'pledge-feedback', 'pledge-status-link', 'quantity', 'paypal-button-container',
+        'pledge-total', 'pledge-quantity', 'pledge-units'
     ].map(id => [id, {hidden: false, disabled: false, textContent: '', addEventListener(event, callback) { this[event] = callback; }}]));
+    elements.quantity.value = '2';
+    elements.quantity.form = {action: 'https://example.test/w/token/offer'};
     elements['pledge-checkout'].dataset = {createUrl: '/w/token/api/pledges', quantity: '2', campaignId: 'campaign'};
     const calls = [];
     let handlers;
     let redirected;
     const context = {
+        URL, URLSearchParams, DOMParser: class { parseFromString() { return quotePage; } }, FormData: class { constructor() { return new URLSearchParams('quantity=3'); } },
         document: {
             getElementById: id => elements[id],
             querySelector: selector => csrf ? {content: selector === 'meta[name="_csrf"]' ? 'synthetic-csrf' : 'X-CSRF-TOKEN'} : null
         },
         window: {
-            location: {assign: url => { redirected = url; }},
+            location: {href: 'https://example.test/', assign: url => { redirected = url; }},
             paypal: sdk ? {Buttons: options => {
                 handlers = options;
                 return {render: () => Promise.resolve()};
@@ -30,7 +34,7 @@ function browser({sdk = true, responses = [], csrf = true} = {}) {
             calls.push({url, options});
             const response = responses.shift();
             if (response instanceof Error) throw response;
-            return {ok: response.ok, json: async () => response.body};
+            return {ok: response.ok, json: async () => response.body, text: async () => ''};
         }
     };
     vm.runInNewContext(script, context);
@@ -116,12 +120,30 @@ test('an unexpected provider order does not authorize the stored pledge', async 
     assert.equal(app.elements['paypal-button-container'].hidden, true);
 });
 
-test('quantity changes require a new server quote before showing the button', () => {
-    const app = browser();
-    app.elements.quantity.change();
+test('quantity changes hide checkout until a server quote is available', async () => {
+    const app = browser({responses: [new Error('offline')]});
+    app.elements.quantity.value = '3';
+    await app.elements.quantity.change();
     assert.equal(app.elements['paypal-button-container'].hidden, true);
     assert.match(app.elements['pledge-feedback'].textContent, /Update total/);
-    assert.equal(app.calls.length, 0);
+    await assert.rejects(app.handlers.createOrder(), /Quote is not current/);
+});
+
+test('a matching server quote updates the displayed amount and order quantity', async () => {
+    const quotePage = {
+        getElementById(id) {
+            return id === 'pledge-checkout' ? {dataset: {campaignId: 'campaign', quantity: '3'}} : {textContent: 'USD 48.00'};
+        },
+        querySelector() { return null; }
+    };
+    const app = browser({responses: [{ok: true}, created], quotePage});
+    app.elements.quantity.value = '3';
+    await app.elements.quantity.change();
+    assert.equal(app.elements['pledge-total'].textContent, 'USD 48.00');
+    assert.equal(app.elements['paypal-button-container'].hidden, false);
+    assert.equal(app.calls[0].options.headers.Accept, 'text/html');
+    await app.handlers.createOrder();
+    assert.equal(JSON.parse(app.calls[1].options.body).quantity, 3);
 });
 
 test('SDK load failure has a retry explanation without creating a pledge', () => {

@@ -392,3 +392,11 @@ test('apply filters is hidden only after initialization and restored on enhancem
         assert.equal(browser(config).applyFilters.hidden, false);
     }
 });
+
+test('source labels are human readable while raw source remains available', () => {
+    const app = browser();
+    const source = app.options.columnDefs.find(column => column.field === 'source');
+    assert.equal(source.valueFormatter({value: 'IMPORTED'}), 'Imported');
+    assert.equal(source.valueFormatter({value: 'ONSITE'}), 'On-site');
+    assert.ok(app.displayed.some(row => row.source === 'ONSITE'));
+});

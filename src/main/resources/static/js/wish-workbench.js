@@ -152,8 +152,13 @@
 
     function textCell(params) {
         const element = document.createElement('span');
-        element.textContent = params.value == null ? '' : String(params.value);
+        const value = params.valueFormatted ?? params.value;
+        element.textContent = value == null ? '' : String(value);
         return element;
+    }
+
+    function sourceLabel(source) {
+        return ({IMPORTED: 'Imported', ONSITE: 'On-site'})[source] || source;
     }
 
     function showDetail(row, origin = document.activeElement) {
@@ -168,7 +173,7 @@
         add('h3', 'Source wish');
         add('p', row.text);
         add('p', `Wish ID: ${row.id}`);
-        add('p', `Source: ${row.source} · Language: ${row.language} · ${row.hidden}`);
+        add('p', `Source: ${sourceLabel(row.source)} · Language: ${row.language} · ${row.hidden}`);
         add('h3', 'Option labels and reasons');
         for (const item of row.labelsByOption) {
             add('p', `${optionNames.get(item.optionId) || item.optionId}: ${item.displayLabel} — ${item.reason}`);
@@ -287,19 +292,19 @@
             getRowId: params => params.data.id,
             rowHeight: 64,
             headerHeight: 48,
-            defaultColDef: {sortable: true, resizable: true, minWidth: 140, cellRenderer: textCell},
+            defaultColDef: {sortable: true, resizable: true, minWidth: 85, cellRenderer: textCell},
             columnDefs: [
                 {field: 'text', headerName: 'Wish', headerTooltip: 'Press Enter for full wish details', pinned: 'left', lockPinned: true,
-                    width: window.matchMedia?.('(max-width: 600px)').matches ? 220 : 360, minWidth: 220, cellRenderer: wishCell},
+                    flex: 2, minWidth: 160, cellRenderer: wishCell},
                 ...Array.from(optionNames, ([optionId, name]) => ({
-                    colId: optionId, headerName: name, headerTooltip: name, width: 180, minWidth: 170, wrapHeaderText: true, autoHeaderHeight: true,
+                    colId: optionId, headerName: name, headerTooltip: name, flex: 1, minWidth: 100, wrapHeaderText: true, autoHeaderHeight: true,
                     valueGetter: params => params.data.labelsByOption.find(item => item.optionId === optionId)?.displayLabel || '',
                     cellRenderer: labelCell,
                 })),
-                {field: 'evidence', headerName: 'Quoted evidence', width: 240, cellRenderer: evidenceCell},
-                {field: 'flags', headerName: 'Review flags', width: 160, cellRenderer: flagCell},
-                {field: 'source', headerName: 'Source', width: 110, minWidth: 100},
-                {field: 'hidden', headerName: 'Visibility', width: 110, minWidth: 100},
+                {field: 'evidence', headerName: 'Quoted evidence', flex: 1.5, minWidth: 110, cellRenderer: evidenceCell},
+                {field: 'flags', headerName: 'Review flags', flex: 1, minWidth: 100, cellRenderer: flagCell},
+                {field: 'source', headerName: 'Source', flex: 1, minWidth: 85, valueFormatter: params => sourceLabel(params.value)},
+                {field: 'hidden', headerName: 'Visibility', flex: 1, minWidth: 85},
             ],
             selectionColumnDef: {width: 44, minWidth: 44, maxWidth: 44, pinned: 'left'},
             onRowClicked: event => {

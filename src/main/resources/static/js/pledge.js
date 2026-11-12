@@ -52,9 +52,42 @@
         return {'Content-Type': 'application/json', [header]: token};
     }
 
-    quantity.addEventListener('change', () => {
+    let quoteVersion = 0;
+    quantity.addEventListener('change', async () => {
+        const version = ++quoteVersion;
         container.hidden = true;
-        show('Select Update total to review the server-calculated amount before authorizing.');
+        const bar = document.querySelector('.offer-mobile-bar');
+        if (bar) bar.hidden = true;
+        document.getElementById('pledge-total').textContent = 'Updating…';
+        show('Updating the server-calculated total.');
+        const form = quantity.form;
+        const url = new URL(form.action, window.location.href);
+        url.search = new URLSearchParams(new FormData(form)).toString();
+        try {
+            const response = await fetch(url.toString(), {headers: {'Accept': 'text/html'}});
+            if (!response.ok) throw new Error('Quote unavailable');
+            const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+            if (version !== quoteVersion) return;
+            const next = page.getElementById('pledge-checkout');
+            const total = page.getElementById('pledge-total');
+            if (!next || !total || next.dataset.campaignId !== checkout.dataset.campaignId || next.dataset.quantity !== quantity.value) {
+                show(page.querySelector('.offer-pledge .notice-warning')?.textContent || 'This quote is unavailable. Reload the page to try again.');
+                return;
+            }
+            checkout.dataset.quantity = next.dataset.quantity;
+            document.getElementById('pledge-total').textContent = total.textContent;
+            document.getElementById('pledge-quantity').textContent = quantity.value;
+            document.getElementById('pledge-units').textContent = quantity.value === '1' ? 'unit' : 'units';
+            const nextBar = page.querySelector('.offer-mobile-bar');
+            if (bar && nextBar) {
+                bar.querySelector('div').replaceWith(nextBar.querySelector('div'));
+                bar.hidden = false;
+            }
+            container.hidden = false;
+            show('Continue with PayPal to authorize this amount in the sandbox.');
+        } catch (_) {
+            if (version === quoteVersion) show('Could not update the total. Use Update total to try again.');
+        }
     });
 
     if (!window.paypal) {
@@ -64,6 +97,7 @@
 
     window.paypal.Buttons({
         async createOrder() {
+            if (container.hidden || quantity.value !== checkout.dataset.quantity) throw new Error('Quote is not current');
             pledge = null;
             approvalStarted = false;
             serverMessage = false;

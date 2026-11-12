@@ -1,0 +1,9 @@
+@media (max-width: 700px) {
+    .fan-wish-page .page-heading { padding-block: var(--space-3); }
+    .fan-wish-page .page-heading h1 { font-size: 1.8rem; margin-top: var(--space-2); }
+    .fan-wish-page .page-heading p { margin-top: var(--space-2); }
+    .fan-wish-page .form-stack { gap: var(--space-3); }
+    .fan-wish-page .card { padding: var(--space-4); }
+    .fan-wish-page textarea { min-height: 100px; }
+    body:has(.fan-wish-page) .demo-guide { padding-block: var(--space-2); }
+}
