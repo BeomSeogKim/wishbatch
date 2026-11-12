@@ -26,7 +26,9 @@
     </section>
     <section class="card">
         <h2>What AI did</h2>
-        <p>AI grouped wishes against the maker's feasible options and suggested a batch. Software checked references, source quotes and permitted variants, and calculated the counts. Classification can still be wrong.</p>
+        <p th:if="${evidence != null and evidence.isSeed}">This stored synthetic reference illustrates the validated analysis format; it is an example, not a live analysis of these wishes.</p>
+        <p th:if="${evidence != null and !evidence.isSeed}">AI grouped wishes against the maker's feasible options and suggested a batch. Software checked references, source quotes and permitted variants, and calculated the counts. Classification can still be wrong.</p>
+        <p th:if="${evidence == null}">The analysis used for this offer is unavailable.</p>
         <p>AI could not set the offer price, cost, payment amount, minimum, capacity or dates. The maker decided the offer.</p>
     </section>
     <section class="card">
@@ -40,7 +42,7 @@
             <dt>Delivery region</dt><dd th:text="${region}"></dd>
             <dt>Delivery terms</dt><dd th:text="${delivery}"></dd>
         </dl>
-        <p>Production and delivery are not guaranteed.</p>
+        <p>Production and delivery are the maker's responsibility.</p>
     </section>
     <section class="card">
         <h2>What the money states mean</h2>

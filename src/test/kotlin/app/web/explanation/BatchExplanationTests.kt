@@ -85,6 +85,9 @@ class BatchExplanationTests @Autowired constructor(
         val html = mvc.get("/w/${workspace.token}/how-this-batch-was-chosen")
             .andExpect { status { isOk() } }.andReturn().response.contentAsString
         assertContains(HtmlUtils.htmlUnescape(html), validQuote)
+        assertContains(html, "AI grouped wishes against the maker's feasible options")
+        assertFalse(html.contains("This stored synthetic reference illustrates"))
+        assertContains(html, "Production and delivery are the maker's responsibility.")
         listOf("How this batch was chosen", "Example offer", "Printed cards", "<dt>Compatible</dt><dd>16</dd>",
             "<dt>Depends</dt><dd>10</dd>", "<dt>Not served</dt><dd>9</dd>", "Authorized holds", ">2</span>",
             "Paid", ">1</span>", "Compatible", "Not served").forEach { assertContains(html, it) }
@@ -173,6 +176,9 @@ class BatchExplanationTests @Autowired constructor(
             assertContains(HtmlUtils.htmlUnescape(html), quote)
             assertContains(html, "Anonymous synthetic wish")
             assertContains(html, "stored analysis of synthetic demo wishes")
+            assertContains(html, "This stored synthetic reference illustrates the validated analysis format")
+            assertFalse(html.contains("AI grouped wishes against the maker's feasible options"))
+            assertContains(html, "Production and delivery are the maker's responsibility.")
         }
     }
 
