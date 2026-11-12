@@ -10,6 +10,7 @@ import app.campaign.model.Option
 import app.campaign.model.WishKind
 import app.campaign.port.AnalysisOutput
 import app.campaign.port.AnalyzedWish
+import app.campaign.port.MakerQuestion
 import app.campaign.port.Proposal
 import app.campaign.port.ProposalEvidence
 import app.campaign.port.WishVerdict
@@ -35,6 +36,8 @@ import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
 import java.time.Duration
 import java.time.Instant
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.UUID
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -214,6 +217,10 @@ class OfferDraftServiceTests @Autowired constructor(
         }.andReturn().response.contentAsString.let { html ->
             assertContains(html, "Use reviewed draft")
             assertContains(html, "/maker/offer-draft?run=${f.run.id}")
+            val firstSubmit = Regex("<button\\b[^>]*type=\"submit\"[^>]*>").find(html)!!.value
+            assertContains(firstSubmit, "value=\"check-price\"")
+            assertFalse(firstSubmit.contains("use-reviewed-draft"))
+            Files.writeString(Path.of("build/offer-draft-keyboard.html"), html)
         }
         val response = mvc.securePost("/w/${f.token}/maker/offer") {
             fields.forEach { (key, value) -> param(key, value) }
@@ -324,7 +331,7 @@ class OfferDraftServiceTests @Autowired constructor(
 
     private fun fixture(mode: String = "valid"): Fixture {
         val workspace = workspaces.create()
-        val option = Option(workspace.id, "Art print", "print", mapOf("paper" to "Soft paper"), emptyMap(),
+        val option = Option(workspace.id, "Art print", "print", mapOf("paper" to "Soft paper"), mapOf("finish" to listOf("matte", "glossy")),
             500, "USD", 2, 10, "Maker confirmed delivery", "US")
         entityManager.persist(option)
         val wish = workspaces.addWish(workspace.token, "I like <script>alert('wish')</script>.")
@@ -333,7 +340,8 @@ class OfferDraftServiceTests @Autowired constructor(
             listOf(WishVerdict(wish.id, option.id, CompatibilityVerdict.COMPATIBLE, "Supported format")),
             if (mode == "no-proposal") null else Proposal(option.id, emptyMap(), listOf(ProposalEvidence(
                 "Supported format", evidenceId, if (mode == "invented-quote") "Invented quote" else wish.text))),
-            if (mode == "no-proposal") "No feasible option" else null, emptyList(), emptyList(), emptyList(), listOf(option.id))
+            if (mode == "no-proposal") "No feasible option" else null, emptyList(),
+            listOf(MakerQuestion("Can you meet the selected finish?", listOf(wish.id))), emptyList(), listOf(option.id))
         val run = AnalysisRun(workspace.id, "offline", analysisInputHash(workspaces.listOptions(workspace.token),
             workspaces.listWishes(workspace.token, includeHidden = false)), mapper.writeValueAsString(output),
             createdAt = Instant.parse("2026-11-12T01:00:00Z"))

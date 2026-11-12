@@ -26,12 +26,6 @@
                     <input type="hidden" name="run" th:value="${analysis.id}">
                     <input th:if="${fields['reviewedDraftApplied'] == 'true'}" type="hidden" name="reviewedDraftApplied" value="true">
                     <p th:if="${fields['reviewedDraftApplied'] == 'true'}" class="notice" role="status">Reviewed draft: check the title and specification before confirming publication.</p>
-                    <div th:if="${reviewedDraft != null}" class="notice">
-                        <input type="hidden" name="draft" th:value="${reviewedDraft.id}">
-                        <input type="hidden" name="draftSourceHash" th:value="${reviewedDraft.sourceHash}">
-                        <button type="submit" name="action" value="use-reviewed-draft" formnovalidate class="button button-secondary">Use reviewed draft</button>
-                        <p class="field-help">Copy the reviewed title and description into this form. Your other entries are retained. Review and confirm the exact offer separately.</p>
-                    </div>
                     <div class="two-column">
                         <div class="card">
                             <h2>Product and delivery</h2>
@@ -82,6 +76,12 @@
                                 </ul>
                             </div>
                             <button type="submit" name="action" value="check-price" formnovalidate class="button button-secondary">Check this price</button>
+                            <div th:if="${reviewedDraft != null}" class="notice">
+                                <input type="hidden" name="draft" th:value="${reviewedDraft.id}">
+                                <input type="hidden" name="draftSourceHash" th:value="${reviewedDraft.sourceHash}">
+                                <button type="submit" name="action" value="use-reviewed-draft" formnovalidate class="button button-secondary">Use reviewed draft</button>
+                                <p class="field-help">Copy the reviewed title and description into this form. Your other entries are retained. Review and confirm the exact offer separately.</p>
+                            </div>
                             <p class="field-help">Unit cost: <strong th:text="${@makerDisplay.money(option.unitCost, option.currency)}">
                                 </strong>. A price below cost is allowed.</p>
                             <p id="price-warning" class="notice notice-warning" role="status" th:attr="data-cost=${option.unitCost}" hidden>The unit price is below the option's unit cost.</p>
