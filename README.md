@@ -1,8 +1,11 @@
 # Wishbatch
 
-[Demo video (2 min 47.621 sec)](https://youtu.be/zjRppyAZa7Y) ·
+[Demo video (2 min 48 sec)](https://youtu.be/D6czzn1XdnI) ·
 [Try the sandbox](https://wishbatch.onrender.com/) ·
 [Testing guide](https://wishbatch.onrender.com/guide)
+
+The main flow was recorded on the hosted demo; the failure-path segment was
+recorded on a local build as a labeled simulation.
 
 Fans ask for different things; a maker needs one batch they can actually make.
 Wishbatch uses AI to group free-text wishes into a feasible offer, then uses
