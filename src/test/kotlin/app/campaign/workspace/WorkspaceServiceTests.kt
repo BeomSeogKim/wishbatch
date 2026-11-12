@@ -33,6 +33,7 @@ class WorkspaceServiceTests @Autowired constructor(
     private val entityManager: EntityManager,
     private val transactionManager: PlatformTransactionManager,
     private val analysisRuns: AnalysisRunService,
+    private val seedEnrichment: StoredSeedEnrichment,
 ) {
     @Test
     fun `two workspaces persist separate complete seed records`() {
@@ -101,7 +102,7 @@ class WorkspaceServiceTests @Autowired constructor(
     @Test
     fun `intake trims text and optional names and enforces length limits`() {
         val now = Instant.parse("2026-03-04T05:06:07Z")
-        val timedService = WorkspaceService(entityManager, catalog, fixedClock(now), analysisRuns)
+        val timedService = WorkspaceService(entityManager, catalog, fixedClock(now), analysisRuns, seedEnrichment)
         val workspace = timedService.create()
         assertEquals(now, workspace.createdAt)
         val wish = timedService.addWish(workspace.token, " \n A matte set, please! \t", "  Fern  ")

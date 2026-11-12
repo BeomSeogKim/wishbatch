@@ -1,0 +1,79 @@
+{
+  "inputHash": "44072d7b1486590d6aae4fcff231bfad18ebbf4ca406d0d95b012505cd92654c",
+  "generatedAt": "2026-11-12T15:22:36.604671Z",
+  "followup": {
+    "drafts": [],
+    "model": "gpt-6.1-sol",
+    "failure": null,
+    "completedAt": "2026-11-12T15:22:25.827611Z"
+  },
+  "replies": {
+    "bodies": [
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch."
+    ],
+    "model": "gpt-6.1-sol",
+    "failure": null,
+    "completedAt": "2026-11-12T15:22:31.783966Z"
+  },
+  "gloss": {
+    "sources": [
+      {
+        "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+        "sourceHash": "6a8dada3018bae3c965dd8d3e6972efcd7ad779d83c3492eacc4192556767aa0",
+        "text": "\uc9c0\ud37c\uac00 \uc788\ub294 \uc791\uc740 \ud30c\uc6b0\uce58\ub97c \uc6d0\ud574\uc694. \uc9d9\uc740 \ud30c\ub780\uc0c9\uc774\uba74 \uc88b\uaca0\uc5b4\uc694."
+      },
+      {
+        "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+        "sourceHash": "148bef143fa64989810775ff54a0c04091a7fba820b36be08a4eb9cb78918eea",
+        "text": "Un tablier avec des poches pour faire du pain, s\u2019il vous pla\u00eet."
+      }
+    ],
+    "translations": [
+      {
+        "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+        "sourceHash": "6a8dada3018bae3c965dd8d3e6972efcd7ad779d83c3492eacc4192556767aa0",
+        "status": "TRANSLATED",
+        "inferredLanguage": "ko",
+        "englishGloss": "I want a small pouch with a zipper. I'd like it to be dark blue."
+      },
+      {
+        "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+        "sourceHash": "148bef143fa64989810775ff54a0c04091a7fba820b36be08a4eb9cb78918eea",
+        "status": "TRANSLATED",
+        "inferredLanguage": "fr",
+        "englishGloss": "An apron with pockets for making bread, please."
+      }
+    ],
+    "model": "gpt-6.1-sol",
+    "failure": null,
+    "completedAt": "2026-11-12T15:22:36.604573Z",
+    "generatedAtByWishId": {}
+  }
+}

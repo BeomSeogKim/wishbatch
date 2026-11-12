@@ -67,6 +67,17 @@ class SeedCatalogTests {
         assertNotEquals(catalog.wishId(first, "w01"), catalog.wishId(second, "w01"))
         assertEquals(catalog.optionId(first, "postcard-set"), catalog.optionId(first, "postcard-set"))
         assertNotEquals(catalog.optionId(first, "postcard-set"), catalog.optionId(second, "postcard-set"))
+        for (scenario in catalog.scenarios) {
+            for (seed in scenario.definition.options) {
+                val option = app.campaign.model.Option(first, seed.name, seed.format, seed.fixedAttributes,
+                    seed.allowedVariants, seed.unitCost, seed.currency, seed.minBatch, seed.maxCapacity,
+                    seed.leadTimeText, seed.shipRegion, catalog.optionId(first, seed.key))
+                assertEquals(seed.listPrice, catalog.listPrice(option))
+                assertEquals(null, catalog.listPrice(app.campaign.model.Option(second, seed.name, seed.format,
+                    seed.fixedAttributes, seed.allowedVariants, seed.unitCost, seed.currency, seed.minBatch,
+                    seed.maxCapacity, seed.leadTimeText, seed.shipRegion, option.id)))
+            }
+        }
         assertFailsWith<IllegalArgumentException> { catalog.wishId(first, "w99") }
         assertFailsWith<IllegalArgumentException> { catalog.optionId(first, "poster") }
     }
@@ -82,6 +93,7 @@ class SeedCatalogTests {
             original.copy(unitCost = -1),
             original.copy(listPrice = original.unitCost),
             original.copy(listPrice = original.unitCost - 1),
+            original.copy(listPrice = 0),
             original.copy(currency = "usd"),
             original.copy(minBatch = 0),
             original.copy(maxCapacity = 2),

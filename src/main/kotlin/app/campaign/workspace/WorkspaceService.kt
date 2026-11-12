@@ -36,6 +36,7 @@ class WorkspaceService(
     private val seedCatalog: SeedCatalog,
     private val clock: Clock = Clock.systemUTC(),
     private val analysisRuns: AnalysisRunService,
+    private val seedEnrichment: StoredSeedEnrichment,
 ) {
     private val random = SecureRandom()
     private val tokenPattern = Regex("[A-Za-z0-9_-]{43}")
@@ -75,7 +76,10 @@ class WorkspaceService(
                 id = seedCatalog.wishId(workspace.id, seed.key),
             ))
         }
-        analysisRuns.attachSeed(workspace, listOptions(workspace.token), listWishes(workspace.token))
+        val options = listOptions(workspace.token)
+        val wishes = listWishes(workspace.token)
+        analysisRuns.attachSeed(workspace, options, wishes)
+        seedEnrichment.attach(workspace, seed, requireNotNull(analysisRuns.latest(workspace.token)), options, wishes)
         return workspace
     }
 

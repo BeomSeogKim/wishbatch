@@ -1,75 +1,88 @@
 {
   "maker": {
     "name": "Thread & Tide",
-    "description": "A textile studio sewing useful fabric goods.",
+    "description": "A small sewing studio making waxed-canvas organizers, market bags, and linen-blend kitchen aprons.",
     "characters": {
-      "Studio": "A fictional independent maker"
+      "Harbor": "Plain, durable cloth with visible stitching and practical pockets"
     }
   },
   "defaultMaxQtyPerPledge": 3,
   "options": [
     {
       "key": "textile-pouch",
-      "name": "Canvas pouch",
+      "name": "Waxed-canvas cable pouch",
       "format": "pouch",
       "fixedAttributes": {
-        "material": "canvas"
+        "material": "waxed cotton canvas",
+        "size": "16 x 10 cm",
+        "closure": "brass zipper",
+        "lining": "unlined",
+        "care": "wipe clean; do not machine wash",
+        "weather": "water-resistant, not waterproof"
       },
       "allowedVariants": {
         "color": [
-          "natural",
-          "blue"
+          "navy",
+          "olive"
         ]
       },
-      "unitCost": 900,
-      "listPrice": 2400,
+      "unitCost": 1100,
       "currency": "USD",
-      "minBatch": 3,
-      "maxCapacity": 20,
+      "minBatch": 12,
+      "maxCapacity": 60,
       "leadTimeText": "3 weeks",
-      "shipRegion": "US"
+      "shipRegion": "US",
+      "listPrice": 2400
     },
     {
       "key": "textile-tote",
-      "name": "Canvas tote",
+      "name": "Cotton-canvas market tote",
       "format": "tote",
       "fixedAttributes": {
-        "material": "canvas"
+        "material": "unwaxed cotton canvas",
+        "size": "38 x 40 cm",
+        "handles": "shoulder-length straps",
+        "pocket": "inside slip pocket",
+        "closure": "open top",
+        "care": "cold hand wash; line dry"
       },
       "allowedVariants": {
         "color": [
           "natural",
-          "blue"
+          "navy"
         ]
       },
-      "unitCost": 1200,
-      "listPrice": 3800,
+      "unitCost": 1800,
       "currency": "USD",
-      "minBatch": 3,
-      "maxCapacity": 20,
-      "leadTimeText": "3 weeks",
-      "shipRegion": "US"
+      "minBatch": 10,
+      "maxCapacity": 40,
+      "leadTimeText": "4 weeks",
+      "shipRegion": "US",
+      "listPrice": 3800
     },
     {
       "key": "textile-apron",
-      "name": "Cotton apron",
+      "name": "Linen-blend baking apron",
       "format": "apron",
       "fixedAttributes": {
-        "material": "cotton"
+        "material": "linen and cotton blend",
+        "fit": "adult bib apron with adjustable neck loop and waist ties",
+        "pockets": "two front patch pockets",
+        "care": "cold gentle wash; line dry"
       },
       "allowedVariants": {
         "color": [
           "natural",
-          "blue"
+          "charcoal"
         ]
       },
-      "unitCost": 1500,
-      "listPrice": 5600,
+      "unitCost": 2600,
       "currency": "USD",
-      "minBatch": 3,
-      "maxCapacity": 20,
-      "leadTimeText": "3 weeks",
-      "shipRegion": "US"
+      "minBatch": 8,
+      "maxCapacity": 24,
+      "leadTimeText": "5 weeks",
+      "shipRegion": "US",
+      "listPrice": 5600
     }
   ]
 }

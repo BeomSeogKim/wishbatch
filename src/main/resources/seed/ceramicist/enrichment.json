@@ -1,0 +1,111 @@
+{
+  "inputHash": "931302c706351236e68928491e731165928823b4bacbb663da91f6dcfbbc6659",
+  "generatedAt": "2026-11-12T15:22:25.788538Z",
+  "followup": {
+    "drafts": [
+      {
+        "text": "Which color should be offered?",
+        "attribute": "OTHER",
+        "variantKey": "color",
+        "choices": [
+          "natural",
+          "blue"
+        ],
+        "wishIds": [
+          "7559d536-b3dd-3456-a143-e591810abb08"
+        ]
+      },
+      {
+        "text": "Which finish should be offered?",
+        "attribute": "FINISH",
+        "variantKey": "finish",
+        "choices": [
+          "satin",
+          "glossy"
+        ],
+        "wishIds": [
+          "7559d536-b3dd-3456-a143-e591810abb08"
+        ]
+      }
+    ],
+    "model": "gpt-6.1-sol",
+    "failure": null,
+    "completedAt": "2026-11-12T15:22:15.419342Z"
+  },
+  "replies": {
+    "bodies": [
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch."
+    ],
+    "model": "gpt-6.1-sol",
+    "failure": null,
+    "completedAt": "2026-11-12T15:22:20.563645Z"
+  },
+  "gloss": {
+    "sources": [
+      {
+        "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+        "sourceHash": "26208ea5a4f3264cd79e6efc0b4366afe2a3e6fb234cc9c5c2a288619d1da87b",
+        "text": "\uc190\uc7a1\uc774 \uc5c6\ub294 \ub3c4\uc790\uae30 \ucef5\uc744 \uc6d0\ud574\uc694. \uc0c9\uc0c1\uc740 \ud30c\ub780\uc0c9\uc774\ub098 \ub0b4\ucd94\ub7f4 \ubaa8\ub450 \uad1c\ucc2e\uace0, \uc2dd\uae30\uc138\ucc99\uae30\uc5d0 \ub123\uc744 \uc218 \uc788\uc73c\uba74 \uc88b\uaca0\uc5b4\uc694."
+      },
+      {
+        "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+        "sourceHash": "85252fb6a15b1375bd61d93ba137fb23df0830f3d712f2dc9a9dadda6b1df3a1",
+        "text": "Me gustar\u00eda el cuenco de gres de 650 ml para desayunar. Solo lo comprar\u00eda con acabado satinado, no brillante."
+      },
+      {
+        "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+        "sourceHash": "384aba923d5113b610c895496bac00e63ed7d510ca2ad5a55dcd1d8b0428628d",
+        "text": "Je voudrais le pot en gr\u00e8s avec un trou de drainage et sa soucoupe. La couleur bleue ou naturelle me convient."
+      }
+    ],
+    "translations": [
+      {
+        "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+        "sourceHash": "26208ea5a4f3264cd79e6efc0b4366afe2a3e6fb234cc9c5c2a288619d1da87b",
+        "status": "TRANSLATED",
+        "inferredLanguage": "ko",
+        "englishGloss": "I want a ceramic cup without a handle. Either blue or natural is fine, and I would like it to be dishwasher-safe."
+      },
+      {
+        "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+        "sourceHash": "85252fb6a15b1375bd61d93ba137fb23df0830f3d712f2dc9a9dadda6b1df3a1",
+        "status": "TRANSLATED",
+        "inferredLanguage": "es",
+        "englishGloss": "I would like the 650 ml stoneware bowl for breakfast. I would only buy it with a satin finish, not glossy."
+      },
+      {
+        "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+        "sourceHash": "384aba923d5113b610c895496bac00e63ed7d510ca2ad5a55dcd1d8b0428628d",
+        "status": "TRANSLATED",
+        "inferredLanguage": "fr",
+        "englishGloss": "I would like the stoneware pot with a drainage hole and its saucer. Blue or natural works for me."
+      }
+    ],
+    "model": "gpt-6.1-sol",
+    "failure": null,
+    "completedAt": "2026-11-12T15:22:25.788432Z",
+    "generatedAtByWishId": {}
+  }
+}

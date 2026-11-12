@@ -1,12 +1,25 @@
 {
-  "model": "synthetic-reference",
+  "model": "gpt-6.1-sol",
   "validated": {
     "output": {
       "wishes": [
         {
           "wishId": "11603779-816a-3812-8526-235cae300b62",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "zip pouch",
+              "quote": "I need a small zip pouch"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "small",
+              "quote": "small"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -14,7 +27,20 @@
         {
           "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "tote",
+              "quote": "The market tote would carry my library books"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "OTHER",
+              "value": "inside slip pocket",
+              "quote": "the inside slip pocket is useful for my card."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -22,7 +48,14 @@
         {
           "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron",
+              "quote": "would like the apron to keep flour off my clothes."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -30,7 +63,20 @@
         {
           "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "pouch",
+              "quote": "I would buy the cable pouch"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FINISH",
+              "value": "navy only; not olive",
+              "quote": "only in navy; olive will not work for my kit."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -38,7 +84,20 @@
         {
           "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "tote",
+              "quote": "The tote works for me"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FINISH",
+              "value": "natural",
+              "quote": "only in natural"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -46,7 +105,20 @@
         {
           "wishId": "8e2c260f-46df-3217-a940-29694a650433",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron",
+              "quote": "I want the apron"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FINISH",
+              "value": "charcoal",
+              "quote": "only if charcoal is available"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -54,7 +126,20 @@
         {
           "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "pouch",
+              "quote": "pouch"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "completely waterproof with sealed seams",
+              "quote": "I need a completely waterproof pouch for a wet swimsuit, including sealed seams."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -62,7 +147,20 @@
         {
           "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "tote",
+              "quote": "A tote"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "padded laptop sleeve and top zipper",
+              "quote": "only if it has a padded laptop sleeve and a zip across the top."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -70,7 +168,20 @@
         {
           "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron",
+              "quote": "I need a cross-back apron without a neck loop"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "cross-back, without a neck loop",
+              "quote": "I need a cross-back apron without a neck loop because neck straps hurt me."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -78,7 +189,20 @@
         {
           "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "pouch",
+              "quote": "the cable pouch"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "FINISH",
+              "value": "waxed canvas and brass zipper",
+              "quote": "The waxed canvas and brass zipper are why I would choose the cable pouch over a plastic organizer."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -86,7 +210,20 @@
         {
           "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "tote",
+              "quote": "the tote"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "OTHER",
+              "value": "shoulder-length handles",
+              "quote": "Shoulder-length handles make the tote useful on my walk to the grocery store."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -94,7 +231,20 @@
         {
           "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron",
+              "quote": "a linen and cotton apron"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "FINISH",
+              "value": "linen and cotton rather than polyester",
+              "quote": "I prefer a linen and cotton apron to a polyester one for rolling pastry."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -102,15 +252,50 @@
         {
           "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
           "kind": "REQUEST",
-          "needs": [],
-          "maxUnitPrice": null,
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "pouch",
+              "quote": "The pouch"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "PRICE",
+              "value": "Under USD 25",
+              "quote": "if the final price stays under $25"
+            }
+          ],
+          "maxUnitPrice": {
+            "minorUnits": 2500,
+            "currency": "USD"
+          },
           "quantity": null,
           "region": null
         },
         {
           "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "tote",
+              "quote": "the tote"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "Fits an A4 folder",
+              "quote": "Will an A4 folder fit in the tote?"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "Carry papers",
+              "quote": "I need the bag for papers rather than loose groceries."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -118,7 +303,20 @@
         {
           "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron",
+              "quote": "an apron batch"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "Waist ties adjust over work clothes",
+              "quote": "if the waist ties can adjust over my work clothes"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -126,7 +324,20 @@
         {
           "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "pouch",
+              "quote": "the cable pouch"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "Separate internal compartments; not one open cavity",
+              "quote": "Please add separate internal compartments to the cable pouch; I cannot use one open cavity."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -134,15 +345,47 @@
         {
           "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "tote",
+              "quote": "two navy totes"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FINISH",
+              "value": "navy",
+              "quote": "navy"
+            },
+            {
+              "strength": "UNKNOWN",
+              "attribute": "QUANTITY",
+              "value": "2",
+              "quote": "two"
+            }
+          ],
           "maxUnitPrice": null,
-          "quantity": null,
+          "quantity": 2,
           "region": null
         },
         {
           "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron",
+              "quote": "the apron"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "Local pickup only; no mailing",
+              "quote": "I only want the apron if local pickup is possible; I do not want it mailed."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -150,7 +393,26 @@
         {
           "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "pouch",
+              "quote": "the pouch"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "FINISH",
+              "value": "navy or olive",
+              "quote": "Either navy or olive is fine"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "OTHER",
+              "value": "Zipper closure",
+              "quote": "being able to zip it shut matters more."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -158,7 +420,20 @@
         {
           "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "tote",
+              "quote": "tote"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FINISH",
+              "value": "bright red; no natural or navy substitution",
+              "quote": "I want a bright red tote, and I am not willing to switch to natural or navy."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -166,7 +441,20 @@
         {
           "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron",
+              "quote": "A child-sized apron"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "child-sized for an eight-year-old",
+              "quote": "A child-sized apron for my eight-year-old is the only size I need."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -174,7 +462,20 @@
         {
           "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "pouch",
+              "quote": "I need a pouch"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "large enough for an A4 sketchbook",
+              "quote": "large enough for an A4 sketchbook; a small cable case will not help."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -182,7 +483,14 @@
         {
           "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "wheeled shopping trolley, not a hand-carried bag",
+              "quote": "What I need is a wheeled shopping trolley, not a bag carried by hand."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -190,7 +498,20 @@
         {
           "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron",
+              "quote": "The apron is for baking"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "OTHER",
+              "value": "front pockets for a timer and recipe card",
+              "quote": "I like having front pockets for a timer and recipe card."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -198,7 +519,14 @@
         {
           "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "ceramic mixing bowl, not sewn items",
+              "quote": "a ceramic mixing bowl instead of any sewn item"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -206,15 +534,41 @@
         {
           "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "waxed pouch",
+              "quote": "the waxed pouch"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "REGION",
+              "value": "Canada",
+              "quote": "only if you ship it to Canada."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
-          "region": null
+          "region": "Canada"
         },
         {
           "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "tote",
+              "quote": "a tote"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "TIMING",
+              "value": "delivery tomorrow; cannot wait several weeks",
+              "quote": "delivered tomorrow for a school event; waiting several weeks is not possible."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -222,15 +576,44 @@
         {
           "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
           "kind": "REQUEST",
-          "needs": [],
-          "maxUnitPrice": null,
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron",
+              "quote": "The apron"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "PRICE",
+              "value": "strictly below $20",
+              "quote": "only below $20; that is my firm spending limit."
+            }
+          ],
+          "maxUnitPrice": {
+            "minorUnits": 2000,
+            "currency": "USD"
+          },
           "quantity": null,
           "region": null
         },
         {
           "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "pouch",
+              "quote": "the pouch"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "Must be machine washable weekly",
+              "quote": "I need to machine wash the pouch every week, so wipe-clean care is not enough."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -238,7 +621,20 @@
         {
           "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "tote",
+              "quote": "the tote"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FINISH",
+              "value": "Natural must be a light undyed color; confirmation needed",
+              "quote": "I need to confirm that natural is a light undyed color."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -246,7 +642,20 @@
         {
           "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron",
+              "quote": "an apron"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "Button closure instead of waist ties",
+              "quote": "closes with buttons instead of waist ties."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -254,7 +663,20 @@
         {
           "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "pouch or tote",
+              "quote": "either the small pouch or the larger tote could work"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "OTHER",
+              "value": "For carrying yarn",
+              "quote": "For carrying yarn"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -262,7 +684,20 @@
         {
           "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron",
+              "quote": "the baking apron"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "separate cable pouch",
+              "quote": "a separate cable pouch"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -270,7 +705,20 @@
         {
           "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "small zippered pouch",
+              "quote": "\uc9c0\ud37c\uac00 \uc788\ub294 \uc791\uc740 \ud30c\uc6b0\uce58\ub97c \uc6d0\ud574\uc694."
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "FINISH",
+              "value": "dark blue",
+              "quote": "\uc9d9\uc740 \ud30c\ub780\uc0c9\uc774\uba74 \uc88b\uaca0\uc5b4\uc694."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -278,7 +726,20 @@
         {
           "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "canvas market bag",
+              "quote": "una bolsa de lona"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "carry bread and market vegetables",
+              "quote": "para llevar pan y verduras del mercado."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -286,7 +747,20 @@
         {
           "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "apron with pockets",
+              "quote": "Un tablier avec des poches"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "bread baking",
+              "quote": "pour faire du pain"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -302,7 +776,26 @@
         {
           "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "zip pouch",
+              "quote": "I need a small zip pouch"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "small",
+              "quote": "small"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "charging cable storage",
+              "quote": "to keep charging cables from tangling in my backpack."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -329,677 +822,689 @@
           "wishId": "11603779-816a-3812-8526-235cae300b62",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Small zippered format meets 'small zip pouch'."
         },
         {
           "wishId": "11603779-816a-3812-8526-235cae300b62",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Open-top tote is not a 'small zip pouch'."
         },
         {
           "wishId": "11603779-816a-3812-8526-235cae300b62",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron is not a 'small zip pouch'."
         },
         {
           "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Pouch does not meet 'market tote' demand."
         },
         {
           "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Meets 'market tote' demand and has the preferred slip pocket."
         },
         {
           "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron does not meet 'market tote' demand."
         },
         {
           "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Pouch does not meet 'apron' demand."
         },
         {
           "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Tote does not meet 'apron' demand."
         },
         {
           "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Bib design meets 'apron' demand for flour protection."
         },
         {
           "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "CONDITIONAL",
+          "reason": "Can the allowed navy variant meet 'only in navy'?"
         },
         {
           "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Tote does not meet 'cable pouch' demand."
         },
         {
           "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron does not meet 'cable pouch' demand."
         },
         {
           "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Pouch, not the requested tote; natural is unavailable."
         },
         {
           "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "Can the allowed natural variant be selected?"
         },
         {
           "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron, not the requested tote."
         },
         {
           "wishId": "8e2c260f-46df-3217-a940-29694a650433",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Pouch, not the requested apron; charcoal is unavailable."
         },
         {
           "wishId": "8e2c260f-46df-3217-a940-29694a650433",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Tote, not the requested apron; charcoal is unavailable."
         },
         {
           "wishId": "8e2c260f-46df-3217-a940-29694a650433",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "Can the allowed charcoal variant be selected?"
         },
         {
           "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Water-resistant, explicitly not waterproof."
         },
         {
           "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Tote, not the requested waterproof pouch."
         },
         {
           "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron, not the requested waterproof pouch."
         },
         {
           "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Pouch, not the requested tote."
         },
         {
           "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Open top conflicts with required top zipper."
         },
         {
           "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron, not the requested tote."
         },
         {
           "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Requires an apron, not a pouch."
         },
         {
           "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requires an apron, not a tote."
         },
         {
           "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Neck loop conflicts with required cross-back, loop-free design."
         },
         {
           "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Matches requested format and favored canvas and brass zipper."
         },
         {
           "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requests a cable pouch, not a tote."
         },
         {
           "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requests a cable pouch, not an apron."
         },
         {
           "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Requests a tote, not a pouch."
         },
         {
           "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Matches tote demand and favored shoulder-length handles."
         },
         {
           "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requests a tote, not an apron."
         },
         {
           "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Requests an apron, not a pouch."
         },
         {
           "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requests an apron, not a tote."
         },
         {
           "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Matches apron demand and preferred linen-cotton material."
         },
         {
           "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "CONDITIONAL",
+          "reason": "Will the unset selling price be under $25?"
         },
         {
           "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Tote does not meet pouch demand."
         },
         {
           "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron does not meet pouch demand."
         },
         {
           "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Wrong format and too small for an A4 folder."
         },
         {
           "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "38 x 40 cm tote accommodates an A4 folder for papers."
         },
         {
           "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron is not a tote for carrying papers."
         },
         {
           "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Pouch does not meet apron demand."
         },
         {
           "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Tote does not meet apron demand."
         },
         {
           "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "Will the unspecified waist-tie range fit over work clothes?"
         },
         {
           "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Separate internal compartments are not an allowed variant."
         },
         {
           "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Tote does not meet compartmented cable-pouch demand."
         },
         {
           "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron does not meet compartmented cable-pouch demand."
         },
         {
           "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Requests \"totes\", not a pouch."
         },
         {
           "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "Needs your eyes: the readings disagree."
         },
         {
           "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requests \"totes\", not an apron."
         },
         {
           "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Requests \"the apron\", not a pouch."
         },
         {
           "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requests \"the apron\", not a tote."
         },
         {
           "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "Is local pickup possible? \"I do not want it mailed.\""
         },
         {
           "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "\"the pouch\" matches; both colors and zipper are available."
         },
         {
           "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requests \"the pouch\", not a tote."
         },
         {
           "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requests \"the pouch\", not an apron."
         },
         {
           "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Requires a \"bright red tote\"; neither format nor color matches."
         },
         {
           "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requires \"bright red\"; only natural and navy are available."
         },
         {
           "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requires a \"bright red tote\"; neither format nor color matches."
         },
         {
           "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Pouch is not the required child-sized apron."
         },
         {
           "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Tote is not the required child-sized apron."
         },
         {
           "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Adult fit conflicts with the required child size."
         },
         {
           "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "16 x 10 cm cannot accommodate an A4 sketchbook."
         },
         {
           "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Tote is not the requested pouch."
         },
         {
           "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron is not the requested pouch."
         },
         {
           "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Pouch is not a wheeled shopping trolley."
         },
         {
           "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Carried tote is not a wheeled shopping trolley."
         },
         {
           "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron is not a wheeled shopping trolley."
         },
         {
           "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Pouch is not a baking apron."
         },
         {
           "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Tote is not a baking apron."
         },
         {
           "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Baking apron with two front pockets matches the request."
         },
         {
           "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Sewn pouch is not a ceramic mixing bowl."
         },
         {
           "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Sewn tote is not a ceramic mixing bowl."
         },
         {
           "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Sewn apron is not a ceramic mixing bowl."
         },
         {
           "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "US-only shipping conflicts with required delivery to Canada."
         },
         {
           "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Wrong format and no shipping to Canada."
         },
         {
           "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Wrong format and no shipping to Canada."
         },
         {
           "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Wrong format; three-week lead time cannot meet tomorrow."
         },
         {
           "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Four-week lead time cannot meet delivery tomorrow."
         },
         {
           "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Wrong format; five-week lead time cannot meet tomorrow."
         },
         {
           "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Pouch does not meet the requested apron format."
         },
         {
           "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Tote does not meet the requested apron format."
         },
         {
           "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "verdict": "CONDITIONAL",
+          "reason": "Will the unset selling price be strictly below $20?"
         },
         {
           "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Wipe-clean care prohibits required machine washing."
         },
         {
           "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Wrong format; hand washing also fails machine-wash need."
         },
         {
           "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Apron does not meet requested pouch format."
         },
         {
           "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "CONDITIONAL",
-          "reason": "The stated budget needs maker review."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Pouch does not meet requested tote format."
         },
         {
           "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "CONDITIONAL",
-          "reason": "The stated budget needs maker review."
+          "reason": "Can natural be confirmed as a light undyed color?"
         },
         {
           "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "verdict": "CONDITIONAL",
-          "reason": "The stated budget needs maker review."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Apron does not meet requested tote format."
         },
         {
           "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "CONDITIONAL",
-          "reason": "The conflicting color requirements need clarification."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Pouch does not meet requested apron format."
         },
         {
           "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
-          "verdict": "CONDITIONAL",
-          "reason": "The conflicting color requirements need clarification."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Tote does not meet requested apron format."
         },
         {
           "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "verdict": "CONDITIONAL",
-          "reason": "The conflicting color requirements need clarification."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Waist ties conflict with required button closure."
         },
         {
           "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Small pouch is an explicitly accepted alternative."
         },
         {
           "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Larger tote is an explicitly accepted alternative."
         },
         {
           "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron is neither of the requested formats."
         },
         {
           "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Serves the separately requested cable-pouch demand."
         },
         {
           "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Neither requested format: apron or separate cable pouch."
         },
         {
           "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Serves the separately requested baking-apron demand."
         },
         {
           "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Small zippered pouch; navy meets the color preference."
         },
         {
           "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Open-top tote is not a small zippered pouch."
         },
         {
           "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron is not a small zippered pouch."
         },
         {
           "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Small cable pouch is not a market bag for bread and vegetables."
         },
         {
           "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Canvas market tote suits carrying bread and vegetables."
         },
         {
           "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron is not a canvas market bag."
         },
         {
           "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Pouch is not an apron with pockets."
         },
         {
           "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Tote is not an apron with pockets."
         },
         {
           "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Baking apron has two front pockets."
         },
         {
           "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
           "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Small zippered pouch suits charging cable storage."
         },
         {
           "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Open-top tote is not the requested small zip pouch."
         },
         {
           "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Apron is not the requested small zip pouch."
         }
       ],
       "proposal": {
         "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
-        "suggestedVariants": {},
+        "suggestedVariants": {
+          "color": "navy"
+        },
         "rationale": [
           {
-            "text": "Fans requested this format.",
-            "wishId": "11603779-816a-3812-8526-235cae300b62",
-            "quote": "I would buy the pouch."
+            "text": "Best supported by compatible demand for compact cable storage.",
+            "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+            "quote": "I need a small zip pouch"
+          },
+          {
+            "text": "The material and closure match expressed preferences.",
+            "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
+            "quote": "The waxed canvas and brass zipper are why I would choose the cable pouch over a plastic organizer."
+          },
+          {
+            "text": "Suggested navy addresses a color-dependent request, pending confirmation.",
+            "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+            "quote": "only in navy; olive will not work for my kit."
           }
         ]
       },
@@ -1008,53 +1513,1339 @@
         {
           "label": "Not served",
           "wishIds": [
-            "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
-            "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
-            "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
-            "adbf1472-fb73-31ce-9572-fe0a69a98839",
-            "1c28f360-ed92-30f8-b749-d739cea5c253",
-            "5abc0dd1-d005-3e88-9c15-c4466155f86e"
+            "aad5c5fe-e500-3737-8ac3-3c83199171f8"
           ],
-          "reason": "The requested format differs."
+          "reason": "Pouch does not meet 'market tote' demand."
         },
         {
           "label": "Not served",
           "wishIds": [
-            "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
-            "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+            "70314079-42f2-3277-abfe-d409ce16b75d"
+          ],
+          "reason": "Pouch does not meet 'apron' demand."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2"
+          ],
+          "reason": "Pouch, not the requested tote; natural is unavailable."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "8e2c260f-46df-3217-a940-29694a650433"
+          ],
+          "reason": "Pouch, not the requested apron; charcoal is unavailable."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "018ea386-c1c9-3dad-8d10-0bbb835bc3d9"
+          ],
+          "reason": "Water-resistant, explicitly not waterproof."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "6c0c2aaf-34aa-3665-a661-67223f814531"
+          ],
+          "reason": "Pouch, not the requested tote."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "b8dd007a-584e-36d7-8f79-247b8d49d5df"
+          ],
+          "reason": "Requires an apron, not a pouch."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "1a7e5e31-3af0-3937-a501-e3e83b728165"
+          ],
+          "reason": "Requests a tote, not a pouch."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "0647dede-8f9f-39c0-a1b6-c623b8439eca"
+          ],
+          "reason": "Requests an apron, not a pouch."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "e7687de1-c4c8-339f-a253-c6ab5a78c3b6"
+          ],
+          "reason": "Wrong format and too small for an A4 folder."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "52394f11-6791-3ea3-86a1-7f4c2f5935de"
+          ],
+          "reason": "Pouch does not meet apron demand."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "bb0f8075-32f6-3fd6-9af9-e14c08a7f634"
+          ],
+          "reason": "Separate internal compartments are not an allowed variant."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "52893dbe-d439-3ce1-8b94-ceb5b13c91ea"
+          ],
+          "reason": "Requests \"totes\", not a pouch."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "972dc94d-ee99-379a-bdac-d66a32fda61c"
+          ],
+          "reason": "Requests \"the apron\", not a pouch."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "dd96f232-1c5c-3f13-ba70-f073cd71006b"
+          ],
+          "reason": "Requires a \"bright red tote\"; neither format nor color matches."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "5deecfde-f2d1-3917-a9c0-f5d577076f3c"
+          ],
+          "reason": "Pouch is not the required child-sized apron."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18"
+          ],
+          "reason": "16 x 10 cm cannot accommodate an A4 sketchbook."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a"
+          ],
+          "reason": "Pouch is not a wheeled shopping trolley."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "adbf1472-fb73-31ce-9572-fe0a69a98839"
+          ],
+          "reason": "Pouch is not a baking apron."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "1c28f360-ed92-30f8-b749-d739cea5c253"
+          ],
+          "reason": "Sewn pouch is not a ceramic mixing bowl."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "5abc0dd1-d005-3e88-9c15-c4466155f86e"
+          ],
+          "reason": "US-only shipping conflicts with required delivery to Canada."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "d2219835-9d5b-3475-b768-0d3e9fc2bf79"
+          ],
+          "reason": "Wrong format; three-week lead time cannot meet tomorrow."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "3a5b8979-d8e3-3230-8267-f3d05c1ff954"
+          ],
+          "reason": "Pouch does not meet the requested apron format."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
             "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5"
           ],
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Wipe-clean care prohibits required machine washing."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e"
+          ],
+          "reason": "Pouch does not meet requested tote format."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0"
+          ],
+          "reason": "Pouch does not meet requested apron format."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c"
+          ],
+          "reason": "Small cable pouch is not a market bag for bread and vegetables."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13"
+          ],
+          "reason": "Pouch is not an apron with pockets."
         }
       ],
       "questionsForMaker": [
         {
-          "text": "Can the conflicting color request be clarified?",
+          "text": "Can you confirm navy for the proposed pouch?",
           "wishIds": [
-            "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0"
+            "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af"
+          ]
+        },
+        {
+          "text": "What is the selling price, so the stated budget condition can be checked?",
+          "wishIds": [
+            "409367dc-de96-3569-94fd-36b68bc13f5e"
           ]
         }
       ],
       "alternatives": [
         {
           "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
-          "whyNotFirst": "Other wishes request this format."
+          "whyNotFirst": "Less compatible demand and more unresolved conditions than the pouch."
         },
         {
           "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
-          "whyNotFirst": "Other wishes request this format."
+          "whyNotFirst": "Less compatible demand and more unresolved conditions than the pouch."
         }
       ],
       "optionIds": [
         "4c381316-3aca-3652-811b-14930d17d1de",
         "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
         "06cb86ff-a6d2-35ce-a21a-579e37047009"
-      ]
+      ],
+      "secondReading": {
+        "agreedWishCount": 39,
+        "comparedWishCount": 40,
+        "comparisons": [
+          {
+            "wishId": "11603779-816a-3812-8526-235cae300b62",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "11603779-816a-3812-8526-235cae300b62",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "11603779-816a-3812-8526-235cae300b62",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "8e2c260f-46df-3217-a940-29694a650433",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "8e2c260f-46df-3217-a940-29694a650433",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "8e2c260f-46df-3217-a940-29694a650433",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": true
+          },
+          {
+            "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5b6cb92c-fed5-3f54-9fd9-399ddb5ca0d2",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5b6cb92c-fed5-3f54-9fd9-399ddb5ca0d2",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5b6cb92c-fed5-3f54-9fd9-399ddb5ca0d2",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "04da6e5a-b0f4-388d-b28e-853fd16e3d95",
+            "optionId": "4c381316-3aca-3652-811b-14930d17d1de",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "04da6e5a-b0f4-388d-b28e-853fd16e3d95",
+            "optionId": "0ff271eb-52b2-3c50-b49d-9f9e6a152361",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "04da6e5a-b0f4-388d-b28e-853fd16e3d95",
+            "optionId": "06cb86ff-a6d2-35ce-a21a-579e37047009",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          }
+        ],
+        "batchCompositionChanged": true,
+        "status": "COMPLETE",
+        "incompleteWishIds": []
+      },
+      "metrics": {
+        "elapsedSeconds": 37.657798333,
+        "tokenUsage": {
+          "inputTokens": 33455,
+          "outputTokens": 26067,
+          "reasoningTokens": 176
+        },
+        "usageComplete": true,
+        "failureCategory": null
+      }
     },
-    "flags": []
+    "flags": [
+      {
+        "rule": "V6",
+        "path": "not_served",
+        "message": "Groups rebuilt from incompatible verdicts."
+      }
+    ]
   },
-  "inputHash": "88bf37705075ea87a8e5993c25eedb9b194d2bdf71f950a199dd2b3e259b53c7",
-  "completedAt": "2026-11-12T00:00:00Z",
+  "inputHash": "44072d7b1486590d6aae4fcff231bfad18ebbf4ca406d0d95b012505cd92654c",
+  "completedAt": "2026-11-12T15:16:43.599314Z",
   "seedWorkspaceId": "00000000-0000-0000-0000-000000000000",
   "optionKeys": {
     "4c381316-3aca-3652-811b-14930d17d1de": "textile-pouch",

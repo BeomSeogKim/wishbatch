@@ -1,0 +1,77 @@
+{
+  "inputHash": "53b459c891c61023c805234693fc7f0c1cc13abc63f3ebb54f1a74401618f26d",
+  "generatedAt": "2026-11-12T15:22:10.881405Z",
+  "followup": {
+    "drafts": [],
+    "model": "gpt-6.1-sol",
+    "failure": null,
+    "completedAt": "2026-11-12T15:22:06.740405Z"
+  },
+  "replies": {
+    "bodies": [
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch.",
+      "Thank you for sharing your wish. This wish is classified as not served by the proposed batch."
+    ],
+    "model": "gpt-6.1-sol",
+    "failure": null,
+    "completedAt": "2026-11-12T15:22:10.864752Z"
+  },
+  "gloss": {
+    "sources": [
+      {
+        "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+        "sourceHash": "04414a036549355e34e05b45d2019eac86b84364fec89916d900f11100a7e6ed",
+        "text": "\uc815\ub9d0 \uc544\ub984\ub2e4\uc6b4 \uadf8\ub9bc\uc774\uc5d0\uc694. \uace0\ub9c8\uc6cc\uc694!"
+      },
+      {
+        "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+        "sourceHash": "04414a036549355e34e05b45d2019eac86b84364fec89916d900f11100a7e6ed",
+        "text": "\uc815\ub9d0 \uc544\ub984\ub2e4\uc6b4 \uadf8\ub9bc\uc774\uc5d0\uc694. \uace0\ub9c8\uc6cc\uc694!"
+      },
+      {
+        "wishId": "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf",
+        "sourceHash": "6bb7c13e77b622dfc86f5e694c4c9ae489652e23e6887bed10d7e58d3253ef7d",
+        "text": "\u00a1Qu\u00e9 dibujos tan bonitos! Gracias por compartirlos."
+      }
+    ],
+    "translations": [
+      {
+        "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+        "sourceHash": "04414a036549355e34e05b45d2019eac86b84364fec89916d900f11100a7e6ed",
+        "status": "TRANSLATED",
+        "inferredLanguage": "ko",
+        "englishGloss": "It's a really beautiful picture. Thank you!"
+      },
+      {
+        "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+        "sourceHash": "04414a036549355e34e05b45d2019eac86b84364fec89916d900f11100a7e6ed",
+        "status": "TRANSLATED",
+        "inferredLanguage": "ko",
+        "englishGloss": "It's a really beautiful picture. Thank you!"
+      },
+      {
+        "wishId": "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf",
+        "sourceHash": "6bb7c13e77b622dfc86f5e694c4c9ae489652e23e6887bed10d7e58d3253ef7d",
+        "status": "TRANSLATED",
+        "inferredLanguage": "es",
+        "englishGloss": "What beautiful drawings! Thank you for sharing them."
+      }
+    ],
+    "model": "gpt-6.1-sol",
+    "failure": null,
+    "completedAt": "2026-11-12T14:44:59.657799Z",
+    "generatedAtByWishId": {
+      "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13": "2026-11-12T14:44:59.657796Z",
+      "7559d536-b3dd-3456-a143-e591810abb08": "2026-11-12T14:44:59.657798Z",
+      "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf": "2026-11-12T14:44:59.657799Z"
+    }
+  }
+}

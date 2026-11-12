@@ -1,75 +1,102 @@
 {
   "maker": {
     "name": "Kiln & Current",
-    "description": "A ceramics studio making small functional pieces.",
+    "description": "A fictional ceramics studio making small batches of functional stoneware for the table and windowsill.",
     "characters": {
-      "Studio": "A fictional independent maker"
+      "Studio": "A fictional independent ceramics maker"
     }
   },
   "defaultMaxQtyPerPledge": 3,
   "options": [
     {
       "key": "ceramicist-cup",
-      "name": "Stoneware cup",
+      "name": "Handleless stoneware cup",
       "format": "cup",
       "fixedAttributes": {
-        "material": "stoneware"
+        "material": "stoneware",
+        "capacity": "280 ml",
+        "handle": "handleless",
+        "use": "food safe",
+        "care": "dishwasher safe and microwave safe"
       },
       "allowedVariants": {
         "color": [
           "natural",
           "blue"
-        ]
-      },
-      "unitCost": 900,
-      "listPrice": 2600,
-      "currency": "USD",
-      "minBatch": 3,
-      "maxCapacity": 20,
-      "leadTimeText": "3 weeks",
-      "shipRegion": "US"
-    },
-    {
-      "key": "ceramicist-bowl",
-      "name": "Stoneware bowl",
-      "format": "bowl",
-      "fixedAttributes": {
-        "material": "stoneware"
-      },
-      "allowedVariants": {
-        "color": [
-          "natural",
-          "blue"
+        ],
+        "finish": [
+          "matte",
+          "glossy"
         ]
       },
       "unitCost": 1200,
-      "listPrice": 3600,
       "currency": "USD",
-      "minBatch": 3,
-      "maxCapacity": 20,
-      "leadTimeText": "3 weeks",
-      "shipRegion": "US"
+      "minBatch": 8,
+      "maxCapacity": 32,
+      "leadTimeText": "4 weeks",
+      "shipRegion": "US",
+      "listPrice": 2600
     },
     {
-      "key": "ceramicist-planter",
-      "name": "Stoneware planter",
-      "format": "planter",
+      "key": "ceramicist-bowl",
+      "name": "Everyday stoneware bowl",
+      "format": "bowl",
       "fixedAttributes": {
-        "material": "stoneware"
+        "material": "stoneware",
+        "capacity": "650 ml",
+        "diameter": "16 cm",
+        "height": "6 cm",
+        "use": "food safe",
+        "care": "dishwasher safe and microwave safe"
       },
       "allowedVariants": {
         "color": [
           "natural",
           "blue"
+        ],
+        "finish": [
+          "satin",
+          "glossy"
         ]
       },
-      "unitCost": 1500,
-      "listPrice": 4400,
+      "unitCost": 1800,
       "currency": "USD",
-      "minBatch": 3,
-      "maxCapacity": 20,
-      "leadTimeText": "3 weeks",
-      "shipRegion": "US"
+      "minBatch": 6,
+      "maxCapacity": 24,
+      "leadTimeText": "5 weeks",
+      "shipRegion": "US",
+      "listPrice": 3600
+    },
+    {
+      "key": "ceramicist-planter",
+      "name": "Stoneware planter with saucer",
+      "format": "planter",
+      "fixedAttributes": {
+        "material": "stoneware",
+        "inner diameter": "11 cm",
+        "height": "10 cm",
+        "drainage": "one drainage hole",
+        "accessory": "matching saucer included",
+        "use": "plants only; not food safe",
+        "care": "wipe clean by hand"
+      },
+      "allowedVariants": {
+        "color": [
+          "natural",
+          "blue"
+        ],
+        "finish": [
+          "matte",
+          "satin"
+        ]
+      },
+      "unitCost": 2200,
+      "currency": "USD",
+      "minBatch": 5,
+      "maxCapacity": 18,
+      "leadTimeText": "6 weeks",
+      "shipRegion": "US",
+      "listPrice": 4400
     }
   ]
 }

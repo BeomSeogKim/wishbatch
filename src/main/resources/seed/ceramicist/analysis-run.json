@@ -1,12 +1,31 @@
 {
-  "model": "synthetic-reference",
+  "model": "gpt-6.1-sol",
   "validated": {
     "output": {
       "wishes": [
         {
           "wishId": "11603779-816a-3812-8526-235cae300b62",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "stoneware bowl",
+              "quote": "650 ml stoneware bowl"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "650 ml",
+              "quote": "650 ml"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "food use",
+              "quote": "for breakfast cereal and soup"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -14,7 +33,20 @@
         {
           "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "planter",
+              "quote": "planter"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "drainage hole and matching saucer",
+              "quote": "with a drainage hole and matching saucer"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -22,7 +54,26 @@
         {
           "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "handleless cup",
+              "quote": "handleless 280 ml cup"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "280 ml",
+              "quote": "280 ml"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "food use",
+              "quote": "for my afternoon tea"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -30,7 +81,20 @@
         {
           "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "bowl",
+              "quote": "bowl"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "blue color only",
+              "quote": "only if the color is blue"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -38,7 +102,20 @@
         {
           "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "planter",
+              "quote": "I need the planter"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FINISH",
+              "value": "matte, not shiny",
+              "quote": "only if the finish is matte; a shiny surface is not for me."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -46,7 +123,20 @@
         {
           "wishId": "8e2c260f-46df-3217-a940-29694a650433",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "cup",
+              "quote": "Please offer the cup."
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "dishwasher safe and microwave safe",
+              "quote": "I need it to be both dishwasher safe and microwave safe."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -54,7 +144,26 @@
         {
           "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "bowl, not cup or planter",
+              "quote": "I would use the 16 cm bowl for rice at dinner, rather than a cup or a plant pot."
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "16 cm",
+              "quote": "16 cm"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "food use",
+              "quote": "for rice at dinner"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -62,7 +171,20 @@
         {
           "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "cup",
+              "quote": "The cup would work"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "natural color, not blue",
+              "quote": "only if the color is natural. Blue is a deal breaker for me."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -70,7 +192,26 @@
         {
           "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "planter",
+              "quote": "planter"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "11 cm inner diameter",
+              "quote": "11 cm inner diameter"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "saucer included",
+              "quote": "with a saucer"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -78,7 +219,20 @@
         {
           "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "bowl",
+              "quote": "I would like a bowl for noodles"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "SIZE",
+              "value": "650 ml is sufficient",
+              "quote": "the 650 ml capacity is enough for my small portions."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -86,7 +240,20 @@
         {
           "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "cup",
+              "quote": "I want a cup"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FINISH",
+              "value": "glossy",
+              "quote": "only if the finish is glossy."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -94,7 +261,20 @@
         {
           "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "bowl",
+              "quote": "I would buy the bowl"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FINISH",
+              "value": "satin, not glossy",
+              "quote": "only if the finish is satin, not glossy."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -102,7 +282,20 @@
         {
           "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "planter",
+              "quote": "I need a planter"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "blue color required",
+              "quote": "only if its color is blue"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -110,15 +303,53 @@
         {
           "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "bowl",
+              "quote": "bowl"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "food safe",
+              "quote": "food-safe"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "dishwasher safe",
+              "quote": "can go in the dishwasher"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "REGION",
+              "value": "US",
+              "quote": "my US apartment"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
-          "region": null
+          "region": "US"
         },
         {
           "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "cup",
+              "quote": "interested in the cup"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "FINISH",
+              "value": "matte preferred; glossy acceptable",
+              "quote": "Matte would be my preference, but glossy is fine too."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -126,7 +357,20 @@
         {
           "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "planter",
+              "quote": "Please make the planter"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "matching saucer included",
+              "quote": "with its matching saucer"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -134,7 +378,20 @@
         {
           "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "cup or bowl",
+              "quote": "Either the cup or the bowl would work for me"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "food safe and microwave safe",
+              "quote": "as long as it is food safe and microwave safe."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -142,7 +399,20 @@
         {
           "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "drinking cup",
+              "quote": "I need a drinking cup with a handle."
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "handle required; handleless unacceptable",
+              "quote": "I need a drinking cup with a handle. I cannot use a handleless cup."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -150,7 +420,20 @@
         {
           "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "bowl",
+              "quote": "I want a wooden bowl, not a ceramic one."
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "wooden, not ceramic",
+              "quote": "I want a wooden bowl, not a ceramic one."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -158,7 +441,20 @@
         {
           "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "planter",
+              "quote": "I would buy a planter only if it has no drainage hole because it must hold water on its own."
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "no drainage hole; must hold water on its own",
+              "quote": "only if it has no drainage hole because it must hold water on its own."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -166,7 +462,20 @@
         {
           "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "serving bowl",
+              "quote": "a serving bowl"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "at least 1.5 liters",
+              "quote": "holding at least 1.5 liters"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -174,7 +483,20 @@
         {
           "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "cup",
+              "quote": "a cup"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "porcelain, not stoneware",
+              "quote": "only if it is porcelain rather than stoneware"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -182,7 +504,20 @@
         {
           "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "hanging planter",
+              "quote": "a hanging planter"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "attached rope; not a tabletop pot with a saucer",
+              "quote": "with an attached rope, not a tabletop pot with a saucer"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -190,23 +525,65 @@
         {
           "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
           "kind": "REQUEST",
-          "needs": [],
-          "maxUnitPrice": null,
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "cup",
+              "quote": "the cup"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "PRICE",
+              "value": "total budget strictly under $5",
+              "quote": "my total budget is under $5"
+            }
+          ],
+          "maxUnitPrice": {
+            "minorUnits": 500,
+            "currency": "USD"
+          },
           "quantity": null,
           "region": null
         },
         {
           "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "bowl",
+              "quote": "the bowl"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "REGION",
+              "value": "Canada",
+              "quote": "only if you can ship it to Canada"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
-          "region": null
+          "region": "Canada"
         },
         {
           "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "planter",
+              "quote": "a planter"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "TIMING",
+              "value": "delivered tomorrow; six weeks is too late",
+              "quote": "delivered tomorrow for a housewarming party. Six weeks is too late."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -214,7 +591,26 @@
         {
           "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "cup or food-safe bowl",
+              "quote": "A cup is my first choice, but a food-safe bowl would also be useful"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "FORMAT",
+              "value": "cup first choice",
+              "quote": "A cup is my first choice"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "OTHER",
+              "value": "natural or blue",
+              "quote": "either natural or blue works"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -222,15 +618,47 @@
         {
           "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "bowl",
+              "quote": "two bowls"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "QUANTITY",
+              "value": "2",
+              "quote": "two bowls"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "FINISH",
+              "value": "either available finish",
+              "quote": "We are happy with either available finish."
+            }
+          ],
           "maxUnitPrice": null,
-          "quantity": null,
+          "quantity": 2,
           "region": null
         },
         {
           "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "cup",
+              "quote": "Please make a red cup;"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "Red; excludes natural and blue",
+              "quote": "Please make a red cup; I would not buy natural or blue."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -238,7 +666,20 @@
         {
           "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "Ceramic teapot, not cup, bowl, or planter",
+              "quote": "I am looking for a ceramic teapot with a lid and spout, rather than a cup, bowl, or planter."
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "Lid and spout",
+              "quote": "with a lid and spout"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -246,7 +687,20 @@
         {
           "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "bowl",
+              "quote": "I want the bowl"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "TIMING",
+              "value": "Arrival within one week",
+              "quote": "only if it arrives within one week; I cannot wait five weeks."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -254,7 +708,20 @@
         {
           "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "planter",
+              "quote": "I would choose the planter"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "Food safe for serving snacks",
+              "quote": "only if it is food safe enough to serve snacks in, not just for plants."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -262,7 +729,26 @@
         {
           "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "planter or bowl",
+              "quote": "a planter or a bowl"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "for growing herbs",
+              "quote": "for growing herbs"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "drainage hole and saucer required",
+              "quote": "it must have a drainage hole and a saucer"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -270,7 +756,26 @@
         {
           "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "handleless ceramic cup",
+              "quote": "\uc190\uc7a1\uc774 \uc5c6\ub294 \ub3c4\uc790\uae30 \ucef5\uc744 \uc6d0\ud574\uc694."
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "OTHER",
+              "value": "blue or natural acceptable",
+              "quote": "\uc0c9\uc0c1\uc740 \ud30c\ub780\uc0c9\uc774\ub098 \ub0b4\ucd94\ub7f4 \ubaa8\ub450 \uad1c\ucc2e\uace0,"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "OTHER",
+              "value": "dishwasher safe",
+              "quote": "\uc2dd\uae30\uc138\ucc99\uae30\uc5d0 \ub123\uc744 \uc218 \uc788\uc73c\uba74 \uc88b\uaca0\uc5b4\uc694."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -278,7 +783,26 @@
         {
           "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "stoneware bowl for breakfast",
+              "quote": "el cuenco de gres de 650 ml para desayunar"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "SIZE",
+              "value": "650 ml",
+              "quote": "650 ml"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FINISH",
+              "value": "satin, not glossy",
+              "quote": "Solo lo comprar\u00eda con acabado satinado, no brillante."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -286,7 +810,26 @@
         {
           "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "stoneware planter",
+              "quote": "le pot en gr\u00e8s"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "drainage hole and saucer",
+              "quote": "avec un trou de drainage et sa soucoupe"
+            },
+            {
+              "strength": "PREFERENCE",
+              "attribute": "OTHER",
+              "value": "blue or natural acceptable",
+              "quote": "La couleur bleue ou naturelle me convient."
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -302,7 +845,26 @@
         {
           "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
           "kind": "REQUEST",
-          "needs": [],
+          "needs": [
+            {
+              "strength": "HARD",
+              "attribute": "FORMAT",
+              "value": "bowl",
+              "quote": "I would buy the bowl only if the color is blue and the finish is satin;"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "OTHER",
+              "value": "blue color",
+              "quote": "the color is blue"
+            },
+            {
+              "strength": "HARD",
+              "attribute": "FINISH",
+              "value": "satin",
+              "quote": "the finish is satin"
+            }
+          ],
           "maxUnitPrice": null,
           "quantity": null,
           "region": null
@@ -328,678 +890,691 @@
         {
           "wishId": "11603779-816a-3812-8526-235cae300b62",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup is not the requested 650 ml bowl."
         },
         {
           "wishId": "11603779-816a-3812-8526-235cae300b62",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Matches bowl format, capacity, material and food use."
         },
         {
           "wishId": "11603779-816a-3812-8526-235cae300b62",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter is not a bowl and is not food safe."
         },
         {
           "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup is not the requested planter."
         },
         {
           "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl is not the requested planter."
         },
         {
           "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Matches planter, drainage hole and included saucer."
         },
         {
           "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Matches handleless cup, capacity and food use."
         },
         {
           "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl is not the requested 280 ml cup."
         },
         {
           "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter is not a cup and is not food safe."
         },
         {
           "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup is not the requested bowl."
         },
         {
           "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "Will the allowed blue variant be selected?"
         },
         {
           "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter is not the requested bowl."
         },
         {
           "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Requires a planter, not a cup."
         },
         {
           "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requires a planter, not a bowl; matte is unavailable."
         },
         {
           "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "Will the allowed matte finish be selected?"
         },
         {
           "wishId": "8e2c260f-46df-3217-a940-29694a650433",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Cup is both dishwasher safe and microwave safe."
         },
         {
           "wishId": "8e2c260f-46df-3217-a940-29694a650433",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requires a cup, not a bowl."
         },
         {
           "wishId": "8e2c260f-46df-3217-a940-29694a650433",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Not a cup; hand-clean only and not food safe."
         },
         {
           "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Explicitly wants a bowl rather than a cup."
         },
         {
           "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Food-safe bowl has the requested 16 cm diameter."
         },
         {
           "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Explicitly excludes plant pots; not food safe."
         },
         {
           "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "CONDITIONAL",
+          "reason": "Will the allowed natural color be selected?"
         },
         {
           "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requires a cup, not a bowl."
         },
         {
           "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requires a cup, not a planter."
         },
         {
           "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup does not meet planter demand."
         },
         {
           "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl does not meet planter demand."
         },
         {
           "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Matches 11 cm inner diameter and includes a saucer."
         },
         {
           "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup does not meet bowl demand."
         },
         {
           "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Food-safe bowl matches the stated sufficient capacity."
         },
         {
           "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter is not a food-safe bowl."
         },
         {
           "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "CONDITIONAL",
+          "reason": "Will the allowed glossy finish be selected?"
         },
         {
           "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl does not meet cup demand."
         },
         {
           "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter does not meet cup demand; glossy is unavailable."
         },
         {
           "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup does not meet bowl demand; satin is unavailable."
         },
         {
           "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "Will the allowed satin finish be selected?"
         },
         {
           "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter does not meet bowl demand."
         },
         {
           "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup does not meet the requested planter format."
         },
         {
           "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl does not meet the requested planter format."
         },
         {
           "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "Will the allowed blue color be selected?"
         },
         {
           "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup does not meet the requested bowl format."
         },
         {
           "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Food-safe, dishwasher-safe bowl ships within the US."
         },
         {
           "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Not a bowl; not food safe or dishwasher safe."
         },
         {
           "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Cup matches; both acceptable finishes are allowed."
         },
         {
           "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl does not meet the requested cup format."
         },
         {
           "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter does not meet the requested cup format."
         },
         {
           "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Not a planter with a matching saucer."
         },
         {
           "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Not a planter with a matching saucer."
         },
         {
           "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Planter includes the requested matching saucer."
         },
         {
           "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Cup is food safe and microwave safe."
         },
         {
           "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Bowl is food safe and microwave safe."
         },
         {
           "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Neither cup nor bowl; not food safe."
         },
         {
           "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Handleless; a handle is required."
         },
         {
           "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl does not meet drinking-cup format."
         },
         {
           "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter does not meet drinking-cup format; not food safe."
         },
         {
           "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup is not a bowl; stoneware is not wood."
         },
         {
           "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Stoneware is ceramic, not wood."
         },
         {
           "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter is not a bowl; stoneware is not wood."
         },
         {
           "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup does not meet planter format."
         },
         {
           "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl does not meet planter format."
         },
         {
           "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Has a drainage hole, explicitly prohibited."
         },
         {
           "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Cup is not a serving bowl and holds less than 1.5 liters."
         },
         {
           "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "650 ml is below the required 1.5 liters."
         },
         {
           "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter is not a food-safe serving bowl."
         },
         {
           "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Stoneware conflicts with the porcelain-only requirement."
         },
         {
           "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Bowl is not a cup; stoneware is not porcelain."
         },
         {
           "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter is not a cup; stoneware is not porcelain."
         },
         {
           "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Cup is not a hanging planter with an attached rope."
         },
         {
           "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Bowl is not a hanging planter with an attached rope."
         },
         {
           "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Saucer planter lacks the required hanging rope."
         },
         {
           "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "Will the total selling price be strictly under $5?"
         },
         {
           "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl does not meet the requested cup format."
         },
         {
           "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Planter does not meet the requested cup format."
         },
         {
           "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Cup is not a bowl; US-only shipping excludes Canada."
         },
         {
           "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "US-only shipping excludes required delivery to Canada."
         },
         {
           "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Planter is not a bowl; US-only shipping excludes Canada."
         },
         {
           "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Not a planter; four-week lead time cannot meet tomorrow."
         },
         {
           "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Not a planter; five-week lead time cannot meet tomorrow."
         },
         {
           "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Six-week lead time conflicts with required delivery tomorrow."
         },
         {
           "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "verdict": "COMPATIBLE",
+          "reason": "Cup matches first choice; either offered color works."
         },
         {
           "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "verdict": "COMPATIBLE",
+          "reason": "Food-safe bowl is explicitly accepted as an alternative."
         },
         {
           "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Planter is neither a cup nor a food-safe bowl."
         },
         {
           "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Cup does not match requested bowl format."
         },
         {
           "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "verdict": "COMPATIBLE",
+          "reason": "Bowl matches demand; either available finish is accepted."
         },
         {
           "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Planter does not match requested bowl format."
         },
         {
           "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Only natural or blue are allowed; both explicitly excluded."
         },
         {
           "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Bowl is not a cup; red is unavailable."
         },
         {
           "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Planter is not a cup; red is unavailable."
         },
         {
           "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "CONDITIONAL",
-          "reason": "The stated budget needs maker review."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup is explicitly excluded; a teapot is required."
         },
         {
           "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "CONDITIONAL",
-          "reason": "The stated budget needs maker review."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Bowl is explicitly excluded; a teapot is required."
         },
         {
           "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "verdict": "CONDITIONAL",
-          "reason": "The stated budget needs maker review."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Planter is explicitly excluded; a teapot is required."
         },
         {
           "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "CONDITIONAL",
-          "reason": "The conflicting color requirements need clarification."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Not a bowl; four-week lead time exceeds one-week deadline."
         },
         {
           "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "CONDITIONAL",
-          "reason": "The conflicting color requirements need clarification."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Five-week lead time exceeds required one-week arrival."
         },
         {
           "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "verdict": "CONDITIONAL",
-          "reason": "The conflicting color requirements need clarification."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Not a bowl; six-week lead time exceeds one-week deadline."
         },
         {
           "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup does not meet the requested planter format."
         },
         {
           "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Bowl does not meet the requested planter format."
         },
         {
           "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Plants-only use conflicts with required food safety."
         },
         {
           "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup is neither requested format; lacks drainage and saucer."
         },
         {
           "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl lacks required drainage hole and saucer."
         },
         {
           "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Planter includes required drainage hole and saucer."
         },
         {
           "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
           "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "reason": "Handleless ceramic cup; dishwasher safe; both colors allowed."
         },
         {
           "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl is not the requested cup format."
         },
         {
           "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Planter is not the requested cup format."
         },
         {
           "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Wrong format and capacity; satin finish unavailable."
         },
         {
           "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "650 ml food-safe bowl matches; will satin finish be selected?"
         },
         {
           "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Not a bowl and not food safe for breakfast."
         },
         {
           "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Cup is not a planter with drainage hole and saucer."
         },
         {
           "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Bowl is not a planter with drainage hole and saucer."
         },
         {
           "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "COMPATIBLE",
+          "reason": "Stoneware planter includes drainage hole and matching saucer."
         },
         {
           "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
           "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-          "verdict": "COMPATIBLE",
-          "reason": "The requested format is available."
+          "verdict": "INCOMPATIBLE",
+          "reason": "Requires a bowl and satin finish; neither is available."
         },
         {
           "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
           "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "verdict": "CONDITIONAL",
+          "reason": "Can the allowed blue color and satin finish both be supplied?"
         },
         {
           "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
           "verdict": "INCOMPATIBLE",
-          "reason": "The requested format differs."
+          "reason": "Requires a bowl, not a planter."
         }
       ],
       "proposal": {
-        "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
-        "suggestedVariants": {},
+        "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+        "suggestedVariants": {
+          "color": "blue",
+          "finish": "satin"
+        },
         "rationale": [
           {
-            "text": "Fans requested this format.",
-            "wishId": "11603779-816a-3812-8526-235cae300b62",
-            "quote": "I would buy the cup."
+            "text": "Best supported by compatible demand; suitable for food use and dishwasher care.",
+            "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
+            "quote": "can go in the dishwasher"
+          },
+          {
+            "text": "Suggested color addresses conditional interest.",
+            "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+            "quote": "only if the color is blue"
+          },
+          {
+            "text": "Suggested finish addresses conditional interest.",
+            "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+            "quote": "only if the finish is satin, not glossy."
           }
         ]
       },
@@ -1008,53 +1583,1307 @@
         {
           "label": "Not served",
           "wishIds": [
-            "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
-            "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
-            "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
-            "adbf1472-fb73-31ce-9572-fe0a69a98839",
-            "1c28f360-ed92-30f8-b749-d739cea5c253",
-            "5abc0dd1-d005-3e88-9c15-c4466155f86e"
+            "aad5c5fe-e500-3737-8ac3-3c83199171f8"
           ],
-          "reason": "The requested format differs."
+          "reason": "Bowl is not the requested planter."
         },
         {
           "label": "Not served",
           "wishIds": [
-            "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
-            "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+            "70314079-42f2-3277-abfe-d409ce16b75d"
+          ],
+          "reason": "Bowl is not the requested 280 ml cup."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2"
+          ],
+          "reason": "Requires a planter, not a bowl; matte is unavailable."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "8e2c260f-46df-3217-a940-29694a650433",
+            "6c0c2aaf-34aa-3665-a661-67223f814531"
+          ],
+          "reason": "Requires a cup, not a bowl."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "b8dd007a-584e-36d7-8f79-247b8d49d5df"
+          ],
+          "reason": "Bowl does not meet planter demand."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "1a7e5e31-3af0-3937-a501-e3e83b728165"
+          ],
+          "reason": "Bowl does not meet cup demand."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "409367dc-de96-3569-94fd-36b68bc13f5e",
+            "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba"
+          ],
+          "reason": "Bowl does not meet the requested planter format."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "52394f11-6791-3ea3-86a1-7f4c2f5935de",
+            "adbf1472-fb73-31ce-9572-fe0a69a98839"
+          ],
+          "reason": "Bowl does not meet the requested cup format."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "bb0f8075-32f6-3fd6-9af9-e14c08a7f634"
+          ],
+          "reason": "Not a planter with a matching saucer."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "972dc94d-ee99-379a-bdac-d66a32fda61c"
+          ],
+          "reason": "Bowl does not meet drinking-cup format."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "dae2845e-f050-3572-bdc5-4e0d3330e912"
+          ],
+          "reason": "Stoneware is ceramic, not wood."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "dd96f232-1c5c-3f13-ba70-f073cd71006b"
+          ],
+          "reason": "Bowl does not meet planter format."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "5deecfde-f2d1-3917-a9c0-f5d577076f3c"
+          ],
+          "reason": "650 ml is below the required 1.5 liters."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18"
+          ],
+          "reason": "Bowl is not a cup; stoneware is not porcelain."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a"
+          ],
+          "reason": "Bowl is not a hanging planter with an attached rope."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "1c28f360-ed92-30f8-b749-d739cea5c253"
+          ],
+          "reason": "US-only shipping excludes required delivery to Canada."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "5abc0dd1-d005-3e88-9c15-c4466155f86e"
+          ],
+          "reason": "Not a planter; five-week lead time cannot meet tomorrow."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
             "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5"
           ],
-          "reason": "The stated requirement is outside this catalog."
+          "reason": "Bowl is not a cup; red is unavailable."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e"
+          ],
+          "reason": "Bowl is explicitly excluded; a teapot is required."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0"
+          ],
+          "reason": "Five-week lead time exceeds required one-week arrival."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "23b9ed3e-0293-376b-aeb0-e4bf5e72750a"
+          ],
+          "reason": "Bowl lacks required drainage hole and saucer."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9"
+          ],
+          "reason": "Bowl is not the requested cup format."
+        },
+        {
+          "label": "Not served",
+          "wishIds": [
+            "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13"
+          ],
+          "reason": "Bowl is not a planter with drainage hole and saucer."
         }
       ],
       "questionsForMaker": [
         {
-          "text": "Can the conflicting color request be clarified?",
+          "text": "Can you confirm blue with satin finish? Related interest remains conditional pending confirmation.",
           "wishIds": [
-            "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0"
+            "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+            "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+            "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c"
           ]
+        },
+        {
+          "text": "What selling price will apply, and are there unresolved purchase conditions beyond the sampled evidence?",
+          "wishIds": []
         }
       ],
       "alternatives": [
         {
-          "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
-          "whyNotFirst": "Other wishes request this format."
+          "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+          "whyNotFirst": "Less compatible demand than the bowl, despite fewer unresolved conditions."
         },
         {
           "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
-          "whyNotFirst": "Other wishes request this format."
+          "whyNotFirst": "Less compatible demand than the bowl, despite fewer unresolved conditions."
         }
       ],
       "optionIds": [
         "bf2aa329-2967-3668-aa8a-6a99846a4c34",
         "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
         "8207af68-bb57-3d4a-bb8d-a27d9da2c339"
-      ]
+      ],
+      "secondReading": {
+        "agreedWishCount": 40,
+        "comparedWishCount": 40,
+        "comparisons": [
+          {
+            "wishId": "11603779-816a-3812-8526-235cae300b62",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "11603779-816a-3812-8526-235cae300b62",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "11603779-816a-3812-8526-235cae300b62",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "aad5c5fe-e500-3737-8ac3-3c83199171f8",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "70314079-42f2-3277-abfe-d409ce16b75d",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb8ddf73-fb9f-3c3c-a990-44a754dfa8af",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "c53ac9d6-2606-3b15-a9ab-ce16c311f1a2",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "8e2c260f-46df-3217-a940-29694a650433",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "8e2c260f-46df-3217-a940-29694a650433",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "8e2c260f-46df-3217-a940-29694a650433",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "018ea386-c1c9-3dad-8d10-0bbb835bc3d9",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6c0c2aaf-34aa-3665-a661-67223f814531",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b8dd007a-584e-36d7-8f79-247b8d49d5df",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0f192565-8720-38ff-88cd-8dbe15e901c9",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1a7e5e31-3af0-3937-a501-e3e83b728165",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "0647dede-8f9f-39c0-a1b6-c623b8439eca",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "409367dc-de96-3569-94fd-36b68bc13f5e",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "e7687de1-c4c8-339f-a253-c6ab5a78c3b6",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "52394f11-6791-3ea3-86a1-7f4c2f5935de",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "bb0f8075-32f6-3fd6-9af9-e14c08a7f634",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "52893dbe-d439-3ce1-8b94-ceb5b13c91ea",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "972dc94d-ee99-379a-bdac-d66a32fda61c",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dae2845e-f050-3572-bdc5-4e0d3330e912",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "dd96f232-1c5c-3f13-ba70-f073cd71006b",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "cea0d4a0-b8b2-3970-8ee2-3f6b3f982f9a",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "adbf1472-fb73-31ce-9572-fe0a69a98839",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1c28f360-ed92-30f8-b749-d739cea5c253",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5abc0dd1-d005-3e88-9c15-c4466155f86e",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d2219835-9d5b-3475-b768-0d3e9fc2bf79",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "3a5b8979-d8e3-3230-8267-f3d05c1ff954",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3c5fc80-8b2b-37eb-bbab-265f6ee59dd5",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "a3559703-f5f3-3d0b-84f1-a3efe3a53f1e",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "b09fee51-1ecb-35bd-8e04-aaebd61a9ea0",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "6b09c99d-7fb3-3ceb-a529-b21f1cafa5ba",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "23b9ed3e-0293-376b-aeb0-e4bf5e72750a",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "d49f1ee2-e5eb-3646-8b5d-5bfe99c53db9",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "9bcaa9a4-5fbd-3265-b96a-f2fb39dced7c",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "1f19ea6c-59e6-3f39-a0e8-ca08a67cbd13",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "COMPATIBLE",
+            "secondVerdict": "COMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "f3c31bd1-ea7b-3bc8-b1e8-00e626f788bf",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "CONDITIONAL",
+            "secondVerdict": "CONDITIONAL",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "7559d536-b3dd-3456-a143-e591810abb08",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "REQUEST",
+            "secondKind": "REQUEST",
+            "firstVerdict": "INCOMPATIBLE",
+            "secondVerdict": "INCOMPATIBLE",
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5b6cb92c-fed5-3f54-9fd9-399ddb5ca0d2",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5b6cb92c-fed5-3f54-9fd9-399ddb5ca0d2",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "5b6cb92c-fed5-3f54-9fd9-399ddb5ca0d2",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "04da6e5a-b0f4-388d-b28e-853fd16e3d95",
+            "optionId": "bf2aa329-2967-3668-aa8a-6a99846a4c34",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "04da6e5a-b0f4-388d-b28e-853fd16e3d95",
+            "optionId": "faed2a52-484e-3d86-bbd7-e4c4259dcd37",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          },
+          {
+            "wishId": "04da6e5a-b0f4-388d-b28e-853fd16e3d95",
+            "optionId": "8207af68-bb57-3d4a-bb8d-a27d9da2c339",
+            "firstKind": "NOT_A_REQUEST",
+            "secondKind": "NOT_A_REQUEST",
+            "firstVerdict": null,
+            "secondVerdict": null,
+            "needsYourEyes": false
+          }
+        ],
+        "batchCompositionChanged": true,
+        "status": "COMPLETE",
+        "incompleteWishIds": []
+      },
+      "metrics": {
+        "elapsedSeconds": 35.994759208,
+        "tokenUsage": {
+          "inputTokens": 34032,
+          "outputTokens": 26049,
+          "reasoningTokens": 0
+        },
+        "usageComplete": true,
+        "failureCategory": null
+      }
     },
-    "flags": []
+    "flags": [
+      {
+        "rule": "V6",
+        "path": "not_served",
+        "message": "Groups rebuilt from incompatible verdicts."
+      }
+    ]
   },
-  "inputHash": "43192efe499e7d069d10dbae5c09dcac953e66b42d7b866ae13ea37ef3aea332",
-  "completedAt": "2026-11-12T00:00:00Z",
+  "inputHash": "931302c706351236e68928491e731165928823b4bacbb663da91f6dcfbbc6659",
+  "completedAt": "2026-11-12T15:16:05.929294Z",
   "seedWorkspaceId": "00000000-0000-0000-0000-000000000000",
   "optionKeys": {
     "bf2aa329-2967-3668-aa8a-6a99846a4c34": "ceramicist-cup",
