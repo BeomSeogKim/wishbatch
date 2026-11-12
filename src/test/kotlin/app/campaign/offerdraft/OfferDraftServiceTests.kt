@@ -217,7 +217,13 @@ class OfferDraftServiceTests @Autowired constructor(
         }.andReturn().response.contentAsString.let { html ->
             assertContains(html, "Use reviewed draft")
             assertContains(html, "/maker/offer-draft?run=${f.run.id}")
-            val firstSubmit = Regex("<button\\b[^>]*type=\"submit\"[^>]*>").find(html)!!.value
+            val offerForm = assertNotNull(Regex(
+                "<form\\b[^>]*action=\"/w/${Regex.escape(f.token)}/maker/offer\"[^>]*>.*?</form>",
+                RegexOption.DOT_MATCHES_ALL,
+            ).find(html)).value
+            assertContains(offerForm, "method=\"post\"")
+            assertContains(offerForm, "name=\"_csrf\"")
+            val firstSubmit = Regex("<button\\b[^>]*type=\"submit\"[^>]*>").find(offerForm)!!.value
             assertContains(firstSubmit, "value=\"check-price\"")
             assertFalse(firstSubmit.contains("use-reviewed-draft"))
             Files.writeString(Path.of("build/offer-draft-keyboard.html"), html)

@@ -88,10 +88,11 @@ class OfferEvidenceTests @Autowired constructor(
             assertTrue(fixture.wishes.single { it.id == quote.wishId }.text.contains(quote.quote))
         }
         val html = render(fixture)
-        for (text in listOf("Why this offer", "Interested in this offer:", "5", "stated interest, not orders",
+        for (text in listOf("Why this offer", "Interested in this offer", "Visible requests compatible with this offer and price. These are not orders.",
             "AI grouped the wishes; the maker chose and confirmed this offer.", "Anonymous fan")) {
             assertContains(html, text)
         }
+        assertContains(html, "data-live-field=\"interest\">5</p>")
         assertEquals(3, Regex("<figure class=\"evidence\">").findAll(html).count())
         evidence.quotes.forEach { assertContains(html, it.quote) }
         fixture.wishes.indices.forEach {

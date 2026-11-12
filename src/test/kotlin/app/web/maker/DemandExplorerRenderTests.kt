@@ -92,7 +92,8 @@ class DemandExplorerRenderTests(
         assertContains(proposalHtml, "id=\"wish-workbench\"")
         assertContains(proposalHtml, "/maker/next-batch?run=${run.id}")
         assertContains(proposalHtml, "/maker/questions\"")
-        assertContains(proposalHtml, "Review follow-up questions")
+        assertContains(proposalHtml, "Questions to ask fans")
+        assertContains(proposalHtml, "Review questions to ask fans for the latest analysis")
         assertContains(proposalHtml, "id=\"demand-explorer\"")
 
         reviews.decide(workspace.token, run.id, source.id, selected.id, CompatibilityVerdict.INCOMPATIBLE, "Different format")

@@ -10,6 +10,7 @@ import app.campaign.port.WishReadingComparison
 import app.campaign.review.WishReviewService
 import app.campaign.workbench.WishWorkbenchService
 import app.campaign.workbench.WorkbenchFilter
+import app.campaign.workbench.WorkbenchRow
 import app.campaign.workspace.WorkspaceService
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
@@ -87,13 +88,17 @@ class WishWorkbenchDetailTests(
         val workspace = workspaces.create()
         val workbench = workbenches.read(workspace.token, null)
         val flaggedId = workbench.rows.maxBy { it.id }.id
-        val flagged = workbench.copy(rows = workbench.rows.map { if (it.id == flaggedId) it.copy(flags = listOf("Review this wish")) else it })
+        val flagged = workbench.copy(rows = workbench.rows.map {
+            it.copy(flags = if (it.id == flaggedId) listOf("Review this wish") else emptyList())
+        })
         val model = ExtendedModelMap()
         addWorkbenchAttributes(model, flagged)
         assertEquals("flags", (model["workbenchFilter"] as WorkbenchFilter).sort)
         assertEquals(flaggedId, (model["workbenchRows"] as List<*>).first().let { (it as app.campaign.workbench.WorkbenchRow).id })
         addWorkbenchAttributes(model, flagged, WorkbenchFilter(sort = "id", q = "no matching synthetic source"), explicitSort = true)
         assertEquals("id", (model["workbenchFilter"] as WorkbenchFilter).sort)
+        assertEquals(workbench.rows.map { it.id }.sorted(),
+            (model["workbenchRows"] as List<*>).map { (it as WorkbenchRow).id })
         assertTrue((model["visibleIds"] as Set<*>).isEmpty())
         val html = mvc.get("/w/${workspace.token}/maker/proposal/wishes")
             .andExpect { status { isOk() } }.andReturn().response.contentAsString

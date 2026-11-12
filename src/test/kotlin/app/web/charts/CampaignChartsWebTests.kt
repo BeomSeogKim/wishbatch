@@ -102,7 +102,7 @@ class CampaignChartsWebTests @Autowired constructor(
         assertEquals(listOf(null, 0L, 0L, 0L, 3L), view.history.checkpoints.map { it.paid })
         assertEquals(listOf(null, null, null, null, null), view.history.checkpoints.map { it.interest })
         val html = result.response.contentAsString
-        for (text in listOf("Current stages", "<table", "Historical offer interest is unavailable", "conversion rate",
+        for (text in listOf("Current stages", "<table", "Historical offer interest is unavailable", "these counts do not measure conversion",
             "data-paid=\"3\"", "data-interest=\"1\"", "FUNDED is a historical", "different measures")) assertContains(html, text)
         records.forEach { assertContains(html, it.id.toString()); assertContains(html, it.createdAt.toString()) }
         for (privateValue in listOf("private-order", "private-auth", "private-capture", "private-email", "private-provider", "<script>unsafe")) {

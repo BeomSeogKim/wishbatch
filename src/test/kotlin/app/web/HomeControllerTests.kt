@@ -73,11 +73,17 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
         listOf(
             "Fans want different things",
             "01 / Listen", "02 / Shape", "03 / Confirm",
-            "Interested in this offer", "Authorized holds", "Paid",
-            "Wishes, not orders", "Units held, not paid", "Units with completed payments",
-            "Synthetic example", "PayPal places the holds", "captures can fail",
+            "PayPal places the holds", "captures can fail",
             "refunds and hold releases are attempted", "Timing depends on PayPal and your bank or card"
         ).forEach { assertContains(overview, it) }
+        val countsSection = html.substringAfter("class=\"clarity-section shell\"").substringBefore("id=\"testing\"")
+        listOf(
+            "Interested in this offer", "Authorized holds", "Paid",
+            "These are not orders.", "Units with a payment hold. Not paid yet.", "Units with completed payments.",
+            "Synthetic campaign example / minimum 30 units"
+        ).forEach { assertContains(countsSection, it) }
+        assertFalse(overview.contains("aria-label=\"Campaign counts\""))
+        assertEquals(1, Regex("aria-label=\"Campaign counts\"").findAll(html).count())
     }
 
     @Test

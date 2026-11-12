@@ -63,7 +63,8 @@ class PledgeTraceControllerTests @Autowired constructor(private val mvc: MockMvc
             .andReturn().response.contentAsString
         assertContains(html, "No wish is linked to this pledge.")
         assertContains(html, "offer&#39;s recorded evidence set")
-        assertContains(html, "Selected supporting evidence: <span>2</span> wishes.")
+        val text = html.replace(Regex("<[^>]+>"), "").replace(Regex("\\s+"), " ")
+        assertContains(text, "Selected supporting evidence: 2 wishes.")
         assertContains(html, "This sample is not the total interested count.")
         assertContains(html, "An individual reading is unavailable for this wish and offered option.")
         assertFalse(html.contains("A second reading was not recorded"))
