@@ -118,6 +118,15 @@
                 <p class="preview-section">
                     <a th:href="@{/w/{token}/offer(token=${token})}" target="_blank" rel="noopener noreferrer">Open fan offer page (new tab)</a> · <a th:href="@{/w/{token}/result(token=${token})}" target="_blank" rel="noopener noreferrer">Open public result (new tab)</a>
                 </p>
+                <section class="preview-section">
+                    <h2>Payment books</h2>
+                    <form method="post" th:action="@{/w/{token}/maker/books(token=${token})}">
+                        <input type="hidden" name="campaignId" th:value="${campaign.id}">
+                        <button class="button button-secondary" type="submit">Check against PayPal</button>
+                    </form>
+                    <p>Re-read provider resources and run normal payment reconciliation. Refunds and hold releases may be requested for an unsuccessful campaign.</p>
+                    <a th:href="@{/w/{token}/maker/books(token=${token},campaignId=${campaign.id})}">View recorded checks and pledge ledger</a>
+                </section>
                 <div th:replace="~{maker/settlement-fragments :: pledges(${campaign})}">
                 </div>
                 <div th:replace="~{maker/settlement-fragments :: attention(${campaign})}">

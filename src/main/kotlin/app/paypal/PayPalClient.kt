@@ -51,6 +51,23 @@ class PayPalClient internal constructor(
             "payment_source" to mapOf("paypal" to mapOf("experience_context" to mapOf("shipping_preference" to "GET_FROM_FILE"))),
         )) { body -> OrderDetails(OrderId(body.requiredText("id"))) to orderStatus(body) }
 
+    override fun readOrder(orderId: OrderId, idempotencyKey: String) =
+        call(HttpMethod.GET, "/v2/checkout/orders/${segment(orderId.value)}", idempotencyKey) { body ->
+            val units = body.optionalArray("purchase_units")
+            val payments = units.map {
+                require(it.isObject)
+                it.path("payments").also { payment -> require(payment.isMissingNode || payment.isObject) }
+            }
+            val unit = units.singleOrNull()
+            OrderDetails(
+                OrderId(body.requiredText("id")), body.requiredText("status"),
+                payments.flatMap { it.optionalArray("authorizations").map { resource -> AuthorizationId(resource.requiredText("id")) } },
+                payments.flatMap { it.optionalArray("captures").map { resource -> CaptureId(resource.requiredText("id")) } },
+                payments.flatMap { it.optionalArray("refunds").map { resource -> RefundId(resource.requiredText("id")) } },
+                unit?.takeUnless { it.path("amount").isMissingNode }?.let(::money),
+            ) to orderStatus(body)
+        }
+
     override fun authorizeOrder(orderId: OrderId, idempotencyKey: String) =
         call(HttpMethod.POST, "/v2/checkout/orders/${segment(orderId.value)}/authorize", idempotencyKey, emptyMap<String, Any>()) { body ->
             val unit = body.path("purchase_units").path(0)
@@ -148,6 +165,12 @@ class PayPalClient internal constructor(
     private fun segment(value: String) = UriUtils.encodePathSegment(value, UTF_8)
     private fun JsonNode.text(field: String): String? = path(field).let { if (it.isString) it.asString() else null }
     private fun JsonNode.requiredText(field: String) = requireNotNull(text(field))
+    private fun JsonNode.optionalArray(field: String): List<JsonNode> {
+        val value = path(field)
+        if (value.isMissingNode) return emptyList()
+        require(value.isArray)
+        return value.toList()
+    }
     private fun orderStatus(body: JsonNode) = when (body.requiredText("status")) {
         "CREATED", "PAYER_ACTION_REQUIRED" -> PaymentStatus.CREATED
         "SAVED" -> PaymentStatus.PENDING

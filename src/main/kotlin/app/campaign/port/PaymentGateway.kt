@@ -39,7 +39,15 @@ sealed interface PaymentResult<out T> {
     ) : PaymentResult<Nothing>
 }
 
-data class OrderDetails(val orderId: OrderId)
+/** Order reads expose payment references without buyer data; amount requires one purchase unit. */
+data class OrderDetails(
+    val orderId: OrderId,
+    val providerStatus: String? = null,
+    val authorizationIds: List<AuthorizationId> = emptyList(),
+    val captureIds: List<CaptureId> = emptyList(),
+    val refundIds: List<RefundId> = emptyList(),
+    val amount: Money? = null,
+)
 
 /**
  * Amount and currency must match the server's pledge before accepting the hold. captureId is
@@ -94,6 +102,8 @@ enum class WebhookVerification { VERIFIED, INVALID, UNAVAILABLE }
  */
 interface PaymentGateway {
     fun createAuthorizeOrder(request: CreateAuthorizeOrder, idempotencyKey: String): PaymentResult<OrderDetails>
+    fun readOrder(orderId: OrderId, idempotencyKey: String): PaymentResult<OrderDetails> =
+        PaymentResult.Failed(PaymentStatus.FAILED, errorCode = "UNSUPPORTED_OPERATION")
     fun authorizeOrder(orderId: OrderId, idempotencyKey: String): PaymentResult<AuthorizationDetails>
     fun readAuthorization(authorizationId: AuthorizationId, idempotencyKey: String): PaymentResult<AuthorizationDetails>
     fun capture(authorizationId: AuthorizationId, idempotencyKey: String): PaymentResult<CaptureDetails>

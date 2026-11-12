@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Check against PayPal', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <header class="page-heading">
+        <p class="eyebrow">Maker payment books</p>
+        <h1>Check against PayPal</h1>
+        <p class="lead">Compare each pledge with its PayPal order, authorization, capture, and refund. Existing payment transitions recheck and repair supported differences.</p>
+        <p>These are dated observations. Provider errors mean Unknown, never Match. A match can include a pending payment or a partial refund; it does not mean the batch is fully paid.</p>
+    </header>
+    <section class="preview-section">
+        <form method="post" th:action="@{/w/{token}/maker/books(token=${token})}">
+            <input type="hidden" name="campaignId" th:value="${campaignId}">
+            <button class="button button-primary" type="submit">Check against PayPal</button>
+        </form>
+        <p>This re-reads provider resources and runs normal reconciliation. An unsuccessful campaign may request refunds or hold releases. Unknown balances are never automatically refunded.</p>
+        <a th:href="@{/w/{token}/maker/campaign(token=${token})}">Back to campaign</a>
+    </section>
+    <section th:if="${check == null}" class="empty-state preview-section">
+        <h2>No check recorded yet.</h2>
+        <p>Run a check to record local and provider states on the timeline.</p>
+    </section>
+    <section th:if="${check != null}" class="preview-section" aria-labelledby="ledger-heading">
+        <h2 id="ledger-heading">Pledge ledger</h2>
+        <p>Started <time th:datetime="${check.startedAt}" th:text="${@makerDisplay.time(check.startedAt)}"></time>;
+            finished <time th:datetime="${check.checkedAt}" th:text="${@makerDisplay.time(check.checkedAt)}"></time>.</p>
+        <p>Local and provider observations are made in sequence. Remaining differences need another check or manual review; campaign outcomes remain historical.</p>
+        <p th:if="${check.pledges.isEmpty()}">No pledges existed at this check.</p>
+        <div id="books-controls" hidden>
+            <label for="books-search">Filter the ledger</label>
+            <input id="books-search" type="search" placeholder="State, resource ID, or match status">
+            <button id="books-export" class="button button-secondary" type="button">Export CSV</button>
+            <button id="books-fallback-toggle" class="button button-secondary" type="button" aria-controls="books-fallback" aria-expanded="false">Show accessible table</button>
+        </div>
+        <div id="books-grid" hidden aria-label="Pledge payment comparison"></div>
+        <div id="books-fallback" class="table-scroll">
+            <table id="books-table">
+                <caption>Recorded pledge comparisons. Money is formatted from integer minor units on the server.</caption>
+                <thead><tr><th scope="col">Pledge</th><th scope="col">Units</th><th scope="col">Amount</th><th scope="col">Local before</th><th scope="col">PayPal before</th><th scope="col">Match before</th><th scope="col">Local after</th><th scope="col">PayPal after</th><th scope="col">Match after</th></tr></thead>
+                <tbody>
+                <tr th:each="row : ${check.pledges}">
+                    <th scope="row" th:text="${row.pledgeId}"></th>
+                    <td th:text="${row.quantity}"></td>
+                    <td th:text="${@makerDisplay.money(row.amount, row.currency)}"></td>
+                    <td th:text="${row.before.state}"></td>
+                    <td><ul><li th:each="resource : ${row.before.resources}"><span th:text="${resource.kind + ' ' + resource.id + ': ' + (resource.providerStatus ?: (resource.status ?: 'UNKNOWN'))}"></span><span th:if="${resource.amount != null}" th:text="${' / ' + @makerDisplay.money(resource.amount, resource.currency)}"></span></li></ul><span th:if="${row.before.resources.isEmpty()}">Unknown: no provider resource ID</span></td>
+                    <td th:text="${row.before.match}"></td>
+                    <td th:text="${row.after.state}"></td>
+                    <td><ul><li th:each="resource : ${row.after.resources}"><span th:text="${resource.kind + ' ' + resource.id + ': ' + (resource.providerStatus ?: (resource.status ?: 'UNKNOWN'))}"></span><span th:if="${resource.amount != null}" th:text="${' / ' + @makerDisplay.money(resource.amount, resource.currency)}"></span></li></ul><span th:if="${row.after.resources.isEmpty()}">Unknown: no provider resource ID</span></td>
+                    <td th:text="${row.after.match}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${gridAvailable}"><th:block th:replace="~{fragments/data-tools :: grid}"></th:block></th:block>
+        <script defer th:src="@{/js/books-ledger.js}"></script>
+    </section>
+    <section class="preview-section" th:unless="${history.isEmpty()}">
+        <h2>Check history</h2>
+        <ol><li th:each="entry : ${history}"><a th:href="@{/w/{token}/maker/books(token=${token},campaignId=${campaignId},checkId=${entry.id})}" th:text="${@makerDisplay.time(entry.checkedAt)}"></a> · <span th:text="${entry.pledges.size()}"></span> pledges</li></ol>
+    </section>
+</main>
+</body>
+</html>
