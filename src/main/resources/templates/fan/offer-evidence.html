@@ -3,8 +3,6 @@
 <body>
 <section th:fragment="why(evidence)" class="card" aria-labelledby="offer-evidence-title">
     <h2 id="offer-evidence-title">Why this offer</h2>
-    <p class="offer-interest"><strong>Interested in this offer: <span th:text="${evidence.counts.interest}"></span></strong> — stated interest, not orders.</p>
-    <p th:text="${evidence.counts.conditional + ' more depend on a condition'}"></p>
     <p>AI grouped the wishes; the maker chose and confirmed this offer.</p>
     <div class="offer-evidence-quotes">
         <figure th:each="quote : ${evidence.quotes}" class="evidence">
