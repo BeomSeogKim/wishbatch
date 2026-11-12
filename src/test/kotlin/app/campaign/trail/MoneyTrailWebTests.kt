@@ -1,5 +1,13 @@
 package app.campaign.trail
 
+import app.campaign.books.BooksCheck
+import app.campaign.books.BooksMatch
+import app.campaign.books.BooksPledgeRow
+import app.campaign.books.BooksPledgeSnapshot
+import app.campaign.books.BooksResource
+import app.campaign.books.BooksResourceKind
+import app.campaign.model.PledgeState
+import app.campaign.port.PaymentStatus
 import app.campaign.model.Campaign
 import app.campaign.model.Event
 import app.campaign.model.Offer
@@ -16,6 +24,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import tools.jackson.databind.json.JsonMapper
 import java.time.Instant
 import java.util.UUID
 
@@ -28,6 +37,7 @@ class MoneyTrailWebTests @Autowired constructor(
     private val campaigns: CampaignRepository,
     private val pledges: PledgeRepository,
     private val events: EventRepository,
+    private val mapper: JsonMapper,
 ) {
     @Test
     fun `ledger uses persisted checkpoints and rejects another workspace`() {
@@ -50,10 +60,29 @@ class MoneyTrailWebTests @Autowired constructor(
             }
         }
         mvc.get("/w/${other.token}/pledges/${pledge.id}").andExpect { status { isNotFound() } }
-        val check = events.save(Event(campaign.id, "BOOKS_CHECK", detail = "private-json-marker", createdAt = now))
+        val snapshot = BooksPledgeSnapshot(PledgeState.CAPTURED, listOf(
+            BooksResource(BooksResourceKind.CAPTURE, "=cap-1", PaymentStatus.COMPLETED, "COMPLETED", 650, "USD", true),
+        ), BooksMatch.MATCH)
+        val oldId = UUID.randomUUID()
+        val oldSnapshot = BooksPledgeSnapshot(PledgeState.AUTHORIZED, listOf(
+            BooksResource(BooksResourceKind.AUTHORIZATION, "old-auth", PaymentStatus.CREATED, "CREATED", 650, "USD", true),
+        ), BooksMatch.MISMATCH)
+        events.save(Event(campaign.id, "BOOKS_CHECK", detail = mapper.writeValueAsString(
+            BooksCheck(oldId, campaign.id, now.minusSeconds(1), now.minusSeconds(1),
+                listOf(BooksPledgeRow(pledge.id, 1, 650, "USD", oldSnapshot, oldSnapshot))),
+        ), createdAt = now.minusSeconds(1), id = oldId))
+        val checkId = UUID.randomUUID()
+        val check = events.save(Event(campaign.id, "BOOKS_CHECK", detail = mapper.writeValueAsString(
+            BooksCheck(checkId, campaign.id, now, now, listOf(BooksPledgeRow(pledge.id, 1, 650, "USD", snapshot, snapshot))),
+        ), createdAt = now, id = checkId))
         val path = "/w/${owner.token}/maker/campaigns/${campaign.id}/trail"
         mvc.get(path).andExpect { status { isOk() }; content { string(org.hamcrest.Matchers.containsString("Payment confirmed")) }; content { string(org.hamcrest.Matchers.containsString("<table")) } }
         mvc.get(path).andExpect { content { string(org.hamcrest.Matchers.containsString("checkId=${check.id}")); string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("private-json-marker"))) } }
+        mvc.get(path).andExpect { content { string(org.hamcrest.Matchers.containsString("CAPTURE: =cap-1")); string(org.hamcrest.Matchers.containsString("MATCH")); string(org.hamcrest.Matchers.containsString("Not checked")); string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("old-auth"))) } }
+        mvc.get("/w/${owner.token}/maker/campaigns/${campaign.id}/comparison.csv").andExpect {
+            status { isOk() }; content { string(org.hamcrest.Matchers.containsString("CAPTURE: =cap-1")) }
+        }
+        mvc.get("/w/${other.token}/maker/campaigns/${campaign.id}/comparison.csv").andExpect { status { isNotFound() } }
         mvc.get("$path.csv").andExpect { status { isOk() }; content { string(org.hamcrest.Matchers.containsString("cap-1")) } }
         mvc.get("/w/${other.token}/maker/campaigns/${campaign.id}/trail.csv").andExpect { status { isNotFound() } }
     }

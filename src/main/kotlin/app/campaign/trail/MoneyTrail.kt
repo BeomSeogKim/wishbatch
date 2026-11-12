@@ -1,7 +1,10 @@
 package app.campaign.trail
 
+import app.campaign.books.BooksCheckService
 import app.campaign.model.Event
 import app.campaign.model.Pledge
+import app.campaign.service.CampaignRef
+import app.campaign.service.ServiceResult
 import app.campaign.store.CampaignRepository
 import app.campaign.store.EventRepository
 import app.campaign.store.OfferRepository
@@ -10,6 +13,16 @@ import app.campaign.store.WorkspaceRepository
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.UUID
+
+data class TrailComparison(
+    val pledgeId: UUID,
+    val currentState: String,
+    val amount: String,
+    val checkedAt: Instant?,
+    val checkedState: String,
+    val providerStates: String,
+    val match: String,
+)
 
 data class BooksCheckpoint(val id: UUID, val checkpoint: Instant)
 
@@ -46,6 +59,7 @@ class MoneyTrail(
     private val offers: OfferRepository,
     private val pledges: PledgeRepository,
     private val events: EventRepository,
+    private val books: BooksCheckService,
 ) {
     fun campaign(token: String, campaignId: UUID): List<TrailEntry>? {
         val workspace = workspaces.findByToken(token) ?: return null
@@ -53,6 +67,28 @@ class MoneyTrail(
         if (offers.findByIdAndWorkspaceId(campaign.offerId, workspace.id) == null) return null
         return trailEntries(pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(campaignId),
             events.findByCampaignIdOrderByCreatedAtAscIdAsc(campaignId))
+    }
+
+    fun comparison(token: String, campaignId: UUID): List<TrailComparison>? {
+        val workspace = workspaces.findByToken(token) ?: return null
+        val campaign = campaigns.findById(campaignId).orElse(null) ?: return null
+        if (offers.findByIdAndWorkspaceId(campaign.offerId, workspace.id) == null) return null
+        val history = when (val result = books.history(CampaignRef(workspace.id, campaignId))) {
+            is ServiceResult.Success -> result.value
+            is ServiceResult.Rejected -> return null
+        }
+        val latest = history.lastOrNull()
+        val checked = latest?.pledges?.associateBy { it.pledgeId }.orEmpty()
+        return pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(campaignId).map { pledge ->
+            val snapshot = checked[pledge.id]?.after
+            TrailComparison(pledge.id, pledge.state.name, "${pledge.amount} ${pledge.currency} minor units",
+                if (snapshot == null) null else latest?.checkedAt,
+                snapshot?.state?.name ?: "Not checked",
+                snapshot?.resources?.joinToString("; ") { resource ->
+                    "${resource.kind}: ${resource.id} — ${resource.providerStatus ?: resource.status?.name ?: "UNKNOWN"}"
+                }?.ifEmpty { "Unknown" } ?: "Unknown",
+                snapshot?.match?.name ?: "UNKNOWN")
+        }
     }
 
     fun booksChecks(token: String, campaignId: UUID): List<BooksCheckpoint>? {

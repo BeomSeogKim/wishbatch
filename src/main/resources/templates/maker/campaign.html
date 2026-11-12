@@ -126,6 +126,7 @@
                     </form>
                     <p>Re-read provider resources and run normal payment reconciliation. Refunds and hold releases may be requested for an unsuccessful campaign.</p>
                     <a th:href="@{/w/{token}/maker/books(token=${token},campaignId=${campaign.id})}">View recorded checks and pledge ledger</a>
+                    · <a th:href="@{/w/{token}/maker/campaigns/{id}/trail(token=${token},id=${campaign.id})}">Money trail</a>
                 </section>
                 <div th:replace="~{maker/settlement-fragments :: pledges(${campaign})}">
                 </div>
