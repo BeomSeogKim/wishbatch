@@ -11,6 +11,8 @@ function browser({sdk = true, responses = [], csrf = true, quotePage = null} = {
         'pledge-checkout', 'pledge-feedback', 'pledge-status-link', 'quantity', 'paypal-button-container',
         'pledge-total', 'pledge-quantity', 'pledge-units'
     ].map(id => [id, {hidden: false, disabled: false, textContent: '', addEventListener(event, callback) { this[event] = callback; }}]));
+    const action = {hidden: false};
+    elements['pledge-checkout'].closest = () => action;
     elements.quantity.value = '2';
     elements.quantity.form = {action: 'https://example.test/w/token/offer'};
     elements['pledge-checkout'].dataset = {createUrl: '/w/token/api/pledges', quantity: '2', campaignId: 'campaign'};
@@ -18,7 +20,7 @@ function browser({sdk = true, responses = [], csrf = true, quotePage = null} = {
     let handlers;
     let redirected;
     const context = {
-        URL, URLSearchParams, DOMParser: class { parseFromString() { return quotePage; } }, FormData: class { constructor() { return new URLSearchParams('quantity=3'); } },
+        URL, URLSearchParams, DOMParser: class { parseFromString(text) { return typeof quotePage === 'function' ? quotePage(text) : quotePage; } }, FormData: class { constructor() { return new URLSearchParams('quantity=3'); } },
         document: {
             getElementById: id => elements[id],
             querySelector: selector => csrf ? {content: selector === 'meta[name="_csrf"]' ? 'synthetic-csrf' : 'X-CSRF-TOKEN'} : null
@@ -32,13 +34,13 @@ function browser({sdk = true, responses = [], csrf = true, quotePage = null} = {
         },
         fetch: async (url, options) => {
             calls.push({url, options});
-            const response = responses.shift();
+            const response = await responses.shift();
             if (response instanceof Error) throw response;
-            return {ok: response.ok, json: async () => response.body, text: async () => ''};
+            return {ok: response.ok, json: async () => response.body, text: async () => response.text || ''};
         }
     };
     vm.runInNewContext(script, context);
-    return {elements, calls, get handlers() { return handlers; }, get redirected() { return redirected; }};
+    return {elements, action, calls, get handlers() { return handlers; }, get redirected() { return redirected; }};
 }
 
 const created = {
@@ -157,4 +159,59 @@ test('carries the selected wish into the pledge request', async () => {
     app.elements['pledge-checkout'].dataset.wishId = 'selected-wish';
     await app.handlers.createOrder();
     assert.equal(JSON.parse(app.calls[0].options.body).wishId, 'selected-wish');
+});
+
+function quotePage(quantity, campaign = 'campaign') {
+    return {
+        getElementById(id) {
+            return id === 'pledge-checkout' ? (quantity == null ? null : {dataset: {campaignId: campaign, quantity}}) : {textContent: `USD ${quantity}.00`};
+        },
+        querySelector() { return null; }
+    };
+}
+
+test('the newest quantity wins when quote responses arrive out of order', async () => {
+    let resolveFirst;
+    const first = new Promise(resolve => { resolveFirst = resolve; });
+    const app = browser({responses: [first, {ok: true, text: '4'}], quotePage: text => quotePage(text)});
+    app.elements.quantity.value = '3';
+    const earlier = app.elements.quantity.change();
+    app.elements.quantity.value = '4';
+    await app.elements.quantity.change();
+    resolveFirst({ok: true, text: '3'});
+    await earlier;
+    assert.equal(app.elements['pledge-checkout'].dataset.quantity, '4');
+    assert.equal(app.elements['pledge-total'].textContent, 'USD 4.00');
+});
+
+test('mismatched or unavailable quotes never enable checkout', async () => {
+    for (const page of [quotePage('3', 'another'), quotePage('4'), quotePage(null)]) {
+        const app = browser({responses: [{ok: true}], quotePage: page});
+        app.elements.quantity.value = '3';
+        await app.elements.quantity.change();
+        assert.equal(app.elements['paypal-button-container'].hidden, true);
+        await assert.rejects(app.handlers.createOrder(), /Quote is not current/);
+    }
+});
+
+test('a late quote cannot restore checkout after live invalidation', async () => {
+    let resolveQuote;
+    const pending = new Promise(resolve => { resolveQuote = resolve; });
+    const app = browser({responses: [pending], quotePage: quotePage('3')});
+    app.elements.quantity.value = '3';
+    const update = app.elements.quantity.change();
+    app.action.hidden = true;
+    resolveQuote({ok: true});
+    await update;
+    assert.equal(app.elements['paypal-button-container'].hidden, true);
+    assert.equal(app.elements['pledge-checkout'].dataset.quantity, '2');
+    await assert.rejects(app.handlers.createOrder(), /Quote is not current/);
+});
+
+test('a quote cannot restore checkout when the PayPal SDK failed to load', async () => {
+    const app = browser({sdk: false, responses: [{ok: true}], quotePage: quotePage('3')});
+    app.elements.quantity.value = '3';
+    await app.elements.quantity.change();
+    assert.equal(app.elements['paypal-button-container'].hidden, true);
+    assert.match(app.elements['pledge-feedback'].textContent, /PayPal could not load/);
 });

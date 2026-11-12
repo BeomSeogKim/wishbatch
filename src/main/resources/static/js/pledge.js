@@ -26,6 +26,7 @@
     const statusLink = document.getElementById('pledge-status-link');
     const quantity = document.getElementById('quantity');
     const container = document.getElementById('paypal-button-container');
+    const action = checkout.closest('[data-live-action="pledge"]');
     let pledge = null;
     let approvalStarted = false;
     let serverMessage = false;
@@ -67,7 +68,7 @@
             const response = await fetch(url.toString(), {headers: {'Accept': 'text/html'}});
             if (!response.ok) throw new Error('Quote unavailable');
             const page = new DOMParser().parseFromString(await response.text(), 'text/html');
-            if (version !== quoteVersion) return;
+            if (version !== quoteVersion || action.hidden) return;
             const next = page.getElementById('pledge-checkout');
             const total = page.getElementById('pledge-total');
             if (!next || !total || next.dataset.campaignId !== checkout.dataset.campaignId || next.dataset.quantity !== quantity.value) {
@@ -83,8 +84,12 @@
                 bar.querySelector('div').replaceWith(nextBar.querySelector('div'));
                 bar.hidden = false;
             }
-            container.hidden = false;
-            show('Continue with PayPal to authorize this amount in the sandbox.');
+            if (window.paypal) {
+                container.hidden = false;
+                show('Continue with PayPal to authorize this amount in the sandbox.');
+            } else {
+                show('PayPal could not load. No pledge counted. Reload this page to try again.');
+            }
         } catch (_) {
             if (version === quoteVersion) show('Could not update the total. Use Update total to try again.');
         }
@@ -97,7 +102,7 @@
 
     window.paypal.Buttons({
         async createOrder() {
-            if (container.hidden || quantity.value !== checkout.dataset.quantity) throw new Error('Quote is not current');
+            if (action.hidden || container.hidden || quantity.value !== checkout.dataset.quantity) throw new Error('Quote is not current');
             pledge = null;
             approvalStarted = false;
             serverMessage = false;
