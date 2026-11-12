@@ -35,6 +35,19 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
     }
 
     @Test
+    fun `layout exposes csrf metadata only when available`() {
+        val withoutToken = mvc.get("/").andReturn().response.contentAsString
+        assertFalse(withoutToken.contains("name=\"_csrf\""))
+        assertFalse(withoutToken.contains("name=\"_csrf_header\""))
+
+        val withToken = mvc.get("/") {
+            flashAttr("_csrf", mapOf("token" to "test-token", "headerName" to "X-CSRF-TOKEN"))
+        }.andReturn().response.contentAsString
+        assertContains(withToken, "name=\"_csrf\" content=\"test-token\"")
+        assertContains(withToken, "name=\"_csrf_header\" content=\"X-CSRF-TOKEN\"")
+    }
+
+    @Test
     fun `landing overview explains the journey and payment counts`() {
         val html = mvc.get("/").andReturn().response.contentAsString
         val overview = html.substringAfter("class=\"hero shell\"").substringBefore("id=\"how-it-works\"")
