@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<article th:fragment="wish(row)" class="card proposal-wish" th:id="'wish-' + ${row.wish.id}" tabindex="-1">
+    <p class="eyebrow" th:text="${row.wish.displayName ?: 'Anonymous fan'}">Fan</p>
+    <blockquote><p th:text="${row.wish.text}">The full source wish.</p></blockquote>
+    <p><strong th:text="${row.reason}">Reason for this verdict.</strong></p>
+    <p th:if="${row.wish.hidden}" class="muted">Hidden since this analysis.</p>
+    <ul class="proposal-needs" th:unless="${row.needs.isEmpty()}">
+        <li th:each="need : ${row.needs}">
+            <span class="badge badge-neutral" th:text="${need.strength.name() == 'HARD' ? 'Hard condition' : (need.strength.name() == 'PREFERENCE' ? 'Preference' : 'Unknown')}">Hard condition</span>
+            <span th:text="${need.value}">Need</span>
+            <q th:text="${need.quote}">Exact supporting words</q>
+        </li>
+    </ul>
+    <p th:if="${row.needs.isEmpty()}" class="muted">No grounded purchase needs were extracted.</p>
+</article>
+<section th:fragment="wishGroup(groupId, title, explanation, rows)" class="proposal-group" th:id="${groupId}">
+    <h3><span th:text="${title}">Compatible</span> <span class="badge badge-neutral" th:text="${rows.size()}">0</span></h3>
+    <p class="muted" th:text="${explanation}">Group explanation</p>
+    <p th:if="${rows.isEmpty()}">No wishes in this group.</p>
+    <div class="proposal-wish-list">
+        <th:block th:each="row : ${rows}"><article th:replace="~{maker/proposal-fragments :: wish(${row})}"></article></th:block>
+    </div>
+</section>
+</body>
+</html>

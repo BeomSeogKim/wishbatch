@@ -104,8 +104,9 @@ class MakerMoneyControllerTests @Autowired constructor(
     }
 
     @Test
-    fun `new workspace pages render honest empty states and shared shell`() {
+    fun `workspace without analysis renders honest empty states and shared shell`() {
         val workspace = workspaces.create().also(owned::add)
+        analyses.deleteAll(analyses.findByWorkspaceId(workspace.id))
         for ((route, text) in listOf("offer" to "No proposal is available.",
             "campaign" to "No published campaign yet.", "result" to "No campaign result yet.")) {
             val html = page(workspace.token, route)

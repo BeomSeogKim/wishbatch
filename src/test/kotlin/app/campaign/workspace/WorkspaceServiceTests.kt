@@ -1,5 +1,6 @@
 package app.campaign.workspace
 
+import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.model.Wish
 import app.campaign.model.WishSource
 import app.testing.fixedClock
@@ -31,6 +32,7 @@ class WorkspaceServiceTests @Autowired constructor(
     private val catalog: SeedCatalog,
     private val entityManager: EntityManager,
     private val transactionManager: PlatformTransactionManager,
+    private val analysisRuns: AnalysisRunService,
 ) {
     @Test
     fun `two workspaces persist separate complete seed records`() {
@@ -99,7 +101,7 @@ class WorkspaceServiceTests @Autowired constructor(
     @Test
     fun `intake trims text and optional names and enforces length limits`() {
         val now = Instant.parse("2026-03-04T05:06:07Z")
-        val timedService = WorkspaceService(entityManager, catalog, fixedClock(now))
+        val timedService = WorkspaceService(entityManager, catalog, fixedClock(now), analysisRuns)
         val workspace = timedService.create()
         assertEquals(now, workspace.createdAt)
         val wish = timedService.addWish(workspace.token, " \n A matte set, please! \t", "  Fern  ")
@@ -196,7 +198,7 @@ class WorkspaceServiceTests @Autowired constructor(
             executor.shutdownNow()
             executor.awaitTermination(10, TimeUnit.SECONDS)
             transaction.executeWithoutResult {
-                for (entity in listOf("Wish", "Option")) {
+                for (entity in listOf("AnalysisRunQuota", "AnalysisRun", "Wish", "Option")) {
                     entityManager.createQuery("delete from $entity e where e.workspaceId = :id")
                         .setParameter("id", workspace.id).executeUpdate()
                 }

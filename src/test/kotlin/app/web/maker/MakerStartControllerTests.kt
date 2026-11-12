@@ -47,7 +47,7 @@ class MakerStartControllerTests(
     }
 
     @Test
-    fun `maker home shows the first step next action and fan wish link`() {
+    fun `maker home opens at the stored proposal and shows the fan wish link`() {
         val token = workspaces.create().token
         val html = mvc.get("/w/$token/maker").andExpect {
             status { isOk() }
@@ -55,9 +55,9 @@ class MakerStartControllerTests(
         }.andReturn().response.contentAsString
 
         assertShell(html)
-        assertRail(html, token, "options")
+        assertRail(html, token, "proposal")
         assertContains(html, "demo-scale")
-        assertContains(html, "Review options")
+        assertContains(html, "Review proposal")
         assertEquals(1, Regex("button button-primary").findAll(html).count())
         assertTrue(Regex("<a[^>]*href=\"/w/$token\"[^>]*target=\"_blank\"[^>]*rel=\"noopener noreferrer\"")
             .containsMatchIn(html))

@@ -1,5 +1,6 @@
 package app.campaign.workspace
 
+import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.model.Option
 import app.campaign.model.Wish
 import app.campaign.model.WishSource
@@ -27,6 +28,7 @@ class WorkspaceService(
     private val entityManager: EntityManager,
     private val seedCatalog: SeedCatalog,
     private val clock: Clock = Clock.systemUTC(),
+    private val analysisRuns: AnalysisRunService,
 ) {
     private val random = SecureRandom()
     private val tokenPattern = Regex("[A-Za-z0-9_-]{43}")
@@ -65,6 +67,7 @@ class WorkspaceService(
                 id = seedCatalog.wishId(workspace.id, seed.key),
             ))
         }
+        analysisRuns.attachSeed(workspace, listOptions(workspace.token), listWishes(workspace.token))
         return workspace
     }
 

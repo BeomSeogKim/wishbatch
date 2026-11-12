@@ -7,8 +7,10 @@
             th:classappend="${step.count == current ? 'is-current' : (step.count < current ? 'is-complete' : '')}"
             th:attr="aria-current=${step.count == current ? 'step' : null}">
             <span class="step-number" th:text="${step.count}">1</span>
-            <a th:href="@{/w/{token}/maker/{route}(token=${token},route=${route})}"
+            <a th:if="${route != 'offer' || proposalUnavailable != true}"
+               th:href="@{/w/{token}/maker/{route}(token=${token},route=${route})}"
                th:text="${ {'Options', 'Wishes', 'Proposal', 'Offer', 'Campaign', 'Settlement'}[step.index]}">Options</a>
+            <span th:if="${route == 'offer' && proposalUnavailable == true}" aria-disabled="true">Offer</span>
         </li>
     </ol>
 </nav>
