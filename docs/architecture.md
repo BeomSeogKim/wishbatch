@@ -58,7 +58,12 @@ counts. They are stored, computed, and shown separately.
   transport failure. Every operation takes an idempotency key. Its KDoc fixes
   full-payment behavior, retries, and reconciliation responsibilities.
 - `app.campaign.port.WishAnalyzer` takes option/wish snapshots and returns
-  validated `AnalysisOutput` or a typed `AnalysisResult.Failure`.
+  validated `AnalysisOutput` or a typed `AnalysisResult.Failure`, including
+  `NOT_CONFIGURED` for a missing provider key and `TIMEOUT` for an exceeded budget.
+  Success exposes the model, shared input hash, completion instant, and validated
+  output with flags for immutable run persistence. `AnalysisRun.resultJson` stores
+  the JSON-mapper serialization of `AnalysisOutput`; its `optionIds` roster comes
+  from the input snapshot, not the model.
   `AnalysisValidationResult`, `AnalysisValidationFlag`, and
   `AnalysisValidationRule` describe validation without implementing it.
 - `app.campaign.rules` publishes the three count functions, `thresholdMet`,
@@ -66,6 +71,13 @@ counts. They are stored, computed, and shown separately.
   `validateOffer`, `checkCapacity`, and `idempotencyKey`. Transition checks
   validate edges and reasons; services must apply the documented trigger
   guards and serialize capacity checks.
+- `analysisInputHash` hashes option IDs and product fields plus wish IDs and exact
+  text using canonical SHA-256 serialization independent of collection order.
+  Callers select wishes first; workspace and wish metadata are excluded. Both
+  analyzers and callers use this function. `optionWishCounts` derives Compatible,
+  Depends (`CONDITIONAL`), Not served (`INCOMPATIBLE`), and Not a request totals
+  for every option from validated output. Screens must use these counts, never
+  model-supplied counts.
 - Time-dependent callers inject `java.time.Clock` and pass explicit instants
   to rules. Tests share `app.testing.InMemoryPaymentGateway`,
   `InMemoryWishAnalyzer`, and `fixedClock`. The fakes record calls and consume

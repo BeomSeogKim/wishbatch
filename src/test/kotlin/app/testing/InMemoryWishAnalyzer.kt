@@ -4,18 +4,23 @@ import app.campaign.model.Option
 import app.campaign.model.Wish
 import app.campaign.port.AnalysisResult
 import app.campaign.port.WishAnalyzer
+import app.campaign.rules.analysisInputHash
 
 data class AnalysisCall(val options: List<Option>, val wishes: List<Wish>)
 
-/** Queue validated successes or failures in results; every input is snapshotted before returning. */
+/** Queue validated successes or failures in results; success hashes are computed from the recorded input snapshot. */
 class InMemoryWishAnalyzer : WishAnalyzer {
     val results = ArrayDeque<AnalysisResult>()
     private val recordedCalls = mutableListOf<AnalysisCall>()
     val calls: List<AnalysisCall> get() = recordedCalls.toList()
 
     override fun analyze(options: List<Option>, wishes: List<Wish>): AnalysisResult {
-        recordedCalls.add(AnalysisCall(options.map { it.snapshot() }, wishes.map { it.snapshot() }))
-        return results.removeFirstOrNull() ?: throw AssertionError("No scripted wish analysis result")
+        val snapshot = AnalysisCall(options.map { it.snapshot() }, wishes.map { it.snapshot() })
+        recordedCalls.add(snapshot)
+        return when (val result = results.removeFirstOrNull() ?: throw AssertionError("No scripted wish analysis result")) {
+            is AnalysisResult.Success -> result.copy(inputHash = analysisInputHash(snapshot.options, snapshot.wishes))
+            is AnalysisResult.Failure -> result
+        }
     }
 
     private fun Option.snapshot() = Option(

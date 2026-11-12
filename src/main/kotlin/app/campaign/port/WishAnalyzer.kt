@@ -7,6 +7,7 @@ import app.campaign.model.NeedStrength
 import app.campaign.model.Option
 import app.campaign.model.Wish
 import app.campaign.model.WishKind
+import java.time.Instant
 import java.util.UUID
 
 data class WishNeed(val strength: NeedStrength, val attribute: NeedAttribute, val value: String, val quote: String)
@@ -44,6 +45,8 @@ data class AnalysisAlternative(val optionId: UUID, val whyNotFirst: String)
 /**
  * Normalized output: at most one proposal, zero to two alternatives, and no model-owned offer
  * prices, thresholds, capacities or dates. A missing proposal requires noProposalReason.
+ * Plain data serializable with the application's JSON mapper; AnalysisRun.resultJson stores
+ * this shape. optionIds contains every input option ID, supplied by the adapter, not the model.
  * Adapters convert decimal price limits into exact minor units in the input currency.
  */
 data class AnalysisOutput(
@@ -54,6 +57,7 @@ data class AnalysisOutput(
     val notServed: List<NotServedGroup>,
     val questionsForMaker: List<MakerQuestion>,
     val alternatives: List<AnalysisAlternative>,
+    val optionIds: List<UUID>,
 )
 
 enum class AnalysisValidationRule {
@@ -81,14 +85,28 @@ sealed interface AnalysisValidationResult {
     data class Rejected(override val flags: List<AnalysisValidationFlag>) : AnalysisValidationResult
 }
 
-enum class AnalysisFailure { INVALID_JSON, INVALID_OUTPUT, PROVIDER_FAILURE, RUN_LIMIT_REACHED }
+enum class AnalysisFailure {
+    /** No provider key is configured. */
+    NOT_CONFIGURED,
+    /** The analysis time budget was exceeded. */
+    TIMEOUT,
+    INVALID_JSON, INVALID_OUTPUT, PROVIDER_FAILURE, RUN_LIMIT_REACHED,
+}
 
 sealed interface AnalysisResult {
-    data class Success(val model: String, val validated: AnalysisValidationResult.Accepted) : AnalysisResult
+    data class Success(
+        val model: String,
+        val validated: AnalysisValidationResult.Accepted,
+        val inputHash: String,
+        val completedAt: Instant,
+    ) : AnalysisResult
     data class Failure(val reason: AnalysisFailure, val flags: List<AnalysisValidationFlag> = emptyList()) : AnalysisResult
 }
 
 /**
+ * Callers select the wishes to include before analysis. Read only the fields covered by
+ * app.campaign.rules.analysisInputHash; callers and implementations use that shared function.
+ * Success reports that hash and the completion instant from an injected Clock.
  * Analyze only the supplied snapshot. Success contains validated output; failures preserve the
  * caller's last valid run. Unknown fields are discarded. Invalid JSON or multiple proposals may
  * be retried once only. Implementations enforce their configured live-call budget.

@@ -20,6 +20,7 @@ import app.campaign.port.PaymentStatus
 import app.campaign.port.RefundDetails
 import app.campaign.port.RefundId
 import app.campaign.port.VoidDetails
+import app.campaign.rules.analysisInputHash
 import app.testing.InMemoryPaymentGateway
 import app.testing.InMemoryWishAnalyzer
 import app.testing.PaymentCall
@@ -217,12 +218,12 @@ class TestFakesTests {
         val wish = Wish(workspaceId, "A blue shirt", WishSource.ONSITE, "Fan", instant)
         val options = mutableListOf(option)
         val wishes = mutableListOf(wish)
-        val output = AnalysisOutput(emptyList(), emptyList(), null, "No compatible requests", emptyList(), emptyList(), emptyList())
-        val success = AnalysisResult.Success("test-model", AnalysisValidationResult.Accepted(output, emptyList()))
+        val output = AnalysisOutput(emptyList(), emptyList(), null, "No compatible requests", emptyList(), emptyList(), emptyList(), listOf(option.id))
+        val success = AnalysisResult.Success("test-model", AnalysisValidationResult.Accepted(output, emptyList()), "scripted", instant)
         val failure = AnalysisResult.Failure(AnalysisFailure.PROVIDER_FAILURE)
         analyzer.results.addAll(listOf(success, failure))
 
-        assertSame(success, analyzer.analyze(options, wishes))
+        assertEquals(success.copy(inputHash = analysisInputHash(options, wishes)), analyzer.analyze(options, wishes))
         val firstCalls = analyzer.calls
         options.clear()
         wishes.clear()
