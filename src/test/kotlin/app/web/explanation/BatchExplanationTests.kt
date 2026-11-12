@@ -1,0 +1,103 @@
+package app.web.explanation
+
+import app.campaign.analysisrun.AnalysisRunService
+import app.campaign.model.AnalysisRun
+import app.campaign.model.Campaign
+import app.campaign.model.CampaignState
+import app.campaign.model.Offer
+import app.campaign.model.Pledge
+import app.campaign.model.PledgeState
+import app.campaign.port.ProposalEvidence
+import app.campaign.workspace.WorkspaceService
+import app.testing.InMemoryPaymentGateway
+import app.testing.fixedClock
+import jakarta.persistence.EntityManager
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
+import org.springframework.web.util.HtmlUtils
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
+import tools.jackson.databind.json.JsonMapper
+import java.time.Instant
+import kotlin.test.assertContains
+import kotlin.test.assertFalse
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(BatchExplanationTests.Fakes::class)
+class BatchExplanationTests @Autowired constructor(
+    private val workspaces: WorkspaceService,
+    private val runs: AnalysisRunService,
+    private val entityManager: EntityManager,
+    private val mapper: JsonMapper,
+    private val mvc: MockMvc,
+    transactionManager: PlatformTransactionManager,
+) {
+    private val transactions = TransactionTemplate(transactionManager)
+    private val now = Instant.parse("2026-01-01T00:00:00Z")
+
+    @Test
+    fun `unknown token and workspace without published campaign return not found`() {
+        mvc.get("/w/unknown/how-this-batch-was-chosen").andExpect { status { isNotFound() } }
+        val workspace = workspaces.create()
+        mvc.get("/w/${workspace.token}/how-this-batch-was-chosen").andExpect { status { isNotFound() } }
+    }
+
+    @Test
+    fun `page shows attached analysis and counts without private or unvalidated evidence`() {
+        val workspace = workspaces.create()
+        val stored = runs.latest(workspace.token)!!
+        val proposal = requireNotNull(stored.output.proposal)
+        val option = proposal.optionId
+        val privateWish = workspaces.addWish(workspace.token, "Contact private@example.com for my order", "Private Name")
+        val seedWish = workspaces.listWishes(workspace.token).first { wish ->
+            proposal.rationale.any { it.wishId == wish.id }
+        }
+        val validQuote = proposal.rationale.first { it.wishId == seedWish.id }.quote
+        val output = stored.output.copy(proposal = proposal.copy(rationale = listOf(
+            ProposalEvidence("", privateWish.id, privateWish.text),
+            ProposalEvidence("", seedWish.id, "invented words"),
+            ProposalEvidence("", seedWish.id, validQuote),
+        )))
+        transactions.executeWithoutResult {
+            val run = AnalysisRun(workspace.id, "synthetic", "hash", mapper.writeValueAsString(output), createdAt = now)
+            entityManager.persist(run)
+            val offer = Offer(workspace.id, option, run.id, "Example offer", "Printed cards", emptyMap(),
+                200, "USD", "Ships later", "US", 2, 10)
+            entityManager.persist(offer)
+            val campaign = Campaign(offer.id, CampaignState.OPEN, openedAt = now,
+                closesAt = now.plusSeconds(900), confirmDeadline = now.plusSeconds(44100))
+            entityManager.persist(campaign)
+            entityManager.persist(Pledge(campaign.id, 2, 400, "USD", PledgeState.AUTHORIZED,
+                payerEmailMasked = "buyer-secret@example.com", createdAt = now))
+            entityManager.persist(Pledge(campaign.id, 1, 200, "USD", PledgeState.CAPTURED,
+                payerEmailMasked = "other-buyer@example.com", createdAt = now))
+        }
+        val html = mvc.get("/w/${workspace.token}/how-this-batch-was-chosen")
+            .andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(HtmlUtils.htmlUnescape(html), validQuote)
+        listOf("How this batch was chosen", "Example offer", "Printed cards", "<dt>Compatible</dt><dd>16</dd>",
+            "<dt>Depends</dt><dd>10</dd>", "<dt>Not served</dt><dd>9</dd>", "Authorized holds", ">2</span>",
+            "Paid", ">1</span>", "Compatible", "Not served").forEach { assertContains(html, it) }
+        listOf("private@example.com", "Private Name", "buyer-secret@example.com", "other-buyer@example.com",
+            "invented words").forEach { assertFalse(html.contains(it)) }
+        workspaces.setWishHidden(workspace.token, seedWish.id, true)
+        val hiddenHtml = mvc.get("/w/${workspace.token}/how-this-batch-was-chosen")
+            .andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertFalse(HtmlUtils.htmlUnescape(hiddenHtml).contains(validQuote))
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    class Fakes {
+        @Bean @Primary fun explanationPayments() = InMemoryPaymentGateway()
+        @Bean @Primary fun explanationClock() = fixedClock(Instant.parse("2026-01-01T00:00:00Z"))
+    }
+}

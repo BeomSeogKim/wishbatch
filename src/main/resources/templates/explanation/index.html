@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('How this batch was chosen', ~{::main})}">
+<body>
+<main id="main" class="shell fan-page">
+    <h1>How this batch was chosen</h1>
+    <p th:text="${offerTitle}"></p>
+    <section class="card">
+        <h2>Wishes behind the offer</h2>
+        <th:block th:if="${evidence != null}">
+            <p>These are classifications from the analysis used for this offer, not orders. Some wishes may have arrived later.</p>
+            <p th:if="${evidence.isSeed}">This offer uses a stored analysis of synthetic demo wishes.</p>
+            <dl class="term-list">
+                <dt>Compatible</dt><dd th:text="${evidence.counts.compatible}"></dd>
+                <dt>Depends</dt><dd th:text="${evidence.counts.depends}"></dd>
+                <dt>Not served</dt><dd th:text="${evidence.counts.notServed}"></dd>
+                <dt>Not a request</dt><dd th:text="${evidence.counts.notARequest}"></dd>
+            </dl>
+            <figure class="evidence" th:each="quote : ${evidence.quotes}">
+                <blockquote><p th:text="${quote}"></p></blockquote><figcaption>Anonymous synthetic wish</figcaption>
+            </figure>
+            <p th:if="${#lists.isEmpty(evidence.quotes)}">No public quotes are available for this offer.</p>
+        </th:block>
+        <p th:if="${evidence == null}">Analysis evidence is unavailable for this offer.</p>
+    </section>
+    <section class="card">
+        <h2>What AI did</h2>
+        <p>AI grouped wishes against the maker's feasible options and suggested a batch. Software checked references, source quotes and permitted variants, and calculated the counts. Classification can still be wrong.</p>
+        <p>AI could not set the offer price, cost, payment amount, minimum, capacity or dates. The maker decided the offer.</p>
+    </section>
+    <section class="card">
+        <h2>What the maker confirmed</h2>
+        <p th:text="${spec}"></p>
+        <dl class="term-list">
+            <th:block th:each="variant : ${variants}"><dt th:text="${variant.key}"></dt><dd th:text="${variant.value}"></dd></th:block>
+            <dt>Price per unit</dt><dd th:text="${price}"></dd>
+            <dt>Minimum units</dt><dd th:text="${minimum}"></dd>
+            <dt>Capacity</dt><dd th:text="${capacity}"></dd>
+            <dt>Delivery region</dt><dd th:text="${region}"></dd>
+            <dt>Delivery terms</dt><dd th:text="${delivery}"></dd>
+        </dl>
+        <p>Production and delivery are not guaranteed.</p>
+    </section>
+    <section class="card">
+        <h2>What the money states mean</h2>
+        <p>Current campaign state: <strong th:text="${state}"></strong></p>
+        <dl class="term-list">
+            <dt>Stated interest</dt><dd><span th:text="${counts.statedInterest}"></span> wishes; these are not orders or payments.</dd>
+            <dt>Authorized holds</dt><dd><span th:text="${counts.authorizedHolds}"></span> units with PayPal authorization holds; these are not completed payments.</dd>
+            <dt>Paid</dt><dd><span th:text="${counts.paid}"></span> units with completed captures.</dd>
+        </dl>
+        <p>After the minimum is authorized and the maker confirms, PayPal attempts capture. Only completed captures count toward the paid minimum for production. A capture can fail or remain pending. If too few payments complete, completed payments are refunded and remaining holds are released; pending or failed actions may still need attention.</p>
+        <p>PayPal and your bank or card determine when refunds or releases become available. Wishbatch does not hold your funds. Check your pledge status for your own outcome.</p>
+    </section>
+    <p><a th:href="@{/w/{token}/offer(token=${token})}">View offer</a></p>
+</main>
+</body>
+</html>
