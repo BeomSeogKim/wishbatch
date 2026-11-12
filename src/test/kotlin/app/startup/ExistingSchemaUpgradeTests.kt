@@ -108,23 +108,25 @@ class ExistingSchemaUpgradeTests {
                     assertTrue(observedBeforeJpa.get(), "Upgrade must finish before EntityManagerFactory initialization")
                     assertTrue("schemaUpgrade" in context.beanFactory.getBeanDefinition("entityManagerFactory").dependsOn!!)
                     assertEquals(if (it == 0) "CAPTURED" else "PARTIALLY_REFUNDED", connection.scalar("select state from pledges").toString())
-                    connection.execute("update pledges set state='CAPTURED'")
                     val factory = context.getBean(EntityManagerFactory::class.java)
                     factory.createEntityManager().use { entityManager ->
                         entityManager.transaction.begin()
                         val saved = assertNotNull(entityManager.find(Pledge::class.java, pledge.id))
-                        assertEquals(PledgeState.CAPTURED, saved.state)
+                        assertEquals(if (it == 0) PledgeState.CAPTURED else PledgeState.PARTIALLY_REFUNDED, saved.state)
                         assertEquals(2, saved.qty)
                         assertEquals(400L, saved.amount)
+                        saved.state = PledgeState.PARTIALLY_REFUNDED
                         saved.lastError = "Synthetic migration check"
                         entityManager.transaction.commit()
                         entityManager.clear()
-                        assertEquals("Synthetic migration check", entityManager.find(Pledge::class.java, pledge.id).lastError)
-                        entityManager.transaction.begin()
-                        // Native persistence exercises the final label even before its domain enum is integrated.
-                        entityManager.createNativeQuery("update pledges set state='PARTIALLY_REFUNDED'").executeUpdate()
-                        entityManager.transaction.commit()
-                        assertEquals("PARTIALLY_REFUNDED", entityManager.createNativeQuery("select state from pledges").singleResult.toString())
+                        val reloaded = assertNotNull(entityManager.find(Pledge::class.java, pledge.id))
+                        assertEquals(PledgeState.PARTIALLY_REFUNDED, reloaded.state)
+                        assertEquals("Synthetic migration check", reloaded.lastError)
+                        assertEquals(2, reloaded.qty)
+                        assertEquals(400L, reloaded.amount)
+                        val savedWish = assertNotNull(entityManager.find(Wish::class.java, wish.id))
+                        assertEquals("Original imported text", savedWish.text)
+                        assertEquals(0, savedWish.duplicateCount)
                     }
                     assertEquals("Original imported text", connection.scalar("select text from wishes"))
                     assertEquals(0, connection.scalar("select duplicate_count from wishes"))
@@ -133,6 +135,7 @@ class ExistingSchemaUpgradeTests {
                     assertEquals(0L, connection.scalar("select count(*) from decision_source_snapshots"))
                     assertEquals(0L, connection.scalar("select count(*) from pledge_decision_records"))
                     assertEquals(0L, connection.scalar("select count(*) from decision_record_entries"))
+                    assertEquals(0L, connection.scalar("select count(*) from wish_review_overrides"))
                     assertFailsWith<SQLException> { connection.execute("update pledges set qty=0") }
                 }
                 assertEquals("PARTIALLY_REFUNDED", connection.scalar("select state from pledges").toString())
