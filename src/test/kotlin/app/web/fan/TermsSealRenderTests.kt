@@ -106,7 +106,7 @@ class TermsSealRenderTests @Autowired constructor(
     }
 
     @Test
-    fun `fan model and fragment expose the existing seal and publication time without writes`() {
+    fun `fan page exposes the seal and publication time while preserving live hooks without writes`() {
         val fixture = fixture()
         val seal = assertNotNull(records.sealedOffer(fixture.workspace.id, fixture.offer.id))
         val before = evidenceCounts(fixture)
@@ -115,10 +115,12 @@ class TermsSealRenderTests @Autowired constructor(
         assertEquals(seal.termsHash, view.termsHash)
         assertEquals(fixture.campaign.openedAt, view.publishedAt)
         assertEquals("AVAILABLE", view.availability)
-        val html = fragment(view)
+        val html = response.response.contentAsString
         assertContains(html, seal.termsHash)
         assertContains(html, fixture.campaign.openedAt.toString())
         assertContains(html, "not a financial guarantee or digital signature")
+        listOf("data-live-campaign", "data-status-url", "data-live-action=\"pledge\"", "data-live-field=\"capacityLeft\"",
+            "data-confirmation-version", "id=\"pledge-total\"").forEach { assertContains(html, it) }
         assertEquals(before, evidenceCounts(fixture))
         assertEquals(0, gateway.orderReads)
     }
@@ -133,6 +135,7 @@ class TermsSealRenderTests @Autowired constructor(
             assertEquals("UNAVAILABLE", view.availability)
             assertNull(view.termsHash)
             assertNull(view.publishedAt)
+            assertContains(response.response.contentAsString, "Terms hash unavailable")
             val fragment = fragment(view)
             assertContains(fragment, "Terms hash unavailable")
             assertContains(fragment, "Unavailable")
@@ -151,6 +154,10 @@ class TermsSealRenderTests @Autowired constructor(
     @Test
     fun `HTML and JSON expose actual dated checks beside the chain without buyer details`() {
         val fixture = fixture()
+        val fanHtml = mvc.get("/w/${fixture.workspace.token}/offer").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        assertContains(fanHtml, assertNotNull(records.sealedOffer(fixture.workspace.id, fixture.offer.id)).termsHash)
+        assertContains(fanHtml, fixture.campaign.openedAt.toString())
         persistence.checkpoint { records.recordPledge(fixture.pledge) }
         val chain = query.findByToken(fixture.workspace.token)!!.pledges.single().entries
         gateway.result = PaymentResult.Received(OrderDetails(OrderId(fixture.pledge.paypalOrderId!!),

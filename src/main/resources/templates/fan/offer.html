@@ -28,6 +28,7 @@
                 <dt>Confirmation deadline (UTC)</dt><dd><time data-live-field="confirmDeadline" th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}"></time></dd>
             </dl>
         </section>
+        <section th:replace="~{terms/seal :: seal(${termsSeal})}"></section>
         <th:block th:if="${offerEvidence != null}">
             <section th:replace="~{fan/offer-evidence :: why(${offerEvidence})}"></section>
         </th:block>

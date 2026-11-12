@@ -240,6 +240,10 @@ class CampaignService(
         val result = if (pledge.authorizationId == null) payments.authorize(pledge) else payments.readAuthorization(pledge)
         if (result !is PaymentResult.Received) {
             pledge.lastError = "AUTHORIZATION_UNCONFIRMED"
+            if (termsRejection != null && pledge.authorizationId != null) {
+                payments.void(pledge)
+                return ServiceResult.Rejected(termsRejection, pledgeView(pledge))
+            }
             if (result.status in setOf(PaymentStatus.DECLINED, PaymentStatus.FAILED) && pledge.authorizationId == null &&
                 !payments.transportFailureObserved(pledge, PaymentAction.AUTHORIZE)) {
                 payments.move(pledge, PledgeState.ABANDONED)

@@ -226,6 +226,37 @@ class TermsCheckTests @Autowired constructor(
         assertTrue(gateway.fake.calls.none { it is PaymentCall.Capture })
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = ["mismatch-voided", "mismatch-unavailable", "unavailable-voided", "unavailable-unavailable"])
+    fun `known hold terms rejection still attempts verified cleanup after failed authorization read`(scenario: String) {
+        val f = fixture()
+        f.pledge.authorizationId = "known-hold"
+        pledges.saveAndFlush(f.pledge)
+        val mismatched = scenario.startsWith("mismatch")
+        gateway.readOrderResults.add(if (mismatched)
+            received(OrderDetails(OrderId(f.pledge.paypalOrderId!!), amount = Money(400, "EUR")), PaymentStatus.COMPLETED)
+        else PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE))
+        gateway.fake.readAuthorizationResults.add(PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE))
+        val released = scenario.endsWith("voided")
+        if (released) release(f.pledge) else {
+            gateway.fake.voidAuthorizationResults.add(PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE))
+            gateway.fake.readAuthorizationResults.add(PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE))
+        }
+        val rejected = assertIs<ServiceResult.Rejected>(service.completePledge(PledgeRef(f.ref, f.pledge.id)))
+        assertEquals(if (mismatched) Rejection.PAYMENT_MISMATCH else Rejection.PAYMENT_UNAVAILABLE, rejected.reason)
+        val saved = pledges.findById(f.pledge.id).orElseThrow()
+        assertEquals(if (released) PledgeState.VOIDED else PledgeState.VOID_FAILED, saved.state)
+        assertEquals("known-hold", saved.authorizationId)
+        if (!released) assertEquals("VOID_UNCONFIRMED", saved.lastError)
+        assertEquals(!released, campaigns.findById(f.campaign.id).orElseThrow().needsAttention)
+        val request = gateway.fake.calls.filterIsInstance<PaymentCall.VoidAuthorization>().single()
+        assertEquals(AuthorizationId("known-hold"), request.authorizationId)
+        assertEquals(idempotencyKey(saved.id, PaymentAction.VOID), request.idempotencyKey)
+        assertTrue(gateway.fake.calls.none { it is PaymentCall.AuthorizeOrder || it is PaymentCall.Capture })
+        assertEquals(if (released) 1 else 2, gateway.fake.calls.filterIsInstance<PaymentCall.ReadAuthorization>().size)
+        assertEquals(if (mismatched) TermsCheckOutcome.MISMATCH else TermsCheckOutcome.UNAVAILABLE, observations(f).single().outcome)
+    }
+
     @Test
     fun `authorization timeout recovers and voids a hold after later terms mismatch`() {
         val f = fixture()
