@@ -84,7 +84,9 @@ from the verdicts. Quote checks establish textual grounding, not correct
 interpretation. Failed runs preserve the last valid result. The maker can review
 wishes in a filterable table and record corrections without rewriting the
 original analysis. Literal quotes that cannot be matched remain unavailable.
-See [data tools](docs/data-tools.md).
+For supported conditions, the maker can approve follow-up questions and fans
+can answer against their wishes; unresolved conditions remain Depends. See
+[data tools](docs/data-tools.md) and [follow-up questions](docs/architecture.md#follow-up-questions).
 
 **No offer price, cost, payment amount, or funding threshold comes from the
 model.** The maker sets commercial terms; server code computes money in integer

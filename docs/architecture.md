@@ -153,6 +153,30 @@ text literally; otherwise evidence is unavailable. The Charts Community 14.3.0
 asset is available for page-specific use; the workbench does not require a chart.
 See [data tools](data-tools.md) for exact assets, scope, and behavior.
 
+## Follow-up questions
+
+For the proposed option, the maker can draft and approve up to three
+multiple-choice questions for visible wishes classified as Depends. Drafts
+must map a recorded hard or unknown condition to a supported catalog variant;
+choices must be exact allowed variants. The maker can edit the question text
+and choices before approval, subject to the same validation. Only approved
+questions are shown for the relevant wish. Answers are stored with the run,
+option, question, wish, and choice.
+
+When approved answers cover all recorded non-preference conditions and their
+source evidence is grounded, the review service can record a Compatible
+revision with source `FAN_ANSWER` and an answer reference. It does not rewrite
+the original analysis. Unsupported, unrelated, or uncovered conditions remain
+Depends; a maker's existing decision is not silently replaced. This association
+is between an answer and a wish, not a pledge-to-wish link.
+
+Drafting uses at most one model request per attempt, no retry, a 15-second
+budget, and at most 40 candidate wishes. It has a process-local daily cap of
+the smaller of 20 calls and `LLM_DAILY_RUN_CAP`. A completed or failed attempt
+is retained per analysis run; missing configuration and cap rejection are not
+recorded as attempts. No model call is made when no supported candidates exist.
+Tests use fakes; these limits do not establish live model quality or performance.
+
 ## Wish analysis
 
 `DefaultWishAnalyzer` implements `WishAnalyzer` using two OpenAI Responses stages.
