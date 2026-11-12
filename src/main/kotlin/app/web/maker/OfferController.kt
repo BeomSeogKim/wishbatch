@@ -65,6 +65,8 @@ class OfferController(
         model.addAttribute("analysis", analysis)
         model.addAttribute("output", output)
         model.addAttribute("option", option)
+        val analyzedIds = output?.wishes.orEmpty().map { it.wishId }.toSet()
+        model.addAttribute("unreadWishCount", workspaces.listWishes(token).count { !it.hidden && it.id !in analyzedIds })
         if (option != null && !model.containsAttribute("fields")) {
             model.addAttribute("fields", defaults(option, output!!, analysis!!).toMutableMap().apply {
                 if (published?.offer?.analysisRunId == analysis.id && published.offer.optionId == option.id) {

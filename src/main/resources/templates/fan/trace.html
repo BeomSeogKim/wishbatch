@@ -12,7 +12,7 @@
         <h2 id="wish-heading">Your wish, in your words</h2>
         <blockquote th:if="${trace.wish != null}" th:text="${trace.wish}"></blockquote>
         <p th:if="${trace.wish == null}" th:text="${trace.wishExplanation}"></p>
-        <p th:if="${trace.evidenceCount != null}"><span th:text="${trace.evidenceCount}"></span> wishes in the offer's recorded evidence set.</p>
+        <p th:if="${trace.evidenceCount != null}">Selected supporting evidence: <span th:text="${trace.evidenceCount}"></span> wishes. This sample is not the total interested count.</p>
     </section>
     <section class="card" aria-labelledby="reading-heading">
         <h2 id="reading-heading">How it was read</h2>
@@ -45,9 +45,9 @@
         </div>
         <th:block th:if="${trace.reading == null and (!trace.readingIntegrityIssue or trace.verdict != null)}">
         <p th:if="${trace.verdict != null}"><strong th:text="${@humanDisplay.state(trace.verdict)}"></strong> for the offered option.</p>
-        <p th:if="${trace.verdict == null}">No individual verdict was recorded for this pledge's wish and offered option.</p>
-        <p th:if="${trace.readingReason != null}" th:text="${trace.readingReason}"></p>
-        <p th:text="${trace.readingAgreement}"></p>
+        <p th:if="${trace.verdict == null}">An individual reading is unavailable for this wish and offered option.</p>
+        <p th:if="${trace.verdict != null and trace.readingReason != null}" th:text="${trace.readingReason}"></p>
+        <p th:if="${trace.verdict != null}" th:text="${trace.readingAgreement}"></p>
         <div th:if="${trace.reviewVerdict != null}">
             <h3 th:text="${trace.reviewSource == 'FAN_ANSWER' ? 'Updated from your answers' : 'Maker review'}"></h3>
             <p><strong th:text="${@humanDisplay.state(trace.reviewVerdict)}"></strong> · revision <span th:text="${trace.reviewRevision}"></span></p>

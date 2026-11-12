@@ -16,6 +16,12 @@
                 <a class="button button-primary" th:href="@{/w/{token}/maker/proposal(token=${token})}">Review proposal</a>
             </div>
             <section th:if="${option != null}" class="preview-section">
+                <div th:if="${unreadWishCount > 0}" class="notice" role="status">
+                    <p>This analysis does not include all current visible wishes (<span th:text="${unreadWishCount}"></span> missing). Re-run it to review them before publishing.</p>
+                    <form method="post" th:action="@{/w/{token}/maker/proposal(token=${token})}">
+                        <button type="submit" class="button button-secondary">Re-run analysis</button>
+                    </form>
+                </div>
                 <p>
                     <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${analysis.id})}">Review the proposal and its evidence</a> · <a th:href="@{/w/{token}/maker/campaign(token=${token})}">Campaign dashboard</a> · <a th:href="@{/w/{token}/maker/offer-draft(token=${token},run=${analysis.id})}">Review text draft</a>
                 </p>

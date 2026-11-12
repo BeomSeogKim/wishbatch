@@ -4,6 +4,7 @@ import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.model.AnalysisRun
 import app.campaign.model.CompatibilityVerdict
 import app.campaign.review.WishReviewService
+import app.campaign.workbench.WorkbenchRow
 import app.campaign.workspace.WorkspaceService
 import app.web.security.CsrfToken
 import app.web.security.securePost
@@ -35,6 +36,27 @@ class WishWorkbenchControllerTests(
     @Autowired private val reviews: WishReviewService,
     @Autowired private val entityManager: EntityManager,
 ) {
+    @Test
+    fun `seeded instruction attempts are visible and flagged first without replacing explicit sorting`() {
+        for ((scenario, expectedFlags) in listOf("illustrator" to 2, "ceramicist" to 2, "textile" to 1)) {
+            val workspace = workspaces.create(scenario)
+            val stored = assertNotNull(runs.latest(workspace.token))
+            val snapshot = stored.run.resultJson
+            val result = mvc.get(path(workspace.token)).andExpect { status { isOk() } }.andReturn()
+            @Suppress("UNCHECKED_CAST")
+            val rows = result.modelAndView!!.model["workbenchRows"] as List<WorkbenchRow>
+            assertEquals(expectedFlags, rows.count { "Instruction attempt, ignored" in it.flags }, scenario)
+            assertTrue(rows.take(expectedFlags).all { it.flags.isNotEmpty() }, scenario)
+            assertContains(result.response.contentAsString, "Instruction attempt, ignored")
+            val explicit = mvc.get(path(workspace.token)) { param("sort", "id") }
+                .andExpect { status { isOk() } }.andReturn()
+            @Suppress("UNCHECKED_CAST")
+            val sorted = explicit.modelAndView!!.model["workbenchRows"] as List<WorkbenchRow>
+            assertEquals(rows.map { it.id }.sorted(), sorted.map { it.id })
+            assertEquals(snapshot, runs.latest(workspace.token)!!.run.resultJson)
+        }
+    }
+
     @Test
     fun `only the pinned community scripts are added to the script policy`() {
         val workspace = workspaces.create()

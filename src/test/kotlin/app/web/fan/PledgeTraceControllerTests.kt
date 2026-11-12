@@ -54,16 +54,51 @@ class PledgeTraceControllerTests @Autowired constructor(private val mvc: MockMvc
 
     @Test
     fun `unlinked and legacy evidence stays unavailable without reconstructing a wish`() {
-        val noWish = record("WISH" to """{"traceScope":"OFFER_EVIDENCE","supportingWishIds":["first","second"]}""")
+        val noWish = record(
+            "WISH" to """{"traceScope":"OFFER_EVIDENCE","supportingWishIds":["first","second"]}""",
+            "VERDICT" to """{"availability":"UNAVAILABLE","reason":"This wish has no recorded reading."}""",
+        )
         `when`(records.findPledgeByToken(token, pledgeId)).thenReturn(noWish)
         val html = mvc.get("/w/$token/pledges/$pledgeId/trace").andExpect { status { isOk() } }
             .andReturn().response.contentAsString
         assertContains(html, "No wish is linked to this pledge.")
         assertContains(html, "offer&#39;s recorded evidence set")
+        assertContains(html, "Selected supporting evidence: <span>2</span> wishes.")
+        assertContains(html, "This sample is not the total interested count.")
+        assertContains(html, "An individual reading is unavailable for this wish and offered option.")
+        assertFalse(html.contains("A second reading was not recorded"))
+        assertFalse(html.contains("This wish has no recorded reading."))
         assertContains(html, "The earlier offer snapshot is unavailable.")
         assertNull(pledgeTrace(noWish).wish)
         val legacy = record("PAYMENT" to """{"state":"CAPTURED","createdAt":"2026-01-01T00:00:00Z"}""")
         assertNull(pledgeTrace(legacy).payments.single().recordedAt)
+    }
+
+    @Test
+    fun `repeated order checkpoints do not claim another creation and retain their hashes`() {
+        val history = record(
+            "PAYMENT" to """{"state":"CREATED","recordedAt":"2026-11-12T15:00:00Z"}""",
+            "PAYMENT" to """{"state":"CREATED","orderId":"ORDER-123","recordedAt":"2026-11-12T15:00:01Z"}""",
+            "PAYMENT" to """{"state":"CREATED","orderId":"ORDER-123","recordedAt":"2026-11-12T15:00:02Z"}""",
+            "PAYMENT" to """{"state":"AUTHORIZED","orderId":"ORDER-123","authorizationId":"AUTH-123","recordedAt":"2026-11-12T15:00:03Z"}""",
+        )
+        val payments = pledgeTrace(history).payments
+        assertEquals(listOf("Pledge started", "PayPal order created", "Payment checkpoint updated", "Authorized hold"),
+            payments.map { it.label })
+        assertEquals(history.entries.map { it.hash }, payments.map { it.hash })
+        assertEquals(Instant.parse("2026-11-12T15:00:02Z"), payments[2].recordedAt)
+        assertEquals(listOf(TraceReference("PayPal order", "ORDER-123")), payments[2].references)
+        `when`(records.findPledgeByToken(token, pledgeId)).thenReturn(history)
+        val html = mvc.get("/w/$token/pledges/$pledgeId/trace").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        assertEquals(1, Regex("PayPal order created").findAll(html).count())
+        listOf("Payment checkpoint updated", "hash-1", "hash-2", "hash-3", "hash-4").forEach { assertContains(html, it) }
+        assertEquals(4, history.entries.size)
+        val changedOrder = record(
+            "PAYMENT" to """{"state":"CREATED","orderId":"ORDER-123"}""",
+            "PAYMENT" to """{"state":"CREATED","orderId":"ORDER-456"}""",
+        )
+        assertEquals(listOf("PayPal order created", "PayPal order created"), pledgeTrace(changedOrder).payments.map { it.label })
     }
 
     @Test

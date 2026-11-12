@@ -40,7 +40,8 @@ internal fun pledgeTrace(record: PledgeDecisionView): PledgeTraceView {
     val terms = offer?.get("terms")?.takeUnless { it.isNull }
     val comparison = verdict?.get("readingAgreement")?.takeUnless { it.isNull }
     val review = verdict?.get("review")?.takeUnless { it.isNull }
-    val payment = record.entries.firstOrNull { it.kind == "PAYMENT" }?.payload
+    val payments = record.entries.filter { it.kind == "PAYMENT" }
+    val payment = payments.firstOrNull()?.payload
     val latestReading = record.entries.lastOrNull { it.kind == "READING" }?.payload
     val reading = latestReading?.takeIf {
         record.integrity == "INTACT" && it.text("scope") == "FORMAT_ASSESSMENT"
@@ -80,9 +81,12 @@ internal fun pledgeTrace(record: PledgeDecisionView): PledgeTraceView {
                 it.text("deliveryTerms"), it.text("shipRegion"), it.text("minBatch"), it.text("capacity"),
                 it.get("chosenVariants")?.properties()?.map { field -> TraceReference(field.key, field.value.asString()) }.orEmpty())
         },
-        record.entries.filter { it.kind == "PAYMENT" }.map { entry ->
+        payments.mapIndexed { index, entry ->
             val payment = entry.payload
-            TracePayment(paymentLabel(payment.text("state"), payment.text("orderId")),
+            val previous = payments.getOrNull(index - 1)?.payload
+            val sameStep = payment.text("state") != null && previous != null &&
+                payment.text("state") == previous.text("state") && payment.text("orderId") == previous.text("orderId")
+            TracePayment(if (sameStep) "Payment checkpoint updated" else paymentLabel(payment.text("state"), payment.text("orderId")),
                 payment.text("recordedAt")?.let { runCatching { Instant.parse(it) }.getOrNull() },
                 listOf("orderId" to "PayPal order", "authorizationId" to "Authorization", "captureId" to "Capture", "refundId" to "Refund")
                     .mapNotNull { (key, label) -> payment.text(key)?.let { TraceReference(label, it) } }, entry.hash)

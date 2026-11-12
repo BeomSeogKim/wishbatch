@@ -11,10 +11,12 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 import tools.jackson.databind.ObjectMapper
 import java.time.Clock
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @SpringBootTest
@@ -90,8 +92,34 @@ class OfferFormExperienceTests @Autowired constructor(
         assertContains(html, "demand-compact")
         assertContains(html, "View full price and demand explorer")
         assertEquals(1, Regex("id=\"demand-explorer\"").findAll(html).count())
-        val firstSubmit = Regex("<button[^>]*type=\"submit\"[^>]*>").find(html)!!.value
+        val offerForm = html.substringAfter("action=\"/w/${fixture.workspace.token}/maker/offer\"")
+        val firstSubmit = Regex("<button[^>]*type=\"submit\"[^>]*>").find(offerForm)!!.value
         assertContains(firstSubmit, "value=\"check-price\"")
+    }
+
+    @Test
+    fun `offer warns about visible wishes missing from the selected analysis with a protected rerun action`() {
+        val workspace = workspaces.create()
+        val run = analyses.findByWorkspaceId(workspace.id).single()
+        fun page() = mvc.get("/w/${workspace.token}/maker/offer") { param("run", run.id.toString()) }
+            .andExpect { status { isOk() } }.andReturn()
+        assertEquals(0, page().modelAndView!!.model["unreadWishCount"])
+        val wish = workspaces.addWish(workspace.token, "A new request after the stored analysis")
+        val result = page()
+        assertEquals(1, result.modelAndView!!.model["unreadWishCount"])
+        val html = result.response.contentAsString
+        assertContains(html, "This analysis does not include all current visible wishes")
+        val rerunForm = Regex("<form[^>]*action=\"/w/${workspace.token}/maker/proposal\"[^>]*>.*?</form>",
+            RegexOption.DOT_MATCHES_ALL).find(html)!!.value
+        assertContains(rerunForm, "method=\"post\"")
+        assertContains(rerunForm, "name=\"_csrf\"")
+        assertContains(rerunForm, "Re-run analysis")
+        mvc.post("/w/${workspace.token}/maker/proposal").andExpect { status { isForbidden() } }
+        workspaces.setWishHidden(workspace.token, wish.id, true)
+        val hidden = page()
+        assertEquals(0, hidden.modelAndView!!.model["unreadWishCount"])
+        assertFalse(hidden.response.contentAsString.contains("Re-run analysis"))
+        assertTrue(offers.findByWorkspaceId(workspace.id).isEmpty())
     }
 
     @Test

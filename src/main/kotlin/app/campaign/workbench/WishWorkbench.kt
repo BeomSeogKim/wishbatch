@@ -76,6 +76,10 @@ fun wishWorkbenchRows(
         val rowFlags = flags.filter { flag ->
             flag.path == "wishes[${wish.id}]" || flag.path.startsWith("wishes[${wish.id}].")
         }.map { "${it.rule}: ${it.message}" }
+        val instructionFlags = if (result?.kind == WishKind.NOT_A_REQUEST &&
+            listOf("system override", "ignore the catalog", "disregard your earlier instructions")
+                .any { wish.text.contains(it, ignoreCase = true) }
+        ) listOf("Instruction attempt, ignored") else emptyList()
         val decisions = overrides.filter { it.wishId == wish.id }.sortedBy { it.createdAt }
         val readingFlags = originalOutput?.secondReading?.comparisons.orEmpty()
             .filter { it.wishId == wish.id && it.needsYourEyes }.map { comparison ->
@@ -96,7 +100,7 @@ fun wishWorkbenchRows(
                 }, verdict?.reason.orEmpty())
             },
             evidence = quotes.distinct().filter { it.isNotBlank() && wish.text.contains(it) },
-            flags = rowFlags + readingFlags,
+            flags = instructionFlags + rowFlags + readingFlags,
             source = wish.source.name,
             language = "Unknown",
             hidden = wish.hidden,
