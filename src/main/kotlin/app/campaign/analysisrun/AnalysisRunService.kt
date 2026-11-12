@@ -19,6 +19,7 @@ import app.campaign.review.WishReviewService
 import app.campaign.review.reviewedAnalysis
 import app.campaign.rules.analysisInputHash
 import app.campaign.workspace.WorkspaceNotFoundException
+import jakarta.annotation.PreDestroy
 import jakarta.persistence.EntityManager
 import jakarta.persistence.LockModeType
 import org.springframework.stereotype.Service
@@ -28,6 +29,14 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
 import tools.jackson.databind.json.JsonMapper
 import java.util.UUID
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Future
+import java.util.concurrent.FutureTask
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.Semaphore
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 data class StoredAnalysisRun(
@@ -48,10 +57,17 @@ sealed interface AnalysisRunResult {
     data object NoVisibleWishes : AnalysisRunResult
 }
 
-sealed interface AnalysisPreparation {
+private sealed interface AnalysisPreparation {
     data class Ready(val work: AnalysisWork, val job: AnalysisProgressView) : AnalysisPreparation
     data class Existing(val job: AnalysisProgressView) : AnalysisPreparation
     data class Rejected(val result: AnalysisRunResult) : AnalysisPreparation
+}
+
+sealed interface AnalysisSubmission {
+    data class Started(val job: AnalysisProgressView, val completion: Future<AnalysisRunResult>) : AnalysisSubmission
+    data class Existing(val job: AnalysisProgressView) : AnalysisSubmission
+    data class Rejected(val result: AnalysisRunResult) : AnalysisSubmission
+    data object Busy : AnalysisSubmission
 }
 
 @Service
@@ -66,6 +82,10 @@ class AnalysisRunService(
     manager: PlatformTransactionManager,
 ) {
     private val transaction = TransactionTemplate(manager)
+    private val slots = Semaphore(4)
+    private val executor = ThreadPoolExecutor(2, 2, 0, TimeUnit.MILLISECONDS, ArrayBlockingQueue(2)) { task ->
+        Thread(task, "analysis-progress").apply { isDaemon = true }
+    }
 
     @Transactional(readOnly = true)
     fun latest(token: String): StoredAnalysisRun? {
@@ -92,13 +112,49 @@ class AnalysisRunService(
     fun liveRunCount(token: String): Long = liveRunCount(workspace(token))
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    fun run(token: String): AnalysisRunResult = when (val prepared = prepare(token)) {
-        is AnalysisPreparation.Ready -> execute(prepared.work)
-        is AnalysisPreparation.Existing -> AnalysisRunResult.Failed(AnalysisFailure.RUN_LIMIT_REACHED)
-        is AnalysisPreparation.Rejected -> prepared.result
+    fun run(token: String): AnalysisRunResult = when (val submitted = submit(token)) {
+        is AnalysisSubmission.Started -> try {
+            submitted.completion.get()
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+            AnalysisRunResult.Failed(AnalysisFailure.PROVIDER_FAILURE)
+        } catch (_: ExecutionException) {
+            AnalysisRunResult.Failed(AnalysisFailure.PROVIDER_FAILURE)
+        }
+        is AnalysisSubmission.Existing, AnalysisSubmission.Busy -> AnalysisRunResult.Failed(AnalysisFailure.RUN_LIMIT_REACHED)
+        is AnalysisSubmission.Rejected -> submitted.result
     }
 
-    fun prepare(token: String): AnalysisPreparation = requireNotNull(transaction.execute {
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    fun submit(token: String): AnalysisSubmission {
+        val existing = progress.latest(token)
+        if (existing?.status in setOf("QUEUED", "RUNNING")) return AnalysisSubmission.Existing(requireNotNull(existing))
+        if (!slots.tryAcquire()) return AnalysisSubmission.Busy
+        var submitted = false
+        try {
+            return when (val prepared = prepare(token)) {
+                is AnalysisPreparation.Existing -> AnalysisSubmission.Existing(prepared.job)
+                is AnalysisPreparation.Rejected -> AnalysisSubmission.Rejected(prepared.result)
+                is AnalysisPreparation.Ready -> {
+                    val completion = FutureTask {
+                        try { execute(prepared.work) } finally { slots.release() }
+                    }
+                    try {
+                        executor.execute(completion)
+                        submitted = true
+                        AnalysisSubmission.Started(prepared.job, completion)
+                    } catch (_: RejectedExecutionException) {
+                        abandon(prepared.work)
+                        AnalysisSubmission.Busy
+                    }
+                }
+            }
+        } finally {
+            if (!submitted) slots.release()
+        }
+    }
+
+    private fun prepare(token: String): AnalysisPreparation = requireNotNull(transaction.execute {
         val workspace = workspace(token, lock = true)
         progress.active(workspace.id)?.let { return@execute AnalysisPreparation.Existing(progress.view(it)) }
         if (liveRunCount(workspace) >= 10) {
@@ -117,8 +173,7 @@ class AnalysisRunService(
         AnalysisPreparation.Ready(AnalysisWork(job.id, workspace.id, options, wishes), progress.view(job))
     })
 
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    fun execute(work: AnalysisWork): AnalysisRunResult {
+    private fun execute(work: AnalysisWork): AnalysisRunResult {
         if (!progress.begin(work)) return AnalysisRunResult.Failed(AnalysisFailure.PROVIDER_FAILURE)
         val incomplete = AtomicBoolean()
         val result = try {
@@ -136,7 +191,7 @@ class AnalysisRunService(
         }
     }
 
-    fun abandon(work: AnalysisWork): AnalysisRunResult =
+    private fun abandon(work: AnalysisWork): AnalysisRunResult =
         finish(work, AnalysisResult.Failure(AnalysisFailure.RUN_LIMIT_REACHED))
 
     private fun finish(
@@ -165,6 +220,9 @@ class AnalysisRunService(
             }
         }
     })
+
+    @PreDestroy
+    fun close() { executor.shutdownNow() }
 
     @Transactional
     fun attachSeed(workspace: Workspace, options: List<Option>, wishes: List<Wish>) {
