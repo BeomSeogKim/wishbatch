@@ -1,6 +1,7 @@
 package app.analysis
 
 import app.campaign.port.AnalysisFailure
+import app.campaign.port.AnalysisTokenUsage
 import org.junit.jupiter.api.Test
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.KotlinModule
@@ -13,6 +14,7 @@ import java.util.concurrent.Flow
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class OpenAiAnalysisProviderTests {
@@ -45,6 +47,38 @@ class OpenAiAnalysisProviderTests {
         assertEquals(request.input, body["input"][0]["content"].asString())
         assertTrue(body["instructions"].asString().contains("NOT_A_REQUEST"))
         assertFalse(body.has("tools"))
+    }
+
+    @Test
+    fun `returned token usage survives successful incomplete and HTTP error responses`() {
+        val usage = """"usage":{"input_tokens":125,"output_tokens":80,"output_tokens_details":{"reasoning_tokens":12}},"""
+        val envelope = response.replaceFirst("{", "{$usage")
+        val expected = AnalysisTokenUsage(125, 80, 12)
+        val success = assertIs<ProviderResult.Success>(provider {
+            CompletableFuture.completedFuture(ProviderHttpResponse(200, envelope))
+        }.generate(request, Duration.ofSeconds(1)))
+        assertEquals(expected, success.usage)
+        for ((status, body) in listOf(200 to envelope.replace("completed", "incomplete"), 429 to envelope)) {
+            val failed = assertIs<ProviderResult.Failure>(provider {
+                CompletableFuture.completedFuture(ProviderHttpResponse(status, body))
+            }.generate(request, Duration.ofSeconds(1)))
+            assertEquals(AnalysisFailure.PROVIDER_FAILURE, failed.reason)
+            assertEquals(expected, failed.usage)
+            assertFalse(failed.toString().contains("output_text"))
+        }
+    }
+
+    @Test
+    fun `missing or invalid usage stays unavailable rather than becoming zero`() {
+        val absent = assertIs<ProviderResult.Success>(provider {
+            CompletableFuture.completedFuture(ProviderHttpResponse(200, response))
+        }.generate(request, Duration.ofSeconds(1)))
+        assertNull(absent.usage)
+        val partial = response.replaceFirst("{", """{"usage":{"input_tokens":0,"output_tokens":-1,"output_tokens_details":{"reasoning_tokens":"12"}},""")
+        val reported = assertIs<ProviderResult.Success>(provider {
+            CompletableFuture.completedFuture(ProviderHttpResponse(200, partial))
+        }.generate(request, Duration.ofSeconds(1)))
+        assertEquals(AnalysisTokenUsage(0, null, null), reported.usage)
     }
 
     @Test

@@ -2,6 +2,7 @@ package app.analysis
 
 import app.analysis.replies.ReplyPrompt
 import app.campaign.port.AnalysisFailure
+import app.campaign.port.AnalysisTokenUsage
 import org.slf4j.LoggerFactory
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.json.JsonMapper
@@ -30,8 +31,9 @@ data class AnalysisRequest(
 )
 
 sealed interface ProviderResult {
-    data class Success(val model: String, val json: String) : ProviderResult
-    data class Failure(val reason: AnalysisFailure) : ProviderResult
+    val usage: AnalysisTokenUsage?
+    data class Success(val model: String, val json: String, override val usage: AnalysisTokenUsage? = null) : ProviderResult
+    data class Failure(val reason: AnalysisFailure, override val usage: AnalysisTokenUsage? = null) : ProviderResult
 }
 
 fun interface AnalysisProvider {
@@ -111,7 +113,7 @@ class OpenAiAnalysisProvider internal constructor(
             if (remaining <= 0) throw TimeoutException()
             val response = pending.get(remaining, TimeUnit.NANOSECONDS)
             if (response.status !in 200..299) {
-                ProviderResult.Failure(if (response.status == 408 || response.status == 504) {
+                decode(response.body, if (response.status == 408 || response.status == 504) {
                     AnalysisFailure.TIMEOUT
                 } else AnalysisFailure.PROVIDER_FAILURE)
             } else {
@@ -138,36 +140,42 @@ class OpenAiAnalysisProvider internal constructor(
         }
     }
 
-    private fun decode(body: String): ProviderResult = try {
+    private fun decode(body: String, failure: AnalysisFailure? = null): ProviderResult = try {
         val response = mapper.readTree(body)
-        logger.debug(
-            "Analysis tokens input={} output={} reasoning={}",
-            response.path("usage").path("input_tokens").asInt(0),
-            response.path("usage").path("output_tokens").asInt(0),
-            response.path("usage").path("output_tokens_details").path("reasoning_tokens").asInt(0),
-        )
+        val reported = response.path("usage")
+        fun token(node: tools.jackson.databind.JsonNode): Long? =
+            if (node.isIntegralNumber && node.canConvertToLong() && node.asLong() >= 0) node.asLong() else null
+        val usage = if (reported.isObject) AnalysisTokenUsage(
+            token(reported.path("input_tokens")), token(reported.path("output_tokens")),
+            token(reported.path("output_tokens_details").path("reasoning_tokens")),
+        ) else null
+        logger.debug("Analysis tokens input={} output={} reasoning={}",
+            usage?.inputTokens ?: "unavailable", usage?.outputTokens ?: "unavailable",
+            usage?.reasoningTokens ?: "unavailable")
         logger.debug(
             "Analysis completed={} outputLimitReached={}",
             response.path("status").asString() == "completed",
             response.path("incomplete_details").path("reason").asString() == "max_output_tokens",
         )
-        if (response.path("status").asString() != "completed" ||
+        if (failure != null) {
+            ProviderResult.Failure(failure, usage)
+        } else if (response.path("status").asString() != "completed" ||
             !response.path("error").isMissingNode && !response.path("error").isNull
         ) {
-            ProviderResult.Failure(AnalysisFailure.PROVIDER_FAILURE)
+            ProviderResult.Failure(AnalysisFailure.PROVIDER_FAILURE, usage)
         } else {
             val contents = response.path("output").filter { it.path("type").asString() == "message" }
                 .flatMap { it.path("content").toList() }
             val texts = contents.filter { it.path("type").asString() == "output_text" }
             val model = response.path("model").asString("")
             if (contents.any { it.path("type").asString() == "refusal" } || texts.size != 1 || model.isBlank()) {
-                ProviderResult.Failure(AnalysisFailure.PROVIDER_FAILURE)
+                ProviderResult.Failure(AnalysisFailure.PROVIDER_FAILURE, usage)
             } else {
-                ProviderResult.Success(model, texts.single().path("text").asString())
+                ProviderResult.Success(model, texts.single().path("text").asString(), usage)
             }
         }
     } catch (_: JacksonException) {
-        ProviderResult.Failure(AnalysisFailure.PROVIDER_FAILURE)
+        ProviderResult.Failure(failure ?: AnalysisFailure.PROVIDER_FAILURE)
     }
 
     companion object {

@@ -79,7 +79,7 @@ class DefaultWishAnalyzerTests {
             try {
                 assertTrue(firstEntered.await(5, TimeUnit.SECONDS))
                 assertTrue(secondCompleted.await(5, TimeUnit.SECONDS))
-                assertEquals(listOf(second.id), events.single { it.stage == "BATCH_COMPLETED" }.processedWishIds)
+                assertEquals(listOf(second.id), events.single { it.stage == "BATCH_COMPLETED" && it.reading == 1 }.processedWishIds)
                 assertFalse(result.isDone)
             } finally {
                 releaseFirst.countDown()
@@ -263,9 +263,10 @@ class DefaultWishAnalyzerTests {
             if (request.stage == AnalysisStage.CLASSIFY && !request.retry) success("{")
             else if (request.stage == AnalysisStage.CLASSIFY) success(classification(request)) else success(proposal())
         }
-        assertIs<AnalysisResult.Success>(analyzer(provider, nanoTime = nanos::get).analyze(listOf(option), listOf(wish)))
+        assertIs<AnalysisResult.Success>(analyzer(provider, AnalysisProperties("test", concurrency = 1), nanoTime = nanos::get)
+            .analyze(listOf(option), listOf(wish)))
         assertEquals(listOf(false, true, false, true, false), provider.requests.map { it.retry })
-        assertEquals(listOf(20L, 20L, 20L, 15L, 10L), provider.budgets.map { it.seconds })
+        assertEquals(List(5) { 20L }, provider.budgets.map { it.seconds })
         assertEquals(provider.requests[0].input, provider.requests[1].input)
     }
 
@@ -280,7 +281,7 @@ class DefaultWishAnalyzerTests {
             assertEquals(listOf("wishes[${wish.id}]"), result.flags.filter {
                 it.rule == AnalysisValidationRule.UNANALYZED_WISH
             }.map { it.path })
-            assertEquals(2, provider.requests.size)
+            assertEquals(4, provider.requests.size)
             assertTrue(provider.requests.all { it.stage == AnalysisStage.CLASSIFY })
         }
     }
@@ -337,7 +338,7 @@ class DefaultWishAnalyzerTests {
         assertEquals(AnalysisFailure.PROVIDER_FAILURE, result.reason)
         assertEquals(wishes.map { "wishes[${it.id}]" }, result.flags.map { it.path })
         assertTrue(result.flags.all { it.rule == AnalysisValidationRule.UNANALYZED_WISH })
-        assertEquals(4, provider.requests.size)
+        assertEquals(8, provider.requests.size)
         assertTrue(provider.requests.all { it.stage == AnalysisStage.CLASSIFY })
     }
 
@@ -431,12 +432,12 @@ class DefaultWishAnalyzerTests {
         for (expiredStage in AnalysisStage.entries) {
             val nanos = AtomicLong()
             val provider = RecordingProvider { request, _ ->
-                if (request.stage == expiredStage) nanos.set(Duration.ofSeconds(60).toNanos())
+                if (request.stage == expiredStage) nanos.set(Duration.ofSeconds(120).toNanos())
                 if (request.stage == AnalysisStage.CLASSIFY) success(classification(request)) else success(proposal())
             }
             assertFailure(AnalysisFailure.TIMEOUT,
                 analyzer(provider, nanoTime = nanos::get).analyze(listOf(option), listOf(wish)))
-            assertEquals(if (expiredStage == AnalysisStage.CLASSIFY) 1 else 3, provider.requests.size)
+            assertTrue(provider.requests.size in (if (expiredStage == AnalysisStage.CLASSIFY) 1..2 else 3..3))
         }
     }
 
@@ -539,7 +540,7 @@ class DefaultWishAnalyzerTests {
         val provider = RecordingProvider { request, _ ->
             if (mapper.readTree(request.input)["wishes"][0]["wish_id"].asString() == wish.id.toString()) {
                 check(waiting.await(5, TimeUnit.SECONDS))
-                nanos.set(Duration.ofSeconds(60).toNanos())
+                nanos.set(Duration.ofSeconds(120).toNanos())
                 success(classification(request))
             } else {
                 waiting.countDown()

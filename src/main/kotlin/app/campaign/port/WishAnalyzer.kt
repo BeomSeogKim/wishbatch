@@ -53,12 +53,26 @@ data class WishReadingComparison(
     val needsYourEyes: Boolean get() = firstKind != secondKind || firstVerdict != secondVerdict
 }
 
-/** Agreement counts wishes whose kind and verdicts agree across every option. */
+enum class SecondReadingStatus { COMPLETE, INCOMPLETE }
+
+/** Only paired wishes contribute agreement counts; incomplete IDs retain a validated first reading. */
 data class SecondReading(
     val agreedWishCount: Int,
     val comparedWishCount: Int,
     val comparisons: List<WishReadingComparison>,
     val batchCompositionChanged: Boolean = false,
+    val status: SecondReadingStatus = SecondReadingStatus.COMPLETE,
+    val incompleteWishIds: List<UUID> = emptyList(),
+)
+
+data class AnalysisTokenUsage(val inputTokens: Long?, val outputTokens: Long?, val reasoningTokens: Long?)
+
+/** Token usage sums returned measurements only; completeness requires every started call and token field. */
+data class AnalysisMetrics(
+    val elapsedSeconds: Double,
+    val tokenUsage: AnalysisTokenUsage? = null,
+    val usageComplete: Boolean = false,
+    val failureCategory: String? = null,
 )
 
 /**
@@ -78,6 +92,7 @@ data class AnalysisOutput(
     val alternatives: List<AnalysisAlternative>,
     val optionIds: List<UUID>,
     val secondReading: SecondReading? = null,
+    val metrics: AnalysisMetrics? = null,
 )
 
 enum class AnalysisValidationRule {
@@ -97,6 +112,8 @@ enum class AnalysisValidationRule {
     MODEL_WRITTEN_NUMBER,
     /** An exhausted classification batch omits this wish; path is wishes[UUID]. */
     UNANALYZED_WISH,
+    /** A validated first reading is retained without a complete second reading. */
+    INCOMPLETE_SECOND_READING,
 }
 
 /** Path identifies an output location; message must not contain raw private input. */
@@ -124,7 +141,11 @@ sealed interface AnalysisResult {
         val inputHash: String,
         val completedAt: Instant,
     ) : AnalysisResult
-    data class Failure(val reason: AnalysisFailure, val flags: List<AnalysisValidationFlag> = emptyList()) : AnalysisResult
+    data class Failure(
+        val reason: AnalysisFailure,
+        val flags: List<AnalysisValidationFlag> = emptyList(),
+        val metrics: AnalysisMetrics? = null,
+    ) : AnalysisResult
 }
 
 /** Events describe completed work; repeated readings can contain the same wish IDs. */
@@ -135,6 +156,8 @@ data class AnalysisProgressEvent(
     val totalBatches: Int? = null,
     val processedWishIds: List<UUID> = emptyList(),
     val flags: List<AnalysisValidationFlag> = emptyList(),
+    val metrics: AnalysisMetrics? = null,
+    val failureCategory: String? = null,
 )
 
 fun interface AnalysisObserver {

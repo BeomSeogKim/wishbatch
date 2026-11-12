@@ -2,6 +2,8 @@ package app.analysis
 
 import app.campaign.model.Option
 import app.campaign.model.Wish
+import app.campaign.port.AnalysisMetrics
+import app.campaign.port.AnalysisTokenUsage
 import app.campaign.port.AnalysisFailure
 import app.campaign.port.AnalysisOutput
 import app.campaign.port.AnalysisObserver
@@ -22,6 +24,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
@@ -85,7 +88,9 @@ class DefaultWishAnalyzer(
 
     override fun analyzeTracked(options: List<Option>, wishes: List<Wish>, observer: AnalysisObserver): AnalysisResult {
         val progressLock = Any()
+        var observedFailureCategory: String? = null
         fun report(event: AnalysisProgressEvent) = synchronized(progressLock) {
+            if (event.failureCategory != null) observedFailureCategory = event.failureCategory
             try {
                 observer.onProgress(event)
             } catch (_: Exception) {
@@ -93,7 +98,51 @@ class DefaultWishAnalyzer(
             }
         }
         val started = nanoTime()
-        fun remaining() = Duration.ofNanos(Duration.ofSeconds(60).toNanos() - (nanoTime() - started))
+        val usageLock = Any()
+        val usages = mutableListOf<AnalysisTokenUsage?>()
+        val failures = mutableListOf<AnalysisFailure>()
+        var callsStarted = 0
+        val result = runAnalysis(options, wishes, started, ::report,
+            onCall = { synchronized(usageLock) { callsStarted++ } }) { returned ->
+            synchronized(usageLock) {
+                usages += returned.usage
+                if (returned is ProviderResult.Failure) failures += returned.reason
+            }
+        }
+        val metrics = synchronized(usageLock) {
+            val available = usages.filterNotNull()
+            fun total(field: (AnalysisTokenUsage) -> Long?): Long? =
+                if (available.isEmpty() || available.any { field(it) == null }) null else available.sumOf { field(it)!! }
+            AnalysisMetrics((nanoTime() - started).coerceAtLeast(0) / 1_000_000_000.0,
+                if (available.isEmpty()) null else AnalysisTokenUsage(total { it.inputTokens }, total { it.outputTokens },
+                    total { it.reasoningTokens }),
+                callsStarted == usages.size && usages.isNotEmpty() && usages.all {
+                    it != null && it.inputTokens != null && it.outputTokens != null && it.reasoningTokens != null
+                },
+                ((result as? AnalysisResult.Failure)?.reason ?: failures.firstOrNull())?.let(::failureCategory)
+                    ?: synchronized(progressLock) { observedFailureCategory })
+        }
+        report(AnalysisProgressEvent("RUN_FINISHED", metrics = metrics, failureCategory = metrics.failureCategory))
+        LoggerFactory.getLogger(javaClass).info("Analysis result={} elapsedSeconds={} failureCategory={} usageComplete={}",
+            result.javaClass.simpleName, metrics.elapsedSeconds, metrics.failureCategory, metrics.usageComplete)
+        return when (result) {
+            is AnalysisResult.Success -> result.copy(validated = result.validated.copy(
+                output = result.validated.output.copy(metrics = metrics)))
+            is AnalysisResult.Failure -> result.copy(metrics = metrics)
+        }
+    }
+
+    private fun runAnalysis(
+        options: List<Option>,
+        wishes: List<Wish>,
+        started: Long,
+        report: (AnalysisProgressEvent) -> Unit,
+        onCall: () -> Unit,
+        onResult: (ProviderResult) -> Unit,
+    ): AnalysisResult {
+        fun remaining() = Duration.ofNanos(Duration.ofSeconds(120).toNanos() - (nanoTime() - started))
+        // Stop classification early enough to synthesize the validated results.
+        fun classificationRemaining() = remaining().minusSeconds(20)
         if (properties.apiKey.isBlank()) return AnalysisResult.Failure(AnalysisFailure.NOT_CONFIGURED)
         if (wishes.size > 200 || wishes.any { it.text.length > 500 } ||
             wishes.map { it.id }.distinct().size != wishes.size || options.map { it.id }.distinct().size != options.size
@@ -108,53 +157,75 @@ class DefaultWishAnalyzer(
         }
         val futures = mutableListOf<Future<StageResult>>()
         try {
-            val readings = mutableListOf<AnalysisOutput>()
-            var batchFailure = AnalysisFailure.INVALID_OUTPUT
-            for ((reading, batches) in listOf(wishes.chunked(properties.batchSize), secondReadingBatches(wishes)).withIndex()) {
-                val tasks = batches.mapIndexed { index, batch ->
-                    executor.submit<StageResult> {
-                        val result = generate(AnalysisRequest(AnalysisPrompt.input(mapper, options, batch),
-                            AnalysisStages.schema(options, AnalysisStage.CLASSIFY), false), options, batch, ::remaining,
-                            onValidation = { validationFlags -> report(AnalysisProgressEvent("CLASSIFY_VALIDATED",
-                                reading + 1, index + 1, batches.size, flags = validationFlags)) })
-                        report(AnalysisProgressEvent("BATCH_COMPLETED", reading + 1, index + 1, batches.size,
-                            processedWishIds = result.output?.wishes.orEmpty().map { it.wishId }))
-                        result
-                    }.also { futures += it }
-                }
-                val outputs = mutableListOf<AnalysisOutput>()
-                for (future in tasks) {
-                    val budget = remaining().toNanos()
-                    if (budget <= 0) return AnalysisResult.Failure(AnalysisFailure.TIMEOUT, flags)
-                    val result = future.get(budget, TimeUnit.NANOSECONDS)
-                    flags += result.flags
-                    if (result.output == null) batchFailure = result.failure else outputs += result.output
-                }
-                if (outputs.isEmpty()) {
-                    val missing = wishes.map { unanalyzed(it) }
-                    flags += missing
-                    report(AnalysisProgressEvent("READING_FAILED", reading + 1, flags = missing))
-                    return AnalysisResult.Failure(batchFailure, flags.distinct())
-                }
-                readings += AnalysisOutput(
-                    outputs.flatMap { it.wishes }, outputs.flatMap { it.verdicts }, null,
-                    "No proposal selected.", emptyList(), emptyList(), emptyList(), options.map { it.id },
-                )
+            val batches = listOf(wishes.chunked(properties.batchSize), secondReadingBatches(wishes))
+            val tasks = listOf(mutableListOf<Future<StageResult>>(), mutableListOf<Future<StageResult>>())
+            val order = if (properties.concurrency == 1) {
+                batches.flatMapIndexed { reading, groups -> groups.indices.map { reading to it } }
+            } else (0 until batches.maxOf { it.size }).flatMap { index ->
+                batches.indices.filter { index < batches[it].size }.map { it to index }
             }
+            for ((reading, index) in order) {
+                val batch = batches[reading][index]
+                val task = executor.submit<StageResult> {
+                    val result = try {
+                        generate(AnalysisRequest(AnalysisPrompt.input(mapper, options, batch),
+                            AnalysisStages.schema(options, AnalysisStage.CLASSIFY), false), options, batch,
+                            ::classificationRemaining, onCall = onCall, onResult = onResult,
+                            onValidation = { validationFlags -> report(AnalysisProgressEvent("CLASSIFY_VALIDATED",
+                                reading + 1, index + 1, batches[reading].size, flags = validationFlags)) })
+                    } catch (_: Exception) {
+                        StageResult(failure = AnalysisFailure.PROVIDER_FAILURE)
+                    }
+                    report(AnalysisProgressEvent("BATCH_COMPLETED", reading + 1, index + 1, batches[reading].size,
+                        processedWishIds = result.output?.wishes.orEmpty().map { it.wishId },
+                        failureCategory = if (result.output == null) failureCategory(result.failure) else null))
+                    result
+                }
+                tasks[reading] += task
+                futures += task
+            }
+            var batchFailure = AnalysisFailure.INVALID_OUTPUT
+            val readings = tasks.mapIndexed { reading, pending ->
+                val outputs = pending.mapNotNull { future ->
+                    val result = try {
+                        if (future.isDone) future.get() else {
+                            val budget = classificationRemaining().toNanos()
+                            if (budget <= 0) StageResult(failure = AnalysisFailure.TIMEOUT)
+                            else future.get(budget, TimeUnit.NANOSECONDS)
+                        }
+                    } catch (_: TimeoutException) {
+                        StageResult(failure = AnalysisFailure.TIMEOUT)
+                    }
+                    if (result.output == null) {
+                        batchFailure = result.failure
+                        report(AnalysisProgressEvent("READING_FAILED", reading + 1,
+                            failureCategory = failureCategory(result.failure)))
+                    }
+                    flags += result.flags
+                    result.output
+                }
+                AnalysisOutput(outputs.flatMap { it.wishes }, outputs.flatMap { it.verdicts }, null,
+                    "No proposal selected.", emptyList(), emptyList(), emptyList(), options.map { it.id })
+            }
+            futures.filterNot { it.isDone }.forEach { it.cancel(true) }
             val merged = SecondReadingMerger.merge(options, wishes, readings[0], readings[1])
             val analyzedIds = merged.wishes.map { it.wishId }.toSet()
             val analyzedWishes = wishes.filter { it.id in analyzedIds }
             val missing = wishes.filter { it.id !in analyzedIds }.map { unanalyzed(it) }
-            flags += missing
-            report(AnalysisProgressEvent("READINGS_MERGED", processedWishIds = analyzedIds.toList(), flags = missing))
-            if (analyzedWishes.isEmpty()) return AnalysisResult.Failure(batchFailure, flags.distinct())
+            val incomplete = merged.secondReading!!.incompleteWishIds.map { id ->
+                AnalysisValidationFlag(AnalysisValidationRule.INCOMPLETE_SECOND_READING,
+                    "wishes[$id]", "Needs your eyes: a complete second reading is unavailable.")
+            }
+            if (analyzedWishes.isEmpty()) return AnalysisResult.Failure(batchFailure, (flags + missing).distinct())
+            flags += missing + incomplete
+            report(AnalysisProgressEvent("READINGS_MERGED", processedWishIds = analyzedIds.toList(), flags = missing + incomplete))
             val proposalInput = AnalysisStages.proposalInput(mapper, options, merged)
             if (proposalInput.length > 160000) return AnalysisResult.Failure(AnalysisFailure.INVALID_OUTPUT, flags)
             report(AnalysisProgressEvent("PROPOSAL_STARTED"))
             val proposalTask = executor.submit<StageResult> { generate(AnalysisRequest(
                 proposalInput,
                 AnalysisStages.schema(options, AnalysisStage.PROPOSE), false, AnalysisStage.PROPOSE, 2048,
-            ), options, analyzedWishes, ::remaining, merged,
+            ), options, analyzedWishes, ::remaining, merged, onCall = onCall, onResult = onResult,
                 onValidation = { validationFlags -> report(AnalysisProgressEvent("PROPOSAL_VALIDATED", flags = validationFlags)) }) }
             futures += proposalTask
             val proposalBudget = remaining().toNanos()
@@ -179,6 +250,14 @@ class DefaultWishAnalyzer(
         }
     }
 
+    private fun failureCategory(reason: AnalysisFailure): String = when (reason) {
+        AnalysisFailure.TIMEOUT -> "TIMEOUT"
+        AnalysisFailure.INVALID_JSON, AnalysisFailure.INVALID_OUTPUT -> "VALIDATION"
+        AnalysisFailure.PROVIDER_FAILURE -> "PROVIDER"
+        AnalysisFailure.RUN_LIMIT_REACHED -> "LIMIT"
+        AnalysisFailure.NOT_CONFIGURED -> "CONFIGURATION"
+    }
+
     private fun secondReadingBatches(wishes: List<Wish>): List<List<Wish>> {
         if (wishes.size <= 1) return wishes.map { listOf(it) }
         val rotated = wishes.drop(1) + wishes.first()
@@ -195,7 +274,7 @@ class DefaultWishAnalyzer(
     }
 
     private fun unanalyzed(wish: Wish) = AnalysisValidationFlag(AnalysisValidationRule.UNANALYZED_WISH,
-        "wishes[${wish.id}]", "Wish could not be analyzed twice.")
+        "wishes[${wish.id}]", "Wish has no validated first reading.")
 
     private data class StageResult(
         val output: AnalysisOutput? = null,
@@ -212,6 +291,8 @@ class DefaultWishAnalyzer(
         classified: AnalysisOutput? = null,
         attempts: Int = 2,
         onValidation: (List<AnalysisValidationFlag>) -> Unit = {},
+        onCall: () -> Unit = {},
+        onResult: (ProviderResult) -> Unit = {},
     ): StageResult {
         val flags = mutableListOf<AnalysisValidationFlag>()
         var failure = AnalysisFailure.INVALID_OUTPUT
@@ -224,7 +305,8 @@ class DefaultWishAnalyzer(
                 val callBudget = remaining()
                 if (callBudget.isNegative || callBudget.isZero) return StageResult(failure = AnalysisFailure.TIMEOUT, flags = flags)
                 if (!reserveCall()) return StageResult(failure = AnalysisFailure.RUN_LIMIT_REACHED, flags = flags)
-                provider.generate(request.copy(retry = attempt == 1), minOf(callBudget, Duration.ofSeconds(20)))
+                onCall()
+                provider.generate(request.copy(retry = attempt == 1), minOf(callBudget, Duration.ofSeconds(20))).also(onResult)
             } finally {
                 permits.release()
             }

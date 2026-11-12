@@ -1,6 +1,7 @@
 package app.campaign.progress
 
 import app.campaign.model.Workspace
+import app.campaign.port.AnalysisFailure
 import app.campaign.port.AnalysisProgressEvent
 import app.campaign.port.AnalysisResult
 import app.campaign.rules.analysisInputHash
@@ -70,7 +71,9 @@ class AnalysisProgressStore(
                 val entry = ProgressEventView(state.events.size + 1, clock.instant(), event.stage,
                     event.reading, event.batch, event.totalBatches, processed.size, flags)
                 job.stateJson = mapper.writeValueAsString(state.copy(processedWishIds = processed,
-                    completedBatchKeys = batches, events = state.events + entry, validationCounts = counts))
+                    completedBatchKeys = batches, events = state.events + entry, validationCounts = counts,
+                    metrics = event.metrics ?: state.metrics,
+                    failureCategory = event.failureCategory ?: event.metrics?.failureCategory ?: state.failureCategory))
                 true
             } == true
         }.getOrDefault(false)
@@ -80,7 +83,14 @@ class AnalysisProgressStore(
         val job = entities.find(AnalysisProgressJob::class.java, work.jobId, LockModeType.PESSIMISTIC_WRITE)
         check(job != null && job.workspaceId == work.workspaceId && job.ownerId == ownerId &&
             job.status in setOf("RUNNING", "QUEUED"))
-        val state = state(job).copy(checkpointIncomplete = checkpointIncomplete)
+        val previous = state(job)
+        val metrics = when (result) {
+            is AnalysisResult.Success -> result.validated.output.metrics
+            is AnalysisResult.Failure -> result.metrics
+        } ?: previous.metrics
+        val category = (result as? AnalysisResult.Failure)?.reason?.let(::failureCategory)
+            ?: metrics?.failureCategory ?: previous.failureCategory
+        val state = previous.copy(checkpointIncomplete = checkpointIncomplete, metrics = metrics, failureCategory = category)
         job.runId = runId
         job.status = if (runId != null) "COMPLETED" else "FAILED"
         job.failure = (result as? AnalysisResult.Failure)?.reason?.name
@@ -125,7 +135,15 @@ class AnalysisProgressStore(
         val sources = sources(job)
         return AnalysisProgressView(job.id, job.status, sources.size, state.processedWishIds.size,
             state.completedBatchKeys.size, job.inputHash, sources, state.events, state.validationCounts,
-            job.runId, state.finalCounts, job.failure, state.checkpointIncomplete)
+            job.runId, state.finalCounts, job.failure, state.checkpointIncomplete, state.metrics, state.failureCategory)
+    }
+
+    private fun failureCategory(reason: AnalysisFailure): String = when (reason) {
+        AnalysisFailure.TIMEOUT -> "TIMEOUT"
+        AnalysisFailure.INVALID_JSON, AnalysisFailure.INVALID_OUTPUT -> "VALIDATION"
+        AnalysisFailure.PROVIDER_FAILURE -> "PROVIDER"
+        AnalysisFailure.RUN_LIMIT_REACHED -> "LIMIT"
+        AnalysisFailure.NOT_CONFIGURED -> "CONFIGURATION"
     }
 
     private fun state(job: AnalysisProgressJob) = mapper.readValue(job.stateJson, ProgressState::class.java)

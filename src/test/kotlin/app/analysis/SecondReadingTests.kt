@@ -7,6 +7,9 @@ import app.campaign.model.WishKind
 import app.campaign.model.WishSource
 import app.campaign.port.AnalysisFailure
 import app.campaign.port.AnalysisOutput
+import app.campaign.port.SecondReadingStatus
+import app.campaign.port.AnalysisTokenUsage
+import app.campaign.port.AnalysisObserver
 import app.campaign.port.AnalysisResult
 import app.campaign.port.AnalysisValidationRule
 import app.campaign.rules.analysisInputHash
@@ -16,6 +19,9 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -126,7 +132,7 @@ class SecondReadingTests {
     }
 
     @Test
-    fun `missing second reading never contributes a compatible wish or agreement`() {
+    fun `missing second reading preserves first verdicts without inventing agreement`() {
         val wishes = wishes(4)
         var classifications = 0
         val analyzer = analyzer { request, _ ->
@@ -139,11 +145,11 @@ class SecondReadingTests {
         }
         val result = assertIs<AnalysisResult.Success>(analyzer.analyze(listOf(option), wishes))
         val output = result.validated.output
-        assertEquals(listOf(wishes[0].id, wishes[3].id), output.wishes.map { it.wishId })
-        assertEquals(2, optionWishCounts(output).single().compatible)
+        assertEquals(wishes.map { it.id }, output.wishes.map { it.wishId })
+        assertEquals(4, optionWishCounts(output).single().compatible)
         assertEquals(2, output.secondReading!!.comparedWishCount)
         assertEquals(setOf("wishes[${wishes[1].id}]", "wishes[${wishes[2].id}]"), result.validated.flags
-            .filter { it.rule == AnalysisValidationRule.UNANALYZED_WISH }.map { it.path }.toSet())
+            .filter { it.rule == AnalysisValidationRule.INCOMPLETE_SECOND_READING }.map { it.path }.toSet())
         assertEquals(analysisInputHash(listOf(option), wishes), result.inputHash)
     }
 
@@ -152,7 +158,7 @@ class SecondReadingTests {
         val nanos = AtomicLong()
         var classifications = 0
         val timed = analyzer(nanoTime = nanos::get) { request, _ ->
-            if (request.stage == AnalysisStage.CLASSIFY && ++classifications == 2) nanos.set(Duration.ofSeconds(60).toNanos())
+            if (request.stage == AnalysisStage.CLASSIFY && ++classifications == 2) nanos.set(Duration.ofSeconds(120).toNanos())
             respond(request)
         }
         assertEquals(AnalysisFailure.TIMEOUT,
@@ -162,6 +168,136 @@ class SecondReadingTests {
         assertEquals(AnalysisFailure.RUN_LIMIT_REACHED,
             assertIs<AnalysisResult.Failure>(capped.analyze(listOf(option), wishes(1))).reason)
         assertEquals(1, calls)
+    }
+
+    @Test
+    fun `both readings start concurrently within one provider concurrency limit`() {
+        val wishes = wishes(4)
+        val secondEntered = CountDownLatch(1)
+        val active = AtomicInteger()
+        val peak = AtomicInteger()
+        val firstIds = wishes.take(2).map { it.id.toString() }.toSet()
+        val secondIds = wishes.slice(1..2).map { it.id.toString() }.toSet()
+        val output = assertIs<AnalysisResult.Success>(analyzer(concurrency = 2) { request, _ ->
+            val count = active.incrementAndGet()
+            peak.accumulateAndGet(count, ::maxOf)
+            try {
+                if (request.stage == AnalysisStage.CLASSIFY) {
+                    val ids = ids(request).toSet()
+                    if (ids == secondIds) secondEntered.countDown()
+                    if (ids == firstIds) assertTrue(secondEntered.await(5, TimeUnit.SECONDS))
+                }
+                respond(request)
+            } finally {
+                active.decrementAndGet()
+            }
+        }.analyze(listOf(option), wishes)).validated.output
+        assertEquals(2, peak.get())
+        assertEquals(SecondReadingStatus.COMPLETE, output.secondReading!!.status)
+        assertEquals(4, output.secondReading.comparedWishCount)
+    }
+
+    @Test
+    fun `failed entire second reading retains complete first roster and flags every unpaired wish`() {
+        val wishes = wishes(4)
+        val firstBatches = wishes.chunked(2).map { batch -> batch.map { it.id.toString() }.toSet() }
+        for (failure in listOf(AnalysisFailure.TIMEOUT, AnalysisFailure.PROVIDER_FAILURE, AnalysisFailure.INVALID_OUTPUT)) {
+            val result = assertIs<AnalysisResult.Success>(analyzer { request, _ ->
+                if (request.stage == AnalysisStage.CLASSIFY && ids(request).toSet() !in firstBatches) {
+                    if (failure == AnalysisFailure.INVALID_OUTPUT) ProviderResult.Success("test-model", "{}")
+                    else ProviderResult.Failure(failure)
+                } else respond(request)
+            }.analyze(listOf(option), wishes))
+            val output = result.validated.output
+            assertEquals(wishes.map { it.id }, output.wishes.map { it.wishId })
+            assertEquals(4, output.verdicts.size)
+            assertEquals(4, optionWishCounts(output).single().compatible)
+            assertEquals(SecondReadingStatus.INCOMPLETE, output.secondReading!!.status)
+            assertEquals(wishes.map { it.id }, output.secondReading.incompleteWishIds)
+            assertEquals(0, output.secondReading.comparedWishCount)
+            assertEquals(0, output.secondReading.agreedWishCount)
+            assertTrue(output.secondReading.comparisons.isEmpty())
+            assertEquals(wishes.map { "wishes[${it.id}]" }, result.validated.flags.filter {
+                it.rule == AnalysisValidationRule.INCOMPLETE_SECOND_READING
+            }.map { it.path })
+            assertEquals(when (failure) {
+                AnalysisFailure.TIMEOUT -> "TIMEOUT"
+                AnalysisFailure.INVALID_OUTPUT -> "VALIDATION"
+                else -> "PROVIDER"
+            }, output.metrics!!.failureCategory)
+        }
+    }
+
+    @Test
+    fun `classification cutoff reserves synthesis time and retains first reading after slow second`() {
+        val nanos = AtomicLong()
+        var calls = 0
+        var proposalBudget: Duration? = null
+        val result = assertIs<AnalysisResult.Success>(analyzer(nanoTime = nanos::get) { request, budget ->
+            if (request.stage == AnalysisStage.CLASSIFY && ++calls == 2) {
+                nanos.set(Duration.ofSeconds(100).toNanos())
+            }
+            if (request.stage == AnalysisStage.PROPOSE) proposalBudget = budget
+            respond(request)
+        }.analyze(listOf(option), wishes(1)))
+        assertEquals(Duration.ofSeconds(20), proposalBudget)
+        assertEquals(1, result.validated.output.wishes.size)
+        assertEquals(SecondReadingStatus.INCOMPLETE, result.validated.output.secondReading!!.status)
+        assertEquals(0, result.validated.output.secondReading!!.comparedWishCount)
+        assertEquals(100.0, result.validated.output.metrics!!.elapsedSeconds)
+        assertNull(result.validated.output.metrics!!.tokenUsage)
+    }
+
+    @Test
+    fun `slow second reading is cancelled while completed first reading still reaches synthesis`() {
+        val nanos = AtomicLong()
+        val firstCompleted = CountDownLatch(1)
+        val cutoffReached = CountDownLatch(1)
+        val cancelled = CountDownLatch(1)
+        val analyzer = analyzer(concurrency = 2, nanoTime = nanos::get) { request, _ ->
+            if (request.stage == AnalysisStage.CLASSIFY && ids(request).size == 1) {
+                assertTrue(firstCompleted.await(5, TimeUnit.SECONDS))
+                nanos.set(Duration.ofSeconds(100).toNanos())
+                cutoffReached.countDown()
+                try {
+                    CountDownLatch(1).await(5, TimeUnit.SECONDS)
+                    error("Slow reading must be cancelled")
+                } catch (_: InterruptedException) {
+                    cancelled.countDown()
+                    ProviderResult.Failure(AnalysisFailure.TIMEOUT)
+                }
+            } else respond(request)
+        }
+        val result = assertIs<AnalysisResult.Success>(analyzer.analyzeTracked(listOf(option), wishes(2), AnalysisObserver {
+            if (it.stage == "BATCH_COMPLETED" && it.reading == 1) {
+                firstCompleted.countDown()
+                assertTrue(cutoffReached.await(5, TimeUnit.SECONDS))
+            }
+        }))
+        assertTrue(cancelled.await(5, TimeUnit.SECONDS))
+        assertEquals(2, result.validated.output.wishes.size)
+        assertEquals(SecondReadingStatus.INCOMPLETE, result.validated.output.secondReading!!.status)
+        assertEquals(0, result.validated.output.secondReading!!.comparedWishCount)
+        assertEquals("TIMEOUT", result.validated.output.metrics!!.failureCategory)
+        assertTrue(result.validated.flags.any { it.rule == AnalysisValidationRule.INCOMPLETE_SECOND_READING })
+    }
+
+    @Test
+    fun `elapsed time and token totals use returned measurements and mark missing usage unavailable`() {
+        for (missing in listOf(false, true)) {
+            val nanos = AtomicLong()
+            var calls = 0
+            val result = assertIs<AnalysisResult.Success>(analyzer(nanoTime = nanos::get) { request, _ ->
+                nanos.addAndGet(Duration.ofSeconds(1).toNanos())
+                val response = respond(request) as ProviderResult.Success
+                response.copy(usage = if (missing && ++calls == 1) null else AnalysisTokenUsage(10, 5, 2))
+            }.analyze(listOf(option), wishes(1)))
+            val metrics = result.validated.output.metrics!!
+            assertEquals(3.0, metrics.elapsedSeconds)
+            assertEquals(AnalysisTokenUsage(if (missing) 20 else 30, if (missing) 10 else 15,
+                if (missing) 4 else 6), metrics.tokenUsage)
+            assertEquals(!missing, metrics.usageComplete)
+        }
     }
 
     @Test
@@ -204,8 +340,9 @@ class SecondReadingTests {
     private fun analyzer(
         batchSize: Int = 2,
         cap: Int = 100,
+        concurrency: Int = 1,
         nanoTime: () -> Long = { 0L },
         respond: (AnalysisRequest, Duration) -> ProviderResult,
-    ) = DefaultWishAnalyzer(AnalysisProperties("test", batchSize = batchSize, concurrency = 1, dailyRunCap = cap),
+    ) = DefaultWishAnalyzer(AnalysisProperties("test", batchSize = batchSize, concurrency = concurrency, dailyRunCap = cap),
         AnalysisProvider { request, budget -> respond(request, budget) }, mapper, Clock.fixed(now, ZoneOffset.UTC), nanoTime)
 }

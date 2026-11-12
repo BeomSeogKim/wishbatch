@@ -6,6 +6,9 @@ import app.campaign.model.Wish
 import app.campaign.model.WishKind
 import app.campaign.model.WishSource
 import app.campaign.model.Workspace
+import app.campaign.port.AnalysisValidationFlag
+import app.campaign.port.AnalysisValidationRule
+import app.campaign.port.SecondReadingStatus
 import app.campaign.port.SecondReading
 import app.campaign.port.WishReadingComparison
 import app.campaign.rules.analysisInputHash
@@ -28,20 +31,23 @@ class StoredSeedAnalysisTests {
     private val now = Instant.parse("2026-11-12T12:00:00Z")
 
     @Test
-    fun `serialized second reading maps comparison references into each workspace and preserves agreement`() {
+    fun `serialized incomplete second reading maps comparisons flags and missing references into each workspace`() {
         val fixture = ClassPathResource("seed/analysis-run.json").inputStream.use {
             mapper.readValue(it, SeedAnalysisFixture::class.java)
         }
         val output = fixture.validated.output
         val verdicts = output.verdicts.associateBy { it.wishId to it.optionId }
-        val reading = SecondReading(output.wishes.size, output.wishes.size, output.wishes.flatMap { wish ->
+        val reading = SecondReading(output.wishes.size - 1, output.wishes.size - 1, output.wishes.drop(1).flatMap { wish ->
             output.optionIds.map { optionId ->
                 val verdict = verdicts[wish.wishId to optionId]?.verdict
                 WishReadingComparison(wish.wishId, optionId, wish.kind, wish.kind, verdict, verdict)
             }
-        }, batchCompositionChanged = true)
+        }, batchCompositionChanged = true, status = SecondReadingStatus.INCOMPLETE,
+            incompleteWishIds = listOf(output.wishes.first().wishId))
+        val flag = AnalysisValidationFlag(AnalysisValidationRule.INCOMPLETE_SECOND_READING,
+            "wishes[${output.wishes.first().wishId}]", "A complete second reading is unavailable.")
         val json = mapper.writeValueAsBytes(fixture.copy(
-            validated = fixture.validated.copy(output = output.copy(secondReading = reading)),
+            validated = fixture.validated.copy(output = output.copy(secondReading = reading), flags = listOf(flag)),
         ))
         val thread = Thread.currentThread()
         val originalLoader = thread.contextClassLoader
@@ -52,14 +58,18 @@ class StoredSeedAnalysisTests {
         try {
             val enriched = StoredSeedAnalysis(catalog, mapper)
             for (workspace in listOf(workspace("first-reading"), workspace("second-reading"))) {
-                val mapped = enriched.forWorkspace(workspace, options(workspace), wishes(workspace)).validated.output
-                val expected = reading.copy(comparisons = reading.comparisons.map { comparison ->
+                val result = enriched.forWorkspace(workspace, options(workspace), wishes(workspace))
+                val mapped = result.validated.output
+                val expected = reading.copy(incompleteWishIds = reading.incompleteWishIds.map {
+                    catalog.wishId(workspace.id, fixture.wishKeys.getValue(it))
+                }, comparisons = reading.comparisons.map { comparison ->
                     comparison.copy(
                         wishId = catalog.wishId(workspace.id, fixture.wishKeys.getValue(comparison.wishId)),
                         optionId = catalog.optionId(workspace.id, fixture.optionKeys.getValue(comparison.optionId)),
                     )
                 })
                 assertEquals(expected, mapped.secondReading)
+                assertEquals(listOf(flag.copy(path = "wishes[${expected.incompleteWishIds.single()}]")), result.validated.flags)
                 assertTrue(mapped.secondReading!!.comparisons.none {
                     it.wishId in fixture.wishKeys || it.optionId in fixture.optionKeys
                 })

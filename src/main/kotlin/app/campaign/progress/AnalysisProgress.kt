@@ -3,6 +3,7 @@ package app.campaign.progress
 import app.campaign.model.Option
 import app.campaign.model.Wish
 import app.campaign.port.AnalysisFailure
+import app.campaign.port.AnalysisMetrics
 import app.campaign.rules.OptionWishCounts
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -44,6 +45,8 @@ data class ProgressState(
     val validationCounts: Map<String, Int> = emptyMap(),
     val finalCounts: List<OptionWishCounts> = emptyList(),
     val checkpointIncomplete: Boolean = false,
+    val metrics: AnalysisMetrics? = null,
+    val failureCategory: String? = null,
 )
 
 data class AnalysisProgressView(
@@ -60,6 +63,8 @@ data class AnalysisProgressView(
     val finalCounts: List<OptionWishCounts>,
     val failure: String?,
     val checkpointIncomplete: Boolean = false,
+    val metrics: AnalysisMetrics? = null,
+    val failureCategory: String? = null,
 )
 
 sealed interface ProgressStart {

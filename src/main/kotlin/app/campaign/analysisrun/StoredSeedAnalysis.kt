@@ -4,6 +4,7 @@ import app.campaign.model.WishKind
 import app.campaign.model.Option
 import app.campaign.model.Wish
 import app.campaign.model.Workspace
+import app.campaign.port.AnalysisValidationRule
 import app.campaign.port.AnalysisResult
 import app.campaign.port.AnalysisValidationResult
 import app.campaign.rules.analysisInputHash
@@ -87,13 +88,19 @@ class StoredSeedAnalysis(private val catalog: SeedCatalog, private val mapper: J
             alternatives = output.alternatives.map { it.copy(optionId = optionIds.getValue(it.optionId)) },
             optionIds = output.optionIds.map(optionIds::getValue),
             secondReading = output.secondReading?.let { reading ->
-                reading.copy(comparisons = reading.comparisons.map {
-                    it.copy(wishId = wishIds.getValue(it.wishId), optionId = optionIds.getValue(it.optionId))
-                })
+                reading.copy(incompleteWishIds = reading.incompleteWishIds.map(wishIds::getValue),
+                    comparisons = reading.comparisons.map {
+                        it.copy(wishId = wishIds.getValue(it.wishId), optionId = optionIds.getValue(it.optionId))
+                    })
             },
         )
         return stored.success.copy(
-            validated = stored.success.validated.copy(output = mapped),
+            validated = stored.success.validated.copy(output = mapped, flags = stored.success.validated.flags.map { flag ->
+                if (flag.rule == AnalysisValidationRule.INCOMPLETE_SECOND_READING) {
+                    val original = UUID.fromString(flag.path.removePrefix("wishes[").removeSuffix("]"))
+                    flag.copy(path = "wishes[${wishIds.getValue(original)}]")
+                } else flag
+            }),
             inputHash = analysisInputHash(options, wishes),
         )
     }

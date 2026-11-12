@@ -40,6 +40,7 @@ fun summarizeBoundary(stored: StoredAnalysisRun?): BoundarySummary? {
                     AnalysisValidationRule.V5 -> "Multiple proposals (V5)" to "Multiple proposals reject an output."
                     AnalysisValidationRule.V6 -> "Regrouping (V6)" to "Not-served groups were rebuilt from verdicts."
                     AnalysisValidationRule.MODEL_WRITTEN_NUMBER -> "Numeric rationale" to "A numeric rationale was not supported by catalog attributes."
+                    AnalysisValidationRule.INCOMPLETE_SECOND_READING -> "Incomplete second reading" to "A validated first reading needs maker review."
                     AnalysisValidationRule.UNANALYZED_WISH -> "Omitted wish" to "A wish could not be analyzed twice."
                 }
                 BoundaryFlagGroup(label, meaning, count)

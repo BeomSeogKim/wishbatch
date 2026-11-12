@@ -7,6 +7,8 @@ import app.campaign.model.Option
 import app.campaign.model.Wish
 import app.campaign.model.WishKind
 import app.campaign.port.AnalysisFailure
+import app.campaign.port.AnalysisMetrics
+import app.campaign.port.AnalysisTokenUsage
 import app.campaign.port.AnalysisObserver
 import app.campaign.port.AnalysisOutput
 import app.campaign.port.AnalysisProgressEvent
@@ -79,11 +81,12 @@ class AnalysisProgressServiceTests @Autowired constructor(
         val emitted = CountDownLatch(1)
         val release = CountDownLatch(1)
         val flag = AnalysisValidationFlag(AnalysisValidationRule.V2, "wishes[0].needs[0]", "Ungrounded quote dropped.")
+        val metrics = AnalysisMetrics(2.75, AnalysisTokenUsage(125, 80, null), usageComplete = false)
         analyzer.scripts[workspace.id] = { inputOptions, inputWishes, observer ->
             for (reading in 1..2) {
                 observer.onProgress(AnalysisProgressEvent("CLASSIFY_VALIDATED", reading, 1, 1, flags = listOf(flag)))
                 observer.onProgress(AnalysisProgressEvent("BATCH_COMPLETED", reading, 1, 1,
-                    processedWishIds = inputWishes.take(2).map { it.id }))
+                    processedWishIds = inputWishes.take(2).map { it.id }, metrics = metrics))
             }
             emitted.countDown()
             check(release.await(5, TimeUnit.SECONDS))
@@ -94,6 +97,8 @@ class AnalysisProgressServiceTests @Autowired constructor(
             assertTrue(emitted.await(5, TimeUnit.SECONDS))
             val intermediate = progress.find(workspace.token, job.id)!!
             assertEquals("RUNNING", intermediate.status)
+            assertEquals(metrics, intermediate.metrics)
+            assertNull(intermediate.failureCategory)
             assertEquals(2, intermediate.processedWishes)
             assertEquals(2, intermediate.completedBatches)
             assertEquals(mapOf("V2" to 2), intermediate.validationCounts)
@@ -114,6 +119,7 @@ class AnalysisProgressServiceTests @Autowired constructor(
         }
         val completed = terminal(workspace.token, job.id)
         assertEquals("COMPLETED", completed.status)
+        assertEquals(metrics, completed.metrics)
         assertEquals(wishes.size, completed.processedWishes)
         assertEquals(mapOf("V2" to 2), completed.validationCounts)
         assertEquals(options.size, completed.finalCounts.size)
@@ -134,6 +140,24 @@ class AnalysisProgressServiceTests @Autowired constructor(
     }
 
     @Test
+    fun `completed result metrics replace provisional metrics and persist with the analysis`() {
+        val workspace = workspaces.create()
+        val provisional = AnalysisMetrics(1.5)
+        val final = AnalysisMetrics(4.25, AnalysisTokenUsage(220, 140, 20), usageComplete = true)
+        analyzer.scripts[workspace.id] = { options, wishes, observer ->
+            observer.onProgress(AnalysisProgressEvent("PROPOSAL_STARTED", metrics = provisional))
+            val result = success(options, wishes)
+            result.copy(validated = result.validated.copy(output = result.validated.output.copy(metrics = final)))
+        }
+        val job = assertIs<ProgressStart.Started>(progress.start(workspace.token)).job
+        val completed = terminal(workspace.token, job.id)
+        assertEquals("COMPLETED", completed.status)
+        assertEquals(final, completed.metrics)
+        assertEquals(final, runs.latest(workspace.token)!!.output.metrics)
+        assertNull(completed.failureCategory)
+    }
+
+    @Test
     fun `failed analysis retains the latest valid run provenance and provisional validation summary`() {
         val workspace = workspaces.create()
         analyzer.scripts[workspace.id] = { options, wishes, _ -> success(options, wishes) }
@@ -143,16 +167,19 @@ class AnalysisProgressServiceTests @Autowired constructor(
         val before = runs.latest(workspace.token)!!
         val sources = records.findByToken(workspace.token)!!.sources
         val flag = AnalysisValidationFlag(AnalysisValidationRule.V2, "proposal.rationale[0]", "Ungrounded quote dropped.")
+        val metrics = AnalysisMetrics(12.5, AnalysisTokenUsage(200, null, null), failureCategory = "VALIDATION")
         analyzer.scripts[workspace.id] = { _, wishes, observer ->
             observer.onProgress(AnalysisProgressEvent("BATCH_COMPLETED", 1, 1, 1,
                 processedWishIds = wishes.take(1).map { it.id }))
             observer.onProgress(AnalysisProgressEvent("PROPOSAL_VALIDATED", flags = listOf(flag)))
-            AnalysisResult.Failure(AnalysisFailure.INVALID_OUTPUT, listOf(flag))
+            AnalysisResult.Failure(AnalysisFailure.INVALID_OUTPUT, listOf(flag), metrics)
         }
         val failed = assertIs<ProgressStart.Started>(progress.start(workspace.token)).job
         val finished = terminal(workspace.token, failed.id)
         assertEquals("FAILED", finished.status)
         assertEquals("INVALID_OUTPUT", finished.failure)
+        assertEquals(metrics, finished.metrics)
+        assertEquals("VALIDATION", finished.failureCategory)
         assertEquals(1, finished.processedWishes)
         assertEquals(mapOf("V2" to 1), finished.validationCounts)
         assertTrue(finished.finalCounts.isEmpty())
