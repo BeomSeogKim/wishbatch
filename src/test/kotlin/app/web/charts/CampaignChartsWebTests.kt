@@ -102,6 +102,7 @@ class CampaignChartsWebTests @Autowired constructor(
         assertEquals(listOf(null, 0L, 0L, 0L, 3L), view.history.checkpoints.map { it.paid })
         assertEquals(listOf(null, null, null, null, null), view.history.checkpoints.map { it.interest })
         val html = result.response.contentAsString
+        assertContains(html, "Recorded count history")
         for (text in listOf("Current stages", "<table", "Historical offer interest is unavailable", "these counts do not measure conversion",
             "data-paid=\"3\"", "data-interest=\"1\"", "FUNDED is a historical", "different measures")) assertContains(html, text)
         records.forEach { assertContains(html, it.id.toString()); assertContains(html, it.createdAt.toString()) }
@@ -115,6 +116,26 @@ class CampaignChartsWebTests @Autowired constructor(
         assertEquals(beforeEvents, events.count())
         assertEquals(PledgeState.CAPTURED, pledges.findById(pledge.id).orElseThrow().state)
         assertEquals(CampaignState.FUNDED, campaigns.findById(campaign.id).orElseThrow().state)
+    }
+
+    @Test
+    fun `a single recorded checkpoint keeps current counts but hides history`() {
+        val (owner, campaign) = fixture(CampaignState.OPEN)
+        val result = mvc.get("/w/${owner.token}/maker/campaign/${campaign.id}/charts")
+            .andExpect { status { isOk() } }.andReturn()
+        val view = assertIs<CampaignCharts>(result.modelAndView!!.model["charts"])
+        assertEquals(1, view.history.checkpoints.size)
+        val html = result.response.contentAsString
+        assertContains(html, "Current stages")
+        assertFalse(html.contains("Recorded count history"))
+        assertFalse(html.contains("Reloading is not a historical observation"))
+        val pledge = pledges.save(Pledge(campaign.id, 1, 500, "USD", PledgeState.CREATED, createdAt = now.plusSeconds(1)))
+        events.save(Event(campaign.id, "PLEDGE_CREATED", pledge.id, detail = "CREATED", createdAt = now.plusSeconds(1)))
+        val second = mvc.get("/w/${owner.token}/maker/campaign/${campaign.id}/charts")
+            .andExpect { status { isOk() } }.andReturn()
+        assertEquals(2, assertIs<CampaignCharts>(second.modelAndView!!.model["charts"]).history.checkpoints.size)
+        assertContains(second.response.contentAsString, "Recorded count history")
+        assertContains(second.response.contentAsString, "Reloading is not a historical observation")
     }
 
     @Test
@@ -168,6 +189,9 @@ class CampaignChartsWebTests @Autowired constructor(
         assertEquals(1, view.interest)
         assertEquals(3L, view.authorized)
         assertTrue(view.history.checkpoints.isEmpty())
+        assertContains(result.response.contentAsString, "Current stages")
+        assertFalse(result.response.contentAsString.contains("Recorded count history"))
+        assertFalse(result.response.contentAsString.contains("Reloading is not a historical observation"))
         assertContains(view.interestHistoryMessage, "visibility and reviewed conditions were not recorded")
         assertEquals(CampaignState.OPEN, campaigns.findById(campaign.id).orElseThrow().state)
         assertEquals(PledgeState.AUTHORIZED, pledges.findById(pledge.id).orElseThrow().state)

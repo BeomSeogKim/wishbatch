@@ -20,7 +20,7 @@
     if (!current || !api) return;
 
     const stages = [
-        { stage: 'Stated interest (requests)', label: 'Interest (requests)', count: count(current.dataset.interest) },
+        { stage: 'Interested in this offer (requests)', label: 'Interest (requests)', count: count(current.dataset.interest) },
         { stage: 'Authorized holds (units)', label: 'Holds (units)', count: count(current.dataset.authorized) },
         { stage: 'Completed payments (units)', label: 'Paid (units)', count: count(current.dataset.paid) },
     ];
@@ -58,7 +58,7 @@
         legend: { position: 'bottom', orientation: 'vertical', maxHeight: 100, spacing: 16 },
         data: history,
         series: [
-            ['interest', 'Stated interest (requests)'],
+            ['interest', 'Interested in this offer (requests)'],
             ['authorized', 'Authorized holds (units)'],
             ['paid', 'Completed payments (units)'],
         ].map(([yKey, yName]) => ({

@@ -19,7 +19,7 @@
              th:attr="data-interest=${charts.interest},data-authorized=${charts.authorized},data-paid=${charts.paid}">
         <h2 id="current-stages">Current stages</h2>
         <p>Recorded state: <strong th:text="${@makerDisplay.words(charts.state)}"></strong>. Observed <time th:datetime="${charts.observedAt}" th:text="${@makerDisplay.time(charts.observedAt)}"></time>.</p>
-        <p>This read-only page snapshot is separate from live campaign counts. It does not refresh provider status or evaluate campaign deadlines. Reloading is not a historical observation.</p>
+        <p>This read-only page snapshot is separate from live campaign counts. It does not refresh provider status or evaluate campaign deadlines.</p>
         <p th:if="${charts.state.name() == 'FUNDED'}">FUNDED is a historical settlement outcome; it does not guarantee current payment availability, production or delivery.</p>
         <ul><li th:each="warning : ${charts.attention}" th:text="${warning}"></li></ul>
         <div id="current-stages-chart" class="campaign-chart" hidden aria-label="Current stages: requests and payment units; the table contains exact values"></div>
@@ -36,10 +36,10 @@
         <p th:if="${charts.analysisAt != null}">Offer analysis recorded <time th:datetime="${charts.analysisAt}" th:text="${@makerDisplay.time(charts.analysisAt)}"></time>.</p>
         <p>Minimum batch: <span th:text="${charts.minimum}"></span> paid units. These bars have different units and do not measure conversion.</p>
     </section>
-    <section class="preview-section card" aria-labelledby="recorded-counts">
+    <section class="preview-section card" aria-labelledby="recorded-counts" th:if="${charts.history.checkpoints.size() &gt;= 2}">
         <h2 id="recorded-counts">Recorded count history</h2>
         <p th:text="${charts.interestHistoryMessage}"></p>
-        <p>Only recorded checkpoints are shown. No interpolated observations, pre-publication curve or present-state backfill is supplied. Equal-time independent changes share one checkpoint; spacing represents checkpoint order, not elapsed time.</p>
+        <p>Reloading is not a historical observation. Only recorded checkpoints are shown. No interpolated observations, pre-publication curve or present-state backfill is supplied. Equal-time independent changes share one checkpoint; spacing represents checkpoint order, not elapsed time.</p>
         <p>Older or incomplete payment history is unavailable. A gap suppresses the full payment history because the missing interval cannot be safely located; the current snapshot is shown separately.</p>
         <ul><li th:each="limit : ${charts.history.limits}" th:text="${limit}"></li></ul>
         <p th:if="${charts.history.checkpoints.isEmpty()}">No recorded count checkpoints are available.</p>

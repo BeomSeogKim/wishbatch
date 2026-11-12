@@ -51,7 +51,7 @@
                             </select>
                             <p id="quantity-help" class="field-help">Capacity is checked again when you authorize.</p>
                         </div>
-                        <button class="button button-secondary" type="submit">Update total</button>
+                        <button id="update-total" class="button button-secondary" type="submit">Update total</button>
                     </form>
                     <p th:if="${total != null}">Total to authorize: <strong id="pledge-total" th:text="${@humanDisplay.money(quote.amount, quote.currency)}"></strong>
                         for <span id="pledge-quantity" th:text="${quantity}"></span> <span id="pledge-units" th:text="${quantity == 1 ? 'unit' : 'units'}"></span>.</p>

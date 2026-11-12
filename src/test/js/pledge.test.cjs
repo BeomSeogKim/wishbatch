@@ -6,10 +6,10 @@ const path = require('node:path');
 
 const script = fs.readFileSync(path.join(__dirname, '../../main/resources/static/js/pledge.js'), 'utf8');
 
-function browser({sdk = true, responses = [], csrf = true, quotePage = null} = {}) {
+function browser({sdk = true, sdkReject = false, sdkRender = null, responses = [], csrf = true, quotePage = null} = {}) {
     const elements = Object.fromEntries([
         'pledge-checkout', 'pledge-feedback', 'pledge-status-link', 'quantity', 'paypal-button-container',
-        'pledge-total', 'pledge-quantity', 'pledge-units'
+        'pledge-total', 'pledge-quantity', 'pledge-units', 'update-total'
     ].map(id => [id, {hidden: false, disabled: false, textContent: '', addEventListener(event, callback) { this[event] = callback; }}]));
     const action = {hidden: false};
     elements['pledge-checkout'].closest = () => action;
@@ -29,7 +29,7 @@ function browser({sdk = true, responses = [], csrf = true, quotePage = null} = {
             location: {href: 'https://example.test/', assign: url => { redirected = url; }},
             paypal: sdk ? {Buttons: options => {
                 handlers = options;
-                return {render: () => Promise.resolve()};
+                return {render: () => sdkRender || (sdkReject ? Promise.reject(new Error('SDK failed')) : Promise.resolve())};
             }} : undefined
         },
         fetch: async (url, options) => {
@@ -127,6 +127,7 @@ test('quantity changes hide checkout until a server quote is available', async (
     app.elements.quantity.value = '3';
     await app.elements.quantity.change();
     assert.equal(app.elements['paypal-button-container'].hidden, true);
+    assert.equal(app.elements['update-total'].hidden, false);
     assert.match(app.elements['pledge-feedback'].textContent, /Update total/);
     await assert.rejects(app.handlers.createOrder(), /Quote is not current/);
 });
@@ -142,6 +143,7 @@ test('a matching server quote updates the displayed amount and order quantity', 
     app.elements.quantity.value = '3';
     await app.elements.quantity.change();
     assert.equal(app.elements['pledge-total'].textContent, 'USD 48.00');
+    assert.equal(app.elements['update-total'].hidden, true);
     assert.equal(app.elements['paypal-button-container'].hidden, false);
     assert.equal(app.calls[0].options.headers.Accept, 'text/html');
     await app.handlers.createOrder();
@@ -151,6 +153,7 @@ test('a matching server quote updates the displayed amount and order quantity', 
 test('SDK load failure has a retry explanation without creating a pledge', () => {
     const app = browser({sdk: false});
     assert.match(app.elements['pledge-feedback'].textContent, /No pledge counted.*try again/);
+    assert.equal(app.elements['update-total'].hidden, false);
     assert.equal(app.calls.length, 0);
 });
 
@@ -214,4 +217,30 @@ test('a quote cannot restore checkout when the PayPal SDK failed to load', async
     await app.elements.quantity.change();
     assert.equal(app.elements['paypal-button-container'].hidden, true);
     assert.match(app.elements['pledge-feedback'].textContent, /PayPal could not load/);
+    assert.equal(app.elements['update-total'].hidden, false);
+});
+
+test('manual total remains available until automatic quote support initializes', async () => {
+    const app = browser();
+    await Promise.resolve();
+    assert.equal(app.elements['update-total'].hidden, true);
+    assert.equal(browser({sdk: false}).elements['update-total'].hidden, false);
+});
+
+test('manual total returns when PayPal rendering fails', async () => {
+    const app = browser({sdkReject: true});
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(app.elements['update-total'].hidden, false);
+});
+
+test('a late SDK render cannot hide the manual retry after a quote failure', async () => {
+    let finishRender;
+    const sdkRender = new Promise(resolve => { finishRender = resolve; });
+    const app = browser({sdkRender, responses: [new Error('offline')]});
+    app.elements.quantity.value = '3';
+    await app.elements.quantity.change();
+    finishRender();
+    await Promise.resolve();
+    assert.equal(app.elements['update-total'].hidden, false);
 });

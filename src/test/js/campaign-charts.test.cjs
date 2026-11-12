@@ -5,7 +5,7 @@ const vm = require('node:vm');
 
 const script = fs.readFileSync('src/main/resources/static/js/campaign-charts.js', 'utf8');
 
-function setup({ cdn = true, fail = false, points = [], current = { interest: '1', authorized: '0', paid: '3' } } = {}) {
+function setup({ cdn = true, fail = false, missingHistory = false, points = [], current = { interest: '1', authorized: '0', paid: '3' } } = {}) {
     const calls = [];
     const containers = {
         'campaign-charts': { dataset: current },
@@ -13,6 +13,10 @@ function setup({ cdn = true, fail = false, points = [], current = { interest: '1
         'recorded-counts-chart': { hidden: true },
         'chart-status': { textContent: 'Tables remain available.' },
     };
+    if (missingHistory) {
+        delete containers['recorded-counts-chart'];
+        delete containers['chart-status'];
+    }
     const rows = points.map((point, index) => {
         const row = { id: `checkpoint-${index + 1}`, dataset: point,
             focus() { this.focused = true; },
@@ -45,7 +49,8 @@ test('Community bar and marker-only history use server counts with distinct unit
     assert.equal(bar.title.text, 'Current stages');
     assert.equal(bar.series[0].type, 'bar');
     assert.deepEqual(Array.from(bar.data, row => row.count), [1, 0, 3]);
-    assert.match(bar.data[0].stage, /requests/);
+    assert.equal(bar.data[0].stage, 'Interested in this offer (requests)');
+    assert.equal(history.series[0].yName, 'Interested in this offer (requests)');
     assert.match(bar.data[1].stage, /units/);
     assert.deepEqual(Array.from(history.data, row => row.authorized), [null, 0, 3, 0, 0]);
     assert.deepEqual(Array.from(history.data, row => row.paid), [null, 0, 0, 0, 3]);
@@ -96,4 +101,11 @@ test('plain text and invalid numbers never become HTML or operational counts', (
     assert.deepEqual(Array.from(result.calls[0].data, row => row.count), [null, null, null]);
     assert.equal(result.calls[1].data[0].checkpoint, `2026-01-01T00:00:00Z · ${attack}`);
     assert.equal(result.containers['chart-status'].textContent, 'Tables remain available.');
+});
+
+test('current chart renders when the history section is absent', () => {
+    const result = setup({ missingHistory: true });
+    assert.equal(result.calls.length, 1);
+    assert.equal(result.calls[0].title.text, 'Current stages');
+    assert.equal(result.containers['current-stages-chart'].hidden, false);
 });

@@ -26,6 +26,7 @@
     const statusLink = document.getElementById('pledge-status-link');
     const quantity = document.getElementById('quantity');
     const container = document.getElementById('paypal-button-container');
+    const updateTotal = document.getElementById('update-total');
     const action = checkout.closest('[data-live-action="pledge"]');
     let pledge = null;
     let approvalStarted = false;
@@ -54,17 +55,20 @@
     }
 
     let quoteVersion = 0;
+    let autoQuoteAvailable = false;
+    let quotePendingOrFailed = false;
     quantity.addEventListener('change', async () => {
         const version = ++quoteVersion;
+        quotePendingOrFailed = true;
         container.hidden = true;
         const bar = document.querySelector('.offer-mobile-bar');
         if (bar) bar.hidden = true;
         document.getElementById('pledge-total').textContent = 'Updating…';
         show('Updating the server-calculated total.');
-        const form = quantity.form;
-        const url = new URL(form.action, window.location.href);
-        url.search = new URLSearchParams(new FormData(form)).toString();
         try {
+            const form = quantity.form;
+            const url = new URL(form.action, window.location.href);
+            url.search = new URLSearchParams(new FormData(form)).toString();
             const response = await fetch(url.toString(), {headers: {'Accept': 'text/html'}});
             if (!response.ok) throw new Error('Quote unavailable');
             const page = new DOMParser().parseFromString(await response.text(), 'text/html');
@@ -72,9 +76,12 @@
             const next = page.getElementById('pledge-checkout');
             const total = page.getElementById('pledge-total');
             if (!next || !total || next.dataset.campaignId !== checkout.dataset.campaignId || next.dataset.quantity !== quantity.value) {
+                if (updateTotal) updateTotal.hidden = false;
                 show(page.querySelector('.offer-pledge .notice-warning')?.textContent || 'This quote is unavailable. Reload the page to try again.');
                 return;
             }
+            quotePendingOrFailed = false;
+            if (updateTotal && autoQuoteAvailable) updateTotal.hidden = true;
             checkout.dataset.quantity = next.dataset.quantity;
             document.getElementById('pledge-total').textContent = total.textContent;
             document.getElementById('pledge-quantity').textContent = quantity.value;
@@ -91,7 +98,10 @@
                 show('PayPal could not load. No pledge counted. Reload this page to try again.');
             }
         } catch (_) {
-            if (version === quoteVersion) show('Could not update the total. Use Update total to try again.');
+            if (version === quoteVersion) {
+                if (updateTotal) updateTotal.hidden = false;
+                show('Could not update the total. Use Update total to try again.');
+            }
         }
     });
 
@@ -100,7 +110,7 @@
         return;
     }
 
-    window.paypal.Buttons({
+    const rendered = window.paypal.Buttons({
         async createOrder() {
             if (action.hidden || container.hidden || quantity.value !== checkout.dataset.quantity) throw new Error('Quote is not current');
             pledge = null;
@@ -168,7 +178,13 @@
             quantity.disabled = false;
             if (!serverMessage) show('PayPal checkout could not finish. No pledge counted. You can try again.');
         }
-    }).render('#paypal-button-container').catch(() => {
+    }).render('#paypal-button-container');
+    rendered.then(() => {
+        autoQuoteAvailable = typeof fetch === 'function' && typeof URL === 'function' &&
+            typeof URLSearchParams === 'function' && typeof FormData === 'function' && typeof DOMParser === 'function';
+        if (updateTotal && autoQuoteAvailable && !quotePendingOrFailed) updateTotal.hidden = true;
+    }).catch(() => {
+        if (updateTotal) updateTotal.hidden = false;
         show('PayPal could not load. No pledge counted. Reload this page to try again.');
     });
 })();

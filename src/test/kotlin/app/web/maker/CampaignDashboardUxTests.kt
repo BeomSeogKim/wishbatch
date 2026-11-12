@@ -61,7 +61,7 @@ class CampaignDashboardUxTests @Autowired constructor(
         assertEquals(2, Regex("<progress\\b").findAll(html).count())
         assertEquals(1, Regex("class=\"button button-primary\"").findAll(html).count())
         assertTrue(html.indexOf("aria-label=\"Campaign counts\"") < html.indexOf("id=\"campaign-charts\""))
-        assertTrue(html.indexOf("id=\"count-history\"") < html.indexOf("id=\"timeline-heading\""))
+        assertFalse(html.contains("id=\"count-history\""))
         assertContains(html, "No pledges yet.")
         assertFalse(html.contains("id=\"pledges-heading\""))
         assertContains(html, "<summary>Offer terms and exact deadlines</summary>")
