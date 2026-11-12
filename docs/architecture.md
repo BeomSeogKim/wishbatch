@@ -177,6 +177,42 @@ closes the application. It is disabled by default; tests use fake providers only
 API contracts: [Responses](https://developers.openai.com/api/reference/resources/responses/methods/create),
 [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
 and [error codes](https://developers.openai.com/api/docs/guides/error-codes).
+## Campaign services
+
+`CampaignService` is the web-facing application boundary. `createDraft` takes a
+workspace ID and `DraftOffer`; `publish`, `cancel`, `startPledge`,
+`confirmProduction`, `readCampaign`, `reconcile`, and
+`simulateNextCaptureFailure` take `CampaignRef`. `completePledge` takes
+`PledgeRef`. All return `ServiceResult` with immutable views or typed rejections.
+Published terms have no edit operation. Unpublished drafts do not reserve the
+workspace's single active campaign slot.
+
+`CampaignView` includes the three separate counts, minimum progress, remaining
+capacity and time, confirmation totals, masked pledge rows, outcome, unresolved
+payments, and the provider timeline. Reads reconcile deadlines and pending
+payments; `CampaignReconciliationTick` also runs every minute. Only completed
+captures release production. A late completed capture on an unsuccessful
+campaign is refunded; unresolved captures are never treated as released holds.
+
+Workspace database locks serialize publication and capacity decisions. Local
+coordinators run serially to prevent connection-pool starvation. The lock and
+its independent durable checkpoints require at least two database connections.
+Payment intent, responses, state changes, and compensation survive rollback of
+the coordinating transaction. Retries use the pledge's original operation key;
+provider evidence controls recovery, including after process interruption.
+Ambiguous authorizations remain uncounted and visible for attention. Recovery
+does not initiate a new capture after the confirmation deadline or a terminal
+outcome; it may replay a provider-confirmed capture to recover its resource ID.
+
+Rejected approvals may move from `CREATED` directly to `VOIDED` or `VOID_FAILED`.
+Provider capture evidence may move `CAPTURE_FAILED` or `VOID_FAILED` to
+`CAPTURED` or `CAPTURE_PENDING`. These six additional edges do not relax the
+campaign's terminal states or count pending money as paid.
+
+The optional `app.campaign.demo-simulation-enabled` property defaults to false.
+When enabled, `simulateNextCaptureFailure` arms one campaign-local, explicitly
+recorded simulation. It fails the next unattempted capture without calling the
+provider. It does not alter a real provider response.
 
 ## Configuration
 

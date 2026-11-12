@@ -28,11 +28,14 @@ val CAMPAIGN_TRANSITIONS: Set<CampaignTransition> = setOf(
 
 /**
  * Failed captures allow voiding the remaining authorization. Failed voids and refunds allow
- * retries, and pending refunds may later fail during provider reconciliation.
+ * retries, and pending refunds may later fail during provider reconciliation. Rejected approvals
+ * release their holds directly from CREATED; recovery of failed operations follows capture evidence.
  */
 val PLEDGE_TRANSITIONS: Set<PledgeTransition> = setOf(
     PledgeTransition(PledgeState.CREATED, PledgeState.AUTHORIZED),
     PledgeTransition(PledgeState.CREATED, PledgeState.ABANDONED),
+    PledgeTransition(PledgeState.CREATED, PledgeState.VOIDED),
+    PledgeTransition(PledgeState.CREATED, PledgeState.VOID_FAILED),
     PledgeTransition(PledgeState.AUTHORIZED, PledgeState.CAPTURED),
     PledgeTransition(PledgeState.AUTHORIZED, PledgeState.CAPTURE_PENDING),
     PledgeTransition(PledgeState.AUTHORIZED, PledgeState.CAPTURE_FAILED),
@@ -43,6 +46,10 @@ val PLEDGE_TRANSITIONS: Set<PledgeTransition> = setOf(
     PledgeTransition(PledgeState.CAPTURED, PledgeState.REFUND_FAILED),
     PledgeTransition(PledgeState.CAPTURE_PENDING, PledgeState.CAPTURED),
     PledgeTransition(PledgeState.CAPTURE_PENDING, PledgeState.CAPTURE_FAILED),
+    PledgeTransition(PledgeState.CAPTURE_FAILED, PledgeState.CAPTURED),
+    PledgeTransition(PledgeState.CAPTURE_FAILED, PledgeState.CAPTURE_PENDING),
+    PledgeTransition(PledgeState.VOID_FAILED, PledgeState.CAPTURED),
+    PledgeTransition(PledgeState.VOID_FAILED, PledgeState.CAPTURE_PENDING),
     PledgeTransition(PledgeState.CAPTURE_FAILED, PledgeState.VOIDED),
     PledgeTransition(PledgeState.CAPTURE_FAILED, PledgeState.VOID_FAILED),
     PledgeTransition(PledgeState.VOID_FAILED, PledgeState.VOIDED),
