@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: wishbatch
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: wishbatch-db
+          property: connectionString
+      - key: DB_USERNAME
+        fromDatabase:
+          name: wishbatch-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: wishbatch-db
+          property: password
+      - key: SPRING_JPA_HIBERNATE_DDL_AUTO
+        value: update
+      - key: APP_BASE_URL
+        fromService:
+          type: web
+          name: wishbatch
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: PAYPAL_BASE_URL
+        value: https://api-m.sandbox.paypal.com
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+
+databases:
+  - name: wishbatch-db
+    plan: free
