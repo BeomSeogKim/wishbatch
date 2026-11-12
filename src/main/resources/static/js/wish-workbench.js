@@ -336,7 +336,7 @@
         active = true;
         table.hidden = true;
         if (apply) apply.hidden = true;
-        if (exportButton && api.exportDataAsCsv) exportButton.hidden = false;
+        if (exportButton && api.getDataAsCsv && typeof Blob === 'function' && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') exportButton.hidden = false;
         selectionChanged(api);
     } catch (_) {
         fallback();
@@ -349,13 +349,21 @@
     }
 
     exportButton?.addEventListener('click', () => {
-        if (!active || !api?.exportDataAsCsv) return;
-        api.exportDataAsCsv({
-            fileName: 'wish-review.csv',
+        if (!active || !api?.getDataAsCsv || exportButton.hidden) return;
+        const csv = api.getDataAsCsv({
             exportedRows: 'filteredAndSorted',
-            processCellCallback: params => safeCsv(params.formatValue(params.value)),
+            processCellCallback: params => safeCsv(params.column.getColId() === 'evidence' && params.node.data.quotes.length
+                ? [...params.node.data.quotes, params.node.data.evidenceNotes].filter(Boolean).join(' | ')
+                : params.formatValue(params.value)),
             processHeaderCallback: params => safeCsv(params.column.getColDef().headerName),
         });
+        const contents = csv.startsWith('\uFEFF') ? csv : '\uFEFF' + csv;
+        const url = URL.createObjectURL(new Blob([contents], {type: 'text/csv;charset=utf-8;'}));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'wish-review.csv';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
     });
 
     filters.addEventListener('submit', event => {

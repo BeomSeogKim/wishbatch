@@ -25,6 +25,7 @@
 .offer-quantity-form .field { display: grid; grid-template-columns: auto minmax(52px, 1fr); gap: var(--space-2); align-items: center; }
 .offer-quantity-form .field-help { grid-column: 1 / -1; margin: 0; font-size: .7rem; }
 .offer-quantity-form select { width: 100%; min-height: 44px; }
+.offer-quantity-form #update-total[hidden] { display: none; }
 .offer-quantity-form .button { min-height: 44px; padding: 10px 14px; }
 .offer-pledge > p { margin-top: var(--space-3); }
 .offer-disclosure { border-top: 1px solid var(--line); padding-block: var(--space-3); font-size: .8rem; }

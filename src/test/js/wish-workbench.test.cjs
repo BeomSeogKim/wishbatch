@@ -100,7 +100,7 @@ function browser({cdn = true, failCreate = false, sourceRows} = {}) {
     const api = {
         getSelectedRows: () => selected,
         forEachNodeAfterFilterAndSort(callback) { displayed.forEach(data => callback({data})); },
-        exportDataAsCsv(params) { exports.push(params); },
+        getDataAsCsv(params) { exports.push(params); return 'csv data'; },
         getDisplayedRowCount: () => displayed.length,
         deselectAll() { selected = []; options.onSelectionChanged({api}); },
         applyColumnState(state) { assert.deepEqual(JSON.parse(JSON.stringify(state)), {defaultState: {sort: null}}); },
@@ -130,9 +130,19 @@ function browser({cdn = true, failCreate = false, sourceRows} = {}) {
     const computedStyle = {getPropertyValue: name => ({'--surface': '#ffffff', '--ink': '#17212b',
         '--line': '#d6dde2', '--accent': '#00665b', '--font': 'system-ui'}[name] || '#eeeeee')};
     window.getComputedStyle = () => computedStyle;
-    vm.runInNewContext(script, {document, window, getComputedStyle: () => computedStyle});
+    const blobs = [];
+    const links = [];
+    const createElement = document.createElement;
+    document.createElement = tag => {
+        const result = createElement(tag);
+        if (tag === 'a') { result.click = () => { links.push(result); }; }
+        return result;
+    };
+    const URL = {createObjectURL(blob) { blobs.push(blob); return 'blob:test'; }, revokeObjectURL() {}};
+    class Blob { constructor(parts, options) { this.parts = parts; this.type = options.type; } }
+    vm.runInNewContext(script, {document, window, URL, Blob, setTimeout: callback => callback(), getComputedStyle: () => computedStyle});
     return {table, container, filters, controls, checkboxes, status, evidenceFilter, description, clearEvidence,
-        window, document, detail, detailContent, applyFilters, priority, exportButton, exports, api, get options() { return options; }, get displayed() { return displayed; },
+        window, document, detail, detailContent, applyFilters, priority, exportButton, exports, blobs, links, api, get options() { return options; }, get displayed() { return displayed; },
         failUpdates() { failUpdate = true; },
         select(ids) {
             selected = displayed.filter(row => ids.includes(row.id));
@@ -415,9 +425,22 @@ test('view export uses filtered and sorted rows, displayed labels, and safe spre
     const exportOptions = app.exports[0];
     assert.equal(exportOptions.exportedRows, 'filteredAndSorted');
     assert.deepEqual(Array.from(app.displayed, row => row.id), ['two']);
-    assert.equal(exportOptions.processCellCallback({value: 'raw', formatValue: () => 'Depends'}), 'Depends');
+    assert.equal(exportOptions.processCellCallback({column: {getColId: () => 'print'}, value: 'raw', formatValue: () => 'Depends'}), 'Depends');
+    const evidence = {column: {getColId: () => 'evidence'}, node: {data: {quotes: [' first  quote ', 'second, \"quote\"']}}, formatValue: () => 'unused'};
+    assert.equal(exportOptions.processCellCallback(evidence), ' first  quote  | second, \"quote\"');
+    evidence.node.data.evidenceNotes = 'Some analysis evidence is unavailable: no exact source quote.';
+    assert.equal(exportOptions.processCellCallback(evidence), ' first  quote  | second, \"quote\" | Some analysis evidence is unavailable: no exact source quote.');
+    evidence.node.data.evidenceNotes = '';
+    evidence.node.data.quotes = ['=first', 'second'];
+    assert.equal(exportOptions.processCellCallback(evidence), "'=first | second");
+    assert.equal(app.blobs[0].type, 'text/csv;charset=utf-8;');
+    assert.equal(app.blobs[0].parts[0], '\uFEFFcsv data');
+    app.api.getDataAsCsv = () => '\uFEFFalready marked';
+    app.exportButton.handlers.click();
+    assert.equal(app.blobs[1].parts[0], '\uFEFFalready marked');
+    assert.equal(app.links[0].download, 'wish-review.csv');
     for (const value of ['=1+1', '  +cmd', '\ttext', '-1', '@SUM(A1)']) {
-        assert.equal(exportOptions.processCellCallback({value, formatValue: value => value}), "'" + value);
+        assert.equal(exportOptions.processCellCallback({column: {getColId: () => 'text'}, value, formatValue: value => value}), "'" + value);
     }
     assert.equal(exportOptions.processHeaderCallback({column: {getColDef: () => ({headerName: '=unsafe'})}}), "'=unsafe");
     for (const config of [{cdn: false}, {failCreate: true}]) assert.equal(browser(config).exportButton.hidden, true);
