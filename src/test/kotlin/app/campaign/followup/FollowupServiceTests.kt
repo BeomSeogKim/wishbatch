@@ -170,26 +170,33 @@ class FollowupServiceTests @Autowired constructor(
     fun `ceramicist catalog question approval and independent fan answers change effective demand only`() {
         val workspace = workspaces.create("ceramicist")
         val option = workspaces.listOptions(workspace.token).first { "color" in it.allowedVariants }
-        val wish = workspaces.addWish(workspace.token, "Only blue color")
-        val other = workspaces.addWish(workspace.token, "Only blue color")
+        val needs = option.allowedVariants.map { (key, choices) ->
+            val condition = "${choices.first()} $key"
+            WishNeed(NeedStrength.HARD, FollowupQuestions.attributeForVariantKey(key)!!, condition, condition)
+        }
+        val text = "Only ${needs.joinToString(", ") { it.value }}"
+        val wish = workspaces.addWish(workspace.token, text)
+        val other = workspaces.addWish(workspace.token, text)
         val output = AnalysisOutput(listOf(wish, other).map {
-            AnalyzedWish(it.id, WishKind.REQUEST,
-                listOf(WishNeed(NeedStrength.HARD, NeedAttribute.OTHER, "blue color", "Only blue color")))
+            AnalyzedWish(it.id, WishKind.REQUEST, needs)
         }, listOf(wish, other).map { WishVerdict(it.id, option.id, CompatibilityVerdict.CONDITIONAL, "Confirm color.") },
             Proposal(option.id, emptyMap(), emptyList()), null, emptyList(), emptyList(), emptyList(), listOf(option.id))
         val run = storeRun(workspace.id, output, Instant.parse("2090-01-01T00:00:00Z"))
         assertEquals(FollowupPageState.READY, followups.makerPage(workspace.token).state)
         assertEquals(0, calls)
         followups.draft(workspace.token)
-        val question = followups.makerPage(workspace.token).questions.single()
-        followups.approve(workspace.token, question.id, question.text, question.choices)
-        followups.answer(workspace.token, question.id, wish.id, "blue")
+        val questions = followups.makerPage(workspace.token).questions
+        assertEquals(option.allowedVariants.size, questions.size)
+        questions.forEach { question ->
+            followups.approve(workspace.token, question.id, question.text, question.choices)
+            followups.answer(workspace.token, question.id, wish.id, option.allowedVariants.getValue(question.variantKey).first())
+        }
         assertEquals(FollowupPageState.READY, followups.makerPage(workspace.token).state)
         val stored = runs.latest(workspace.token)!!
         assertEquals(1, optionWishCounts(stored.output).single().compatible)
         assertEquals(1, optionWishCounts(stored.output).single().depends)
         assertTrue(followups.answers(workspace.token, other.id).isEmpty())
-        assertEquals(listOf(question.id), followups.fanQuestions(workspace.token, other.id).map { it.id })
+        assertEquals(questions.map { it.id }, followups.fanQuestions(workspace.token, other.id).map { it.id })
         assertEquals(output, stored.originalOutput)
         assertEquals(run.resultJson, stored.run.resultJson)
         assertEquals(1, calls)
