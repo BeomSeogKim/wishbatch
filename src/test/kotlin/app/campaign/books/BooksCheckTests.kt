@@ -29,6 +29,7 @@ import app.campaign.workspace.WorkspaceService
 import app.testing.InMemoryPaymentGateway
 import app.testing.fixedClock
 import app.web.security.securePost
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,9 +64,22 @@ class BooksCheckTests @Autowired constructor(
     private val mvc: MockMvc,
 ) {
     private val now = Instant.parse("2026-01-01T00:00:00Z")
+    private val ownedCampaigns = mutableListOf<UUID>()
 
     @BeforeEach
     fun reset() = gateway.reset()
+
+    @AfterEach
+    fun cleanCampaigns() {
+        ownedCampaigns.forEach { id ->
+            val campaign = campaigns.findById(id).orElseThrow()
+            events.deleteAll(events.findByCampaignIdOrderByCreatedAtAscIdAsc(id))
+            pledges.deleteAll(pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(id))
+            campaigns.delete(campaign)
+            offers.deleteById(campaign.offerId)
+        }
+        ownedCampaigns.clear()
+    }
 
     @Test
     fun `explicit check heals external void through existing transitions and persists private free history`() {
@@ -192,6 +206,9 @@ class BooksCheckTests @Autowired constructor(
         assertContains(html, "Check history")
         assertContains(html, "Sandbox demo. No real money moves.")
         assertContains(html, "/js/books-ledger.js")
+        val bundle = "https://cdn.jsdelivr.net/npm/ag-grid-community@36.3.0/dist/ag-grid-community.min.noStyle.js"
+        assertContains(html, "<script defer src=\"$bundle\">")
+        assertTrue(html.indexOf(bundle) < html.indexOf("/js/books-ledger.js"))
         assertFalse(html.contains("buyer@example.test"))
         assertEquals(reads, gateway.calls.size)
         mvc.get("/js/books-ledger.js").andExpect { status { isOk() } }
@@ -204,6 +221,7 @@ class BooksCheckTests @Autowired constructor(
             emptyMap(), 200, "USD", "Ships later", "US", 3, 10))
         val campaign = campaigns.saveAndFlush(Campaign(offer.id, campaignState, openedAt = now,
             closesAt = now.plusSeconds(900), confirmDeadline = now.plusSeconds(44100)))
+        ownedCampaigns.add(campaign.id)
         val pledge = pledges.saveAndFlush(Pledge(campaign.id, 3, 600, "USD", state,
             paypalOrderId = "order", authorizationId = if (state == PledgeState.CREATED) null else "authorization",
             captureId = if (state in setOf(PledgeState.CAPTURED, PledgeState.REFUND_PENDING)) "capture" else null,

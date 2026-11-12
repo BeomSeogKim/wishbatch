@@ -52,7 +52,7 @@
                 </tbody>
             </table>
         </div>
-        <th:block th:if="${gridAvailable}"><th:block th:replace="~{fragments/data-tools :: grid}"></th:block></th:block>
+        <th:block th:replace="~{fragments/data-tools :: grid}"></th:block>
         <script defer th:src="@{/js/books-ledger.js}"></script>
     </section>
     <section class="preview-section" th:unless="${history.isEmpty()}">

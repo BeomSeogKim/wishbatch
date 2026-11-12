@@ -39,7 +39,6 @@ class BooksController(
         model.addAttribute("campaignId", ref.campaignId)
         model.addAttribute("history", history.asReversed())
         model.addAttribute("check", selected)
-        model.addAttribute("gridAvailable", ClassPathResource("templates/fragments/data-tools.html").exists())
         return "books/ledger"
     }
 
