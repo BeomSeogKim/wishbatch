@@ -2,6 +2,7 @@ package app.web.fan
 
 import app.campaign.model.PledgeState
 import app.campaign.outcome.outcomeStep
+import app.campaign.trail.MoneyTrail
 import app.campaign.service.CampaignService
 import app.campaign.service.PledgeReferences
 import app.campaign.service.Rejection
@@ -25,6 +26,7 @@ class PledgeStatusController(
     private val messages: MessageSource,
     private val service: CampaignService,
     private val references: PledgeReferences,
+    private val trail: MoneyTrail,
 ) {
     @GetMapping("/w/{token}/pledges/{id}")
     fun pledge(@PathVariable token: String, @PathVariable id: String, model: Model, response: HttpServletResponse): String {
@@ -53,6 +55,7 @@ class PledgeStatusController(
             PledgeState.REFUND_PENDING -> "Check this page again for the refund result."
             PledgeState.VOID_FAILED, PledgeState.REFUND_FAILED -> "The payment needs attention. Check this page again; release or refund has not been confirmed."
         })
+        model.addAttribute("trailEntries", trail.pledge(token, pledgeId).orEmpty())
         addCampaignResult(model, lookup.campaign)
         return "fan/pledge"
     }
