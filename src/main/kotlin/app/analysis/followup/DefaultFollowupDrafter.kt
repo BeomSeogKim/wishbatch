@@ -10,10 +10,8 @@ import app.campaign.followup.FollowupDraft
 import app.campaign.followup.FollowupDraftResult
 import app.campaign.followup.FollowupDrafter
 import app.campaign.followup.FollowupQuestions
-import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.NeedAttribute
 import app.campaign.model.Option
-import app.campaign.model.WishKind
 import app.campaign.port.AnalysisFailure
 import app.campaign.port.AnalysisOutput
 import org.springframework.context.annotation.Bean
@@ -47,19 +45,15 @@ class DefaultFollowupDrafter(
         val started = nanoTime()
         fun remaining() = Duration.ofNanos(Duration.ofSeconds(15).toNanos() - (nanoTime() - started))
         fun failed(reason: AnalysisFailure) = FollowupDraftResult.Failed(reason)
-        if (properties.apiKey.isBlank()) return failed(AnalysisFailure.NOT_CONFIGURED)
         if (option.id !in output.optionIds) return failed(AnalysisFailure.INVALID_OUTPUT)
-        val conditional = output.verdicts.filter {
-            it.optionId == option.id && it.verdict == CompatibilityVerdict.CONDITIONAL
-        }.map { it.wishId }.toSet()
+        val eligible = FollowupQuestions.eligibleWishIds(option, output)
         val variants = option.allowedVariants.filterKeys { key -> FollowupQuestions.attributeForVariantKey(key) != null }
             .filterValues { it.distinct().size >= 2 }
         val candidates = output.wishes.filter { wish ->
-            wish.kind == WishKind.REQUEST && wish.wishId in conditional && wish.needs.any { need ->
-                variants.keys.any { key -> FollowupQuestions.matchesVariantNeed(option, key, need) }
-            }
+            wish.wishId in eligible
         }.sortedBy { it.wishId }.take(40)
         if (candidates.isEmpty()) return FollowupDraftResult.Drafted(emptyList(), properties.model)
+        if (properties.apiKey.isBlank()) return failed(AnalysisFailure.NOT_CONFIGURED)
         val input = mapper.writeValueAsString(mapOf(
             "task" to "Draft up to three short multiple-choice questions for maker review, then fans. " +
                 "Group Depends wishes by a recorded variant condition. Each question has one attribute and " +

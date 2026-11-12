@@ -6,6 +6,7 @@ import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.Option
 import app.campaign.model.Workspace
 import app.campaign.port.AnalysisFailure
+import app.campaign.port.AnalysisOutput
 import app.campaign.review.WishReviewService
 import app.campaign.workspace.WorkspaceNotFoundException
 import app.campaign.workspace.WorkspaceService
@@ -18,12 +19,15 @@ import java.util.UUID
 
 class InvalidFollowupException : RuntimeException()
 
+enum class FollowupPageState { READY, UNAVAILABLE, STALE, NO_ELIGIBLE, FAILED }
+
 data class FollowupPage(
     val runId: UUID?,
     val option: Option?,
     val questions: List<FollowupQuestion>,
     val failure: String?,
     val drafted: Boolean = false,
+    val state: FollowupPageState = FollowupPageState.READY,
 )
 
 @Service
@@ -37,10 +41,25 @@ class FollowupService(
     private val clock: Clock,
 ) {
     fun makerPage(token: String): FollowupPage {
-        val stored = runs.latest(token) ?: return FollowupPage(null, null, emptyList(), null)
+        val stored = runs.latest(token)
+            ?: return FollowupPage(null, null, emptyList(), null, state = FollowupPageState.UNAVAILABLE)
         val option = workspaces.listOptions(token).singleOrNull { it.id == stored.output.proposal?.optionId }
         val attempt = entityManager.find(FollowupDraftAttempt::class.java, stored.run.id)
-        return FollowupPage(stored.run.id, option, questions(stored), attempt?.failure, attempt != null)
+        val questions = questions(stored)
+        val state = when {
+            option == null -> FollowupPageState.UNAVAILABLE
+            attempt?.failure != null -> FollowupPageState.FAILED
+            questions.any { question ->
+                !validQuestion(token, stored, option, question.draft()) || question.wishIds.any { wishId ->
+                    stored.overrides.filter { it.wishId == wishId && it.optionId == question.optionId }
+                        .maxByOrNull { it.revision }?.source == "MAKER"
+                }
+            } -> FollowupPageState.STALE
+            questions.isNotEmpty() -> FollowupPageState.READY
+            attempt != null || eligibleOutput(token, stored, option).wishes.isEmpty() -> FollowupPageState.NO_ELIGIBLE
+            else -> FollowupPageState.READY
+        }
+        return FollowupPage(stored.run.id, option, questions, attempt?.failure, attempt != null, state)
     }
 
     @Transactional
@@ -53,11 +72,8 @@ class FollowupService(
         }
         val option = workspaces.listOptions(token).singleOrNull { it.id == stored.output.proposal?.optionId }
             ?: throw InvalidFollowupException()
-        val visible = workspaces.listWishes(token, includeHidden = false).map { it.id }.toSet()
-        val output = stored.output.copy(
-            wishes = stored.output.wishes.filter { it.wishId in visible },
-            verdicts = stored.output.verdicts.filter { it.wishId in visible },
-        )
+        val output = eligibleOutput(token, stored, option)
+        if (output.wishes.isEmpty()) return FollowupDraftResult.Drafted(emptyList(), stored.run.model)
         val result = drafter.draft(option, output)
         if (result is FollowupDraftResult.Failed && result.reason in setOf(AnalysisFailure.NOT_CONFIGURED, AnalysisFailure.RUN_LIMIT_REACHED)) {
             return result
@@ -96,12 +112,11 @@ class FollowupService(
             return question
         }
         val option = workspaces.listOptions(token).single { it.id == question.optionId }
-        try {
-            FollowupQuestions.validate(listOf(edited), option, stored.output)
-        } catch (_: IllegalArgumentException) {
-            throw InvalidFollowupException()
-        }
-        if (workspaces.listWishes(token, includeHidden = false).map { it.id }.toSet().containsAll(edited.wishIds).not()) {
+        if (!validQuestion(token, stored, option, edited) || edited.wishIds.any { wishId ->
+                stored.output.verdicts.none {
+                    it.wishId == wishId && it.optionId == option.id && it.verdict == CompatibilityVerdict.CONDITIONAL
+                }
+            }) {
             throw InvalidFollowupException()
         }
         question.text = edited.text
@@ -112,9 +127,12 @@ class FollowupService(
 
     fun fanQuestions(token: String, wishId: UUID): List<FollowupQuestion> {
         val stored = visibleWish(token, wishId)
+        val options = workspaces.listOptions(token).associateBy { it.id }
         val answered = answerRows(stored, wishId).map { it.questionId }.toSet()
         return questions(stored).filter { question ->
-            question.approved && wishId in question.wishIds && (question.id in answered ||
+            val option = options[question.optionId]
+            question.approved && wishId in question.wishIds && option != null &&
+                validQuestion(token, stored, option, question.draft().copy(wishIds = listOf(wishId))) && (question.id in answered ||
                 stored.output.verdicts.any { it.wishId == wishId && it.optionId == question.optionId && it.verdict == CompatibilityVerdict.CONDITIONAL })
         }
     }
@@ -131,10 +149,40 @@ class FollowupService(
             if (it.choice != choice) throw InvalidFollowupException()
             return it
         }
+        val option = workspaces.listOptions(token).single { it.id == question.optionId }
+        if (!validQuestion(token, stored, option, question.draft().copy(wishIds = listOf(wishId)))) {
+            throw InvalidFollowupException()
+        }
         val answer = FollowupAnswerRecord(workspace.id, stored.run.id, question.optionId, question.id, wishId, choice, clock.instant())
         entityManager.persist(answer)
         reviews.recordFanResolution(token, answer.id)
         return answer
+    }
+
+    private fun eligibleOutput(token: String, stored: StoredAnalysisRun, option: Option): AnalysisOutput {
+        val visible = workspaces.listWishes(token, includeHidden = false).associateBy { it.id }
+        val eligible = FollowupQuestions.eligibleWishIds(option, stored.output)
+        val wishes = stored.originalOutput.wishes.filter { analyzed ->
+            analyzed.wishId in eligible && visible[analyzed.wishId]?.let {
+                FollowupQuestions.grounded(analyzed.needs, it)
+            } == true
+        }
+        val ids = wishes.map { it.wishId }.toSet()
+        return stored.originalOutput.copy(wishes = wishes,
+            verdicts = stored.originalOutput.verdicts.filter { it.wishId in ids })
+    }
+
+    private fun validQuestion(token: String, stored: StoredAnalysisRun, option: Option, draft: FollowupDraft): Boolean {
+        val visible = workspaces.listWishes(token, includeHidden = false).associateBy { it.id }
+        return try {
+            FollowupQuestions.validate(listOf(draft), option, stored.originalOutput)
+            draft.wishIds.all { id ->
+                val analyzed = stored.originalOutput.wishes.single { it.wishId == id }
+                visible[id]?.let { FollowupQuestions.grounded(analyzed.needs, it) } == true
+            }
+        } catch (_: IllegalArgumentException) {
+            false
+        }
     }
 
     private fun questions(stored: StoredAnalysisRun): List<FollowupQuestion> = entityManager.createQuery(

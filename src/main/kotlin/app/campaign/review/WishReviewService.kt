@@ -4,9 +4,9 @@ import app.campaign.model.AnalysisRun
 import app.campaign.followup.FollowupAnswerRecord
 import app.campaign.followup.FollowupQuestion
 import app.campaign.followup.FollowupQuestions
+import app.campaign.followup.FollowupReviewRecorded
 import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.Option
-import app.campaign.model.NeedStrength
 import app.campaign.model.Wish
 import app.campaign.model.WishKind
 import app.campaign.model.Workspace
@@ -17,6 +17,7 @@ import app.campaign.workspace.WorkspaceNotFoundException
 import jakarta.persistence.EntityManager
 import jakarta.persistence.LockModeType
 import org.springframework.stereotype.Service
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
 import java.time.Clock
@@ -30,6 +31,7 @@ class WishReviewService(
     private val entityManager: EntityManager,
     private val mapper: JsonMapper,
     private val clock: Clock,
+    private val events: ApplicationEventPublisher,
 ) {
     fun history(workspaceId: UUID, runId: UUID): List<WishReviewOverride> = entityManager.createQuery(
         "select r from WishReviewOverride r where r.workspaceId = :workspaceId and r.runId = :runId " +
@@ -92,14 +94,11 @@ class WishReviewService(
         val history = history(workspace.id, run.id)
         history.singleOrNull { it.answerId == answerId }?.let { return it }
         val previous = history.filter { it.wishId == wish.id && it.optionId == answer.optionId }.maxByOrNull { it.revision }
-        if (previous?.source == "MAKER") throw InvalidWishReviewException()
+        if (previous?.source == "MAKER") return null
         if (previous?.source == "FAN_ANSWER") return previous
         val original = mapper.readValue(run.resultJson, AnalysisOutput::class.java)
-        val effective = reviewedAnalysis(original, history)
-        val needs = effective.wishes.singleOrNull { it.wishId == wish.id }?.needs.orEmpty()
-            .filter { it.strength != NeedStrength.PREFERENCE }
-        fun normalized(text: String) = text.trim().replace(Regex("(?U)\\s+"), " ")
-        if (needs.any { it.quote.isBlank() || !normalized(wish.text).contains(normalized(it.quote)) }) return null
+        val needs = original.wishes.singleOrNull { it.wishId == wish.id }?.needs.orEmpty()
+        if (!FollowupQuestions.grounded(needs, wish)) return null
         val option = entityManager.find(Option::class.java, answer.optionId)
             ?.takeIf { it.workspaceId == workspace.id } ?: throw WorkspaceNotFoundException()
         val questions = entityManager.createQuery(
@@ -114,7 +113,7 @@ class WishReviewService(
             .setParameter("optionId", option.id).setParameter("wishId", wish.id).resultList
         val resolution = try {
             FollowupQuestions.resolve(run.id, wish.id, questions.map { it.approvedQuestion() },
-                answers.map { it.answer() }, option, effective)
+                answers.map { it.answer() }, option, original)
         } catch (_: IllegalArgumentException) {
             throw InvalidWishReviewException()
         }
@@ -123,7 +122,11 @@ class WishReviewService(
             workspace.id, run.id, wish.id, option.id, resolution.verdict,
             CompatibilityVerdict.CONDITIONAL, "Fan confirmed the allowed variants for the recorded conditions.",
             clock.instant(), (previous?.revision ?: 0) + 1, source = "FAN_ANSWER", answerId = answer.id,
-        ).also(entityManager::persist)
+        ).also {
+            entityManager.persist(it)
+            events.publishEvent(FollowupReviewRecorded(it, answers.toList(),
+                questions.filter { question -> answers.any { it.questionId == question.id } }))
+        }
     }
 }
 

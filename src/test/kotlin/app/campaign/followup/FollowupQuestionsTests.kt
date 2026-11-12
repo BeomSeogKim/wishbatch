@@ -31,6 +31,15 @@ class FollowupQuestionsTests {
         "finish", listOf("matte", "glossy"), listOf(wish))
 
     @Test
+    fun `variant quote matching respects Unicode word boundaries and whitespace`() {
+        for (quote in listOf("matters", "formatte", "matte\u8272", "matte2")) {
+            assertEquals(false, FollowupQuestions.matchesVariantNeed(option, "finish", finish.copy(quote = quote)))
+        }
+        assertEquals(true, FollowupQuestions.matchesVariantNeed(option, "finish",
+            finish.copy(value = "matte\u00a0finish", quote = "Only MATTE finish")))
+    }
+
+    @Test
     fun `validated model draft can be edited and approved against the same catalog`() {
         assertEquals(listOf(draft), FollowupDraftValidator.validate(listOf(draft), option, output))
         val edited = draft.copy(text = "Which finish works for you?")

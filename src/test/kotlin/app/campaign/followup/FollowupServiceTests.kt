@@ -32,6 +32,8 @@ import org.springframework.context.annotation.Primary
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.context.event.ApplicationEvents
+import org.springframework.test.context.event.RecordApplicationEvents
 import org.springframework.test.web.servlet.get
 import tools.jackson.databind.json.JsonMapper
 import java.time.Instant
@@ -47,6 +49,7 @@ import kotlin.test.assertTrue
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(FollowupServiceTests.DraftConfiguration::class)
+@RecordApplicationEvents
 class FollowupServiceTests @Autowired constructor(
     private val followups: FollowupService,
     private val workspaces: WorkspaceService,
@@ -58,6 +61,9 @@ class FollowupServiceTests @Autowired constructor(
     private val drafter: OfflineDrafter,
     transactionManager: PlatformTransactionManager,
 ) {
+    @Autowired
+    private lateinit var events: ApplicationEvents
+
     private val transaction = TransactionTemplate(transactionManager)
     private val calls get() = drafter.calls
 
@@ -73,9 +79,11 @@ class FollowupServiceTests @Autowired constructor(
         override fun draft(option: Option, output: AnalysisOutput): FollowupDraftResult {
             calls++
             failure?.let { return FollowupDraftResult.Failed(it) }
-            val drafts = option.allowedVariants.filterKeys { it in setOf("finish", "size") }.map { (key, choices) ->
-                FollowupDraft("Which $key meets your condition?", if (key == "finish") NeedAttribute.FINISH else NeedAttribute.SIZE,
-                    key, choices, output.wishes.map { it.wishId })
+            val drafts = option.allowedVariants.filterKeys { FollowupQuestions.attributeForVariantKey(it) != null }.map { (key, choices) ->
+                FollowupDraft("Which $key meets your condition?", FollowupQuestions.attributeForVariantKey(key)!!,
+                    key, choices, output.wishes.filter { wish ->
+                        wish.needs.any { FollowupQuestions.matchesVariantNeed(option, key, it) }
+                    }.map { it.wishId })
             }
             return FollowupDraftResult.Drafted(drafts, "offline-model")
         }
@@ -116,6 +124,10 @@ class FollowupServiceTests @Autowired constructor(
         assertEquals(answer.id, followups.answer(fixture.token, question.id, fixture.wish, "glossy").id)
         assertEquals(decision.id, reviews.recordFanResolution(fixture.token, answer.id)?.id)
         assertEquals(1, reviews.history(fixture.run.workspaceId, fixture.run.id).size)
+        val event = events.stream(FollowupReviewRecorded::class.java).toList().single()
+        assertEquals(decision.id, event.review.id)
+        assertEquals(listOf(answer.id), event.answers.map { it.id })
+        assertEquals(listOf(question.id), event.questions.map { it.id })
         val fanLabel = mvc.get("/w/${fixture.token}/maker/proposal") { param("run", fixture.run.id.toString()) }
             .andReturn().response.contentAsString
         assertContains(fanLabel, ">Fan answer</strong>")
@@ -133,6 +145,7 @@ class FollowupServiceTests @Autowired constructor(
         assertEquals(CompatibilityVerdict.INCOMPATIBLE, stored.output.verdicts.single().verdict)
         assertEquals(listOf("FAN_ANSWER", "MAKER"), stored.overrides.map { it.source })
         assertEquals(makerReason, stored.overrides.last().reason)
+        assertEquals(1L, events.stream(FollowupReviewRecorded::class.java).count())
         val makerLabel = mvc.get("/w/${fixture.token}/maker/proposal") { param("run", fixture.run.id.toString()) }
             .andReturn().response.contentAsString
         assertContains(makerLabel, ">Maker override</strong>")
@@ -151,6 +164,35 @@ class FollowupServiceTests @Autowired constructor(
         assertEquals(2, stored.overrides.size)
         assertEquals(2, optionWishCounts(stored.output).single().compatible)
         assertTrue(stored.overrides.all { it.source == "FAN_ANSWER" && it.answerId != null })
+    }
+
+    @Test
+    fun `ceramicist catalog question approval and independent fan answers change effective demand only`() {
+        val workspace = workspaces.create("ceramicist")
+        val option = workspaces.listOptions(workspace.token).first { "color" in it.allowedVariants }
+        val wish = workspaces.addWish(workspace.token, "Only blue color")
+        val other = workspaces.addWish(workspace.token, "Only blue color")
+        val output = AnalysisOutput(listOf(wish, other).map {
+            AnalyzedWish(it.id, WishKind.REQUEST,
+                listOf(WishNeed(NeedStrength.HARD, NeedAttribute.OTHER, "blue color", "Only blue color")))
+        }, listOf(wish, other).map { WishVerdict(it.id, option.id, CompatibilityVerdict.CONDITIONAL, "Confirm color.") },
+            Proposal(option.id, emptyMap(), emptyList()), null, emptyList(), emptyList(), emptyList(), listOf(option.id))
+        val run = storeRun(workspace.id, output, Instant.parse("2090-01-01T00:00:00Z"))
+        assertEquals(FollowupPageState.READY, followups.makerPage(workspace.token).state)
+        assertEquals(0, calls)
+        followups.draft(workspace.token)
+        val question = followups.makerPage(workspace.token).questions.single()
+        followups.approve(workspace.token, question.id, question.text, question.choices)
+        followups.answer(workspace.token, question.id, wish.id, "blue")
+        assertEquals(FollowupPageState.READY, followups.makerPage(workspace.token).state)
+        val stored = runs.latest(workspace.token)!!
+        assertEquals(1, optionWishCounts(stored.output).single().compatible)
+        assertEquals(1, optionWishCounts(stored.output).single().depends)
+        assertTrue(followups.answers(workspace.token, other.id).isEmpty())
+        assertEquals(listOf(question.id), followups.fanQuestions(workspace.token, other.id).map { it.id })
+        assertEquals(output, stored.originalOutput)
+        assertEquals(run.resultJson, stored.run.resultJson)
+        assertEquals(1, calls)
     }
 
     @Test
@@ -178,6 +220,9 @@ class FollowupServiceTests @Autowired constructor(
         val decision = reviews.history(fixture.run.workspaceId, fixture.run.id).single()
         assertEquals(decision.id, reviews.recordFanResolution(fixture.token, first.id)?.id)
         assertEquals(1, reviews.history(fixture.run.workspaceId, fixture.run.id).size)
+        val event = events.stream(FollowupReviewRecorded::class.java).toList().single()
+        assertEquals(questions.map { it.id }.toSet(), event.questions.map { it.id }.toSet())
+        assertEquals(2, event.answers.size)
     }
 
     @Test
@@ -208,14 +253,16 @@ class FollowupServiceTests @Autowired constructor(
     }
 
     @Test
-    fun `later maker review rejects a first fan answer and rolls its persistence back`() {
+    fun `later maker review preserves a first fan answer without changing maker priority`() {
         val fixture = fixture()
         val question = draft(fixture)
         followups.approve(fixture.token, question.id, question.text, question.choices)
         reviews.decide(fixture.token, fixture.run.id, fixture.wish, fixture.option.id,
             CompatibilityVerdict.INCOMPATIBLE, "This condition cannot be met.")
-        assertFailsWith<InvalidWishReviewException> { followups.answer(fixture.token, question.id, fixture.wish, "matte") }
-        assertTrue(followups.answers(fixture.token, fixture.wish).isEmpty())
+        val answer = followups.answer(fixture.token, question.id, fixture.wish, "matte")
+        assertEquals(answer.id, followups.answers(fixture.token, fixture.wish).single().id)
+        assertNull(reviews.recordFanResolution(fixture.token, answer.id))
+        assertEquals(CompatibilityVerdict.INCOMPATIBLE, runs.latest(fixture.token)!!.output.verdicts.single().verdict)
         assertEquals(listOf("MAKER"), reviews.history(fixture.run.workspaceId, fixture.run.id).map { it.source })
         assertFailsWith<WorkspaceNotFoundException> { reviews.recordFanResolution(fixture.token, UUID.randomUUID()) }
     }
@@ -286,12 +333,58 @@ class FollowupServiceTests @Autowired constructor(
     @Test
     fun `sole unsupported finish condition cannot enter the approved fan answer path`() {
         val fixture = fixture(unsupportedFinish = true)
-        assertEquals(FollowupDraftResult.Failed(AnalysisFailure.INVALID_OUTPUT), followups.draft(fixture.token))
+        assertEquals(FollowupPageState.NO_ELIGIBLE, followups.makerPage(fixture.token).state)
+        assertTrue((followups.draft(fixture.token) as FollowupDraftResult.Drafted).drafts.isEmpty())
+        assertEquals(0, calls)
         assertTrue(followups.makerPage(fixture.token).questions.isEmpty())
         assertTrue(followups.fanQuestions(fixture.token, fixture.wish).isEmpty())
         assertTrue(reviews.history(fixture.run.workspaceId, fixture.run.id).isEmpty())
         assertEquals(1, optionWishCounts(runs.find(fixture.token, fixture.run.id)!!.output).single().depends)
         assertEquals(fixture.output, runs.find(fixture.token, fixture.run.id)!!.originalOutput)
+    }
+
+    @Test
+    fun `page reads expose unavailable stale and failure states without drafting or persisting`() {
+        val fixture = fixture()
+        repeat(2) { assertEquals(FollowupPageState.READY, followups.makerPage(fixture.token).state) }
+        assertEquals(0, calls)
+        assertFalse(followups.makerPage(fixture.token).drafted)
+        val question = draft(fixture)
+        workspaces.setWishHidden(fixture.token, fixture.wish, true)
+        repeat(2) { assertEquals(FollowupPageState.STALE, followups.makerPage(fixture.token).state) }
+        assertFailsWith<InvalidFollowupException> {
+            followups.approve(fixture.token, question.id, question.text, question.choices)
+        }
+        assertEquals(1, calls)
+        val failed = fixture()
+        drafter.failure = AnalysisFailure.TIMEOUT
+        followups.draft(failed.token)
+        assertEquals(FollowupPageState.FAILED, followups.makerPage(failed.token).state)
+        val unavailable = fixture()
+        storeRun(unavailable.run.workspaceId, unavailable.output.copy(proposal = null), Instant.parse("2091-01-01T00:00:00Z"))
+        assertEquals(FollowupPageState.UNAVAILABLE, followups.makerPage(unavailable.token).state)
+        assertEquals(2, calls)
+    }
+
+    @Test
+    fun `ungrounded original condition never reaches drafting approval or fan questions`() {
+        val fixture = fixture()
+        val ungrounded = fixture.output.copy(wishes = fixture.output.wishes.map { wish ->
+            wish.copy(needs = wish.needs.map { it.copy(quote = "An absent matte condition") })
+        })
+        val run = storeRun(fixture.run.workspaceId, ungrounded, Instant.parse("2091-01-01T00:00:00Z"))
+        val question = transaction.execute {
+            FollowupQuestion(fixture.run.workspaceId, run.id, fixture.option.id, NeedAttribute.FINISH,
+                "finish", "Which finish works?", listOf("matte", "glossy"), listOf(fixture.wish), run.createdAt)
+                .also { entityManager.persist(it) }
+        }!!
+        assertEquals(FollowupPageState.STALE, followups.makerPage(fixture.token).state)
+        assertTrue((followups.draft(fixture.token) as FollowupDraftResult.Drafted).drafts.isEmpty())
+        assertFailsWith<InvalidFollowupException> {
+            followups.approve(fixture.token, question.id, question.text, question.choices)
+        }
+        assertTrue(followups.fanQuestions(fixture.token, fixture.wish).isEmpty())
+        assertEquals(0, calls)
     }
 
     private fun draft(fixture: Fixture): FollowupQuestion {

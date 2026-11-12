@@ -5,6 +5,7 @@ import app.campaign.model.NeedAttribute
 import app.campaign.model.NeedStrength
 import app.campaign.model.Option
 import app.campaign.model.WishKind
+import app.campaign.model.Wish
 import app.campaign.port.AnalysisOutput
 import app.campaign.port.WishNeed
 import java.util.UUID
@@ -37,6 +38,25 @@ data class FollowupResolution(
 )
 
 object FollowupQuestions {
+    fun grounded(needs: List<WishNeed>, wish: Wish): Boolean {
+        fun normalized(text: String) = text.trim().replace(Regex("""(?U)\s+"""), " ")
+        return needs.filter { it.strength != NeedStrength.PREFERENCE }.all {
+            it.quote.isNotBlank() && normalized(wish.text).contains(normalized(it.quote))
+        }
+    }
+
+    fun eligibleWishIds(option: Option, output: AnalysisOutput): Set<UUID> {
+        val conditional = output.verdicts.filter {
+            it.optionId == option.id && it.verdict == CompatibilityVerdict.CONDITIONAL
+        }.map { it.wishId }.toSet()
+        val keys = option.allowedVariants.filterValues { it.distinct().size >= 2 }.keys
+        return output.wishes.filter { wish ->
+            wish.kind == WishKind.REQUEST && wish.wishId in conditional && wish.needs.any { need ->
+                keys.any { matchesVariantNeed(option, it, need) }
+            }
+        }.map { it.wishId }.toSet()
+    }
+
     fun attributeForVariantKey(key: String): NeedAttribute? = when (key) {
         "format" -> NeedAttribute.FORMAT
         "size" -> NeedAttribute.SIZE
@@ -53,12 +73,12 @@ object FollowupQuestions {
             "color" -> listOf("color", "colour")
             else -> listOf(key)
         }
-        fun normalized(text: String) = text.trim().replace(Regex("(?U)\\s+"), " ").lowercase(Locale.ROOT)
+        fun normalized(text: String) = text.trim().replace(Regex("""(?U)\s+"""), " ").lowercase(Locale.ROOT)
         val value = normalized(need.value)
         return option.allowedVariants[key].orEmpty().any { choice ->
             val variant = normalized(choice)
             val names = listOf(variant) + qualifiers.flatMap { listOf("$variant $it", "$it $variant") }
-            value in names && Regex("(?iuU)(?<![\\p{L}\\p{N}])${Regex.escape(choice)}(?![\\p{L}\\p{N}])")
+            value in names && Regex("""(?iuU)(?<![\p{L}\p{N}])${Regex.escape(choice)}(?![\p{L}\p{N}])""")
                 .containsMatchIn(need.quote)
         }
     }
