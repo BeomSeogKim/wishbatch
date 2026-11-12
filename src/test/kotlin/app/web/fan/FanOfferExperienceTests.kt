@@ -77,7 +77,9 @@ class FanOfferExperienceTests @Autowired constructor(
         assertFalse(html.contains(">$hash</code>"))
         assertContains(html, "A5 archival print")
         assertContains(html, "Shipping included; dispatched in two weeks")
-        for (label in listOf("Stated interest", "Authorized holds", "Paid")) assertContains(html, label)
+        for (label in listOf("Interested in this offer", "Authorized holds", "Paid")) assertContains(html, label)
+        assertContains(html, "more depend on a condition")
+        for (field in listOf("interest", "conditional")) assertContains(html, "data-live-field=\"$field\"")
         for (field in listOf("authorizedHolds", "paid")) assertContains(html, "data-offer-progress=\"$field\"")
         for (number in 1..6) {
             val term = messages.getMessage("money.term.$number", null, Locale.ENGLISH)
