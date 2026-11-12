@@ -40,6 +40,7 @@
                 <span th:unless="${row.current}"> — Source unavailable for this analysis</span>
                 <span th:if="${row.current and !row.selectable}"> — Reading aid unavailable</span>
             </li></ul>
+            <button class="button button-primary" type="submit">Generate selected reading aids</button>
         </details>
     </form>
 </main>

@@ -97,7 +97,7 @@
                         <input type="hidden" name="amount" th:value="${campaign.confirmation.amount}">
                         <label class="checkbox-field">
                             <input type="checkbox" name="acknowledged" value="true" required>
-                            <span>I understand capture can fail and a shortfall requires refunds and hold releases.</span>
+                            <span>I understand capture can fail, refunds and hold releases are requested after a shortfall, and their completion depends on PayPal and the bank or card.</span>
                         </label>
                         <button type="submit" class="button button-primary" th:disabled="${!canConfirm}">Confirm production</button>
                     </form>
