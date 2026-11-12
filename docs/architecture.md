@@ -43,6 +43,34 @@ Use these terms in code, pages, and documents. Do not introduce synonyms.
 Stated interest, authorized holds, and completed payments are three different
 counts. They are stored, computed, and shown separately.
 
+## Contracts
+
+- `app.campaign.model` defines `Workspace`, `Option`, `Wish`, `AnalysisRun`,
+  `Offer`, `Campaign`, `Pledge`, and `Event` as JPA entities, plus their state,
+  reason, source, and analysis-label enums. IDs and references are UUIDs;
+  provider IDs are strings. Money uses `Long` minor units with a currency code,
+  and timestamps use `Instant`. Creation timestamps are supplied by callers.
+  Offer terms and analysis snapshots are immutable; collection fields persist
+  as JSON text. `Money` and `ShippingAddress` carry payment values across ports.
+- `app.campaign.port.PaymentGateway` declares authorize-intent order creation,
+  authorization, capture, void, refund, and authorization/capture/refund reads.
+  Resource-specific IDs and `PaymentResult` distinguish resource status from
+  transport failure. Every operation takes an idempotency key. Its KDoc fixes
+  full-payment behavior, retries, and reconciliation responsibilities.
+- `app.campaign.port.WishAnalyzer` takes option/wish snapshots and returns
+  validated `AnalysisOutput` or a typed `AnalysisResult.Failure`.
+  `AnalysisValidationResult`, `AnalysisValidationFlag`, and
+  `AnalysisValidationRule` describe validation without implementing it.
+- `app.campaign.rules` publishes the three count functions, `thresholdMet`,
+  `funded`, campaign deadlines, transition data and rejection functions,
+  `validateOffer`, `checkCapacity`, and `idempotencyKey`. Transition checks
+  validate edges and reasons; services must apply the documented trigger
+  guards and serialize capacity checks.
+- Time-dependent callers inject `java.time.Clock` and pass explicit instants
+  to rules. Tests share `app.testing.InMemoryPaymentGateway`,
+  `InMemoryWishAnalyzer`, and `fixedClock`. The fakes record calls and consume
+  typed FIFO scripts without making external calls.
+
 ## Configuration
 
 Configuration comes from environment variables. [.env.example](../.env.example)
