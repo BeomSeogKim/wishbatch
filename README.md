@@ -20,7 +20,8 @@ Maker options + fan wishes -> AI analysis -> maker-reviewed offer
 4. Confirm the exact specification, price, minimum, and delivery terms.
 5. Fans authorize PayPal holds for that offer.
 6. Confirm production when the authorized minimum is met; capture payments,
-   then proceed only if enough complete. Otherwise refund payments and void holds.
+   then proceed only if enough complete. Otherwise request refunds and hold releases;
+   PayPal must confirm their completion.
 
 **AI supplies the synthesis; PayPal supplies the financial commitment.** Without
 AI, the maker must sort every wish and the product becomes a preorder form.
@@ -28,7 +29,7 @@ Without PayPal, compatible wishes remain stated interest with no funded batch.
 
 ## Status
 
-A working **sandbox prototype**, with synthetic seed data, stored analysis,
+A working **sandbox prototype**, with synthetic wishes and precomputed model analysis,
 maker/fan pages, offer publication, and payment settlement code. The fastest
 way to try it is <https://wishbatch.onrender.com/>: choose **Start a demo** or
 read the [testing guide](https://wishbatch.onrender.com/guide). Browsing needs
@@ -53,7 +54,8 @@ Install JDK 21 and run from the repository root:
 ```
 
 The default database is in memory and disappears on shutdown. A new workspace
-contains synthetic options, wishes, and a labeled stored analysis. You can
+offers distinct illustrator, ceramicist, and textile catalogs with synthetic
+wishes and labeled precomputed model analyses. You can
 inspect evidence, add or hide wishes, and publish an offer
 without credentials. Reanalysis needs `LLM_API_KEY`; sandbox checkout needs
 `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` from a sandbox REST application,
@@ -73,7 +75,9 @@ and suggest one feasible batch for the maker to review. The default model is
 
 First, batches of wishes are classified against every option as Compatible,
 Depends, or Not served; praise and instructions are Not a request. Code computes
-counts. Second, the model receives those counts and bounded evidence samples
+counts. Two readings are compared; disagreements need review, and an incomplete
+second reading retains the validated first reading and marks it for attention.
+Second, the model receives those counts and bounded evidence samples
 and selects at most one proposal, with quotes, variants, unresolved questions,
 and alternatives. It cannot revise the first stage's classifications or counts.
 
@@ -85,13 +89,19 @@ interpretation. Failed runs preserve the last valid result. The maker can review
 wishes in a filterable table and record corrections without rewriting the
 original analysis. Literal quotes that cannot be matched remain unavailable.
 For supported conditions, the maker can approve follow-up questions and fans
-can answer against their wishes; unresolved conditions remain Depends. See
+can answer against their wishes; unresolved conditions remain Depends. Draft
+replies appear beside wishes only after maker approval, which sends no messages.
+Machine glosses are reading aids, not evidence or verdicts; reviewed offer copy
+needs separate confirmation of its claims and terms. See
 [data tools](docs/data-tools.md) and [follow-up questions](docs/architecture.md#follow-up-questions).
 
 **No offer price, cost, payment amount, or funding threshold comes from the
 model.** The maker sets commercial terms; server code computes money in integer
 minor units and counts from records. Model-extracted fan budgets are quoted
-analysis evidence only, never a price or charge. Analysis has bounded retries,
+analysis evidence only, never a price or charge. The interest count uses the
+offered price: a price-only condition can resolve when its quoted limit covers
+that price, while other unresolved conditions stay conditional. Decimal amounts
+are converted exactly to minor units. Analysis has bounded retries,
 a 60-second deadline, a daily provider-call cap, and a ten-attempt workspace
 quota. [Analysis implementation](docs/architecture.md#wish-analysis).
 
@@ -108,12 +118,13 @@ captures count toward the paid minimum and a `FUNDED` result.
 | `OPEN` | Minimum holds + maker confirmation enter `SETTLING`; closing with enough holds enters `AWAITING_CONFIRMATION` |
 | `AWAITING_CONFIRMATION` | Maker confirmation within 12 hours of close enters `SETTLING` |
 | `SETTLING` | Enough completed capture units enter `FUNDED`; a shortfall enters `NOT_FUNDED` |
-| `NOT_FUNDED` | Below-minimum close, cancellation, expired confirmation, or capture shortfall; refund completed captures and void remaining holds |
+| `NOT_FUNDED` | Below-minimum close, cancellation, expired confirmation, or capture shortfall; request refunds and releases of remaining holds |
 | `FUNDED` | The paid minimum was met at settlement; review current payments and attention flags before proceeding |
 
 Pending captures, voids, and refunds remain visible and are reconciled on reads
 and a minute tick. Verified sandbox webhooks can also trigger reconciliation;
-registration and deployment are separate steps. See the
+registration and deployment are separate steps. A transport receipt alone is
+not an accepted webhook or proof of payment. See the
 [webhook contract](src/main/kotlin/app/paypal/README.md). Stable per-pledge,
 per-operation idempotency keys are reused on retries and recovery. The client
 rejects every API base URL except
@@ -125,7 +136,10 @@ the endpoints and resource-status mappings. A capture can fail. Hold release
 and refund availability depend on PayPal and the bank or card. The product
 never holds funds or guarantees production or delivery. The maker can run a
 [books check](docs/reliability.md#books-check) to compare recorded pledges with
-sandbox resources and inspect dated results.
+sandbox resources and inspect dated results. A fan money trail shows recorded
+checkpoints; a wish is associated with a pledge only when explicitly linked.
+Record verification checks snapshot integrity, not semantic truth or signatures;
+the tamper drill changes only a copy.
 
 ## Evidence and limits
 
@@ -138,30 +152,22 @@ without credentials using JDK 21 and `./gradlew bootRun`; a new workspace
 displayed the stored postcard proposal. A Compose run at that historical
 baseline also created a PostgreSQL workspace with the stored proposal.
 
-An earlier hosted manual check on 2026-11-12 followed the guide through one
-sandbox authorization and completed capture. A separate local manual check at
-the historical `24423a5` baseline also completed a sandbox capture. The current
-source has not completed that golden-path check. These checks do not establish
-that the current source is deployed or that the webhook is registered and
-receiving events. They were not automated provider tests or independent first-time-user studies.
-Cancellation, withdrawal, refund, live reanalysis, cold start after idle, and
-persistence across a service restart were not repeated in that verification.
+A local sandbox golden path passed at the historical `340fb73` baseline.
+Current-source sandbox and hosted verification remain pending. A prior hosted
+check completed one sandbox authorization and capture; it does not establish
+that current source is deployed or webhooks are registered and receiving events.
 
 The offline deterministic settlement sequence test exercises 16 seeds with 64
-actions each using a fake gateway; it is not a provider or hosted test. The
-decision record captures analysis and offer snapshots and payment checkpoints.
-Earlier missing evidence remains unavailable; a pledge is not linked to a
-particular wish by inference. See [reliability](docs/reliability.md)
+actions each using a fake gateway; it is not a provider or hosted test. Earlier
+missing evidence remains unavailable. See [reliability](docs/reliability.md)
 and [provenance](docs/provenance.md).
 
-[Historical evaluation](docs/evaluation.md) covers a former illustrator seed
-snapshot of forty synthetic wishes, including three model runs. Those results
-do not evaluate the revised illustrator examples or the ceramicist and textile
-scenarios introduced by scenario integration. Their stored fixtures are
-synthetic reference data, not fresh model runs. The historical reference labels
-were written by a language model, not human adjudicators; this is a small
-product-designed set, not a held-out benchmark. Historical run times were
-23.213, 25.172, and 27.212 seconds, excluding startup and maker review.
+The three current precomputed analyses took 42.58, 36.00, and 37.66 seconds;
+their paired readings agreed on 40/40, 40/40, and 39/40 wishes, respectively.
+These are execution and consistency observations on synthetic inputs, not
+independent quality scores. [Historical evaluation](docs/evaluation.md) and
+the frozen scenario references are separate synthetic, machine-authored
+self-alignment evidence, not human adjudication or a held-out benchmark.
 **The manual-sorting comparison is not measured.**
 
 The strongest objection is that a maker could sort a few dozen wishes by hand

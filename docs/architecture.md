@@ -132,7 +132,9 @@ IMPORTED stated interest. Stable option and wish keys map to workspace-local
 UUIDs through `optionId` and `wishId`, so stored analysis can remap references
 without sharing records. Workspace creation also calls `AnalysisRunService.attachSeed` in the same transaction. `StoredSeedAnalysis`
 checks the canonical input hash, remaps stored option/wish references to the new
-workspace, and persists the result as a labeled seed run. It makes no model call.
+workspace, and persists the precomputed model result as a labeled seed run. It makes no model
+call at workspace creation. The inputs are synthetic; the outputs are model
+analyses, separate from the frozen synthetic evaluation references.
 
 The maker can paste wishes one per line. Import considers at most 100 lines,
 skips blank or overlong text, and respects the workspace's 200-wish limit under
@@ -182,7 +184,10 @@ Tests use fakes; these limits do not establish live model quality or performance
 `DefaultWishAnalyzer` implements `WishAnalyzer` using two OpenAI Responses stages.
 Classification divides the snapshot into batches of four wishes, each compared
 against every option. Up to ten calls run concurrently across the singleton
-analyzer, including simultaneous workspace runs. Each batch uses a strict schema
+analyzer, including simultaneous workspace runs. Two readings are compared;
+disagreements require review. If the second reading is incomplete, the validated
+first reading remains available and affected wishes are flagged for review.
+Each batch uses a strict schema
 and passes the existing validator before aggregation. Code merges the normalized
 results and computes counts with `optionWishCounts`.
 

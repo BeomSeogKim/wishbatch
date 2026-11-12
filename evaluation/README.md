@@ -8,12 +8,13 @@ python3 evaluation/scenario_evaluate.py --output /tmp/scenario-results.json
 python3 evaluation/export_scenario.py ceramicist /tmp/ceramicist-snapshot
 ```
 
-The default report checks alignment of the three stored synthetic references,
+The default report checks alignment of the three frozen synthetic references,
 forty wishes each. It is not a model run or an accuracy benchmark. Reference
-labels are extracted from those same machine-written stored outputs, without
+labels are extracted from those same frozen machine-written outputs, without
 independent human adjudication. Unknown reasonable-disagreement annotations,
 language labels, raw readings, maker decisions, latency, tokens and cost remain
-null. No manual-sorting comparison has been measured.
+null. These frozen artifacts are separate from the current precomputed model
+analyses used by the product. No manual-sorting comparison has been measured.
 
 `scenarios/manifest.json` freezes source and reference hashes, exact UUID-to-key
 maps, input hashes, counts and reviewed subset keys. Wish UUIDs repeat between

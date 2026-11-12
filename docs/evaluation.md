@@ -2,14 +2,14 @@
 
 This records a historical evaluation of classification agreement on the former
 illustrator snapshot of forty synthetic wishes, not whether AI saves a maker
-time. It does not evaluate the revised illustrator snapshot or the ceramicist
-and textile scenarios introduced by scenario integration. Those scenarios'
-stored fixtures, including the revised illustrator fixture, are labeled
-`synthetic-reference`; they are reference data, not fresh model runs. The revised
-illustrator wishes include multilingual, duplicate, and contradictory examples.
-One small synthetic seed set proves little. The timed
-manual-sorting comparison is **not measured yet**, so no productivity advantage,
-human-level accuracy, or customer demand is established.
+time. It does not evaluate the current precomputed model analyses for the
+illustrator, ceramicist, or textile scenarios. The separately frozen scenario
+references are synthetic self-alignment data, not independent quality labels.
+The current analyses took 42.58, 36.00, and 37.66 seconds; their paired readings
+agreed on 40/40, 40/40, and 39/40 wishes, respectively. These are execution
+and consistency observations, not accuracy scores. The timed manual-sorting
+comparison is **not measured**, so no productivity advantage, human-level
+accuracy, or customer demand is established.
 
 The offline payment sequence test is separate from this model evaluation: it
 uses a fake gateway for 16 deterministic seeds of 64 actions each. It does not

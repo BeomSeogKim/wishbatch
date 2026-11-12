@@ -36,7 +36,8 @@ The proposal page embeds the workbench; the same table is available at
 `GET /w/{token}/maker/proposal/wishes?run={runId}`. Both views retain the selected
 immutable analysis run. Label and option filters pair the verdict with its
 option; totals count distinct source wishes and never extracted quantities.
-Language is unknown when no language metadata was collected.
+A machine gloss is a reading aid that may be inaccurate; it does not change
+verdicts or counts. Language is unknown when no language metadata was collected.
 Displayed quotes must be exact substrings of the original wish, including its
 whitespace. Nonmatching quotes are unavailable; they are never rewritten to
 look like original evidence.
