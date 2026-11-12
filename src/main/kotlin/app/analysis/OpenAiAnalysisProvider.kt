@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 enum class AnalysisStage { CLASSIFY, PROPOSE }
-enum class AnalysisPurpose { ANALYSIS, REPLY }
+enum class AnalysisPurpose { ANALYSIS, REPLY, GLOSS, OFFER_COPY }
 
 data class AnalysisRequest(
     val input: String,
@@ -48,6 +48,7 @@ class OpenAiAnalysisProvider internal constructor(
     private val properties: AnalysisProperties,
     private val mapper: JsonMapper,
     private val transport: AnalysisTransport,
+    private val auxiliaryCallBudget: AuxiliaryCallBudget = sharedAuxiliaryCallBudget,
 ) : AnalysisProvider {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -59,15 +60,28 @@ class OpenAiAnalysisProvider internal constructor(
         val started = System.nanoTime()
         if (properties.apiKey.isBlank()) return ProviderResult.Failure(AnalysisFailure.NOT_CONFIGURED)
         if (budget.isNegative || budget.isZero) return ProviderResult.Failure(AnalysisFailure.TIMEOUT)
+        val auxiliaryOutputLimit = when (request.purpose) {
+            AnalysisPurpose.GLOSS -> 2048
+            AnalysisPurpose.OFFER_COPY -> 1536
+            else -> null
+        }
+        if (auxiliaryOutputLimit != null && (request.retry ||
+            budget > Duration.ofSeconds(15) || request.maxOutputTokens !in 1..auxiliaryOutputLimit)
+        ) return ProviderResult.Failure(AnalysisFailure.INVALID_OUTPUT)
+        val instructions = when (request.purpose) {
+            AnalysisPurpose.GLOSS -> AuxiliaryInstructions.gloss
+            AnalysisPurpose.OFFER_COPY -> AuxiliaryInstructions.offerCopy
+            AnalysisPurpose.REPLY -> ReplyPrompt.instructions
+            AnalysisPurpose.ANALYSIS -> AnalysisPrompt.instructions + "\n" + AnalysisStages.instructions(request.stage) + if (request.retry) {
+                "\nThe previous output was invalid. Return one complete schema-shaped result with at most one proposal."
+            } else ""
+        }
         val body = mapper.writeValueAsString(mapOf(
             "model" to properties.model,
             "store" to false,
             "max_output_tokens" to request.maxOutputTokens,
             "reasoning" to mapOf("effort" to properties.reasoningEffort),
-            "instructions" to if (request.purpose == AnalysisPurpose.REPLY) ReplyPrompt.instructions
-            else AnalysisPrompt.instructions + "\n" + AnalysisStages.instructions(request.stage) + if (request.retry) {
-                "\nThe previous output was invalid. Return one complete schema-shaped result with at most one proposal."
-            } else "",
+            "instructions" to instructions,
             "input" to listOf(mapOf("role" to "user", "content" to request.input)),
             "text" to mapOf("verbosity" to "low", "format" to mapOf(
                 "type" to "json_schema", "name" to "wish_analysis", "strict" to true, "schema" to request.schema,
@@ -80,6 +94,14 @@ class OpenAiAnalysisProvider internal constructor(
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build()
+            if (auxiliaryOutputLimit != null) {
+                if (budget.toNanos() - (System.nanoTime() - started) <= 0) {
+                    return ProviderResult.Failure(AnalysisFailure.TIMEOUT)
+                }
+                if (!auxiliaryCallBudget.reserve(properties.dailyRunCap)) {
+                    return ProviderResult.Failure(AnalysisFailure.RUN_LIMIT_REACHED)
+                }
+            }
             transport.send(httpRequest)
         } catch (_: IllegalArgumentException) {
             return ProviderResult.Failure(AnalysisFailure.PROVIDER_FAILURE)
@@ -149,6 +171,8 @@ class OpenAiAnalysisProvider internal constructor(
     }
 
     companion object {
+        private val sharedAuxiliaryCallBudget = AuxiliaryCallBudget()
+
         private fun httpTransport(): AnalysisTransport {
             val client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build()
             return AnalysisTransport { request ->
