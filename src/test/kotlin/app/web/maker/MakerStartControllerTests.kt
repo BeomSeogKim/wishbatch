@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.mock.web.MockHttpSession
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.transaction.annotation.Transactional
@@ -50,7 +51,7 @@ class MakerStartControllerTests(
     fun `each scenario starts with a stored run and shows its maker to fans`() {
         assertEquals(listOf("illustrator", "ceramicist", "textile"), catalog.scenarios.map { it.key })
         for (scenario in catalog.scenarios) {
-            val url = mvc.post("/demo") { param("scenario", scenario.key) }
+            val url = mvc.securePost("/demo") { param("scenario", scenario.key) }
                 .andExpect { status { is3xxRedirection() } }.andReturn().response.redirectedUrl!!
             val token = url.split('/')[2]
             assertEquals(scenario.key, workspaces.scenario(token).key)
@@ -63,7 +64,7 @@ class MakerStartControllerTests(
             }
             mvc.get("/w/$token/maker").andExpect { model { attributeExists("offerRun") } }
         }
-        mvc.post("/demo") { param("scenario", "unknown") }.andExpect { status { isBadRequest() } }
+        mvc.securePost("/demo") { param("scenario", "unknown") }.andExpect { status { isBadRequest() } }
     }
 
     @Test
@@ -212,15 +213,16 @@ class MakerStartControllerTests(
     @Test
     fun `unknown and malformed tokens render the same shared not found page for every route`() {
         val wishId = workspaces.listWishes(workspaces.create().token).first().id
+        val session = mvc.get("/").andReturn().request.session as MockHttpSession
         val pages = mutableListOf<String>()
         for (token in listOf("missing", "x".repeat(43))) {
             for (suffix in listOf("", "/options", "/wishes")) {
-                pages += mvc.get("/w/$token/maker$suffix").andExpect {
+                pages += mvc.get("/w/$token/maker$suffix") { this.session = session }.andExpect {
                     status { isNotFound() }
                     view { name("error/not-found") }
                 }.andReturn().response.contentAsString
             }
-            pages += mvc.securePost("/w/$token/maker/wishes") {
+            pages += mvc.securePost("/w/$token/maker/wishes", session) {
                 param("wishId", wishId.toString())
                 param("hidden", "true")
             }.andExpect {

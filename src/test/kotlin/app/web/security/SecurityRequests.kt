@@ -10,9 +10,12 @@ import java.util.UUID
 
 fun MockMvc.securePost(
     path: String,
+    existingSession: MockHttpSession? = null,
     dsl: MockHttpServletRequestDsl.() -> Unit = {},
 ): ResultActionsDsl {
-    val page = get("/").andReturn()
+    val page = get("/") {
+        if (existingSession != null) session = existingSession
+    }.andReturn()
     val csrf = page.request.getAttribute("_csrf") as CsrfToken
     val csrfSession = page.request.session as MockHttpSession
     return post(path) {

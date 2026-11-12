@@ -32,6 +32,8 @@ class WebSecurityIntegrationTests @Autowired constructor(
         val page = mvc.get("/").andExpect { status { isOk() } }.andReturn()
         val csrf = page.request.getAttribute("_csrf") as CsrfToken
         assertContains(page.response.contentAsString, "name=\"_csrf\" value=\"${csrf.token}\"")
+        assertContains(page.response.contentAsString, "name=\"_csrf\" content=\"${csrf.token}\"")
+        assertContains(page.response.contentAsString, "name=\"_csrf_header\" content=\"${csrf.headerName}\"")
         val session = page.request.session as MockHttpSession
         mvc.post("/demo").andExpect { status { isForbidden() } }
         val created = mvc.post("/demo") {

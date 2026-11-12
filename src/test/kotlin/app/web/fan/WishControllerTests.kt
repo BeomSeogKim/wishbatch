@@ -9,6 +9,7 @@ import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.mock.web.MockHttpSession
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
@@ -183,10 +184,12 @@ class WishControllerTests @Autowired constructor(
 
     @Test
     fun `unknown tokens return the same safe not found page for reading and submitting`() {
+        val session = mvc.get("/").andReturn().request.session as MockHttpSession
         for (token in listOf("missing", "x".repeat(43))) {
-            val read = mvc.get("/w/$token").andExpect { status { isNotFound() }; view { name("error/not-found") } }
+            val read = mvc.get("/w/$token") { this.session = session }
+                .andExpect { status { isNotFound() }; view { name("error/not-found") } }
                 .andReturn().response.contentAsString
-            val submit = mvc.securePost("/w/$token") { param("text", "") }
+            val submit = mvc.securePost("/w/$token", session) { param("text", "") }
                 .andExpect { status { isNotFound() }; view { name("error/not-found") } }.andReturn().response.contentAsString
             assertContains(read, "This page is unavailable.")
             assertContains(read, "Sandbox demo. No real money moves.")
