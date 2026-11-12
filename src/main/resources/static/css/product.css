@@ -339,4 +339,4 @@ main > .notice + .two-column, main > .notice + .card { margin-top: var(--space-6
 .notice.demo-guide a { margin-top: 0; }
 .notice.demo-guide .demo-guide-next { display: inline-flex; min-height: 36px; padding: 6px 12px; color: var(--ink); }
 .outcome-map-scroll { max-width: 100%; overflow-x: auto; }
-.outcome-map-scroll svg { width: 440px; max-width: none; height: auto; }
+.outcome-map-scroll svg { width: 600px; max-width: none; height: auto; }

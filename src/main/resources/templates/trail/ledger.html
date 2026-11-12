@@ -10,7 +10,7 @@
         <p>Provider states and match are from the latest recorded check, not live status. Pledges absent from that check are unknown.</p>
         <a th:href="@{/w/{token}/maker/campaigns/{id}/comparison.csv(token=${token},id=${campaignId})}">Download comparison CSV</a>
         <div data-comparison-grid hidden aria-label="Pledge comparison grid"></div>
-        <div data-comparison-fallback>
+        <div class="table-scroll" data-comparison-fallback tabindex="0" role="region" aria-label="Pledge comparison table">
             <table data-comparison-table>
                 <thead><tr><th>Pledge ID</th><th>Current local state</th><th>Pledge amount</th><th>Checked at (UTC)</th><th>Local state at check</th><th>Provider resources at check</th><th>Match at check</th></tr></thead>
                 <tbody><tr th:each="row : ${comparisons}"><td th:text="${row.pledgeId}"></td><td th:text="${row.currentState}"></td><td th:text="${row.amount}"></td><td th:text="${row.checkedAt ?: 'Not checked'}"></td><td th:text="${row.checkedState}"></td><td th:text="${row.providerStates}"></td><td th:text="${row.match}"></td></tr></tbody>
@@ -22,7 +22,9 @@
         <h2>Books checks</h2>
         <ul><li th:each="check : ${booksChecks}"><a th:href="@{/w/{token}/maker/books(token=${token},campaignId=${campaignId},checkId=${check.id})}" th:text="${check.checkpoint}"></a></li></ul>
     </section>
-    <div th:replace="~{trail/table :: table(${entries})}"></div>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Recorded payment checkpoints table">
+        <div th:replace="~{trail/table :: table(${entries})}"></div>
+    </div>
     <th:block th:replace="~{fragments/data-tools :: grid}"></th:block>
     <script th:src="@{/js/money-trail.js}" defer></script>
 </main>

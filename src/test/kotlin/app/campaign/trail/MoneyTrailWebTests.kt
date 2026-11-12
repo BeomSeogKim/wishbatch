@@ -55,6 +55,10 @@ class MoneyTrailWebTests @Autowired constructor(
             }
         val path = "/w/${owner.token}/maker/campaigns/${campaign.id}/trail"
         val html = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertTrue(html.contains("class=\"table-scroll\" data-comparison-fallback tabindex=\"0\""))
+        assertTrue(html.contains("aria-label=\"Recorded payment checkpoints table\""))
+        assertTrue(html.contains("data-comparison-table"))
+        assertTrue(html.contains("data-money-trail"))
         val csv = mvc.get("$path.csv").andExpect { status { isOk() } }.andReturn().response.contentAsString
         for (output in listOf(html, csv)) {
             val first = output.indexOf("Refund pending")
