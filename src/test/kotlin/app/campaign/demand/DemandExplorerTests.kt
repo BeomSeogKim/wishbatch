@@ -37,7 +37,7 @@ class DemandExplorerTests {
             "no more than $92233720368547758.07" to Long.MAX_VALUE,
         )) {
             val wish = analyzed(UUID.randomUUID(), listOf(quote), normalized = Money(1, "USD"))
-            val parsed = quotedPriceLimit(wish, "Cards please. $quote", "USD")
+            val parsed = quotedPriceLimit(wish, quote, "USD")
             assertEquals(PriceEvidenceStatus.QUOTED_LIMIT, parsed.status, quote)
             assertEquals(expected, parsed.maximumMinor, quote)
             assertEquals(listOf(quote), parsed.quotes)
@@ -91,6 +91,39 @@ class DemandExplorerTests {
         val nonliteral = analyzed(UUID.randomUUID(), listOf("up to USD 10"))
         assertEquals(PriceEvidenceStatus.AMBIGUOUS, quotedPriceLimit(nonliteral, "up to USD\n10", "USD").status)
         assertEquals(emptyList(), quotedPriceLimit(nonliteral, "up to USD\n10", "USD").quotes)
+    }
+
+    @Test
+    fun `unquoted clauses cannot change the currency or scope of quoted price evidence`() {
+        val examples = listOf(
+            "The following amounts are CAD. Up to $10." to "Up to $10.",
+            "This is my shipping budget. No budget limit." to "No budget limit.",
+            "Up to $10. The following amounts are CAD." to "Up to $10.",
+            "No budget limit. This is my shipping budget." to "No budget limit.",
+            "The amounts are Canadian dollars. Up to $10." to "Up to $10.",
+            "This covers both sets; Up to USD 10." to "Up to USD 10.",
+            "Up to USD 10. This is the combined total." to "Up to USD 10.",
+            "No budget limit. Only for delivery." to "No budget limit.",
+            "Cards please. Up to USD 10." to "Up to USD 10.",
+        )
+        val sources = examples.map { wish(it.first) }
+        val requests = examples.mapIndexed { index, (source, quote) ->
+            analyzed(sources[index].id, listOf(quote)).also {
+                val parsed = quotedPriceLimit(it, source, "USD")
+                assertEquals(PriceEvidenceStatus.AMBIGUOUS, parsed.status, source)
+                assertNull(parsed.maximumMinor, source)
+                assertEquals(listOf(quote), parsed.quotes, source)
+            }
+        }
+        val verdicts = sources.map { WishVerdict(it.id, first.id, CompatibilityVerdict.COMPATIBLE, "Fits") }
+        val demand = assertNotNull(exploreDemand(output(requests, verdicts), listOf(first), sources, first.id, 1000))
+        assertEquals(sources.size, demand.compatible)
+        assertEquals(sources.size, demand.ambiguous)
+        assertEquals(0, demand.unbounded)
+        demand.points.forEach {
+            assertEquals(0, it.compatible)
+            assertEquals(emptyList(), it.wishIds)
+        }
     }
 
     @Test

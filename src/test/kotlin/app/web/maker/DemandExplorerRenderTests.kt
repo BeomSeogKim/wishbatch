@@ -48,9 +48,9 @@ class DemandExplorerRenderTests(
         val options = workspaces.listOptions(workspace.token)
         val selected = options.first()
         val other = options[1]
-        val source = Wish(workspace.id, "Cards <script>alert('x')</script>. At most USD 10.00", WishSource.ONSITE,
+        val source = Wish(workspace.id, "At most USD 10.00", WishSource.ONSITE,
             createdAt = Instant.EPOCH).also(entityManager::persist)
-        val otherSource = Wish(workspace.id, "A print for my wall", WishSource.ONSITE,
+        val otherSource = Wish(workspace.id, "A print for my wall <script>alert('x')</script>", WishSource.ONSITE,
             createdAt = Instant.EPOCH).also(entityManager::persist)
         val wishes = listOf(source, otherSource)
         val output = AnalysisOutput(
