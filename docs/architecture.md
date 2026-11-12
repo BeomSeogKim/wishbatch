@@ -326,8 +326,14 @@ The client uses these sandbox endpoints:
 | Read capture | `GET /v2/payments/captures/{id}` |
 | Read refund | `GET /v2/payments/refunds/{id}` |
 
-There is no webhook endpoint. Reconciliation polls provider resources; a configured
-`PAYPAL_WEBHOOK_ID` does not enable signature verification or webhook handling.
+`POST /webhooks/paypal` verifies the original event with the sandbox signature
+verification API before persisting or acting on it. A configured
+`PAYPAL_WEBHOOK_ID` and sandbox REST credentials are required. Verified event IDs
+are durably deduplicated; supported events trigger reconciliation against current
+provider resources rather than assigning state from the event. Polling on reads
+and the minute tick remains in place. See the [webhook contract](../src/main/kotlin/app/paypal/README.md)
+for events, responses, database requirements, and registration. Source support
+does not establish deployment or registration.
 
 `app.paypal.PayPalClient` implements `PaymentGateway` with the
 [Orders](https://developer.paypal.com/api/orders/v2) and
@@ -386,6 +392,7 @@ print the URL. See [running locally](running.md) for Gradle and Compose commands
 | `PRODUCT_NAME` | Rendered display name | `Wishbatch` |
 | `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` | Sandbox REST credentials | None; calls fail with `NOT_CONFIGURED` |
 | `PAYPAL_BASE_URL` | Only accepted API base URL | `https://api-m.sandbox.paypal.com` |
+| `PAYPAL_WEBHOOK_ID` | Registered sandbox webhook ID for signature verification | None; webhook endpoint returns 503 |
 | `LLM_API_KEY` | Live analysis credential | None; live runs return `NOT_CONFIGURED` |
 | `LLM_MODEL` | Analysis model | `gpt-6.1-sol` |
 | `LLM_REASONING_EFFORT` | Provider reasoning effort | `low` |
@@ -396,8 +403,8 @@ print the URL. See [running locally](running.md) for Gradle and Compose commands
 | `LLM_SEED_OUTPUT_FILE` | New output path for the generator | Required when generating |
 | `LLM_SEED_OPTIONS_FILE`, `LLM_SEED_WISHES_FILE` | Explicit snapshot inputs, supplied together | Canonical seed if both absent |
 
-`APP_BASE_URL`, `DB_SCHEMA`, and `PAYPAL_WEBHOOK_ID` appear in the example and
-Compose configuration but are not consumed by the application. Current web
+`APP_BASE_URL` and `DB_SCHEMA` appear in the example and Compose
+configuration but are not consumed by the application. Current web
 links are relative. Compose forwards the main payment/model settings, but not
 the reasoning, batch, concurrency, or seed-generator settings.
 
@@ -420,6 +427,7 @@ explicitly enables Hibernate schema updates; a plain server health response does
 not prove that workspace tables exist. Database locks and independent payment
 checkpoints require a connection pool of at least two connections.
 
-For evidence and limitations, see [evaluation](evaluation.md) and the
+For settlement invariants and decision records, see [reliability](reliability.md)
+and [provenance](provenance.md). For evidence and limitations, see [evaluation](evaluation.md) and the
 [README](../README.md#evidence-and-limits). Stubbed payment tests do not establish
 live sandbox transaction success.

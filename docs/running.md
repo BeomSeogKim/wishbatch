@@ -93,7 +93,7 @@ authorized units reach the minimum, even before closing. Confirmation captures
 payments; enough completed units fund the batch. A shortfall refunds captures
 and voids remaining holds. The [README's sandbox evidence](../README.md#evidence-and-limits)
 records fresh-clone and hosted manual browser checks on 2026-11-12, including
-provider IDs, timing, and limits. These were not automated repository tests;
+the checks and their limits. These were not automated repository tests;
 hosted cold start and persistence across a service restart remain unchecked.
 
 To expose the labeled capture-failure simulation on the maker dashboard:
@@ -112,7 +112,13 @@ provider-call cap includes retries and is process-local. For Gradle/JAR runs,
 `LLM_REASONING_EFFORT`, `LLM_BATCH_SIZE`, and `LLM_CONCURRENCY` are additional
 controls; Compose does not currently forward them. See
 [configuration](architecture.md#configuration) for all defaults and unused keys.
-No webhook endpoint exists; payment reconciliation uses provider reads.
+The optional sandbox webhook requires `PAYPAL_WEBHOOK_ID` and sandbox REST
+credentials. `POST /webhooks/paypal` verifies signatures before recording events
+and triggering provider-read reconciliation. Without the ID it returns 503;
+checkout and polling remain available. Enabled webhook processing requires at
+least three database connections and permission to create its inbox table. See
+the [webhook setup and contract](../src/main/kotlin/app/paypal/README.md).
+Source support alone does not mean a webhook is deployed or registered.
 
 Never commit credentials or put them in a JDBC URL. Do not put real buyer or
 customer data into this demo.

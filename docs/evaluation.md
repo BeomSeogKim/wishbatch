@@ -11,6 +11,11 @@ One small synthetic seed set proves little. The timed
 manual-sorting comparison is **not measured yet**, so no productivity advantage,
 human-level accuracy, or customer demand is established.
 
+The offline payment sequence test is separate from this model evaluation: it
+uses a fake gateway for 16 deterministic seeds of 64 actions each. It does not
+measure model quality, real sandbox behavior, or hosted operation. See
+[reliability](reliability.md).
+
 ## Reference construction
 
 [Reference labels](../evaluation/reference-labels.json) cover all forty wishes:

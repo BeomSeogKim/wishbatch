@@ -8,6 +8,12 @@ Fans ask for different things; a maker needs one batch they can actually make.
 Wishbatch groups free-text wishes into a feasible offer, then checks whether
 enough fans complete payment before production can proceed.
 
+```text
+Maker options + fan wishes -> AI analysis -> maker-reviewed offer
+                                                    |
+                  sandbox authorization -> capture / refund / void
+```
+
 1. Review the maker's feasible product options.
 2. Collect fan wishes, including conditions and preferences.
 3. Review classifications, source quotes, and one proposed batch.
@@ -101,8 +107,10 @@ captures count toward the paid minimum and a `FUNDED` result.
 | `FUNDED` | Paid minimum met; production may proceed under the maker's terms |
 
 Pending captures, voids, and refunds remain visible and are reconciled on reads
-and a minute tick. Stable per-pledge, per-operation idempotency keys are reused
-on retries and recovery. The client rejects every API base URL except
+and a minute tick. Verified sandbox webhooks can also trigger reconciliation;
+registration and deployment are separate steps. See the
+[webhook contract](src/main/kotlin/app/paypal/README.md). Stable per-pledge,
+per-operation idempotency keys are reused on retries and recovery. The client rejects every API base URL except
 `https://api-m.sandbox.paypal.com` at startup.
 
 The client uses Orders v2 create/authorize and Payments v2 capture/void/refund
@@ -123,29 +131,20 @@ displayed the stored postcard proposal. The corrected Compose command in the
 [running guide](docs/running.md#docker-compose-and-postgresql) also created a
 PostgreSQL workspace with the stored proposal.
 
-An earlier check on 2026-11-12 reported that the [hosted build](https://wishbatch.onrender.com/) passed the
-testing guide's golden path in 2 minutes 28 seconds, from 10:24:38 to 10:27:06
-UTC, including wish/evidence review, price checking, maker questions, sandbox
-buyer login, one approval for three units, and maker confirmation. Stated
-interest/authorized/paid counts were 35/0/0, then 35/3/0, then 35/0/3.
-PayPal resource reads confirmed authorization `7AS89111M3656645V` was `CAPTURED`
-and capture `5XK54784NT246113H` was `COMPLETED` and final for USD 19.50;
-order `28535449WY198563R` appears in the application timeline. No open hold
-remained for this pledge.
+An earlier hosted manual check on 2026-11-12 followed the guide through one
+sandbox authorization and completed capture. A separate local manual check
+also completed a sandbox capture. These checks do not establish that the current
+source is deployed or that the webhook is registered and receiving events.
+They were not automated provider tests or independent first-time-user studies.
+Cancellation, withdrawal, refund, live reanalysis, cold start after idle, and
+persistence across a service restart were not repeated in that verification.
 
-On 2026-11-12, a local build based on `24423a5` with the guide correction in
-this branch authorized three units and completed sandbox capture. The result
-showed 35 stated wishes, zero authorized units, and three paid units. The
-application timeline reported order `4F5949598S139022U`, authorization
-`14864534L7609122X`, and completed capture `6F1406275R7653342`.
-
-These are manual checks, not automated provider tests or independent
-first-time-user studies. Cancellation, withdrawal, refund, live reanalysis,
-cold start after idle, and persistence across a service restart were not
-repeated in this verification. The hosted guide and wishes page differed from
-the current repository's wording; deployment of that exact source revision
-was not established. The later local guide correction has not been verified on
-the hosted build. Webhooks are not implemented.
+The offline deterministic settlement sequence test exercises 16 seeds with 64
+actions each using a fake gateway; it is not a provider or hosted test. The
+standalone decision-record service and read views exist, but lifecycle recording
+is not yet integrated, so existing pledges report unavailable records. A pledge
+is not linked to a particular wish by inference. See [reliability](docs/reliability.md)
+and [provenance](docs/provenance.md).
 
 [Historical evaluation](docs/evaluation.md) covers a former illustrator seed
 snapshot of forty synthetic wishes, including three model runs. Those results
@@ -180,7 +179,8 @@ JavaScript suites. Initial builds download dependencies; tests make no model
 or payment API calls.
 
 See the [documentation index](docs/README.md), [architecture](docs/architecture.md),
-[running guide](docs/running.md), and [design system](docs/design.md).
+[running guide](docs/running.md), [reliability](docs/reliability.md), [provenance](docs/provenance.md),
+and [design system](docs/design.md).
 
 ## Contributing
 
