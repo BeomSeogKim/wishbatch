@@ -1,0 +1,37 @@
+.offer-form { font-size: .9rem; }
+.offer-form .page-heading { padding-block: 28px 20px; }
+.offer-form .page-heading h1 { font-size: clamp(2rem, 4vw, 3rem); margin-block: 8px; }
+.offer-form .lead { max-width: 760px; font-size: 1rem; }
+.offer-form h2 { font-size: 1.35rem; margin-bottom: 16px; }
+.offer-form .eyebrow { margin-bottom: 8px; }
+.offer-form .card { padding: 24px; }
+.offer-form > .preview-section { padding-block: 20px; margin-top: 0; }
+.offer-form form > .preview-section { margin-top: 0; }
+.offer-form form { display: grid; gap: 20px; margin-top: 20px; }
+.offer-form .field { margin-bottom: 14px; }
+.offer-form .field-help, .offer-form .field-error { font-size: .8rem; }
+.offer-form .field-error:empty { display: none; }
+.offer-form input, .offer-form select, .offer-form textarea { min-width: 0; }
+.offer-form textarea { resize: vertical; }
+.offer-form .offer-price-panel, .offer-form .offer-terms-grid, .offer-form .offer-seal { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+.offer-form .offer-price-panel > *, .offer-form .offer-terms-grid > *, .offer-form .offer-seal > * { min-width: 0; }
+.offer-form #unitPrice { max-width: 240px; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.offer-form #price-check-summary { font-weight: 650; }
+.offer-form #offer-price-check { margin-block: 12px; }
+.offer-form #price-excluded { max-height: 180px; overflow: auto; padding-left: 20px; }
+.offer-form #price-excluded q { display: block; }
+.offer-form .offer-draft { padding: 16px 24px; border-block: 1px solid var(--line); }
+.offer-form .offer-draft h2 { margin-bottom: 8px; }
+.offer-form .offer-seal { border-color: var(--accent); background: var(--accent-soft); }
+.offer-form #seal-price { font-size: 1.25rem; font-weight: 650; color: var(--accent); }
+.offer-form .offer-seal-spec { white-space: pre-wrap; }
+.offer-form .offer-seal .button { width: 100%; margin-top: 16px; }
+.offer-form .offer-seal p { overflow-wrap: anywhere; }
+.offer-form fieldset { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-small); }
+.offer-form fieldset legend { font-weight: 650; padding-inline: 4px; }
+.offer-form .checkbox-field { align-items: start; }
+@media (max-width: 760px) {
+    .offer-form .offer-price-panel, .offer-form .offer-terms-grid, .offer-form .offer-seal { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .offer-form .card { padding: 18px; }
+    .offer-form .offer-draft { padding-inline: 0; }
+}

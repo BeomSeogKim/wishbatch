@@ -43,7 +43,7 @@ class DemandExplorerRenderTests(
     @Autowired private val reviews: WishReviewService,
 ) {
     @Test
-    fun `offer renders exact quote evidence and alternative differences without depending on charts`() {
+    fun `offer renders compact demand and links to full evidence on the proposal`() {
         val workspace = workspaces.create()
         val options = workspaces.listOptions(workspace.token)
         val selected = options.first()
@@ -78,11 +78,11 @@ class DemandExplorerRenderTests(
         assertContains(html, "Simulation of stated interest")
         assertContains(html, "At most USD 10.00")
         assertContains(html, "run=${run.id}#wish-${source.id}")
-        assertContains(html, "&lt;script&gt;")
+        assertContains(html, "demand-compact")
         assertFalse(html.contains("<script>alert('x')</script>"))
         assertContains(html, "ag-charts-community@14.3.0/dist/umd/ag-charts-community.min.js")
-        assertContains(html, "wishbatch:filter-wishes")
-        assertContains(html, "Who this serves that ${other.name} does not: 1")
+        assertContains(html, "/maker/proposal?run=${run.id}")
+        assertContains(html, "View full price and demand explorer")
         assertEquals(run.resultJson, entityManager.find(AnalysisRun::class.java, run.id).resultJson)
 
         val proposal = mvc.get("/w/${workspace.token}/maker/proposal") { param("run", run.id.toString()) }
@@ -114,7 +114,7 @@ class DemandExplorerRenderTests(
         val result = mvc.get("/w/${workspace.token}/maker/offer")
             .andExpect { status { isOk() } }.andReturn()
         val option = assertIs<Option>(result.modelAndView!!.model["option"])
-        val fields = mapOf("unitPrice" to "1234", "minBatch" to option.maxCapacity.toString())
+        val fields = mapOf("unitPrice" to "12.34", "minBatch" to option.maxCapacity.toString())
         val checked = mvc.get("/w/${workspace.token}/maker/offer") { flashAttr("fields", fields) }
             .andExpect { status { isOk() } }.andReturn()
         val demand = assertIs<DemandExplorer>(checked.modelAndView!!.model["demand"])

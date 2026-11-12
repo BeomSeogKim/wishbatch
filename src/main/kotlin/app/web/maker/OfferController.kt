@@ -9,6 +9,7 @@ import app.campaign.offerdraft.OfferDraftService
 import app.campaign.port.AnalysisOutput
 import app.campaign.review.WishReviewService
 import app.campaign.review.reviewedAnalysis
+import app.campaign.rules.MoneyInput
 import app.campaign.rules.OfferViolation
 import app.campaign.rules.offerPriceCheck
 import app.campaign.service.CampaignRef
@@ -18,6 +19,7 @@ import app.campaign.service.ServiceResult
 import app.campaign.store.AnalysisRunRepository
 import app.campaign.workspace.WorkspaceNotFoundException
 import app.campaign.workspace.WorkspaceService
+import app.web.layout.HumanDisplay
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -41,6 +43,7 @@ class OfferController(
     private val mapper: ObjectMapper,
     private val campaigns: CampaignService,
     private val display: MakerDisplay,
+    private val humanDisplay: HumanDisplay,
     private val reviews: WishReviewService,
     private val drafts: OfferDraftService,
 ) {
@@ -65,7 +68,14 @@ class OfferController(
             } catch (_: InvalidOfferDraftException) { null })
             @Suppress("UNCHECKED_CAST")
             val fields = model.getAttribute("fields") as Map<String, String>
-            val price = fields["unitPrice"]?.toLongOrNull()?.takeIf { it > 0 }
+            model.addAttribute("durationLabel", when (fields["duration"]) {
+                "15" -> "15 minutes"
+                "120" -> "2 hours"
+                "1440" -> "24 hours"
+                "2880" -> "48 hours"
+                else -> "Check campaign duration"
+            })
+            val price = fields["unitPrice"]?.let(MoneyInput::parseMinorUnits)?.takeIf { it > 0 }
             model.addAttribute("priceCheck", price?.let { priceView(token, analysis!!, output!!, option, it) })
             model.addAttribute("demand", exploreDemand(output!!, workspaces.listOptions(token),
                 workspaces.listWishes(token), option.id, price, fields["minBatch"]?.toIntOrNull()))
@@ -76,14 +86,15 @@ class OfferController(
 
     @GetMapping("/w/{token}/maker/offer/price-check")
     @ResponseBody
-    fun priceCheck(@PathVariable token: String, @RequestParam run: UUID, @RequestParam unitPrice: Long): OfferPriceView {
+    fun priceCheck(@PathVariable token: String, @RequestParam run: UUID, @RequestParam unitPrice: String): OfferPriceView {
         val workspace = workspaces.findByToken(token) ?: throw WorkspaceNotFoundException()
         val analysis = analyses.findByIdAndWorkspaceId(run, workspace.id) ?: throw WorkspaceNotFoundException()
         val output = output(analysis) ?: throw WorkspaceNotFoundException()
         val option = output.proposal?.let { proposal -> workspaces.listOptions(token).find { it.id == proposal.optionId } }
             ?: throw WorkspaceNotFoundException()
-        if (unitPrice <= 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Enter a positive whole-number unit price.")
-        return priceView(token, analysis, output, option, unitPrice)
+        val price = MoneyInput.parseMinorUnits(unitPrice)?.takeIf { it > 0 }
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Enter a positive unit price with up to two decimal places.")
+        return priceView(token, analysis, output, option, price)
     }
 
     @PostMapping("/w/{token}/maker/offer")
@@ -116,12 +127,12 @@ class OfferController(
         if (option == null || output == null) {
             errors["offer"] = "This analysis has no available proposal. Review the evidence before creating an offer."
         } else {
-            val price = fields["unitPrice"]?.toLongOrNull()
+            val price = fields["unitPrice"]?.let(MoneyInput::parseMinorUnits)
             if (price != null && price > 0) {
                 redirect.addFlashAttribute("priceCheck", priceView(token, analysis, output, option, price))
             }
             if (fields["action"] == "check-price") {
-                if (price == null || price <= 0) errors["unitPrice"] = "Enter a positive whole-number unit price."
+                if (price == null || price <= 0) errors["unitPrice"] = "Enter a positive unit price with up to two decimal places."
                 redirect.addFlashAttribute("fields", fields)
                 if (errors.isNotEmpty()) redirect.addFlashAttribute("errors", errors)
                 return "redirect:/w/$token/maker/offer?run=$runId"
@@ -136,7 +147,8 @@ class OfferController(
             val capacity = fields["capacity"]?.toIntOrNull()
             val quantity = fields["maxQtyPerPledge"]?.toIntOrNull()
             val minutes = fields["duration"]?.toLongOrNull()
-            mapOf("unitPrice" to price, "minBatch" to minimum, "capacity" to capacity,
+            if (price == null || price <= 0) errors["unitPrice"] = "Enter a positive unit price with up to two decimal places."
+            mapOf("minBatch" to minimum, "capacity" to capacity,
                 "maxQtyPerPledge" to quantity, "duration" to minutes).forEach { (name, value) ->
                 if (value == null) errors[name] = "Enter a whole number within the displayed limits."
             }
@@ -180,15 +192,15 @@ class OfferController(
         return OfferPriceView(check.fit, check.compatible, check.depends, check.excludedByPrice.map { wish ->
             val limit = wish.maxUnitPrice!!
             ExcludedPriceWish(wish.wishId, wish.needs.filter { it.attribute == NeedAttribute.PRICE }.map { it.quote },
-                display.money(limit.minorUnits, limit.currency), "/w/$token/maker/proposal?run=${run.id}#wish-${wish.wishId}")
-        })
+                humanDisplay.money(limit.minorUnits, limit.currency), "/w/$token/maker/proposal?run=${run.id}#wish-${wish.wishId}")
+        }, price, humanDisplay.money(price, option.currency), price < option.unitCost)
     }
 
     private fun defaults(option: Option, output: AnalysisOutput, run: AnalysisRun): Map<String, String> = buildMap {
         put("run", run.id.toString())
         put("title", option.name)
         put("specText", (listOf(display.catalogLabel(option.format)) + option.fixedAttributes.map { "${display.catalogLabel(it.key)}: ${it.value}" }).joinToString("\n"))
-        put("unitPrice", option.unitCost.toString())
+        put("unitPrice", MoneyInput.formatMinorUnits(option.unitCost))
         put("deliveryTerms", option.leadTimeText)
         put("minBatch", option.minBatch.toString())
         put("capacity", option.maxCapacity.toString())
@@ -223,5 +235,13 @@ class OfferController(
     fun notFound(): String = "error/not-found"
 }
 
-data class OfferPriceView(val fit: Int, val compatible: Int, val depends: Int, val excludedByPrice: List<ExcludedPriceWish>)
+data class OfferPriceView(
+    val fit: Int,
+    val compatible: Int,
+    val depends: Int,
+    val excludedByPrice: List<ExcludedPriceWish>,
+    val unitPrice: Long,
+    val formattedPrice: String,
+    val belowCost: Boolean,
+)
 data class ExcludedPriceWish(val wishId: UUID, val quotes: List<String>, val limit: String, val sourceUrl: String)

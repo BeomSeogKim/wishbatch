@@ -138,13 +138,13 @@ class MakerMoneyControllerTests @Autowired constructor(
         shell(html)
         for (text in listOf(fixture.option.name, "glossy", "What finish can you deliver?", "I can produce and deliver this as specified.",
             "At least 3 units", "From 1 to 10 units", "Default: 3 units", "15 minutes", "2 hours", "24 hours", "48 hours",
-            "USD 6.50", "US", "minor units", "readonly", "price-warning")) assertContains(html, text)
+            "USD 6.50", "US", "Use a positive price", "readonly", "price-warning")) assertContains(html, text)
         assertContains(html, "run=${fixture.run.id}")
         assertContains(html, "Postcard set\nSize: A6\nDesigns in a set: 5")
         assertFalse(html.contains("designCount"))
         assertFalse(html.contains("postcard-set"))
         assertContains(html, "value=\"glossy\" selected=\"selected\"")
-        assertTrue(Regex("id=\"unitPrice\"[^>]*value=\"650\"").containsMatchIn(html))
+        assertTrue(Regex("id=\"unitPrice\"[^>]*value=\"6.50\"").containsMatchIn(html))
         assertTrue(Regex("id=\"maxQtyPerPledge\"[^>]*value=\"3\"").containsMatchIn(html))
         assertContains(html, "aria-current=\"step\"")
     }
@@ -153,7 +153,7 @@ class MakerMoneyControllerTests @Autowired constructor(
     fun `invalid numbers limits blank terms checkbox and unresolved questions redirect with inline errors`() {
         val fixture = fixture()
         val cases = listOf(
-            "unitPrice" to "0", "unitPrice" to "1.50", "unitPrice" to "9223372036854775807",
+            "unitPrice" to "0", "unitPrice" to "1.500", "unitPrice" to "9223372036854775807",
             "minBatch" to "2", "minBatch" to "11", "capacity" to "0", "capacity" to "11",
             "maxQtyPerPledge" to "0", "maxQtyPerPledge" to "11", "duration" to "60", "duration" to "9223372036854775807",
             "title" to " ", "specText" to "", "deliveryTerms" to "", "canDeliver" to "false", "question.0" to "",
@@ -179,7 +179,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         val base = "/w/${fixture.workspace.token}/maker/offer/price-check?run=${fixture.run.id}"
         val original = fixture.run.resultJson
         val initialRuns = analyses.findByWorkspaceId(fixture.workspace.id).size
-        mvc.get("$base&unitPrice=1000").andExpect {
+        mvc.get("$base&unitPrice=10.00").andExpect {
             status { isOk() }
             content { contentTypeCompatibleWith("application/json") }
             jsonPath("$.fit") { value(3) }
@@ -187,7 +187,7 @@ class MakerMoneyControllerTests @Autowired constructor(
             jsonPath("$.depends") { value(1) }
             jsonPath("$.excludedByPrice.length()") { value(0) }
         }
-        mvc.get("$base&unitPrice=1001").andExpect {
+        mvc.get("$base&unitPrice=10.01").andExpect {
             status { isOk() }
             jsonPath("$.fit") { value(2) }
             jsonPath("$.compatible") { value(1) }
@@ -199,7 +199,7 @@ class MakerMoneyControllerTests @Autowired constructor(
                 value("/w/${fixture.workspace.token}/maker/proposal?run=${fixture.run.id}#wish-${fixture.wishId}")
             }
         }
-        mvc.get("$base&unitPrice=1201").andExpect {
+        mvc.get("$base&unitPrice=12.01").andExpect {
             status { isOk() }
             jsonPath("$.fit") { value(1) }
             jsonPath("$.excludedByPrice.length()") { value(2) }
@@ -213,19 +213,19 @@ class MakerMoneyControllerTests @Autowired constructor(
     fun `price endpoint rejects invalid prices unknown workspaces foreign runs and missing proposals`() {
         val fixture = priceFixture()
         val base = "/w/${fixture.workspace.token}/maker/offer/price-check?run=${fixture.run.id}"
-        for (price in listOf("0", "-1", "1.5", "", "9223372036854775808")) {
+        for (price in listOf("0", "-1", "1.500", "", "9223372036854775808")) {
             mvc.get("$base&unitPrice=$price").andExpect { status { isBadRequest() } }
         }
         val other = fixture()
-        mvc.get("/w/missing/maker/offer/price-check?run=${fixture.run.id}&unitPrice=1000")
+        mvc.get("/w/missing/maker/offer/price-check?run=${fixture.run.id}&unitPrice=10.00")
             .andExpect { status { isNotFound() } }
-        mvc.get("/w/${other.workspace.token}/maker/offer/price-check?run=${fixture.run.id}&unitPrice=1000")
+        mvc.get("/w/${other.workspace.token}/maker/offer/price-check?run=${fixture.run.id}&unitPrice=10.00")
             .andExpect { status { isNotFound() } }
         val output = mapper.readValue(fixture.run.resultJson, AnalysisOutput::class.java)
         val run = analyses.saveAndFlush(AnalysisRun(fixture.workspace.id, "test-model", "test-hash",
             mapper.writeValueAsString(output.copy(proposal = null, noProposalReason = "No feasible option")),
             createdAt = clock.instant()))
-        mvc.get("/w/${fixture.workspace.token}/maker/offer/price-check?run=${run.id}&unitPrice=1000")
+        mvc.get("/w/${fixture.workspace.token}/maker/offer/price-check?run=${run.id}&unitPrice=10.00")
             .andExpect { status { isNotFound() } }
     }
 
@@ -234,7 +234,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         val fixture = priceFixture()
         assertContains(page(fixture.workspace.token, "offer?run=${fixture.run.id}"),
             "3 wishes fit this price, 0 are excluded by their stated limit")
-        val response = postOffer(fixture, mapOf("action" to "check-price", "unitPrice" to "1001",
+        val response = postOffer(fixture, mapOf("action" to "check-price", "unitPrice" to "10.01",
             "specText" to "Keep these edited terms", "question.0" to "", "canDeliver" to "false")).andReturn()
         assertFalse(response.flashMap.containsKey("errors"))
         val html = mvc.get(response.response.redirectedUrl!!) {
@@ -243,7 +243,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         assertContains(html, "2 wishes fit this price, 1 are excluded by their stated limit")
         assertContains(html, "At most USD 10.00 &lt;please&gt;")
         assertContains(html, "Keep these edited terms")
-        assertContains(html, "value=\"1001\"")
+        assertContains(html, "value=\"10.01\"")
         assertContains(html, "Check this price")
         assertContains(html, "/js/offer-price.js")
         assertContains(html, "formnovalidate")
@@ -254,7 +254,7 @@ class MakerMoneyControllerTests @Autowired constructor(
     fun `every question needs a recognized resolution before publishing and rejected posts recheck price`() {
         val fixture = priceFixture()
         for (resolution in listOf("", "open", "forged")) {
-            val response = postOffer(fixture, mapOf("question.1" to resolution, "unitPrice" to "1001")).andReturn()
+            val response = postOffer(fixture, mapOf("question.1" to resolution, "unitPrice" to "10.01")).andReturn()
             assertContains(response.flashMap["errors"].toString(), "Resolve this question")
             val check = response.flashMap["priceCheck"] as OfferPriceView
             assertEquals(2, check.fit)
@@ -269,7 +269,7 @@ class MakerMoneyControllerTests @Autowired constructor(
     @Test
     fun `below cost price publishes and second active campaign is rejected without replacing terms`() {
         val fixture = fixture()
-        val published = postOffer(fixture, mapOf("unitPrice" to "100")).andReturn()
+        val published = postOffer(fixture, mapOf("unitPrice" to "1.00")).andReturn()
         assertEquals("/w/${fixture.workspace.token}/maker/campaign", published.response.redirectedUrl)
         assertContains(published.flashMap["notice"].toString(), "below")
         val first = ref(fixture)
@@ -658,7 +658,7 @@ internal fun createMoneyFixture(workspaces: WorkspaceService, analyses: Analysis
 }
 
 internal fun validFields(fixture: MoneyFixture) = mapOf("run" to fixture.run.id.toString(), "title" to fixture.option.name,
-    "specText" to "A6 postcard set with five designs and glossy finish", "unitPrice" to "1000", "minBatch" to "3",
+    "specText" to "A6 postcard set with five designs and glossy finish", "unitPrice" to "10.00", "minBatch" to "3",
     "capacity" to "10", "maxQtyPerPledge" to "3", "duration" to "15", "deliveryTerms" to "Dispatch in two weeks to US addresses",
     "variant.finish" to "glossy", "canDeliver" to "true", "question.0" to "answered")
 

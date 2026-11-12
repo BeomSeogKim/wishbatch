@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Confirm an offer', ~{::main})}">
     <body>
-        <main id="main" class="shell">
+        <main id="main" class="shell offer-form">
+            <link rel="stylesheet" th:href="@{/css/ux-offer-form.css}">
             <header class="page-heading">
                 <p class="eyebrow">Maker offer</p>
                 <h1>Make the offer exact.</h1>
-                <p class="lead">Review the evidence, then set the product and delivery terms you can meet. Published terms cannot be edited.</p>
+                <p class="lead">Set the price, settle the questions, and confirm what you can deliver. Published terms cannot be edited.</p>
             </header>
             <div th:replace="~{maker/fragments :: steps(${token}, ${makerStep})}">
             </div>
@@ -26,14 +27,46 @@
                     <input type="hidden" name="run" th:value="${analysis.id}">
                     <input th:if="${fields['reviewedDraftApplied'] == 'true'}" type="hidden" name="reviewedDraftApplied" value="true">
                     <p th:if="${fields['reviewedDraftApplied'] == 'true'}" class="notice" role="status">Reviewed draft: check the title and specification before confirming publication.</p>
-                    <div class="two-column">
+                    <section class="card offer-price-panel" aria-labelledby="price-heading">
+                        <div>
+                            <p class="eyebrow">01 · Price and interest</p>
+                            <h2 id="price-heading">Set a unit price</h2>
+                            <div class="field">
+                                <label for="unitPrice" th:text="${'Unit price (' + option.currency + ')'}"></label>
+                                <input id="unitPrice" name="unitPrice" type="text" inputmode="decimal" required
+                                       th:value="${fields['unitPrice']}" aria-describedby="unitPrice-help unitPrice-error"
+                                       th:attr="aria-invalid=${errors != null and errors.containsKey('unitPrice')}">
+                                <p id="unitPrice-help" class="field-help">Use a positive price, for example 6.50. Press Enter to check; publishing is a separate action.</p>
+                                <p id="unitPrice-error" class="field-error" th:text="${errors != null ? errors['unitPrice'] : ''}"></p>
+                            </div>
+                            <div id="offer-price-check" role="status" aria-live="polite" th:attr="data-url=@{/w/{token}/maker/offer/price-check(token=${token},run=${analysis.id})}">
+                                <p id="price-check-amount" th:text="${priceCheck != null ? priceCheck.formattedPrice + ' per unit' : 'Check a valid price to preview the amount.'}"></p>
+                                <p id="price-check-summary" th:text="${priceCheck != null ? priceCheck.fit + ' wishes fit this price, ' + priceCheck.excludedByPrice.size() + ' are excluded by their stated limit' : 'Enter a positive price to check which wishes fit.'}"></p>
+                                <p id="price-check-categories" class="field-help" th:text="${priceCheck != null ? priceCheck.compatible + ' Compatible; ' + priceCheck.depends + ' Depends. Other conditions still need review. Wishes are stated interest, not orders.' : ''}"></p>
+                                <details><summary>Wishes excluded by this price</summary><ul id="price-excluded">
+                                    <li th:each="wish : ${priceCheck != null ? priceCheck.excludedByPrice : null}">
+                                        <a th:href="${wish.sourceUrl}">View wish</a>
+                                        <span th:text="${' — stated limit: ' + wish.limit}"></span>
+                                        <q th:each="quote : ${wish.quotes}" th:text="${quote}"></q>
+                                    </li>
+                                </ul></details>
+                            </div>
+                            <button type="submit" name="action" value="check-price" formnovalidate class="button button-secondary">Check this price</button>
+                            <p class="field-help">Unit cost: <strong th:text="${@humanDisplay.money(option.unitCost, option.currency)}"></strong>. A price below cost is allowed.</p>
+                            <p id="price-warning" class="notice notice-warning" role="status" th:hidden="${priceCheck == null or !priceCheck.belowCost}">The unit price is below the option's unit cost.</p>
+                        </div>
+                        <div><p id="offer-demand-pending" class="notice notice-warning" role="status" hidden>Price or minimum changed. The demand data below is from the previous check. Use Check this price to refresh.</p>
+                        <section th:replace="~{maker/demand :: compact(${demand}, ${token}, ${demandRunId}, ${priceCheck != null ? priceCheck.unitPrice : null}, 'Checked unit price')}"></section>
+                        <p><a th:href="@{/w/{token}/maker/proposal(token=${token},run=${analysis.id})} + '#demand-explorer'">View full price and demand explorer</a></p></div>
+                    </section>
+                    <div class="offer-terms-grid">
                         <div class="card">
-                            <h2>Product and delivery</h2>
+                            <p class="eyebrow">02 · Exact terms</p><h2>Product and delivery</h2>
                             <div th:replace="~{maker/settlement-fragments :: input('title', 'Exact title', 'text', ${fields}, ${errors}, 'Required product title.')} ">
                             </div>
                             <div class="field">
                                 <label for="specText">Exact specification</label>
-                                <textarea id="specText" name="specText" rows="7" required aria-describedby="specText-help specText-error" th:attr="aria-invalid=${errors != null and errors.containsKey('specText')}" th:text="${fields['specText']}">
+                                <textarea id="specText" name="specText" rows="4" required aria-describedby="specText-help specText-error" th:attr="aria-invalid=${errors != null and errors.containsKey('specText')}" th:text="${fields['specText']}">
                                 </textarea>
                                 <p id="specText-help" class="field-help">Include fixed attributes, selected variants, and answers to the open questions below.</p>
                                 <p id="specText-error" class="field-error" th:text="${errors != null ? errors['specText'] : ''}">
@@ -60,31 +93,8 @@
                                 <p id="shipRegion-help" class="field-help">Ship region is fixed for this product option.</p>
                             </div>
                         </div>
-                        <div class="card">
-                            <h2>Price and batch limits</h2>
-                            <div th:replace="~{maker/settlement-fragments :: input('unitPrice', ${'Unit price (' + option.currency + ' minor units)'}, 'number', ${fields}, ${errors}, 'Use a positive whole number of minor units; for USD, 100 means USD 1.00.')} ">
-                            </div>
-                            <div id="offer-price-check" role="status" aria-live="polite" th:attr="data-url=@{/w/{token}/maker/offer/price-check(token=${token},run=${analysis.id})}">
-                                <p id="price-check-summary" th:text="${priceCheck != null ? priceCheck.fit + ' wishes fit this price, ' + priceCheck.excludedByPrice.size() + ' are excluded by their stated limit' : 'Enter a positive whole-number price to check which wishes fit.'}"></p>
-                                <p id="price-check-categories" class="field-help" th:text="${priceCheck != null ? priceCheck.compatible + ' Compatible; ' + priceCheck.depends + ' Depends. Other conditions still need review. Wishes are stated interest, not orders.' : ''}"></p>
-                                <ul id="price-excluded">
-                                    <li th:each="wish : ${priceCheck != null ? priceCheck.excludedByPrice : null}">
-                                        <a th:href="${wish.sourceUrl}">View wish</a>
-                                        <span th:text="${' — stated limit: ' + wish.limit}"></span>
-                                        <q th:each="quote : ${wish.quotes}" th:text="${quote}"></q>
-                                    </li>
-                                </ul>
-                            </div>
-                            <button type="submit" name="action" value="check-price" formnovalidate class="button button-secondary">Check this price</button>
-                            <div th:if="${reviewedDraft != null}" class="notice">
-                                <input type="hidden" name="draft" th:value="${reviewedDraft.id}">
-                                <input type="hidden" name="draftSourceHash" th:value="${reviewedDraft.sourceHash}">
-                                <button type="submit" name="action" value="use-reviewed-draft" formnovalidate class="button button-secondary">Use reviewed draft</button>
-                                <p class="field-help">Copy the reviewed title and description into this form. Your other entries are retained. Review and confirm the exact offer separately.</p>
-                            </div>
-                            <p class="field-help">Unit cost: <strong th:text="${@makerDisplay.money(option.unitCost, option.currency)}">
-                                </strong>. A price below cost is allowed.</p>
-                            <p id="price-warning" class="notice notice-warning" role="status" th:attr="data-cost=${option.unitCost}" hidden>The unit price is below the option's unit cost.</p>
+                        <section class="card">
+                            <h2>Batch and timing</h2>
                             <div th:replace="~{maker/settlement-fragments :: input('minBatch', 'Minimum batch (units)', 'number', ${fields}, ${errors}, ${'At least ' + option.minBatch + ' units; no greater than your capacity.'})} ">
                             </div>
                             <div th:replace="~{maker/settlement-fragments :: input('capacity', 'Capacity (units)', 'number', ${fields}, ${errors}, ${'From 1 to ' + option.maxCapacity + ' units.'})} ">
@@ -103,10 +113,20 @@
                                 </p>
                             </div>
                             <p>Closing and confirmation deadlines are set when you publish. Confirmation is due 12 hours after closing.</p>
-                        </div>
+                        </section>
                     </div>
+                    <section class="offer-draft" aria-label="Offer text draft">
+                        <h2>Text draft</h2>
+                        <p><a th:href="@{/w/{token}/maker/offer-draft(token=${token},run=${analysis.id})}">Review or prepare the offer text draft</a></p>
+                            <div th:if="${reviewedDraft != null}" class="notice">
+                                <input type="hidden" name="draft" th:value="${reviewedDraft.id}">
+                                <input type="hidden" name="draftSourceHash" th:value="${reviewedDraft.sourceHash}">
+                                <button type="submit" name="action" value="use-reviewed-draft" formnovalidate class="button button-secondary">Use reviewed draft</button>
+                                <p class="field-help">Copy the reviewed title and description into this form. Your other entries are retained. Review and confirm the exact offer separately.</p>
+                            </div>
+                    </section>
                     <section class="card preview-section" aria-labelledby="questions">
-                        <h2 id="questions">Questions from the analysis</h2>
+                        <p class="eyebrow">03 · Questions checklist</p><h2 id="questions">Questions from the analysis</h2>
                         <p>Resolve every question before publishing: answer it in the specification or mark it not applicable.</p>
                         <p th:if="${output.questionsForMaker.isEmpty()}">No open questions in this analysis.</p>
                         <fieldset class="field" th:each="question, index : ${output.questionsForMaker}" th:attr="aria-describedby=${'question-error-' + index.index}">
@@ -122,7 +142,22 @@
                             <p class="field-error" th:id="${'question-error-' + index.index}" th:text="${errors != null ? errors['question.' + index.index] : ''}"></p>
                         </fieldset>
                     </section>
-                    <div class="preview-section">
+                    <section class="card offer-seal" aria-labelledby="seal-heading">
+                        <div>
+                            <p class="eyebrow">04 · Seal the terms</p>
+                            <h2 id="seal-heading">Review before publishing</h2>
+                            <p id="seal-state" class="field-help" role="status">Preview only. Use Check this price to refresh the terms shown here.</p>
+                            <strong th:text="${fields['title']}"></strong>
+                            <p id="seal-price" th:text="${priceCheck != null ? priceCheck.formattedPrice + ' per unit' : 'Check a valid price before publishing.'}"></p>
+                            <p th:text="${'Minimum ' + fields['minBatch'] + ' units · Capacity ' + fields['capacity'] + ' units'}"></p>
+                            <p class="offer-seal-spec" th:text="${fields['specText']}"></p>
+                            <p th:text="${fields['deliveryTerms']}"></p>
+                            <p th:text="${'Ships to ' + option.shipRegion}"></p>
+                            <p th:each="variant : ${option.allowedVariants}" th:text="${@makerDisplay.catalogLabel(variant.key) + ': ' + fields['variant.' + variant.key]}"></p>
+                            <p th:text="${'Maximum ' + fields['maxQtyPerPledge'] + ' units per pledge · Campaign ' + durationLabel}"></p>
+                            <p>Published terms are fixed. Wishes, authorized holds, and completed payments are separate; only completed payments can fund a batch.</p>
+                        </div>
+                        <div>
                         <label class="checkbox-field">
                             <input type="checkbox" name="canDeliver" value="true" required aria-describedby="canDeliver-error" th:checked="${fields['canDeliver'] == 'true'}" th:attr="aria-invalid=${errors != null and errors.containsKey('canDeliver')}">
                             <span>I can produce and deliver this as specified.</span>
@@ -130,21 +165,11 @@
                         <p id="canDeliver-error" class="field-error" th:text="${errors != null ? errors['canDeliver'] : ''}">
                         </p>
                         <p>The maker chooses this offer. Delivery and production are not guaranteed by the product.</p>
-                        <button class="button button-primary" type="submit">Publish offer and open campaign</button>
-                    </div>
+                        <button class="button button-primary" type="submit" name="action" value="publish">Publish offer and open campaign</button>
+                        </div>
+                    </section>
                 </form>
-                <section th:replace="~{maker/demand :: explorer(${demand}, ${token}, ${demandRunId})}"></section>
                 <script th:src="@{/js/offer-price.js}" defer></script>
-                <script>
-                    const price = document.getElementById('unitPrice');
-                    const warning = document.getElementById('price-warning');
-                    function showPriceWarning() {
-                    try { warning.hidden = price.value === '' || BigInt(price.value) >= BigInt(warning.dataset.cost); }
-                    catch { warning.hidden = true; }
-                    }
-                    price.addEventListener('input', showPriceWarning);
-                    showPriceWarning();
-                </script>
             </section>
         </main>
     </body>
