@@ -1,7 +1,13 @@
 # Seed analysis evaluation
 
-This evaluates classification agreement on forty synthetic wishes, not whether
-AI saves a maker time. One small synthetic seed set proves little. The timed
+This records a historical evaluation of classification agreement on the former
+illustrator snapshot of forty synthetic wishes, not whether AI saves a maker
+time. It does not evaluate the revised illustrator snapshot or the ceramicist
+and textile scenarios introduced by scenario integration. Those scenarios'
+stored fixtures, including the revised illustrator fixture, are labeled
+`synthetic-reference`; they are reference data, not fresh model runs. The revised
+illustrator wishes include multilingual, duplicate, and contradictory examples.
+One small synthetic seed set proves little. The timed
 manual-sorting comparison is **not measured yet**, so no productivity advantage,
 human-level accuracy, or customer demand is established.
 
@@ -11,14 +17,15 @@ human-level accuracy, or customer demand is established.
 35 requests and five non-requests, with three verdicts for each request (105
 request/option pairs). They were authored by a language-model evaluator from
 the wish text, option catalog and label definitions before inspecting the stored
-or fresh outputs. The same assistant implemented this evaluation; these are
+or historical model outputs. The same assistant implemented this evaluation; these are
 neither human labels nor an independent human adjudication. Shared model biases
 remain possible. No reference was changed after seeing output.
 
 The frozen reference SHA-256 is
 `65ed3c779e86124ee2d9e267a0ff9ac5b11abe602d2629f64bfbdb875725279e`.
 Seed-file hashes are included in the reference, and the runner rejects changed
-seed files. This is a recorded output-blind procedure, not externally witnessed
+seed files. The reference and scores apply only to the former snapshot, not to
+the revised scenarios. This is a recorded output-blind procedure, not externally witnessed
 preregistration. The seed itself was designed for the product and its analysis
 prompt already exists; this is not a held-out benchmark.
 
@@ -58,15 +65,14 @@ provider quotes or establish semantic correctness or a raw-provider V2 pass rate
 
 ## Results
 
-All four runs use the same input hash and select the postcard set. Results and
+The four historical runs use the same input hash and select the postcard set. Results and
 complete disagreements are in [results.json](../evaluation/results.json).
-The stored artifact is [the application's seed run](../src/main/resources/seed/analysis-run.json).
-Fresh validated outputs and numeric telemetry are in [runs](../evaluation/runs).
+The three historical model outputs and numeric telemetry are in [runs](../evaluation/runs).
 
 The checked-in results file and table below use an earlier stored seed artifact.
-Scoring the current seed with the command below gives 78/78 exact quotes for
-the stored run; the three fresh-run scores are unchanged. Do not treat the
-stored-run row as a score of the current seed until the results are regenerated.
+Scoring the seed at commit `24423a5` gives 78/78 exact quotes for its stored run;
+the three historical model-run scores are unchanged. The table's 77/77 refers
+to an earlier stored artifact. Neither result scores the revised fixtures.
 
 | Run | Requests | Compatible precision | Compatible recall | Exact quotes | Different wishes: proposed / any option | Analysis seconds | Input / output tokens | Reasoning tokens |
 |---|---|---|---|---|---|---|---|---|
@@ -77,7 +83,7 @@ stored-run row as a score of the current seed until the results are regenerated.
 
 Latency covers analysis and artifact serialization/write, excluding application
 startup. Process wall time and individual decoded-call latencies are available
-in telemetry. All fresh attempts are reported, without selecting the best one.
+in telemetry. All historical attempts are reported, without selecting the best one.
 They use `gpt-6.1-sol`, low reasoning effort, four wishes per batch, ten concurrent
 classification calls and one proposal stage, with the application's bounded
 retries and deadlines. Input and output token totals include every logged
@@ -101,7 +107,7 @@ Proposed-option verdict confusion (reference rows, model columns):
 | Live 2, Live 3 | Depends | 0 | 10 | 0 |
 | Live 2, Live 3 | Incompatible | 0 | 0 | 9 |
 
-Each fresh run logged eleven successful responses: ten classification calls and
+Each historical model run logged eleven successful responses: ten classification calls and
 one proposal call. Across the 105 request/option pairs, Stored and Live 1 agree
 with the reference on 104/105; Live 2 and Live 3 agree on 102/105. These pairs
 are correlated judgments from the same wishes, not 105 independent samples.
@@ -139,7 +145,7 @@ application validation defect. No application code was changed.
 
 The model can reproduce most of this machine-authored reference and provide
 textually grounded evidence on a small, deliberately structured example. The
-fresh runs show whether classifications vary at fixed settings. Agreement with
+historical runs show whether classifications vary at fixed settings. Agreement with
 a reference produced by a related kind of system is weak evidence of correctness.
 The sample includes clear budgets, shipping exclusions, non-requests and hostile
 instructions, but is not representative of real audience language.
@@ -152,7 +158,7 @@ set would remain small and vulnerable to familiarity effects.
 
 ## Stopwatch manual-sorting protocol
 
-1. Use the unchanged forty seed wishes and the option catalog, in seed order.
+1. Use the former forty seed wishes and option catalog at commit `24423a5`, in seed order.
    Fix the proposed option to `postcard-set` before starting. Do not inspect
    the reference, model results, or this document's disagreements before sorting.
 2. Start a stopwatch immediately before reading the catalog and wishes. For each
@@ -171,22 +177,27 @@ set would remain small and vulnerable to familiarity effects.
    original choices before discussion or adjudication. Compare the manual
    mismatch count with the model's binary false positives plus false negatives,
    not the three-verdict disagreement count.
-5. Report the measured time and disagreements next to the fresh analysis times.
+5. Report the measured time and disagreements next to the historical analysis times.
    Include setup/interaction time separately if comparing end-to-end workflows;
-   the current AI latency excludes application startup and maker review. Do not
+   the historical AI latency excludes application startup and maker review. Do not
    infer speedup until this step is measured. If the results tie or favor manual
    sorting at this scale, report that result.
 
 ## Reproduce
 
-Offline scoring uses Python 3's standard library and needs no credentials:
+Offline scoring uses Python 3's standard library and needs no credentials.
+Use a separate clone at the historical baseline; do not score the revised
+fixtures against these labels:
 
 ```sh
+git clone https://github.com/BeomSeogKim/wishbatch.git wishbatch-evaluation
+cd wishbatch-evaluation
+git checkout --detach 24423a5
 python3 -m unittest discover -s evaluation -p 'test_*.py'
 python3 evaluation/evaluate.py \
   src/main/resources/seed/analysis-run.json \
   evaluation/runs/live-1.json evaluation/runs/live-2.json \
-  evaluation/runs/live-3.json --output evaluation/results.json
+  evaluation/runs/live-3.json --output /tmp/wishbatch-results.json
 ```
 
 Live collection is an explicit paid operation, separate from tests. Build the
@@ -203,7 +214,7 @@ LLM_SEED_RUN=true LLM_SEED_OUTPUT_FILE=evaluation/runs/new-run.json \
 With no database override, this uses an isolated in-memory database. The
 generator refuses an existing output path and writes only validated synthetic
 output. This direct command does not collect the companion numeric telemetry
-used for the three reported fresh runs; do not assign those earlier timings or
+used for the three reported historical runs; do not assign those earlier timings or
 token counts to a new output. Keep failed attempts visible when reporting new
 measurements. Do not commit raw logs, credentials, or account records.
 

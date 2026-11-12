@@ -10,7 +10,7 @@ enough fans complete payment before production can proceed.
 
 1. Review the maker's feasible product options.
 2. Collect fan wishes, including conditions and preferences.
-3. Review AI classifications, source quotes, and one proposed batch.
+3. Review classifications, source quotes, and one proposed batch.
 4. Confirm the exact specification, price, minimum, and delivery terms.
 5. Fans authorize PayPal holds for that offer.
 6. Confirm production when the authorized minimum is met; capture payments,
@@ -34,8 +34,8 @@ workflow](docs/deploying.md#free-plan-limits). To run locally, use
 [Full setup and Compose](docs/running.md).
 
 The product hypothesis is unvalidated: no customer demand, production, delivery,
-or advantage over manual sorting has been established. The demo has one maker,
-one active campaign per workspace, and a US/USD catalog. Workspace links also
+or advantage over manual sorting has been established. Each workspace has one
+maker and one active campaign, with a US/USD catalog. Workspace links also
 grant access to maker actions; use disposable synthetic data.
 
 ## Getting started
@@ -47,8 +47,8 @@ Install JDK 21 and run from the repository root:
 ```
 
 The default database is in memory and disappears on shutdown. A new workspace
-contains three feasible options, forty synthetic wishes, and a labeled stored
-analysis. You can inspect evidence, add or hide wishes, and publish an offer
+contains synthetic options, wishes, and a labeled stored analysis. You can
+inspect evidence, add or hide wishes, and publish an offer
 without credentials. Reanalysis needs `LLM_API_KEY`; sandbox checkout needs
 `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` from a sandbox REST application,
 plus a sandbox buyer account for approval. Keep secret values outside Git.
@@ -147,17 +147,14 @@ the current repository's wording; deployment of that exact source revision
 was not established. The later local guide correction has not been verified on
 the hosted build. Webhooks are not implemented.
 
-[Evaluation](docs/evaluation.md) scores forty synthetic wishes (35 requests,
-three options, 105 correlated request/option pairs), using one stored run and
-three fresh runs. All choose postcards. Proposed-option Compatible precision
-is 16/16, 16/16, 15/15, and 15/15; recall is 16/16, 16/16, 15/16, and 15/16
-(93.75-100%). Retained exact quotes are 78/78, 79/79, 79/79, and 78/78.
-The checked-in evaluation summary still describes an earlier stored artifact;
-see the [evaluation caveat](docs/evaluation.md#results) and reproduce the scores
-against the current files.
-The reference labels were written by a language model, not human adjudicators;
-this is a small product-designed set, not a held-out benchmark. Fresh analysis
-times were 23.213, 25.172, and 27.212 seconds, excluding startup and maker review.
+[Historical evaluation](docs/evaluation.md) covers a former illustrator seed
+snapshot of forty synthetic wishes, including three model runs. Those results
+do not evaluate the revised illustrator examples or the ceramicist and textile
+scenarios introduced by scenario integration. Their stored fixtures are
+synthetic reference data, not fresh model runs. The historical reference labels
+were written by a language model, not human adjudicators; this is a small
+product-designed set, not a held-out benchmark. Historical run times were
+23.213, 25.172, and 27.212 seconds, excluding startup and maker review.
 **The manual-sorting comparison is not measured.**
 
 The strongest objection is that a maker could sort a few dozen wishes by hand
