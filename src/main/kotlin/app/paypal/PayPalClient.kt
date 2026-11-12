@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
 import org.springframework.web.util.UriUtils
+import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
 import java.math.BigDecimal
@@ -80,6 +81,35 @@ class PayPalClient internal constructor(
 
     override fun readRefund(refundId: RefundId, idempotencyKey: String) =
         call(HttpMethod.GET, "/v2/payments/refunds/${segment(refundId.value)}", idempotencyKey) { body -> refund(body) }
+
+    override fun verifyWebhook(webhookId: String, headers: Map<String, String>, eventJson: String): WebhookVerification {
+        if (webhookId.isBlank()) return WebhookVerification.UNAVAILABLE
+        val transmissionFields = mapOf(
+            "auth_algo" to "paypal-auth-algo",
+            "cert_url" to "paypal-cert-url",
+            "transmission_id" to "paypal-transmission-id",
+            "transmission_sig" to "paypal-transmission-sig",
+            "transmission_time" to "paypal-transmission-time",
+        )
+        val request = mutableMapOf<String, Any>("webhook_id" to webhookId)
+        for ((field, header) in transmissionFields) {
+            request[field] = headers[header]?.takeIf { it.isNotBlank() } ?: return WebhookVerification.INVALID
+        }
+        val event = try {
+            json.reader().with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS).readTree(eventJson)
+        } catch (_: RuntimeException) { return WebhookVerification.INVALID }
+        if (event == null || !event.isObject) return WebhookVerification.INVALID
+        // PayPal requires the event JSON without parsing and serialization changes.
+        val requestJson = json.writeValueAsString(request).dropLast(1) + ",\"webhook_event\":" + eventJson + "}"
+        val result = call(HttpMethod.POST, "/v1/notifications/verify-webhook-signature", null, RawJson(requestJson)) { body ->
+            when (body.requiredText("verification_status")) {
+                "SUCCESS" -> WebhookVerification.VERIFIED
+                "FAILURE" -> WebhookVerification.INVALID
+                else -> error("Unexpected verification status")
+            } to PaymentStatus.CREATED
+        }
+        return if (result is PaymentResult.Received) result.resource else WebhookVerification.UNAVAILABLE
+    }
 
     private fun authorization(body: JsonNode, orderId: OrderId? = null, email: String? = null, address: ShippingAddress? = null) =
         AuthorizationDetails(
@@ -153,7 +183,7 @@ class PayPalClient internal constructor(
     }
 
     private fun <T> call(
-        method: HttpMethod, path: String, key: String, body: Any? = null,
+        method: HttpMethod, path: String, key: String?, body: Any? = null,
         emptyResponse: Pair<T, PaymentStatus>? = null,
         parse: (JsonNode) -> Pair<T, PaymentStatus>,
     ): PaymentResult<T> {
@@ -199,6 +229,7 @@ class PayPalClient internal constructor(
     }
 
     private data class Response(val code: Int, val debugId: String?, val body: String)
+    private data class RawJson(val value: String)
 
     private fun exchange(method: HttpMethod, path: String, key: String?, body: Any?, bearer: String?): PaymentResult<Response> {
         var lastDebugId: String? = null
@@ -216,7 +247,7 @@ class PayPalClient internal constructor(
                     }
                 if (body != null) {
                     request.contentType(if (bearer == null) MediaType.APPLICATION_FORM_URLENCODED else MediaType.APPLICATION_JSON)
-                        .body(if (bearer == null) body else json.writeValueAsString(body))
+                        .body(if (bearer == null) body else if (body is RawJson) body.value else json.writeValueAsString(body))
                 }
                 val response = request.exchange { _, response ->
                     val debugId = response.headers.getFirst("PayPal-Debug-Id")

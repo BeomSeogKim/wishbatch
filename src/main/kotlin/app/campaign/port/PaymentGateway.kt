@@ -74,6 +74,8 @@ data class RefundDetails(
 /** The server supplies amount; pledgeId becomes the provider's custom reference. */
 data class CreateAuthorizeOrder(val pledgeId: UUID, val amount: Money)
 
+enum class WebhookVerification { VERIFIED, INVALID, UNAVAILABLE }
+
 /**
  * Sandbox payment boundary. Every call accepts the same deterministic key on replay; reads accept
  * a key for tracing even if the provider does not send it as a header. Implementations request
@@ -95,4 +97,8 @@ interface PaymentGateway {
     fun refundCapture(captureId: CaptureId, idempotencyKey: String): PaymentResult<RefundDetails>
     fun readCapture(captureId: CaptureId, idempotencyKey: String): PaymentResult<CaptureDetails>
     fun readRefund(refundId: RefundId, idempotencyKey: String): PaymentResult<RefundDetails>
+
+    /** Verify the complete event using lowercase transmission-header names before processing it. */
+    fun verifyWebhook(webhookId: String, headers: Map<String, String>, eventJson: String): WebhookVerification =
+        WebhookVerification.UNAVAILABLE
 }
