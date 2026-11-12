@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="panel(summary)" class="preview-section" aria-labelledby="boundary-title">
+    <h2 id="boundary-title">Analysis evidence and boundaries</h2>
+    <p th:if="${summary == null}">No analysis run is available.</p>
+    <th:block th:if="${summary != null}">
+        <p th:text="${summary.seed ? 'Stored synthetic reference' : 'Live analysis'}">Run type</p>
+        <dl class="details-list">
+            <div><dt>Run ID</dt><dd th:text="${summary.runId}">Run ID</dd></div>
+            <div><dt>Model</dt><dd th:text="${summary.model}">Model</dd></div>
+            <div><dt>Completed</dt><dd><time th:datetime="${summary.time}" th:text="${summary.time}">Time</time></dd></div>
+            <div><dt>Input hash</dt><dd th:text="${summary.inputHash}">Hash</dd></div>
+        </dl>
+        <p><strong th:text="${summary.representedWishCount}">0</strong> wishes represented in this run. The attempted or read count is unavailable.</p>
+        <p><strong th:text="${summary.newWishCount}">0</strong> visible wishes were added after this analysis; they are separate from this snapshot.</p>
+        <h3>Original validation flags</h3>
+        <p th:if="${summary.flags.isEmpty()}">No validation flags are recorded for this run.</p>
+        <ul th:unless="${summary.flags.isEmpty()}">
+            <li th:each="flag : ${summary.flags}"><strong th:text="${flag.label}">Rule</strong>: <span th:text="${flag.count}">0</span> flags. <span th:text="${flag.meaning}">Meaning</span></li>
+        </ul>
+        <p>Flags are validation observations, not a count of removed outputs. One item can have more than one flag.</p>
+        <h3>Maker overrides</h3>
+        <p><span th:text="${summary.overrideCount}">0</span> recorded overrides. Overrides do not rewrite the original run or its flags.</p>
+        <p>Translations and drafts are aids; source quotes are the original evidence. AI does not publish an offer. Counts and amounts are computed by code or set by the maker.</p>
+        <p>Compatible wishes are stated interest. Authorized units and paid units are separate payment measures.</p>
+    </th:block>
+</section>
+</body>
+</html>
