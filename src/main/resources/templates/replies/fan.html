@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="approved" class="notice notice-info" aria-label="Approved maker reply">
+    <p>Your original wish: <q th:text="${reply.quote}"></q></p>
+    <p>Maker-approved reply: <span th:text="${reply.body}"></span></p>
+</section>
+</body>
+</html>

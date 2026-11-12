@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Reply to wishes', ~{::main})}">
+<body>
+<main id="main" class="shell form-stack">
+    <header class="page-heading">
+        <p class="eyebrow">Maker review</p>
+        <h1>Reply to wishes this batch does not serve</h1>
+        <p>Review the fan's own words and the validated analysis reason before approving each group.</p>
+        <p>Only approved replies can appear beside the relevant wish. Approval sends no messages.</p>
+        <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${replies.runId})}">Back to proposal</a>
+    </header>
+    <p th:if="${replyError}" th:text="${replyError}" class="notice notice-error" role="alert"></p>
+    <p th:if="${replies.status == 'EMPTY'}" class="empty-state">No request groups need a reply in this analysis.</p>
+    <form th:if="${replies.status == 'READY'}" method="post"
+          th:action="@{/w/{token}/maker/replies/generate(token=${token})}" data-reply-generation>
+        <input type="hidden" name="run" th:value="${replies.runId}">
+        <input type="hidden" name="evidenceHash" th:value="${replies.evidenceHash}">
+        <p>Generate once for this analysis. Unsafe reasons are rejected; no automatic retries are made.</p>
+        <button class="button button-primary" type="submit">Draft replies</button>
+        <p role="status" aria-live="polite" data-reply-loading hidden>Drafting replies. Please wait.</p>
+    </form>
+    <p th:if="${replies.status == 'GENERATING'}" class="notice notice-info" role="status">Drafting has started. Reload to check its result. An interrupted attempt is not retried.</p>
+    <div th:if="${replies.status != 'READY' and replies.status != 'EMPTY' and replies.status != 'GENERATING' and replies.status != 'DRAFTED'}"
+         class="notice notice-error" role="alert">
+        <p>Replies are unavailable for this attempt. No draft has been published. Review the analysis before continuing.</p>
+        <p th:text="${replies.status}"></p>
+    </div>
+    <section th:each="group : ${replies.groups}" class="card form-stack">
+        <h2>Not served by this batch</h2>
+        <div th:each="source : ${group.evidence.sources}">
+            <p>Original fan wish: <q th:text="${source.quote}"></q></p>
+        </div>
+        <p th:each="reason : ${group.evidence.reasons}">Validated analysis reason: <span th:text="${reason}"></span></p>
+        <form th:if="${group.draft != null}" method="post" class="form-stack"
+              th:action="@{/w/{token}/maker/replies/approve(token=${token})}">
+            <input type="hidden" name="run" th:value="${replies.runId}">
+            <input type="hidden" name="group" th:value="${group.evidence.groupId}">
+            <input type="hidden" name="evidenceHash" th:value="${replies.evidenceHash}">
+            <label th:for="${'reply-' + group.evidence.groupId}">Reply body</label>
+            <textarea name="body" rows="4" maxlength="500" required th:id="${'reply-' + group.evidence.groupId}" th:text="${group.draft}"></textarea>
+            <p class="field-help">Keep the exact reason. Use “Thank you for sharing your wish.”, “Thanks for your wish.”, or no greeting, separated from the reason by a space. Fan quotes stay separate.</p>
+            <p th:if="${group.approved}" class="notice notice-info" role="status">Approved for these wishes.</p>
+            <button class="button button-primary" type="submit">Approve reply</button>
+        </form>
+    </section>
+    <script>
+        document.querySelectorAll('[data-reply-generation]').forEach(form => {
+            form.addEventListener('submit', () => {
+                form.querySelector('button').disabled = true;
+                form.querySelector('[data-reply-loading]').hidden = false;
+            });
+        });
+    </script>
+</main>
+</body>
+</html>
