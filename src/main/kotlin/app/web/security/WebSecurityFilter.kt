@@ -3,6 +3,7 @@ package app.web.security
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.MediaType
 import org.springframework.web.filter.OncePerRequestFilter
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -27,13 +28,13 @@ class WebSecurityFilter : OncePerRequestFilter() {
         val unsafe = request.method !in SAFE_METHODS
         val path = request.servletPath.ifEmpty { request.requestURI.removePrefix(request.contextPath) }
         if (request.contentLengthLong > MAX_BODY_BYTES) {
-            reject(response, 413, "This request is too large. Submit at most 512 KiB.")
+            reject(request, response, 413, "This request is too large. Submit at most 512 KiB.")
             return
         }
         val bounded = if (unsafe || request.contentLengthLong != 0L) {
             val body = request.inputStream.readNBytes(MAX_BODY_BYTES + 1)
             if (body.size > MAX_BODY_BYTES) {
-                reject(response, 413, "This request is too large. Submit at most 512 KiB.")
+                reject(request, response, 413, "This request is too large. Submit at most 512 KiB.")
                 return
             }
             BoundedRequest(request, body)
@@ -43,7 +44,7 @@ class WebSecurityFilter : OncePerRequestFilter() {
             try {
                 bounded.parameterMap
             } catch (_: IllegalArgumentException) {
-                reject(response, 400, "This request could not be read. Reload the page and try again.")
+                reject(request, response, 400, "This request could not be read. Reload the page and try again.")
                 return
             }
         }
@@ -59,7 +60,7 @@ class WebSecurityFilter : OncePerRequestFilter() {
             val supplied = bounded.getHeader("X-CSRF-TOKEN") ?: bounded.getParameter("_csrf")
             if (request.getHeader("Sec-Fetch-Site") == "cross-site" || expected == null || supplied == null ||
                 !MessageDigest.isEqual(expected.token.toByteArray(), supplied.toByteArray())) {
-                reject(response, 403, "This page expired or the request could not be verified. Reload the page and try again.")
+                reject(request, response, 403, "This page expired or the request could not be verified. Reload the page and try again.")
                 return
             }
             bounded.setAttribute("_csrf", expected)
@@ -71,7 +72,7 @@ class WebSecurityFilter : OncePerRequestFilter() {
             }
             if (!allowed) {
                 response.setHeader("Retry-After", if (route == "/demo") "600" else "60")
-                reject(response, 429, "Too many requests. Wait before trying again.")
+                reject(request, response, 429, "Too many requests. Wait before trying again.")
                 return
             }
         } else if (!request.requestURI.removePrefix(request.contextPath).let {
@@ -88,7 +89,18 @@ class WebSecurityFilter : OncePerRequestFilter() {
         chain.doFilter(bounded, response)
     }
 
-    private fun reject(response: HttpServletResponse, status: Int, message: String) {
+    private fun reject(request: HttpServletRequest, response: HttpServletResponse, status: Int, message: String) {
+        val accepted = try {
+            MediaType.parseMediaTypes(request.getHeader("Accept") ?: "")
+        } catch (_: IllegalArgumentException) {
+            emptyList()
+        }
+        val html = accepted.filter { it.type == "text" && it.subtype == "html" }.maxOfOrNull { it.qualityValue } ?: 0.0
+        val json = accepted.filter { it.type == "application" && it.subtype == "json" }.maxOfOrNull { it.qualityValue } ?: 0.0
+        if (html > 0 && html >= json) {
+            response.sendError(status)
+            return
+        }
         response.status = status
         response.contentType = "application/json"
         response.characterEncoding = "UTF-8"

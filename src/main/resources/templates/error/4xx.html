@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Request unavailable', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <header class="page-heading">
+        <p class="eyebrow">Request unavailable</p>
+        <h1>We could not open this page.</h1>
+        <p class="lead">Check the link or return home and try again.</p>
+        <a class="button button-primary" th:href="@{/}">Return home</a>
+    </header>
+</main>
+</body>
+</html>
