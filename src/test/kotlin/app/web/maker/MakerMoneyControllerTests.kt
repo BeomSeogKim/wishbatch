@@ -470,7 +470,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         gateway.refundCaptureResults.add(PaymentResult.Received(
             RefundDetails(RefundId("refund-late"), Money(3000, "USD")), PaymentStatus.PENDING))
         val refunding = page(fixture.workspace.token, "result")
-        assertContains(refunding, "PayPal is processing your refund.")
+        assertContains(refunding, "A refund has been requested. PayPal confirmation is not yet available.")
         assertContains(refunding, "0 units with completed refunds")
         assertContains(refunding, "refund-late")
     }

@@ -124,7 +124,7 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
             "Your payment could not be completed. You were not charged.",
             "Hold released by PayPal. When the amount reappears depends on your bank or card.",
             "Refunded. When the money arrives depends on PayPal and your bank or card.",
-            "PayPal is processing your refund."
+            "A refund has been requested. PayPal confirmation is not yet available."
         )
         sentences.forEach { assertContains(html, it) }
         val terms = Regex("<section[^>]*aria-label=\"Payment terms\"[^>]*>(.*?)</section>", RegexOption.DOT_MATCHES_ALL)

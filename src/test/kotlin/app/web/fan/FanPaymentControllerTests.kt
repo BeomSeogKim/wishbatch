@@ -544,7 +544,7 @@ class FanPaymentControllerTests @Autowired constructor(
                 PledgeState.VOIDED -> "Hold released by PayPal."
                 PledgeState.VOID_FAILED -> "The hold release is not confirmed."
                 PledgeState.REFUNDED -> "Refunded."
-                PledgeState.REFUND_PENDING -> "PayPal is processing your refund."
+                PledgeState.REFUND_PENDING -> "A refund has been requested. PayPal confirmation is not yet available."
                 PledgeState.REFUND_FAILED -> "The refund is not confirmed."
                 PledgeState.PARTIALLY_REFUNDED -> "Partial refund observed. Remaining amount is unconfirmed. Needs attention."
             }
