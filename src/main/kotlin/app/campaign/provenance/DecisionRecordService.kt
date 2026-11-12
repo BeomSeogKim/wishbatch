@@ -11,6 +11,8 @@ import jakarta.persistence.LockModeType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 /**
@@ -32,9 +34,12 @@ class DecisionRecordService(private val entities: EntityManager, private val map
         require(wishes.map { it.id }.distinct().size == wishes.size)
         val output = mapper.readValue(run.resultJson, AnalysisOutput::class.java)
         require(output.wishes.map { it.wishId }.toSet() == wishes.map { it.id }.toSet())
-        val payload = analysisPayload(run, wishes)
-        require(payload == analysisPayload(saved, wishes))
-        storeSource(run.workspaceId, "ANALYSIS", run.id, payload)
+        val requested = analysisPayload(run, wishes, persistedTimestamp(run.createdAt))
+        // Flush leaves managed timestamps at caller precision; snapshots need the database value.
+        entities.refresh(saved)
+        val payload = analysisPayload(saved, wishes)
+        require(payload == requested)
+        storeSource(saved.workspaceId, "ANALYSIS", saved.id, payload)
     }
 
     /** Call at publication. The offer ID is its version; the stored source hash is its terms hash. */
@@ -54,7 +59,10 @@ class DecisionRecordService(private val entities: EntityManager, private val map
     fun recordPledge(pledge: Pledge) {
         entities.flush()
         val saved = requireNotNull(entities.find(Pledge::class.java, pledge.id, LockModeType.PESSIMISTIC_WRITE))
-        require(paymentPayload(saved) == paymentPayload(pledge))
+        require(paymentPayload(saved) == paymentPayload(pledge, persistedTimestamp(pledge.createdAt),
+            pledge.authorizationExpiresAt?.let(::persistedTimestamp))) {
+            "Persisted payment checkpoint differs from supplied pledge"
+        }
         val campaign = requireNotNull(entities.find(Campaign::class.java, pledge.campaignId))
         val offer = requireNotNull(entities.find(Offer::class.java, campaign.offerId))
         var record = entities.find(PledgeDecisionRecord::class.java, pledge.id)
@@ -83,7 +91,7 @@ class DecisionRecordService(private val entities: EntityManager, private val map
         }
         val entries = entries(pledge.id)
         check(chainValid(record, entries)) { "Stored decision record failed integrity verification" }
-        val payment = paymentPayload(pledge)
+        val payment = paymentPayload(saved)
         if (entries.lastOrNull { it.kind == "PAYMENT" }?.payload != payment) append(record, "PAYMENT", payment)
     }
 
@@ -136,20 +144,27 @@ class DecisionRecordService(private val entities: EntityManager, private val map
         if (reference.isNull) true
         else snapshot != null && reference.asString() == snapshot.hash && hashing.sha256(snapshot.payload) == snapshot.hash
 
-    internal fun paymentPayload(pledge: Pledge): String = hashing.canonical(mapOf(
-        "pledgeId" to pledge.id, "campaignId" to pledge.campaignId, "createdAt" to pledge.createdAt.toString(),
+    internal fun paymentPayload(
+        pledge: Pledge,
+        createdAt: Instant = pledge.createdAt,
+        authorizationExpiresAt: Instant? = pledge.authorizationExpiresAt,
+    ): String = hashing.canonical(mapOf(
+        "pledgeId" to pledge.id, "campaignId" to pledge.campaignId, "createdAt" to createdAt.toString(),
         "quantity" to pledge.qty, "amountMinor" to pledge.amount, "currency" to pledge.currency,
         "orderId" to pledge.paypalOrderId, "authorizationId" to pledge.authorizationId,
-        "authorizationExpiresAt" to pledge.authorizationExpiresAt?.toString(), "captureId" to pledge.captureId,
+        "authorizationExpiresAt" to authorizationExpiresAt?.toString(), "captureId" to pledge.captureId,
         "refundId" to pledge.refundId, "state" to pledge.state.name,
         "simulatedCaptureFailure" to (pledge.lastError == "SIMULATED_CAPTURE_FAILURE"),
     ))
 
-    private fun analysisPayload(run: AnalysisRun, wishes: List<Wish>): String {
+    // Both supported stores round timestamp(6) values to the nearest microsecond.
+    private fun persistedTimestamp(value: Instant): Instant = value.plusNanos(500).truncatedTo(ChronoUnit.MICROS)
+
+    private fun analysisPayload(run: AnalysisRun, wishes: List<Wish>, createdAt: Instant = run.createdAt): String {
         val output = mapper.readValue(run.resultJson, AnalysisOutput::class.java)
         return hashing.canonical(mapOf(
             "version" to 1, "workspaceId" to run.workspaceId, "runId" to run.id, "model" to run.model,
-            "inputHash" to run.inputHash, "createdAt" to run.createdAt.toString(), "seed" to run.isSeed,
+            "inputHash" to run.inputHash, "createdAt" to createdAt.toString(), "seed" to run.isSeed,
             "resultHash" to hashing.sha256(run.resultJson),
             "wishes" to wishes.sortedBy { it.id.toString() }.map { mapOf("wishId" to it.id, "text" to it.text) },
             "wishKinds" to output.wishes.sortedBy { it.wishId.toString() }.map { mapOf("wishId" to it.wishId, "kind" to it.kind) },

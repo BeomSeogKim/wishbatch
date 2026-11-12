@@ -9,6 +9,7 @@ import app.campaign.service.ServiceResult
 import app.campaign.store.CampaignRepository
 import app.campaign.store.OfferRepository
 import jakarta.persistence.EntityManager
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -24,14 +25,23 @@ class PaymentWebhookService(
     private val service: CampaignService,
     @Value("\${PAYPAL_WEBHOOK_ID:}") private val webhookId: String,
 ) {
+    private val logger = LoggerFactory.getLogger(PaymentWebhookService::class.java)
+
     fun receive(event: PaymentWebhook, headers: Map<String, String>, originalJson: String): WebhookResult {
-        if (webhookId.isBlank()) return WebhookResult.DISABLED
+        if (webhookId.isBlank()) return outcome(event, WebhookResult.DISABLED)
         when (gateway.verifyWebhook(webhookId, headers, originalJson)) {
-            WebhookVerification.INVALID -> return WebhookResult.INVALID_SIGNATURE
-            WebhookVerification.UNAVAILABLE -> return WebhookResult.UNAVAILABLE
+            WebhookVerification.INVALID -> return outcome(event, WebhookResult.INVALID_SIGNATURE)
+            WebhookVerification.UNAVAILABLE -> return outcome(event, WebhookResult.UNAVAILABLE)
             WebhookVerification.VERIFIED -> Unit
         }
-        return if (inbox.receive(event, ::process)) WebhookResult.ACCEPTED else WebhookResult.UNAVAILABLE
+        val result = if (inbox.receive(event, ::process)) WebhookResult.ACCEPTED else WebhookResult.UNAVAILABLE
+        return outcome(event, result)
+    }
+
+    private fun outcome(event: PaymentWebhook, result: WebhookResult): WebhookResult {
+        val type = knownEvents.firstOrNull { it == event.type } ?: "UNKNOWN"
+        logger.info("Payment webhook type={} outcome={}", type, result)
+        return result
     }
 
     private fun process(event: PaymentWebhook): Boolean {
@@ -54,4 +64,5 @@ class PaymentWebhookService(
 
     private val captureEvents = setOf("PAYMENT.CAPTURE.COMPLETED", "PAYMENT.CAPTURE.DECLINED",
         "PAYMENT.CAPTURE.DENIED", "PAYMENT.CAPTURE.REFUNDED")
+    private val knownEvents = captureEvents + "PAYMENT.AUTHORIZATION.VOIDED"
 }
