@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="reading(row)" class="two-column">
+    <div>
+        <h2>Original wish</h2>
+        <pre style="white-space: pre-wrap; overflow-wrap: anywhere" th:text="${row.original}">Original text</pre>
+    </div>
+    <div>
+        <h2>English reading aid</h2>
+        <div th:if="${row.saved != null and row.saved.status != null}">
+            <p class="status-pill" th:text="${row.saved.label}">Machine translation</p>
+            <p>Language (machine-inferred): <span th:text="${row.saved.inferredLanguage ?: 'Unknown'}">Unknown</span></p>
+            <pre style="white-space: pre-wrap; overflow-wrap: anywhere" th:if="${row.saved.englishGloss != null}" th:text="${row.saved.englishGloss}">English gloss</pre>
+            <p th:if="${row.saved.status.name() == 'ENGLISH'}">No translation needed (machine-inferred English).</p>
+            <p th:if="${row.saved.status.name() == 'UNCERTAIN'}">Translation is unavailable. Language remains unknown.</p>
+            <p class="field-help">Model: <span th:text="${row.saved.model}">Model</span> · <time th:text="${row.saved.generatedAt}">Time</time></p>
+        </div>
+        <p th:if="${row.saved == null or row.saved.status == null}">Translation is unavailable. Language: Unknown.</p>
+        <p th:unless="${row.current}">The source no longer matches the recorded analysis, or its original snapshot is unavailable.</p>
+    </div>
+</div>
+</body>
+</html>
