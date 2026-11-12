@@ -125,6 +125,7 @@
                         <button class="button button-primary" type="submit">Publish offer and open campaign</button>
                     </div>
                 </form>
+                <section th:replace="~{maker/demand :: explorer(${demand}, ${token}, ${demandRunId})}"></section>
                 <script th:src="@{/js/offer-price.js}" defer></script>
                 <script>
                     const price = document.getElementById('unitPrice');

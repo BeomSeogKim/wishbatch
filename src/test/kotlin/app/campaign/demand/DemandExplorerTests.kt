@@ -79,6 +79,21 @@ class DemandExplorerTests {
     }
 
     @Test
+    fun `clipped quotes cannot drop aggregate currency shipping or historical context`() {
+        for (source in listOf("up to $10 including shipping", "CAD up to $10", "I used to pay up to $10",
+            "up to $10 for two", "up to $10 if it ships tomorrow", "I will not pay up to $10")) {
+            val parsed = quotedPriceLimit(analyzed(UUID.randomUUID(), listOf("up to $10")), source, "USD")
+            assertEquals(PriceEvidenceStatus.AMBIGUOUS, parsed.status, source)
+            assertNull(parsed.maximumMinor)
+        }
+        val unlimited = analyzed(UUID.randomUUID(), listOf("No budget limit"))
+        assertEquals(PriceEvidenceStatus.AMBIGUOUS, quotedPriceLimit(unlimited, "No budget limit for shipping", "USD").status)
+        val nonliteral = analyzed(UUID.randomUUID(), listOf("up to USD 10"))
+        assertEquals(PriceEvidenceStatus.AMBIGUOUS, quotedPriceLimit(nonliteral, "up to USD\n10", "USD").status)
+        assertEquals(emptyList(), quotedPriceLimit(nonliteral, "up to USD\n10", "USD").quotes)
+    }
+
+    @Test
     fun `curve counts distinct visible compatible requests and excludes unknown budgets`() {
         val sources = listOf("up to $10", "under $10", "No budget limit", "Cards please", "up to EUR 10",
             "up to $20", "up to $30", "up to $40", "up to $50").map(::wish)
@@ -135,7 +150,8 @@ class DemandExplorerTests {
         assertEquals(first.minBatch, explorer.minimum)
         val empty = assertNotNull(exploreDemand(output, listOf(first), emptyList(), first.id))
         assertEquals(0, empty.compatible)
-        assertEquals(0, empty.points.single().compatible)
+        assertEquals(listOf(1L, first.unitCost), empty.points.map { it.priceMinor })
+        assertEquals(setOf(0), empty.points.map { it.compatible }.toSet())
         assertNull(exploreDemand(output, listOf(first), listOf(source), UUID.randomUUID()))
         val foreign = option("Foreign", UUID.randomUUID())
         assertEquals(1, assertNotNull(exploreDemand(output, listOf(first, foreign), listOf(source), first.id)).alternatives.size)

@@ -2,6 +2,7 @@ package app.web.maker
 
 import app.campaign.analysisrun.AnalysisRunResult
 import app.campaign.analysisrun.AnalysisRunService
+import app.campaign.demand.exploreDemand
 import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.Wish
 import app.campaign.model.WishKind
@@ -85,6 +86,7 @@ class ProposalController(
             model.addAttribute("optionCounts", optionWishCounts(output))
             model.addAttribute("proposedCounts", optionWishCounts(output).singleOrNull { it.optionId == option?.id })
             if (option != null) {
+                model.addAttribute("demand", exploreDemand(output, options.values.toList(), wishes.values.toList(), option.id))
                 model.addAttribute("optionFormat", display.catalogLabel(option.format))
                 model.addAttribute("optionAttributes", option.fixedAttributes.mapKeys { display.catalogLabel(it.key) }
                     .mapValues { display.catalogLabel(it.value) })

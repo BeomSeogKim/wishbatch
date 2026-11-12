@@ -1,6 +1,7 @@
 package app.web.maker
 
 import app.campaign.model.AnalysisRun
+import app.campaign.demand.exploreDemand
 import app.campaign.model.NeedAttribute
 import app.campaign.model.Option
 import app.campaign.port.AnalysisOutput
@@ -59,6 +60,9 @@ class OfferController(
             val fields = model.getAttribute("fields") as Map<String, String>
             val price = fields["unitPrice"]?.toLongOrNull()?.takeIf { it > 0 }
             model.addAttribute("priceCheck", price?.let { priceView(token, analysis!!, output!!, option, it) })
+            model.addAttribute("demand", exploreDemand(output!!, workspaces.listOptions(token),
+                workspaces.listWishes(token), option.id, price, fields["minBatch"]?.toIntOrNull()))
+            model.addAttribute("demandRunId", analysis!!.id)
         }
         return "maker/offer"
     }

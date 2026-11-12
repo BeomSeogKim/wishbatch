@@ -104,8 +104,10 @@
     </div>
     <div th:replace="~{workbench/table :: workbench}"></div>
     <th:block th:if="${stored != null}">
+        <section th:replace="~{maker/demand :: explorer(${demand}, ${token}, ${stored.run.id})}"></section>
         <nav class="proposal-nav" aria-label="Proposal sections">
             <a href="#wish-workbench">Wish workbench</a>
+            <a th:if="${demand != null}" href="#demand-explorer">Price and demand</a>
             <a th:if="${proposedOption != null}" href="#rationale">Quoted evidence</a>
             <a href="#option-counts">All options</a>
             <a href="#maker-questions">Open questions</a>
@@ -140,6 +142,7 @@
         </section>
         <section class="preview-section" aria-labelledby="maker-questions">
             <div class="section-heading"><h2 id="maker-questions">Questions only you can settle.</h2></div>
+            <p><a th:href="@{/w/{token}/maker/questions(token=${token})}">Review follow-up questions</a></p>
             <p th:if="${stored.output.questionsForMaker.isEmpty()}">No questions were returned. Check the evidence and production terms before making an offer.</p>
             <ul><li th:each="question : ${stored.output.questionsForMaker}">
                 <p th:text="${question.text}">Question for the maker</p>

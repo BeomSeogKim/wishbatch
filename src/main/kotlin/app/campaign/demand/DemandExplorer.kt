@@ -61,6 +61,7 @@ fun exploreDemand(
         if (limit > 0) prices.add(limit)
         if (limit < Long.MAX_VALUE) prices.add(limit + 1)
     }
+    if (prices.size == 1) prices.add(selected.unitCost.takeIf { it > 1 } ?: 2L)
     val points = prices.map { price ->
         val ids = priced.filter { it.price.maximumMinor == null || it.price.maximumMinor >= price }.map { it.wishId }
         DemandPoint(price, ids.size, minimumUnits, ids)
