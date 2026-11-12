@@ -131,7 +131,9 @@ node --test src/test/js/pledge.test.cjs
 The main checks run repository guards, their Python tests, and Gradle checks.
 The evaluation and JavaScript commands are separate. Tests need no credentials,
 network services, shared database, or fixed ports. The first Gradle build may
-download dependencies. Tests always use an isolated in-memory database even if
-`DATABASE_URL` points elsewhere. For only Kotlin/application tests, run
+download dependencies. Application tests default to isolated in-memory H2 even
+if `DATABASE_URL` points elsewhere; restart tests use temporary file-backed H2,
+and schema tests may use a disposable local PostgreSQL cluster. For only
+Kotlin/application tests, run
 `./gradlew test`. See [evaluation](evaluation.md#reproduce) for offline scoring;
 live model collection is a separate paid operation, never part of tests.

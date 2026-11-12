@@ -275,8 +275,9 @@ workspace's single active campaign slot.
 `CampaignView` includes the three separate counts, minimum progress, remaining
 capacity and time, confirmation totals, masked pledge rows, outcome, unresolved
 payments, and the provider timeline. Reads reconcile deadlines and pending
-payments; `CampaignReconciliationTick` also runs every minute. Only completed
-captures release production. A late completed capture on an unsuccessful
+payments; `CampaignReconciliationTick` also runs every minute. Settlement
+requires enough completed captures; later refunds or attention flags can require
+review before production even though the `FUNDED` outcome remains historical. A late completed capture on an unsuccessful
 campaign is refunded; unresolved captures are never treated as released holds.
 
 `CampaignQueries` resolves workspace tokens for screen reads. `currentCampaign`
@@ -428,8 +429,9 @@ above; it never overrides a received provider response.
 
 Without `DATABASE_URL` the application starts on an in-memory database, so a
 fresh clone or a new worktree builds, tests, and runs with no services. The
-build forces the in-memory database for tests even when `DATABASE_URL` is set,
-so tests in different worktrees never share data.
+build defaults tests to isolated in-memory H2 even when `DATABASE_URL` is set.
+Restart tests use temporary file-backed H2, and schema tests may use a disposable
+local PostgreSQL cluster; tests do not share application data.
 `tools/worktree.sh add` assigns each worktree its own port from 8201 to 8209;
 pass it as `SERVER_PORT` when running the application there.
 

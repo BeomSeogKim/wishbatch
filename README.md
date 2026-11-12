@@ -107,7 +107,7 @@ captures count toward the paid minimum and a `FUNDED` result.
 | `AWAITING_CONFIRMATION` | Maker confirmation within 12 hours of close enters `SETTLING` |
 | `SETTLING` | Enough completed capture units enter `FUNDED`; a shortfall enters `NOT_FUNDED` |
 | `NOT_FUNDED` | Below-minimum close, cancellation, expired confirmation, or capture shortfall; refund completed captures and void remaining holds |
-| `FUNDED` | Paid minimum met; production may proceed under the maker's terms |
+| `FUNDED` | The paid minimum was met at settlement; review current payments and attention flags before proceeding |
 
 Pending captures, voids, and refunds remain visible and are reconciled on reads
 and a minute tick. Verified sandbox webhooks can also trigger reconciliation;
@@ -121,7 +121,9 @@ The client uses Orders v2 create/authorize and Payments v2 capture/void/refund
 and resource reads; [architecture](docs/architecture.md#paypal-client) lists
 the endpoints and resource-status mappings. A capture can fail. Hold release
 and refund availability depend on PayPal and the bank or card. The product
-never holds funds or guarantees production or delivery.
+never holds funds or guarantees production or delivery. The maker can run a
+[books check](docs/reliability.md#books-check) to compare recorded pledges with
+sandbox resources and inspect dated results.
 
 ## Evidence and limits
 
