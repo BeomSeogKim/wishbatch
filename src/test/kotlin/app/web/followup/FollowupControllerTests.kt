@@ -62,7 +62,7 @@ class FollowupControllerTests @Autowired constructor(
         val html = mvc.get("/w/$token/maker/questions").andExpect {
             status { isOk() }; view { name("followup/maker") }
         }.andReturn().response.contentAsString
-        assertContains(html, "Review follow-up questions")
+        assertContains(html, "Questions to ask fans")
         assertContains(html, "Art print")
         assertContains(html, "name=\"text\"")
         assertContains(html, "value=\"matte\"")

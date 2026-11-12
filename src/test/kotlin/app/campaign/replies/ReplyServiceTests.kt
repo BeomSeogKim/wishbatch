@@ -351,6 +351,40 @@ class ReplyServiceTests(
     }
 
     @Test
+    fun `maker groups identical reasons in collapsed sections while retaining every draft and approval action`() {
+        val reason = "This batch uses a different format."
+        val fixture = fixture(reasons = listOf(reason, reason))
+        val generated = drafted(fixture)
+        approve(fixture, generated.groups.first(), generated.groups.first().draft!!)
+        val before = replies.maker(fixture.token, fixture.run.id)
+        val calls = drafter.calls
+        val result = mvc.get("/w/${fixture.token}/maker/replies") { param("run", fixture.run.id.toString()) }
+            .andExpect { status { isOk() } }.andReturn()
+        assertEquals(before.groups.groupBy { it.evidence.reasons }, result.modelAndView!!.model["replyReasonGroups"])
+        val html = result.response.contentAsString
+        val reasonSections = Regex("<details[^>]*data-reply-reason-group[^>]*>").findAll(html).toList()
+        assertEquals(1, reasonSections.size)
+        assertFalse(reasonSections.single().value.contains(" open"))
+        assertContains(html, "2 reply groups")
+        assertEquals(2, Regex("<details[^>]*data-reply-group\\s").findAll(html).count())
+        for (group in before.groups) {
+            val block = html.substringAfter("id=\"reply-group-${group.evidence.groupId}\"").substringBefore("</details>")
+            assertContains(block, "Saved draft")
+            assertEquals(group.approved, block.contains("Approved for these wishes."))
+            assertContains(block, "name=\"run\" value=\"${before.runId}\"")
+            assertContains(block, "name=\"group\" value=\"${group.evidence.groupId}\"")
+            assertContains(block, "name=\"evidenceHash\" value=\"${before.evidenceHash}\"")
+            assertContains(block, "id=\"reply-${group.evidence.groupId}\"")
+            assertContains(block, group.draft!!)
+            assertContains(block, "action=\"/w/${fixture.token}/maker/replies/approve\"")
+        }
+        assertContains(html, "&lt;script&gt;fanMarker()&lt;/script&gt;")
+        assertFalse(html.contains("<script>fanMarker()"))
+        assertEquals(before, replies.maker(fixture.token, fixture.run.id))
+        assertEquals(calls, drafter.calls)
+    }
+
+    @Test
     fun `intake real reply transport maker approval and fan page show only the fans approved reply`() {
         val transport = replyTransport()
         val sessions = List(3) { MockHttpSession() }

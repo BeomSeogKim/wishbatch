@@ -1,6 +1,8 @@
 package app.web.fan
 
+import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.model.Wish
+import app.campaign.model.WishKind
 import app.campaign.reading.OfferWishReadingService
 import app.campaign.replies.ReplyService
 import app.campaign.workspace.WishLimitReachedException
@@ -38,13 +40,17 @@ class WishController(
     private val readings: OfferWishReadingService,
     private val campaigns: WishCampaignAvailability? = null,
     private val replies: ReplyService,
+    private val analyses: AnalysisRunService,
 ) {
     @GetMapping("/w/{token}")
     fun wish(@PathVariable token: String, model: Model, response: HttpServletResponse, session: HttpSession): String {
         if (workspaces.findByToken(token) == null) return notFound(response)
         model.addAttribute("token", token)
         model.addAttribute("maker", workspaces.scenario(token).definition.maker)
-        model.addAttribute("recentWishes", workspaces.listWishes(token, includeHidden = false).asReversed().take(5))
+        val nonRequests = analyses.latest(token)?.output?.wishes.orEmpty()
+            .filter { it.kind == WishKind.NOT_A_REQUEST }.map { it.wishId }.toSet()
+        model.addAttribute("recentWishes", workspaces.listWishes(token, includeHidden = false)
+            .asReversed().filterNot { it.id in nonRequests }.take(5))
         model.addAttribute("campaignOpen", campaigns?.isOpen(token) ?: false)
         val lastWishId = session.getAttribute("followup.wish.$token") as? UUID
         model.addAttribute("lastWishId", lastWishId)

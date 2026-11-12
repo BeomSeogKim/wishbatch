@@ -12,7 +12,7 @@
         <p class="lead" th:if="${makerStep == 6}">Your campaign has ended. View the settlement result and check whether any payment actions need attention.</p>
         <p class="sample-label">Costs and production limits are demo-scale.</p>
     </header>
-    <p><a th:href="@{/w/{token}/maker/overview(token=${token})}">Open campaign overview</a></p>
+    <p th:if="${makerCampaign != null}"><a th:href="@{/w/{token}/maker/overview(token=${token})}">Open campaign overview</a></p>
     <div th:replace="~{maker/fragments :: steps(${token}, ${makerStep})}"></div>
     <section th:if="${makerStep == 1}" class="preview-section" aria-labelledby="next-step">
         <div class="card">

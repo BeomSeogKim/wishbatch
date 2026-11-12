@@ -32,24 +32,34 @@
         <p>Replies are unavailable for this attempt. No draft has been published. Review the analysis before continuing.</p>
         <p th:text="${replies.status}"></p>
     </div>
-    <section th:each="group : ${replies.groups}" class="card form-stack">
-        <h2>Not served by this batch</h2>
-        <div th:each="source : ${group.evidence.sources}">
-            <p>Original fan wish: <q th:text="${source.quote}"></q></p>
-        </div>
-        <p th:each="reason : ${group.evidence.reasons}">Validated analysis reason: <span th:text="${reason}"></span></p>
-        <form th:if="${group.draft != null}" method="post" class="form-stack"
-              th:action="@{/w/{token}/maker/replies/approve(token=${token})}">
-            <input type="hidden" name="run" th:value="${replies.runId}">
-            <input type="hidden" name="group" th:value="${group.evidence.groupId}">
-            <input type="hidden" name="evidenceHash" th:value="${replies.evidenceHash}">
-            <label th:for="${'reply-' + group.evidence.groupId}">Reply body</label>
-            <textarea name="body" rows="4" maxlength="500" required th:id="${'reply-' + group.evidence.groupId}" th:text="${group.draft}"></textarea>
-            <p class="field-help">Keep the exact reason. Use “Thank you for sharing your wish.”, “Thanks for your wish.”, or no greeting, separated from the reason by a space. Fan quotes stay separate.</p>
-            <p th:if="${group.approved}" class="notice notice-info" role="status">Approved for these wishes.</p>
-            <button class="button button-primary" type="submit">Approve reply</button>
-        </form>
-    </section>
+    <details th:each="reasonGroup : ${replyReasonGroups}" class="card form-stack" data-reply-reason-group>
+        <summary>
+            <span th:each="reason : ${reasonGroup.key}" th:text="${reason}"></span>
+            <span th:text="${reasonGroup.value.size() + (reasonGroup.value.size() == 1 ? ' reply group' : ' reply groups')}"></span>
+        </summary>
+        <details th:each="group : ${reasonGroup.value}" class="form-stack" data-reply-group th:id="${'reply-group-' + group.evidence.groupId}">
+            <summary>
+                <span th:text="${group.evidence.sources.size() + (group.evidence.sources.size() == 1 ? ' wish' : ' wishes')}"></span>
+                <span th:if="${group.draft == null}"> · No saved draft</span>
+                <span th:if="${group.draft != null}"> · Saved draft</span>
+                <span th:if="${group.approved}"> · Approved</span>
+            </summary>
+            <div th:each="source : ${group.evidence.sources}">
+                <p>Original fan wish: <q th:text="${source.quote}"></q></p>
+            </div>
+            <form th:if="${group.draft != null}" method="post" class="form-stack"
+                  th:action="@{/w/{token}/maker/replies/approve(token=${token})}">
+                <input type="hidden" name="run" th:value="${replies.runId}">
+                <input type="hidden" name="group" th:value="${group.evidence.groupId}">
+                <input type="hidden" name="evidenceHash" th:value="${replies.evidenceHash}">
+                <label th:for="${'reply-' + group.evidence.groupId}">Reply body</label>
+                <textarea name="body" rows="4" maxlength="500" required th:id="${'reply-' + group.evidence.groupId}" th:text="${group.draft}"></textarea>
+                <p class="field-help">Keep the exact reason. Use “Thank you for sharing your wish.”, “Thanks for your wish.”, or no greeting, separated from the reason by a space. Fan quotes stay separate.</p>
+                <p th:if="${group.approved}" class="notice notice-info" role="status">Approved for these wishes.</p>
+                <button class="button button-primary" type="submit">Approve reply</button>
+            </form>
+        </details>
+    </details>
     <script>
         document.querySelectorAll('[data-reply-generation]').forEach(form => {
             form.addEventListener('submit', () => {

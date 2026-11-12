@@ -58,7 +58,8 @@ class DemoGuideConfiguration(
                 offer != null && holds != null && authorizedUnits(holds) >= offer.minBatch
             } ?: false
             modelAndView.addObject("demoGuide", guideFor(token, path, campaign?.state, minimumMet,
-                modelAndView.model["proposalUnavailable"] == true, modelAndView.model["makerStep"] as? Int))
+                modelAndView.model["proposalUnavailable"] == true, modelAndView.model["makerStep"] as? Int,
+                modelAndView.model["wishSubmitted"] == true || modelAndView.model["lastWishId"] != null))
         }
     }
 }
@@ -68,7 +69,7 @@ private val terminalStates = setOf(CampaignState.FUNDED, CampaignState.NOT_FUNDE
 
 internal fun guideFor(
     token: String, path: String, state: CampaignState?, minimumMet: Boolean, proposalUnavailable: Boolean = false,
-    makerStep: Int? = null,
+    makerStep: Int? = null, wishSubmitted: Boolean = false,
 ): DemoGuide {
     val base = "/w/$token"
     val maker = path == "maker" || path.startsWith("maker/")
@@ -81,10 +82,16 @@ internal fun guideFor(
         path == "maker/campaign" -> "Maker: campaign"
         path == "maker/result" -> "Maker: result"
         path == "maker/decision-record" -> "Maker: decision record"
+        path == "maker/decision-record/verify" -> "Maker: record verification"
+        path == "maker/questions" -> "Maker: questions to ask fans"
+        path == "maker/replies" -> "Maker: reply drafts"
+        path == "maker/glosses" -> "Maker: reading aids"
         path == "offer" -> "Fan: offer"
         path == "result" -> "Fan: result"
+        path == "questions" -> "Fan: questions about your wish"
         path == "how-this-batch-was-chosen" ||
             (path.startsWith("campaigns/") && path.endsWith("/how-this-batch-was-chosen")) -> "Fan: batch explanation"
+        path.startsWith("pledges/") && path.endsWith("/trace") -> "Fan: payment trail"
         path.startsWith("pledges/") -> "Fan: pledge status"
         path.isEmpty() -> "Fan: wishes"
         maker -> "Maker workspace"
@@ -97,6 +104,17 @@ internal fun guideFor(
             3 -> "Review proposal" to "$base/maker/proposal"
             else -> "Review options" to "$base/maker/options"
         }
+    } else if (path == "maker/proposal") {
+        if (proposalUnavailable) "Review the wishes before trying analysis again" to "$base/maker/wishes"
+        else "Use the proposal below to confirm the offer terms" to "#main"
+    } else if (path == "maker/offer") {
+        "Complete the offer form and publish" to "#main"
+    } else if (path == "maker/questions") {
+        "Review and approve questions to ask fans" to "#main"
+    } else if (path == "questions") {
+        "Review the questions about your wish" to "#main"
+    } else if (path.isEmpty() && wishSubmitted) {
+        "Switch to the maker view to review the wishes" to "$base/maker/wishes"
     } else if (maker) {
         when (state) {
             CampaignState.OPEN -> if (minimumMet) "Review the holds and confirm production on the campaign dashboard" to "$base/maker/campaign"
@@ -108,9 +126,6 @@ internal fun guideFor(
                 "maker" -> "Review the maker's options" to "$base/maker/options"
                 "maker/options" -> "Review the fans' wishes" to "$base/maker/wishes"
                 "maker/wishes" -> "Review the proposal and evidence" to "$base/maker/proposal"
-                "maker/proposal" -> if (proposalUnavailable) "Review the wishes before trying analysis again" to "$base/maker/wishes"
-                    else "Use the proposal below to confirm the offer terms" to "#main"
-                "maker/offer" -> "Complete the offer form and publish" to "#main"
                 else -> "Review the proposal and evidence" to "$base/maker/proposal"
             }
         }

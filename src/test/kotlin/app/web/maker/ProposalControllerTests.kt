@@ -110,7 +110,7 @@ class ProposalControllerTests(
         }
         assertContains(html, "more depend on a condition")
         assertContains(html, "Live analysis progress")
-        assertContains(html, "Review follow-up questions for the latest analysis")
+        assertContains(html, "Review questions to ask fans for the latest analysis")
         assertContains(html, "data-interest-group-link")
         assertContains(html, "#wish-workbench")
         for (wishId in stored.output.questionsForMaker.flatMap { it.wishIds }) {
@@ -137,7 +137,7 @@ class ProposalControllerTests(
             assertContains(html, "href=\"#wish-${evidence.wishId}\"")
             assertContains(html, "id=\"wish-${evidence.wishId}\"")
         }
-        assertContains(html, "Review follow-up questions for the latest analysis")
+        assertContains(html, "Review questions to ask fans for the latest analysis")
         assertFalse(html.contains("No newer proposal."))
         assertContains(page(token), "No newer proposal.")
         assertEquals(before, analyzer.calls.size)
@@ -208,7 +208,7 @@ class ProposalControllerTests(
         val token = workspaces.create().token
         assertContains(page(token), "<strong>0</strong> visible wishes added")
         workspaces.addWish(token, "Please include a fox.")
-        assertContains(page(token), "<strong>1</strong> visible wishes added")
+        assertContains(page(token), "<strong>1</strong> visible wish added")
         assertContains(page(token), "Re-run to include their words")
         workspaces.listWishes(token).forEach { workspaces.setWishHidden(token, it.id, true) }
         val html = page(token)
@@ -232,7 +232,12 @@ class ProposalControllerTests(
             redirectedUrl("/w/$token/maker/proposal")
         }.andReturn()
         assertContains(result.flashMap["analysisNotice"].toString(), "Analysis complete")
-        val html = page(token)
+        val runId = runs.latest(token)!!.run.id
+        assertEquals(runId, result.flashMap["replyDraftRun"])
+        val html = mvc.get("/w/$token/maker/proposal") {
+            flashAttr("replyDraftRun", result.flashMap["replyDraftRun"]!!)
+        }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "href=\"/w/$token/maker/replies?run=$runId\">Draft replies again for this analysis</a>")
         assertContains(html, "test-live-model")
         assertContains(html, "Live analysis")
         assertContains(html, "Completed")

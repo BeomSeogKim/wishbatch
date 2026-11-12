@@ -4,6 +4,7 @@ import app.campaign.analysisrun.AnalysisRunResult
 import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.demand.exploreDemand
 import app.campaign.followup.FollowupService
+import app.campaign.followup.FollowupPageState
 import app.campaign.gloss.GlossStatus
 import app.campaign.gloss.WishGlossService
 import app.campaign.replies.InvalidReplyEvidenceException
@@ -165,7 +166,10 @@ class ProposalController(
     @PostMapping("/w/{token}/maker/proposal")
     fun analyze(@PathVariable token: String, redirect: RedirectAttributes): String {
         when (val result = runs.run(token)) {
-            is AnalysisRunResult.Completed -> redirect.addFlashAttribute("analysisNotice", "Analysis complete. Review the evidence before choosing your offer.")
+            is AnalysisRunResult.Completed -> {
+                redirect.addFlashAttribute("analysisNotice", "Analysis complete. Review the evidence before choosing your offer.")
+                redirect.addFlashAttribute("replyDraftRun", result.stored.run.id)
+            }
             is AnalysisRunResult.Failed -> redirect.addFlashAttribute("analysisError", failureMessage(result.reason))
             AnalysisRunResult.NoVisibleWishes -> redirect.addFlashAttribute("analysisError", "There are no visible wishes to analyze. Add or unhide a wish, then try again.")
         }
@@ -199,6 +203,9 @@ class ProposalController(
         val questions = followups.makerPage(token)
         val questionState = if (questions.runId != runId) "Counts unavailable · latest analysis only"
             else if (questions.failure != null) "Draft attempt failed · ${questions.questions.size} saved questions"
+            else if (questions.state == FollowupPageState.NO_ELIGIBLE) "No eligible fan questions · ${questions.questions.size} saved questions"
+            else if (questions.state == FollowupPageState.STALE) "Counts unavailable · questions need a current analysis"
+            else if (questions.state == FollowupPageState.UNAVAILABLE) "No proposed option to clarify"
             else if (!questions.drafted) "Not drafted · ${questions.questions.size} saved questions"
             else "${questions.questions.size} questions · ${questions.questions.count { it.approved }} approved"
         val replyState = try {
@@ -222,8 +229,8 @@ class ProposalController(
         val glossState = if (rows.isNotEmpty() && rows.none { it.current }) "Reading aids unavailable · $glossAction"
             else "${rows.count { it.saved?.status == GlossStatus.TRANSLATED }} translations ready · $glossAction"
         return listOf(
-            ProposalHelper("Follow-up questions", questionState, "Review follow-up questions for the latest analysis", "/w/$token/maker/questions"),
-            ProposalHelper("Replies", replyState, "Review replies", "/w/$token/maker/replies?run=$runId"),
+            ProposalHelper("Questions to ask fans", questionState, "Review questions to ask fans for the latest analysis", "/w/$token/maker/questions"),
+            ProposalHelper("Replies", replyState, "Review or draft replies for this analysis", "/w/$token/maker/replies?run=$runId"),
             ProposalHelper("English reading aids", glossState, "Review reading aids", "/w/$token/maker/glosses?run=$runId"),
         )
     }

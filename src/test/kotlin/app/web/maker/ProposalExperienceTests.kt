@@ -2,7 +2,10 @@ package app.web.maker
 
 import app.campaign.analysisrun.AnalysisRunService
 import app.campaign.followup.FollowupDraftAttempt
+import app.campaign.followup.FollowupPage
 import app.campaign.model.AnalysisRun
+import app.campaign.port.AnalysisMetrics
+import app.campaign.port.AnalysisTokenUsage
 import app.campaign.replies.ReplyBatch
 import app.campaign.workspace.WorkspaceService
 import app.testing.InMemoryWishAnalyzer
@@ -18,6 +21,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.transaction.annotation.Transactional
+import tools.jackson.databind.json.JsonMapper
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -34,6 +38,7 @@ class ProposalExperienceTests(
     @Autowired private val runs: AnalysisRunService,
     @Autowired private val entities: EntityManager,
     @Autowired private val analyzer: InMemoryWishAnalyzer,
+    @Autowired private val mapper: JsonMapper,
 ) {
     @TestConfiguration
     class Configuration {
@@ -50,8 +55,8 @@ class ProposalExperienceTests(
         val html = mvc.get("/w/${workspace.token}/maker/proposal").andExpect { status { isOk() } }
             .andReturn().response.contentAsString
         assertEquals(before, analyzer.calls.size)
-        val afterHero = html.substringAfter("This does not publish an offer.").substringAfter("</section>").trimStart()
-        assertTrue(afterHero.startsWith("<section id=\"proposal-demand\">"))
+        assertTrue(html.indexOf("id=\"analysis-submit\"") < html.indexOf("id=\"proposal-demand\""))
+        assertContains(html.substringAfter("class=\"button-row\"").substringBefore("</div>"), "form=\"analysis-form\"")
         assertTrue(html.indexOf("id=\"proposal\"") < html.indexOf("id=\"analysis-form\""))
         assertTrue(html.indexOf("id=\"proposal\"") < html.indexOf("aria-label=\"Maker steps\""))
         val summary = html.substringAfter("aria-label=\"Wish groups for this proposal\"").substringBefore("This does not publish an offer.")
@@ -66,7 +71,46 @@ class ProposalExperienceTests(
         assertContains(html, "id=\"wish-workbench\"")
         assertContains(html, "Run evidence and validation flags")
         assertContains(html, "run=${stored.run.id}")
-        assertEquals(3, Regex("<h3>(Follow-up questions|Replies|English reading aids)</h3>").findAll(html).count())
+        assertEquals(3, Regex("<h3>(Questions to ask fans|Replies|English reading aids)</h3>").findAll(html).count())
+        assertContains(html, "Saved reply and fan-question drafts do not carry over")
+        assertFalse(html.contains("Recorded failure category"))
+    }
+
+    @Test
+    fun `fan questions and maker decisions have separate accurate counts for each scenario`() {
+        for (scenario in listOf("illustrator", "ceramicist", "textile")) {
+            val workspace = workspaces.create(scenario)
+            val stored = assertNotNull(runs.latest(workspace.token))
+            val html = mvc.get("/w/${workspace.token}/maker/proposal").andExpect { status { isOk() } }
+                .andReturn().response.contentAsString
+            assertContains(html, "<h3>Questions to ask fans</h3>")
+            assertContains(html, "<h2 id=\"maker-questions\">Decisions for you</h2>")
+            assertContains(html, "<strong>${stored.output.questionsForMaker.size}</strong> maker decisions from this analysis")
+            val result = mvc.get("/w/${workspace.token}/maker/questions").andExpect { status { isOk() } }.andReturn()
+            val page = result.modelAndView!!.model["page"] as FollowupPage
+            assertContains(result.response.contentAsString, "<strong>${page.questions.size}</strong> saved fan questions")
+            assertContains(result.response.contentAsString, "<span>${page.questions.count { it.approved }}</span> approved")
+        }
+    }
+
+    @Test
+    fun `successful recorded run hides encountered failure category and retains partial token measurements`() {
+        val workspace = workspaces.create()
+        val stored = assertNotNull(runs.latest(workspace.token))
+        val output = stored.originalOutput.copy(metrics = AnalysisMetrics(57.408,
+            AnalysisTokenUsage(120, 80, null), usageComplete = false, failureCategory = "TIMEOUT"))
+        entities.persist(AnalysisRun(workspace.id, "test-recorded-success", stored.run.inputHash,
+            mapper.writeValueAsString(output), createdAt = stored.run.createdAt.plusSeconds(1)))
+        entities.flush()
+        val html = mvc.get("/w/${workspace.token}/maker/proposal").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        assertContains(html, "Live analysis · saved result from this workspace.")
+        assertContains(html, "Partial returned token usage")
+        assertContains(html, "<dd>120</dd>")
+        assertContains(html, "<dd>80</dd>")
+        assertContains(html, "57.41 seconds")
+        assertFalse(html.contains("Recorded failure category"))
+        assertEquals("TIMEOUT", runs.latest(workspace.token)!!.originalOutput.metrics!!.failureCategory)
     }
 
     @Test

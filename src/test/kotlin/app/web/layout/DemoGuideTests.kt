@@ -10,12 +10,14 @@ import app.campaign.store.CampaignRepository
 import app.campaign.store.OfferRepository
 import app.campaign.store.PledgeRepository
 import app.campaign.workspace.WorkspaceService
+import app.web.security.securePost
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
+import org.springframework.mock.web.MockHttpSession
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.transaction.annotation.Propagation
@@ -148,6 +150,32 @@ class DemoGuideTests @Autowired constructor(
             assertContains(html, "Fan: batch explanation")
             assertContains(html, "Review the campaign result")
             assertContains(html, "href=\"/w/${workspace.token}/result\"")
+        }
+    }
+
+    @Test
+    fun `submitted wish guide points to the maker review on later visits`() {
+        val token = workspaces.create().token
+        val response = mvc.securePost("/w/$token") { param("text", "A fox postcard, please.") }
+            .andExpect { status { is3xxRedirection() } }.andReturn()
+        val html = mvc.get("/w/$token") { session = response.request.session as MockHttpSession }
+            .andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "Switch to the maker view to review the wishes")
+        assertContains(html, "href=\"/w/$token/maker/wishes\"")
+        assertFalse(html.contains("Next: Leave a wish"))
+    }
+
+    @Test
+    fun `guide labels questions and payment trails and keeps proposal actions local after funding`() {
+        val token = "token"
+        for (state in listOf(null, CampaignState.OPEN, CampaignState.FUNDED, CampaignState.NOT_FUNDED)) {
+            assertEquals("Fan: questions about your wish", guideFor(token, "questions", state, false).location)
+            assertEquals("#main", guideFor(token, "questions", state, false).nextUrl)
+            assertEquals("Maker: questions to ask fans", guideFor(token, "maker/questions", state, false).location)
+            assertEquals("#main", guideFor(token, "maker/questions", state, false).nextUrl)
+            assertEquals("Fan: payment trail", guideFor(token, "pledges/id/trace", state, false).location)
+            assertEquals("#main", guideFor(token, "maker/proposal", state, false).nextUrl)
+            assertEquals("/w/$token/maker/wishes", guideFor(token, "maker/proposal", state, false, true).nextUrl)
         }
     }
 

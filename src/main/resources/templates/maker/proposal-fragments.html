@@ -3,7 +3,7 @@
 <body>
 <section th:fragment="helpers" class="proposal-helpers" aria-label="AI review helpers">
     <article class="card" th:each="helper : ${proposalHelpers}">
-        <h3 th:text="${helper.title}">Follow-up questions</h3>
+        <h3 th:text="${helper.title}">Questions to ask fans</h3>
         <p class="muted" th:text="${helper.state}">Unavailable</p>
         <a th:href="${helper.url}" th:text="${helper.action}">Review</a>
     </article>
@@ -23,7 +23,7 @@
             </dl>
         </th:block>
     </th:block>
-    <p>Recorded failure category: <span th:text="${failureCategory != null ? @humanDisplay.state(failureCategory) : 'Unavailable'}">Unavailable</span>.</p>
+    <p th:if="${failureCategory != null}">Recorded failure category: <span th:text="${@humanDisplay.state(failureCategory)}"></span>.</p>
 </section>
 <article th:fragment="wish(row)" class="card proposal-wish" th:id="'wish-' + ${row.wish.id}" tabindex="-1">
     <p class="eyebrow" th:text="${row.wish.displayName ?: 'Anonymous fan'}">Fan</p>

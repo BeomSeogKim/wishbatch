@@ -10,6 +10,10 @@
     </header>
     <div th:if="${analysisError != null}" class="notice notice-error" role="alert" th:text="${analysisError}">Analysis could not finish.</div>
     <div th:if="${analysisNotice != null}" class="notice notice-info" role="status" th:text="${analysisNotice}">Analysis complete.</div>
+    <p th:if="${replyDraftRun != null}" class="notice notice-info">Drafts do not carry over to the new analysis.
+        <a th:href="@{/w/{token}/maker/replies(token=${token},run=${replyDraftRun})}">Draft replies again for this analysis</a>
+        or <a th:href="@{/w/{token}/maker/questions(token=${token})}">review questions to ask fans</a>.
+    </p>
     <div th:unless="${hasVisibleWishes}" class="empty-state">
         <h2>No visible wishes to analyze.</h2>
         <p>Add or unhide wishes to hear what fans want. Any previous analysis below reflects its earlier input.</p>
@@ -34,7 +38,11 @@
                 </div>
             </div>
             <p th:if="${proposedCounts != null}" th:text="${proposedCounts.conditional + ' more depend on a condition. Interest at ' + interestPrice + ', not orders.'}"></p>
-            <div class="button-row"><a class="button button-primary" th:href="@{/w/{token}/maker/offer(token=${token},run=${stored.run.id})}">Use this proposal</a></div>
+            <div class="button-row">
+                <a class="button button-primary" th:href="@{/w/{token}/maker/offer(token=${token},run=${stored.run.id})}">Use this proposal</a>
+                <button id="analysis-submit" form="analysis-form" class="button button-secondary" type="submit"
+                        th:disabled="${!hasVisibleWishes}" aria-describedby="analysis-warning analysis-limit">Run it live</button>
+            </div>
             <p>You still set the price and confirm the exact product and delivery terms. This does not publish an offer.</p>
         </section>
         <section id="proposal" th:if="${proposedOption == null}" class="empty-state" aria-labelledby="no-proposal">
@@ -43,28 +51,29 @@
             <p>There is no proposal to turn into an offer. Review the wishes and feasible options before trying again.</p>
         </section>
     </th:block>
-    <section th:if="${demand != null}" id="proposal-demand">
-        <section th:replace="~{maker/demand :: compact(${demand}, ${token}, ${stored.run.id}, ${proposedOption.unitCost}, 'Catalog cost reference')}"></section>
-    </section>
     <div class="proposal-actions">
         <p th:if="${stored != null}" th:class="${stored.newWishCount > 0 ? 'notice notice-info' : 'muted'}">
-            <strong th:text="${stored.newWishCount}">0</strong> visible wishes added after this analysis.
+            <strong th:text="${stored.newWishCount}">0</strong><th:block th:text="${stored.newWishCount == 1 ? ' visible wish added after this analysis.' : ' visible wishes added after this analysis.'}"> visible wishes added after this analysis.</th:block>
             <span th:if="${stored.newWishCount > 0}">Re-run to include their words in the proposal.</span>
         </p>
         <form id="analysis-form" method="post" th:action="@{/w/{token}/maker/proposal(token=${token})}">
-            <button id="analysis-submit" class="button button-secondary" type="submit" th:disabled="${!hasVisibleWishes}"
+            <p th:if="${stored != null}" id="analysis-warning" class="notice notice-warning">A successful live run replaces the current analysis. Saved reply and fan-question drafts do not carry over; draft them again for the new analysis.</p>
+            <button th:if="${proposedOption == null}" id="analysis-submit" class="button button-secondary" type="submit" th:disabled="${!hasVisibleWishes}"
                     th:text="${stored == null ? 'Run analysis' : 'Run it live'}">Run it live</button>
-            <p class="field-help">Two readings and a proposal share a 120-second time limit. The current result stays here while you wait.</p>
+            <p id="analysis-limit" class="field-help">Two readings and a proposal share a 120-second time limit. The current result stays here while you wait.</p>
             <p id="analysis-working" class="notice notice-info" role="status" aria-live="polite" hidden>Reading wishes and checking evidence… Please keep this page open.</p>
         </form>
         <a th:href="@{/w/{token}/maker/analysis-progress(token=${token})}">Live analysis progress</a>
     </div>
+    <section th:if="${demand != null}" id="proposal-demand">
+        <section th:replace="~{maker/demand :: compact(${demand}, ${token}, ${stored.run.id}, ${proposedOption.unitCost}, 'Catalog cost reference')}"></section>
+    </section>
     <div th:replace="~{maker/fragments :: steps(${token}, 3)}"></div>
     <nav class="proposal-nav" aria-label="Proposal sections">
         <a href="#proposal">Proposal</a>
         <a href="#wish-workbench">Workbench</a>
         <a th:if="${demand != null}" href="#proposal-demand">Demand</a>
-        <a th:if="${stored != null}" href="#maker-questions">Questions</a>
+        <a th:if="${stored != null}" href="#maker-questions">Decisions for you</a>
         <a th:if="${stored != null}" href="#run-details">About this analysis</a>
     </nav>
     <th:block th:if="${stored != null}">
@@ -114,7 +123,8 @@
             </div>
         </details>
         <section class="preview-section" aria-labelledby="maker-questions">
-            <div class="section-heading"><h2 id="maker-questions">Questions only you can settle.</h2></div>
+            <div class="section-heading"><h2 id="maker-questions">Decisions for you</h2></div>
+            <p><strong th:text="${stored.output.questionsForMaker.size()}">0</strong> maker decisions from this analysis. These are separate from questions to ask fans.</p>
             <p th:if="${stored.output.questionsForMaker.isEmpty()}">No questions were returned. Check the evidence and production terms before making an offer.</p>
             <ul><li th:each="question : ${stored.output.questionsForMaker}">
                 <p th:text="${question.text}">Question for the maker</p>
@@ -140,7 +150,7 @@
                     <div><dt>Recorded completion</dt><dd><time th:datetime="${stored.run.createdAt}" th:text="${@humanDisplay.time(stored.run.createdAt)}">Completion time</time></dd></div>
                 </dl>
             </section>
-            <section th:replace="~{maker/proposal-fragments :: runMetrics(${stored.originalOutput.metrics}, ${stored.originalOutput.metrics?.failureCategory})}"></section>
+            <section th:replace="~{maker/proposal-fragments :: runMetrics(${stored.originalOutput.metrics}, ${null})}"></section>
             <section class="notice notice-info" aria-label="Second reading">
                 <th:block th:if="${secondReading != null}">
                     <p th:text="${secondReading.status.name() == 'COMPLETE' ? 'Second reading complete.' : 'Second reading incomplete · ' + secondReading.incompleteWishIds.size() + ' wishes retain a validated first reading and need review.'}">Second reading status</p>

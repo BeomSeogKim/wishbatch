@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: page('Follow-up questions', ~{::main})}">
+      th:replace="~{layout/base :: page('Questions to ask fans', ~{::main})}">
 <body>
 <main id="main" class="shell form-stack">
     <header class="page-heading">
         <p class="eyebrow">Clarify stated interest</p>
-        <h1>Review follow-up questions</h1>
+        <h1>Questions to ask fans</h1>
+        <p><strong th:text="${page.questions.size()}">0</strong> saved fan questions · <span th:text="${page.questions.?[approved].size()}">0</span> approved.</p>
+        <p>These clarify fan conditions. Production decisions for you are listed separately on the proposal.</p>
         <p>Review or edit each draft before fans see it. Choices must come from the option's allowed variants.</p>
         <p>Answers clarify wishes. They are not orders, authorizations, or completed payments.</p>
         <a th:href="@{/w/{token}/maker/proposal(token=${token})}">Back to proposal</a>
@@ -45,7 +47,7 @@
     </section>
     <section th:if="${page.state.name() == 'READY'}" th:each="question : ${page.questions}" class="card form-stack" th:attr="aria-labelledby=${'question-title-' + question.id}">
         <h2 th:id="${'question-title-' + question.id}" th:text="${question.text}">Follow-up question</h2>
-        <p class="field-help"><span th:text="${#lists.size(question.wishIds)}">0</span> wishes share this condition. These are stated wishes, not orders.</p>
+        <p class="field-help"><span th:text="${#lists.size(question.wishIds)}">0</span><th:block th:text="${question.wishIds.size() == 1 ? ' wish shares this condition.' : ' wishes share this condition.'}"> wishes share this condition.</th:block> These are stated wishes, not orders.</p>
         <div th:if="${question.approved}">
             <p class="status-pill">Approved for fans</p>
             <ul><li th:each="choice : ${question.choices}" th:text="${choice}">Allowed choice</li></ul>

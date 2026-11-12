@@ -84,6 +84,7 @@ class MakerStartControllerTests(
             .containsMatchIn(html))
         assertContains(html, "Open fan wish page (new tab)")
         assertContains(html, "available after an offer is published")
+        assertFalse(html.contains("Open campaign overview"))
         assertFalse(html.contains("href=\"/w/$token/offer\""))
     }
 

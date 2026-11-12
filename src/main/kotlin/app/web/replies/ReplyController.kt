@@ -23,8 +23,10 @@ import java.util.UUID
 class ReplyController(private val replies: ReplyService) {
     @GetMapping("/w/{token}/maker/replies")
     fun maker(@PathVariable token: String, @RequestParam run: UUID, model: Model): String {
+        val page = replies.maker(token, run)
         model.addAttribute("token", token)
-        model.addAttribute("replies", replies.maker(token, run))
+        model.addAttribute("replies", page)
+        model.addAttribute("replyReasonGroups", page.groups.groupBy { it.evidence.reasons })
         return "replies/maker"
     }
 
