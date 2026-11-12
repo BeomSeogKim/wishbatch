@@ -1,6 +1,6 @@
 (() => {
     const root = document.querySelector('[data-wish-workbench]');
-    if (!root || !window.agGrid?.createGrid) return;
+    if (!root) return;
     const table = root.querySelector('[data-workbench-table]');
     const container = root.querySelector('[data-workbench-grid]');
     const filters = root.querySelector('[data-workbench-filters]');
@@ -11,13 +11,15 @@
     if (!table || !container || !filters || !bulk || !status) return;
 
     const detail = root.querySelector('[data-workbench-detail]');
+    let detailOrigin;
+    const closeDetail = root.querySelector('[data-workbench-detail-close]');
     const detailContent = root.querySelector('[data-workbench-detail-content]');
     const apply = filters.querySelector('[data-workbench-apply]');
     const priority = filters.querySelector('[data-workbench-priority]');
     const initialSort = filters.querySelector('[name="sort"]')?.value || '';
 
     const rows = Array.from(table.querySelectorAll('tbody tr[data-wish-id]')).map((element, index) => {
-        const row = {id: element.dataset.wishId, index, createdAt: element.dataset.createdAt || '', labelsByOption: []};
+        const row = {id: element.dataset.wishId, detailUrl: element.dataset.detailUrl, index, createdAt: element.dataset.createdAt || '', labelsByOption: []};
         for (const field of ['text', 'labels', 'evidence', 'flags', 'source', 'language', 'hidden', 'provenance']) {
             const text = element.querySelector(`[data-field="${field}"]`)?.textContent || '';
             row[field] = field === 'text' || field === 'evidence' ? text : text.trim();
@@ -46,8 +48,9 @@
     let api;
     if (priority && rows.some(row => row.flagItems.length)) {
         priority.hidden = false;
-        if (value('sort') === 'id') filters.querySelector('[name="sort"]').value = 'flags';
+        if (value('sort') === 'id' && filters.dataset.workbenchSortExplicit !== 'true') filters.querySelector('[name="sort"]').value = 'flags';
     }
+    let detailRequest = 0;
     let currentSort = value('sort');
 
     function value(name) {
@@ -102,6 +105,12 @@
         });
         status.textContent = `${gridApi.getDisplayedRowCount()} wishes shown; ${selectedIds.size} selected. Stated interest, not purchases.`;
         status.title = groups.join('; ');
+        const counts = root.querySelector('[data-workbench-counts]');
+        if (counts) counts.replaceChildren(...groups.map(group => {
+            const paragraph = document.createElement('p');
+            paragraph.textContent = group;
+            return paragraph;
+        }));
     }
 
     function fallback() {
@@ -123,6 +132,7 @@
             // A changed evidence/filter scope must not submit invisible selections.
             api.deselectAll();
             for (const checkbox of checkboxes) checkbox.checked = false;
+            detailRequest++;
             if (detail) detail.hidden = true;
             if (currentSort !== value('sort')) {
                 api.applyColumnState({defaultState: {sort: null}});
@@ -146,8 +156,9 @@
         return element;
     }
 
-    function showDetail(row) {
+    function showDetail(row, origin = document.activeElement) {
         if (!detail || !detailContent) return;
+        detailOrigin = origin;
         detailContent.replaceChildren();
         const add = (tag, text) => {
             const element = document.createElement(tag);
@@ -172,6 +183,34 @@
         detail.hidden = false;
         detail.open = true;
         detail.querySelector('summary')?.focus();
+        detail.scrollIntoView({block: 'start'});
+        const request = ++detailRequest;
+        if (row.detailUrl) {
+            const loading = document.createElement('p');
+            loading.textContent = 'Loading recorded readings and reading aid…';
+            detailContent.append(loading);
+            detailContent.setAttribute('aria-busy', 'true');
+            window.fetch(row.detailUrl).then(response => {
+                if (!response.ok) throw new Error('Detail unavailable');
+                return response.text();
+            }).then(html => {
+                if (request !== detailRequest) return;
+                const page = new DOMParser().parseFromString(html, 'text/html');
+                const recorded = page.querySelector('[data-workbench-recorded-detail]');
+                if (!recorded) throw new Error('Detail unavailable');
+                detailContent.replaceChildren(recorded);
+                detailContent.setAttribute('aria-busy', 'false');
+            }).catch(() => {
+                if (request !== detailRequest) return;
+                loading.remove();
+                detailContent.setAttribute('aria-busy', 'false');
+                add('p', 'Recorded readings and reading aid could not load here. Open the detail page to retry.');
+                const link = document.createElement('a');
+                link.href = row.detailUrl;
+                link.textContent = 'Open wish detail page';
+                detailContent.append(link);
+            });
+        }
     }
 
     function wishCell(params) {
@@ -180,7 +219,13 @@
         button.className = 'workbench-wish workbench-compact';
         button.textContent = params.data.text;
         button.title = 'Open full wish evidence and review history';
-        button.addEventListener('click', () => showDetail(params.data));
+        button.addEventListener('click', event => { event?.stopPropagation(); showDetail(params.data, button); });
+        button.addEventListener('keydown', event => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            event.stopPropagation();
+            showDetail(params.data, button);
+        });
         return button;
     }
 
@@ -209,6 +254,21 @@
         return chip;
     }
 
+    closeDetail?.addEventListener('click', () => {
+        detailRequest++;
+        detail.hidden = true;
+        detailOrigin?.focus();
+    });
+
+    table.addEventListener('click', event => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (event.target.closest?.('input, button, select')) return;
+        const element = event.target.closest?.('[data-wish-id]');
+        const row = rows.find(row => row.id === element?.dataset.wishId);
+        if (row) { event.preventDefault(); showDetail(row, element.querySelector('.workbench-source-link')); }
+    });
+    if (!window.agGrid?.createGrid) return;
+
     try {
         const theme = window.agGrid.themeQuartz.withParams({
             backgroundColor: 'var(--surface)', foregroundColor: 'var(--ink)',
@@ -230,21 +290,24 @@
             defaultColDef: {sortable: true, resizable: true, minWidth: 140, cellRenderer: textCell},
             columnDefs: [
                 {field: 'text', headerName: 'Wish', headerTooltip: 'Press Enter for full wish details', pinned: 'left', lockPinned: true,
-                    width: 180, minWidth: 180, cellRenderer: wishCell},
+                    width: window.matchMedia?.('(max-width: 600px)').matches ? 220 : 360, minWidth: 220, cellRenderer: wishCell},
                 ...Array.from(optionNames, ([optionId, name]) => ({
-                    colId: optionId, headerName: name, headerTooltip: name, width: 170,
+                    colId: optionId, headerName: name, headerTooltip: name, width: 180, minWidth: 170, wrapHeaderText: true, autoHeaderHeight: true,
                     valueGetter: params => params.data.labelsByOption.find(item => item.optionId === optionId)?.displayLabel || '',
                     cellRenderer: labelCell,
                 })),
-                {field: 'evidence', headerName: 'Quoted evidence', width: 260, cellRenderer: evidenceCell},
-                {field: 'flags', headerName: 'Review flags', width: 180, cellRenderer: flagCell},
-                {field: 'source', headerName: 'Source'},
-                {field: 'language', headerName: 'Language'},
-                {field: 'hidden', headerName: 'Visibility'},
+                {field: 'evidence', headerName: 'Quoted evidence', width: 240, cellRenderer: evidenceCell},
+                {field: 'flags', headerName: 'Review flags', width: 160, cellRenderer: flagCell},
+                {field: 'source', headerName: 'Source', width: 110, minWidth: 100},
+                {field: 'hidden', headerName: 'Visibility', width: 110, minWidth: 100},
             ],
             selectionColumnDef: {width: 44, minWidth: 44, maxWidth: 44, pinned: 'left'},
+            onRowClicked: event => {
+                if (!event.event?.target?.closest?.('input, button, a, [role=checkbox]')) showDetail(event.data);
+            },
             onCellKeyDown: event => {
-                if (event.event?.key === 'Enter' && event.colDef.field === 'text') {
+                if (event.event?.key === 'Enter' && event.colDef.colId !== 'ag-Grid-SelectionColumn' &&
+                    !event.event.target?.closest?.('button, input')) {
                     event.event.preventDefault();
                     showDetail(event.data);
                 }

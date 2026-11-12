@@ -17,7 +17,7 @@
 [data-workbench-filters], .workbench-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: end; }
 [data-workbench-filters] label, .workbench-actions label { display: grid; gap: var(--space-2); }
 [data-workbench-status] { margin-block: var(--space-4); }
-[data-workbench-detail] { margin-block: var(--space-4); padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
+[data-workbench-detail] { scroll-margin-top: 4rem; margin-block: var(--space-4); padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
 [data-workbench-detail] summary { cursor: pointer; color: var(--accent); }
 [data-workbench-detail-content] { overflow-wrap: anywhere; }
 [data-workbench-detail-content] p { white-space: pre-wrap; }
@@ -25,4 +25,19 @@
 @media (max-width: 600px) {
     [data-workbench-filters] label, .workbench-actions label { width: 100%; }
     [data-workbench-grid] { height: 500px; }
+}
+[data-workbench-filters] label, .workbench-actions label { min-width: 0; max-width: 100%; }
+[data-workbench-filters] select, .workbench-actions select, .workbench-actions input { min-width: 0; max-width: 100%; }
+[data-workbench-counts] { color: var(--muted); overflow-wrap: anywhere; font-size: .875rem; }
+.workbench-source-link { display: block; min-width: 20rem; white-space: pre-wrap; }
+.workbench-recorded-detail { min-width: 0; overflow-wrap: anywhere; }
+.workbench-original, .workbench-recorded-detail q { white-space: pre-wrap; }
+.workbench-recorded-detail q { display: block; border-left: 3px solid var(--accent); padding-left: var(--space-3); margin-block: var(--space-3); }
+.workbench-option-detail { padding: var(--space-4); margin-block: var(--space-3); background: var(--surface-soft); border: 1px solid var(--line); border-radius: var(--radius-small); }
+.workbench-option-detail h4 { margin-top: 0; }
+.workbench-readings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.workbench-readings h5 { font-size: 1rem; margin-block: var(--space-3) var(--space-2); }
+@media (max-width: 600px) {
+    .workbench-readings { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    [data-workbench-filters] select, .workbench-actions select, .workbench-actions input { width: 100%; }
 }

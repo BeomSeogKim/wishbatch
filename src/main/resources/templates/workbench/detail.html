@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Wish evidence', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <link rel="stylesheet" th:href="@{/css/workbench.css}">
+    <h1>Wish evidence</h1>
+    <p><a th:href="@{/w/{token}/maker/proposal/wishes(token=${token},run=${workbench.stored?.run?.id})}">Back to wish workbench</a></p>
+    <article class="workbench-recorded-detail" data-workbench-recorded-detail>
+        <h2>Recorded wish detail</h2>
+        <h3>Source wish</h3>
+        <p class="workbench-original" th:text="${row.text}"></p>
+        <p>Wish ID: <span th:text="${row.id}"></span></p>
+        <p>Source: <span th:text="${row.source}"></span> · Language: <span th:text="${row.language}"></span> · <span th:text="${row.hidden ? 'Hidden' : 'Visible'}"></span></p>
+        <h3>Option labels and reasons</h3>
+        <p>Current labels include recorded maker decisions. Original readings remain below.</p>
+        <section class="workbench-option-detail" th:each="item : ${row.labels}" th:with="first=${firstVerdicts[item.optionId]},comparison=${readings[item.optionId]}">
+            <h4 th:text="${item.optionName}"></h4>
+            <p><strong th:text="${item.displayLabel}"></strong> · <span th:text="${#strings.isEmpty(item.reason) ? 'No reason recorded.' : item.reason}"></span></p>
+            <div class="workbench-readings">
+                <div>
+                    <h5>First reading</h5>
+                    <p th:if="${firstWish != null}"><span th:text="${firstWish.kind}"></span> / <span th:text="${first?.verdict ?: 'Unclassified'}"></span></p>
+                    <p th:if="${firstWish == null}">First reading unavailable for this wish.</p>
+                    <p th:text="${first?.reason ?: 'No option reason recorded.'}"></p>
+                </div>
+                <div>
+                    <h5>Second reading</h5>
+                    <p th:if="${comparison != null}"><span th:text="${comparison.secondKind}"></span> / <span th:text="${comparison.secondVerdict ?: 'Unclassified'}"></span></p>
+                    <p th:if="${comparison != null}">A separate reason was not retained for the second reading.</p>
+                    <p th:if="${comparison == null}">Second reading unavailable for this wish and option.</p>
+                </div>
+            </div>
+        </section>
+        <h3>English reading aid</h3>
+        <th:block th:if="${gloss?.saved?.status != null}">
+            <p>Machine translation · Language (machine-inferred): <span th:text="${gloss.saved.inferredLanguage ?: 'Unknown'}"></span></p>
+            <p class="workbench-original" th:if="${gloss.saved.englishGloss != null}" th:text="${gloss.saved.englishGloss}"></p>
+            <p th:if="${gloss.saved.status.name() == 'ENGLISH'}">No translation needed (machine-inferred English).</p>
+            <p th:if="${gloss.saved.status.name() == 'UNCERTAIN'}">Translation is unavailable. Language remains unknown.</p>
+            <p>Model: <span th:text="${gloss.saved.model}"></span> · <time th:text="${gloss.saved.generatedAt}"></time></p>
+        </th:block>
+        <p th:if="${gloss?.saved?.status == null}">Reading aid unavailable for this source wish and run. Language remains unknown.</p>
+        <p>Machine translations may be inaccurate. Evidence quotes use the original text; reading aids do not change verdicts or counts.</p>
+        <h3>Grounded quotes</h3>
+        <q th:each="quote : ${row.evidence}" th:text="${quote}"></q>
+        <p th:if="${row.evidenceUnavailable}">Some analysis evidence is unavailable: no exact source quote.</p>
+        <p th:if="${row.evidence.isEmpty() && !row.evidenceUnavailable}">No exact source quote recorded.</p>
+        <h3>Review flags and validation</h3>
+        <ul th:unless="${row.flags.isEmpty()}"><li th:each="flag : ${row.flags}" th:text="${flag}"></li></ul>
+        <p th:if="${row.flags.isEmpty()}">No row flags recorded.</p>
+        <h3>Override history</h3>
+        <ol th:unless="${row.provenance.isEmpty()}"><li th:each="entry : ${row.provenance}" th:text="${entry}"></li></ol>
+        <p th:if="${row.provenance.isEmpty()}">No review history available.</p>
+    </article>
+</main>
+</body>
+</html>

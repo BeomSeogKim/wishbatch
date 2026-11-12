@@ -7,7 +7,7 @@
     <p>Every source wish, with labels for each feasible option. These are statements of interest, never purchases.</p>
     <p>Use Tab to move between controls; in the grid use arrow keys to move and Space to select a row and Enter on a wish to open its full details. The table also works without scripts.</p>
     <p th:if="${workbenchNotice != null}" class="notice notice-info" role="status" th:text="${workbenchNotice}"></p>
-    <form method="get" th:action="@{/w/{token}/maker/proposal/wishes(token=${token})}" data-workbench-filters>
+    <form method="get" th:action="@{/w/{token}/maker/proposal/wishes(token=${token})}" data-workbench-filters th:attr="data-workbench-sort-explicit=${workbenchFilter.sort == 'id'}">
         <input th:if="${workbench.stored != null}" type="hidden" name="run" th:value="${workbench.stored.run.id}">
         <label>Option
             <select name="optionId">
@@ -28,7 +28,7 @@
         <label>Search <input type="search" name="q" maxlength="500" th:value="${workbenchFilter.q}"></label>
         <label>Sort
             <select name="sort">
-                <option value="flags" data-workbench-priority hidden>Flagged first</option>
+                <option value="flags" data-workbench-priority th:hidden="${!workbenchHasFlags}" th:selected="${workbenchFilter.sort == 'flags'}">Flagged first</option>
                 <option value="id" th:selected="${workbenchFilter.sort == 'id'}">Wish ID</option>
                 <option value="text" th:selected="${workbenchFilter.sort == 'text'}">Wish text</option>
                 <option value="source" th:selected="${workbenchFilter.sort == 'source'}">Source</option>
@@ -39,9 +39,13 @@
         <button class="button button-secondary" type="submit" data-workbench-apply>Apply filters</button>
     </form>
     <p data-workbench-evidence-filter hidden role="status"><span data-workbench-evidence-description>Evidence filter active</span> <button type="button" data-workbench-clear-evidence>Clear evidence filter</button></p>
-    <p data-workbench-status role="status" aria-live="polite"><span th:text="${visibleIds.size()}">0</span> wishes shown.
-        <span th:each="group : ${workbenchCountGroups}"><span th:text="${group.key} + ': '"></span><span th:each="count : ${group.value}" th:text="${count.key} + ' ' + ${count.value} + '. '"></span></span>
-    </p>
+    <p data-workbench-status role="status" aria-live="polite"><span th:text="${visibleIds.size()}">0</span> wishes shown.</p>
+    <details class="workbench-counts">
+        <summary>Per-option counts for shown wishes</summary>
+        <div data-workbench-counts>
+            <p th:each="group : ${workbenchCountGroups}"><span th:text="${group.key} + ': '"></span><span th:each="count : ${group.value}" th:text="${count.key} + ' ' + ${count.value} + '. '"></span></p>
+        </div>
+    </details>
     <details th:if="${workbench.stored != null && !workbench.stored.flags.isEmpty()}">
         <summary>Run validation flags</summary>
         <p>Run flags may refer to removed evidence; only flags with an identifiable wish are also attached to its row.</p>
@@ -65,15 +69,15 @@
             <button class="button button-secondary" type="submit" formnovalidate th:formaction="@{/w/{token}/maker/proposal/wishes/hide(token=${token})}">Hide selected wishes</button>
         </div>
         <div data-workbench-grid hidden aria-label="Wish review grid"></div>
-        <div class="workbench-table-scroll">
+        <div class="workbench-table-scroll" tabindex="0" role="region" aria-label="Wish evidence table, scroll for all columns">
             <table data-workbench-table tabindex="0">
                 <caption>Wish evidence and labels. Language remains unknown when no language metadata was collected.</caption>
-                <thead><tr><th>Select</th><th>Wish ID</th><th>Wish</th><th>Per-option labels and reasons</th><th>Grounded quotes</th><th>Review flags / validation</th><th>Source</th><th>Language</th><th>Visibility</th><th>Review provenance</th></tr></thead>
+                <thead><tr><th scope="col">Select</th><th scope="col">Wish ID</th><th scope="col">Wish</th><th scope="col">Per-option labels and reasons</th><th scope="col">Grounded quotes</th><th scope="col">Review flags / validation</th><th scope="col">Source</th><th scope="col">Language</th><th scope="col">Visibility</th><th scope="col">Review provenance</th></tr></thead>
                 <tbody>
-                <tr th:each="row : ${workbenchRows}" th:attr="data-wish-id=${row.id}" th:hidden="${!visibleIds.contains(row.id)}">
+                <tr th:each="row : ${workbenchRows}" th:attr="data-wish-id=${row.id},data-detail-url=@{/w/{token}/maker/proposal/wishes/{wishId}(token=${token},wishId=${row.id},run=${workbench.stored?.run?.id})}" th:hidden="${!visibleIds.contains(row.id)}">
                     <td><input type="checkbox" name="wishIds" th:value="${row.id}" th:attr="aria-label='Select wish ' + ${row.id}" th:disabled="${workbench.stored == null || !workbench.stored.output.wishes.![wishId].contains(row.id)}"></td>
                     <td data-field="id" th:text="${row.id}"></td>
-                    <td data-field="text" th:text="${row.text}"></td>
+                    <td data-field="text"><a class="workbench-source-link" th:href="@{/w/{token}/maker/proposal/wishes/{wishId}(token=${token},wishId=${row.id},run=${workbench.stored?.run?.id})}" th:text="${row.text}"></a></td>
                     <td data-field="labels"><span class="workbench-label" th:each="item : ${row.labels}" th:attr="data-option-id=${item.optionId},data-label=${item.label},data-reason=${item.reason},data-display-label=${item.displayLabel}" th:text="${item.optionName} + ': ' + ${item.displayLabel} + ' - ' + ${item.reason}"></span></td>
                     <td data-field="evidence"><q th:each="quote : ${row.evidence}" th:text="${quote}"></q><span th:if="${row.evidenceUnavailable}">Some analysis evidence is unavailable: no exact source quote.</span><span th:if="${row.evidence.isEmpty() && !row.evidenceUnavailable}">No exact source quote recorded</span></td>
                     <td data-field="flags"><span data-workbench-flag th:each="flag : ${row.flags}" th:text="${flag} + ' '"></span><span th:if="${row.flags.isEmpty()}">No row flags recorded</span></td>
@@ -88,6 +92,7 @@
     </form>
     <details data-workbench-detail hidden>
         <summary>Full wish evidence and review history</summary>
+        <button class="button button-secondary" type="button" data-workbench-detail-close>Back to wish row</button>
         <div data-workbench-detail-content></div>
     </details>
     <th:block th:replace="~{fragments/data-tools :: grid}"></th:block>
