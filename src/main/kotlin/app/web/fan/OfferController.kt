@@ -45,7 +45,9 @@ class OfferController(
         campaign?.let { model.addAttribute("unitPrice", displayMoney(it.offer.unitPrice, it.offer.currency)) }
         model.addAttribute("termsSeal", campaign?.let { terms.findByOffer(workspace.id, it.offer.id) })
         model.addAttribute("offerEvidence", campaign?.let {
-            evidence.findByOffer(workspace.id, it.offer.id)?.let(OfferEvidenceView::from)
+            evidence.findByOffer(workspace.id, it.offer.id)?.let { source ->
+                OfferEvidenceView.from(source.copy(quotes = source.quotes.sortedByDescending { quote -> quote.quote.length }))
+            }
         })
         when (val result = campaigns.quote(token, quantity)) {
             is ServiceResult.Success -> {

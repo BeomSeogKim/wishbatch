@@ -9,7 +9,7 @@
         <figure th:each="quote : ${evidence.quotes}" class="evidence">
             <span class="eyebrow">From a wish</span>
             <blockquote><p th:text="${quote.quote}"></p></blockquote>
-            <figcaption th:text="${quote.displayName}"></figcaption>
+            <figcaption>Anonymous fan</figcaption>
         </figure>
     </div>
 </section>

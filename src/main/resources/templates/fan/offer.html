@@ -2,9 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page('The offer', ~{::main})}">
 <body>
-<main id="main" class="shell fan-page" data-live-campaign
+<main id="main" class="shell fan-page offer-page" data-live-campaign
       th:with="confirmationVersion=${@liveCampaignDisplay.confirmationVersion(campaign)}"
       th:attr="data-status-url=@{/w/{token}/api/campaign-status(token=${token})},data-campaign-id=${campaign?.id},data-initial-state=${campaign?.state},data-initial-holds=${campaign?.counts?.authorizedHolds},data-initial-paid=${campaign?.counts?.paid},data-initial-capacity=${campaign?.capacityLeft},data-confirmation-version=${confirmationVersion}">
+    <link rel="stylesheet" th:href="@{/css/ux-fan-offer.css}">
     <p><a th:href="@{/w/{token}(token=${token})}">Back to wishes</a></p>
     <h1 th:text="${campaign != null ? campaign.offer.title : 'No open offer'}">The offer</h1>
     <div th:unless="${campaignOpen}" class="empty-state">
@@ -12,59 +13,92 @@
         <a th:if="${resultAvailable}" th:href="@{/w/{token}/result(token=${token})}">View campaign result</a>
     </div>
     <th:block th:if="${campaign != null}">
-        <section class="card" aria-label="Exact offer">
-            <h2>What the maker will produce</h2>
-            <p class="offer-specification" th:text="${campaign.offer.specText}"></p>
-            <dl class="term-list">
-                <th:block th:each="variant : ${campaign.offer.chosenVariants}">
-                    <dt th:text="${@makerDisplay.catalogLabel(variant.key)}"></dt><dd th:text="${@makerDisplay.catalogLabel(variant.value)}"></dd>
+        <div class="offer-layout">
+            <div class="offer-details">
+                <section class="card" aria-label="Exact offer">
+                    <h2>What the maker will produce</h2>
+                    <p class="offer-specification" th:text="${campaign.offer.specText}"></p>
+                    <dl class="term-list">
+                        <th:block th:each="variant : ${campaign.offer.chosenVariants}">
+                            <dt th:text="${@makerDisplay.catalogLabel(variant.key)}"></dt><dd th:text="${@makerDisplay.catalogLabel(variant.value)}"></dd>
+                        </th:block>
+                        <dt>Unit price</dt><dd th:text="${unitPrice}"></dd>
+                        <dt>Delivery terms</dt><dd th:text="${campaign.offer.deliveryTerms}"></dd>
+                        <dt>Shipping region</dt><dd th:text="${campaign.offer.shipRegion}"></dd>
+                        <dt>Minimum batch</dt><dd th:text="${campaign.offer.minBatch + ' units'}"></dd>
+                        <dt>Capacity left</dt><dd><span data-live-field="capacityLeft" th:text="${campaign.capacityLeft}"></span> units</dd>
+                        <dt>Close time (UTC)</dt><dd><time data-live-field="closesAt" th:datetime="${campaign.closesAt}" th:text="${@makerDisplay.time(campaign.closesAt)}"></time></dd>
+                        <dt>Confirmation deadline (UTC)</dt><dd><time data-live-field="confirmDeadline" th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}"></time></dd>
+                    </dl>
+                </section>
+                <th:block th:if="${offerEvidence != null}">
+                    <section th:replace="~{fan/offer-evidence :: why(${offerEvidence})}"></section>
                 </th:block>
-                <dt>Unit price</dt><dd th:text="${unitPrice}"></dd>
-                <dt>Delivery terms</dt><dd th:text="${campaign.offer.deliveryTerms}"></dd>
-                <dt>Shipping region</dt><dd th:text="${campaign.offer.shipRegion}"></dd>
-                <dt>Minimum batch</dt><dd th:text="${campaign.offer.minBatch + ' units'}"></dd>
-                <dt>Capacity left</dt><dd><span data-live-field="capacityLeft" th:text="${campaign.capacityLeft}"></span> units</dd>
-                <dt>Close time (UTC)</dt><dd><time data-live-field="closesAt" th:datetime="${campaign.closesAt}" th:text="${@makerDisplay.time(campaign.closesAt)}"></time></dd>
-                <dt>Confirmation deadline (UTC)</dt><dd><time data-live-field="confirmDeadline" th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}"></time></dd>
-            </dl>
-        </section>
-        <section th:replace="~{terms/seal :: seal(${termsSeal})}"></section>
-        <th:block th:if="${offerEvidence != null}">
-            <section th:replace="~{fan/offer-evidence :: why(${offerEvidence})}"></section>
-        </th:block>
-        <div th:replace="~{livecampaign/fragments :: counts(${campaign})}"></div>
-        <section th:replace="~{livecampaign/fragments :: progress(${campaign})}"></section>
-        <section th:replace="~{fan/outcome-map :: map(${null}, ${null})}"></section>
-        <section data-live-action="pledge" th:if="${campaignOpen}" class="card" aria-label="Authorize a pledge">
-            <h2>Choose your quantity</h2>
-            <form method="get" th:action="@{/w/{token}/offer(token=${token})}">
-                <div class="field">
-                    <label for="quantity">Quantity</label>
-                    <select id="quantity" name="quantity" aria-describedby="quantity-help">
-                        <option th:each="number : ${#numbers.sequence(1, campaign.offer.maxQtyPerPledge)}"
-                                th:value="${number}" th:text="${number}" th:selected="${number == quantity}"></option>
-                    </select>
-                    <p id="quantity-help" class="field-help">Update the total after changing quantity. Capacity is checked again when you authorize.</p>
-                </div>
-                <button class="button button-secondary" type="submit">Update total</button>
-            </form>
-            <p th:if="${total != null}">Total to authorize: <strong id="pledge-total" th:text="${total}"></strong>
-                for <span th:text="${quantity}"></span> <span th:text="${quantity == 1 ? 'unit' : 'units'}"></span>.</p>
-            <p th:if="${quoteError != null}" class="notice notice-warning" role="alert" th:text="${quoteError}"></p>
-            <div th:replace="~{fragments/components :: moneyTerms}"></div>
-            <p th:unless="${paypalReady}" class="notice notice-info">PayPal sandbox checkout is not configured. Please try again later.</p>
-            <div th:if="${quote != null and quote.allowed and paypalReady}" id="pledge-checkout"
-                 th:attr="data-create-url=@{/w/{token}/api/pledges(token=${token})},data-quantity=${quantity},data-campaign-id=${campaign.id}">
-                <p id="pledge-feedback" role="status" aria-live="polite">Continue with PayPal to authorize this amount in the sandbox.</p>
-                <a id="pledge-status-link" hidden>Check pledge status</a>
-                <div id="paypal-button-container"></div>
-                <noscript>JavaScript is required for PayPal checkout.</noscript>
-                <script th:src="@{https://www.paypal.com/sdk/js(client-id=${paypalClientId},currency=${quote.currency},intent='authorize',components='buttons')}"></script>
-                <script th:src="@{/js/pledge.js}"></script>
             </div>
-        </section>
+            <aside id="offer-commitment" class="card offer-commitment" th:classappend="${campaign.state.name() == 'FUNDED' or campaign.state.name() == 'NOT_FUNDED' ? 'offer-settled' : ''}" tabindex="-1" aria-label="Your commitment">
+                <p class="eyebrow">Your commitment · PayPal sandbox</p>
+                <p class="offer-price"><strong th:text="${unitPrice}"></strong> <span>per unit</span></p>
+                <div data-live-action="pledge" th:if="${campaignOpen}" class="offer-pledge" aria-label="Authorize a pledge">
+                    <p th:if="${quote != null and quote.allowed}" class="offer-hold-note">Authorize a hold now. You are not charged yet.</p>
+                    <h2 class="h3">Choose your quantity</h2>
+                    <form class="offer-quantity-form" method="get" th:action="@{/w/{token}/offer(token=${token})}">
+                        <div class="field">
+                            <label for="quantity">Quantity</label>
+                            <select id="quantity" name="quantity" aria-describedby="quantity-help">
+                                <option th:each="number : ${#numbers.sequence(1, campaign.offer.maxQtyPerPledge)}"
+                                        th:value="${number}" th:text="${number}" th:selected="${number == quantity}"></option>
+                            </select>
+                            <p id="quantity-help" class="field-help">Update the total after changing quantity. Capacity is checked again when you authorize.</p>
+                        </div>
+                        <button class="button button-secondary" type="submit">Update total</button>
+                    </form>
+                    <p th:if="${total != null}">Total to authorize: <strong id="pledge-total" th:text="${total}"></strong>
+                        for <span th:text="${quantity}"></span> <span th:text="${quantity == 1 ? 'unit' : 'units'}"></span>.</p>
+                    <p th:if="${quoteError != null}" class="notice notice-warning" role="alert" th:text="${quoteError}"></p>
+                    <details class="offer-disclosure">
+                        <summary>Payment terms · hold, capture, release &amp; refund</summary>
+                        <div th:replace="~{fragments/components :: moneyTerms}"></div>
+                    </details>
+                    <p class="offer-payment-summary">Enough holds + maker confirmation → attempt payment. A payment shortfall → refunds and hold releases are requested. Capture can fail; timing depends on PayPal and your bank or card.</p>
+                    <p th:unless="${paypalReady}" class="notice notice-info">PayPal sandbox checkout is not configured. Please try again later.</p>
+                    <div th:if="${quote != null and quote.allowed and paypalReady}" id="pledge-checkout"
+                         th:attr="data-create-url=@{/w/{token}/api/pledges(token=${token})},data-quantity=${quantity},data-campaign-id=${campaign.id}">
+                        <p id="pledge-feedback" role="status" aria-live="polite">Continue with PayPal to authorize this amount in the sandbox.</p>
+                        <a id="pledge-status-link" hidden>Check pledge status</a>
+                        <div id="paypal-button-container"></div>
+                        <noscript>JavaScript is required for PayPal checkout.</noscript>
+                        <script th:src="@{https://www.paypal.com/sdk/js(client-id=${paypalClientId},currency=${quote.currency},intent='authorize',components='buttons')}"></script>
+                    </div>
+                </div>
+                <div class="offer-counts">
+                    <div th:replace="~{livecampaign/fragments :: counts(${campaign})}"></div>
+                </div>
+                <div class="offer-progress" aria-label="Minimum batch progress">
+                    <div data-offer-hold-progress th:if="${campaign.state.name() == 'OPEN' or campaign.state.name() == 'AWAITING_CONFIRMATION'}">
+                    <p>Holds: <span data-live-field="authorizedHolds" th:text="${campaign.counts.authorizedHolds}"></span> / <span th:text="${campaign.offer.minBatch}"></span> minimum units</p>
+                    <progress class="progress-authorized" data-offer-progress="authorizedHolds" th:value="${campaign.counts.authorizedHolds}" th:max="${campaign.offer.minBatch}" aria-label="Authorized units toward minimum batch"></progress>
+                    </div>
+                    <p>Paid: <span data-live-field="paid" th:text="${campaign.counts.paid}"></span> / <span th:text="${campaign.offer.minBatch}"></span> minimum units</p>
+                    <progress class="progress-paid" data-offer-progress="paid" th:value="${campaign.counts.paid}" th:max="${campaign.offer.minBatch}" aria-label="Paid units toward minimum batch"></progress>
+                </div>
+                <details class="offer-disclosure">
+                    <summary>Published terms · verify the sealed offer</summary>
+                    <section th:replace="~{terms/seal :: seal(${termsSeal})}"></section>
+                </details>
+                <details class="offer-disclosure">
+                    <summary>Campaign status &amp; payment outcomes</summary>
+                    <section th:replace="~{livecampaign/fragments :: progress(${campaign})}"></section>
+                    <section th:replace="~{fan/outcome-map :: map(${null}, ${null})}"></section>
+                </details>
+            </aside>
+        </div>
+        <nav th:if="${campaignOpen and total != null}" data-live-action="pledge" class="offer-mobile-bar" aria-label="Review your pledge">
+            <div><span>Reviewed total · <span th:text="${quantity}"></span> <span th:text="${quantity == 1 ? 'unit' : 'units'}"></span></span><strong th:text="${total}"></strong></div>
+            <a class="button button-primary" href="#offer-commitment">Review checkout</a>
+        </nav>
     </th:block>
     <div th:replace="~{livecampaign/fragments :: freshness}"></div>
+    <script th:src="@{/js/pledge.js}" defer></script>
     <script th:src="@{/js/live-campaign.js}" defer></script>
 </main>
 </body>

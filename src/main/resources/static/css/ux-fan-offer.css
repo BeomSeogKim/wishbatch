@@ -1,0 +1,53 @@
+.offer-page > p:first-of-type { padding-top: var(--space-3); }
+.offer-page > h1 { margin-block: var(--space-4) var(--space-6); font-size: clamp(2rem, 4vw, 3.25rem); }
+.offer-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+.offer-details { display: grid; gap: var(--space-6); min-width: 0; }
+.offer-details h2 { font-size: 1.6rem; }
+.offer-details .term-list { margin-bottom: 0; }
+.offer-commitment { position: sticky; top: 56px; padding: var(--space-6); min-width: 0; max-height: calc(100dvh - 72px); overflow-y: auto; scroll-margin-top: 64px; }
+.offer-price { margin-top: var(--space-2); font-variant-numeric: tabular-nums; }
+.offer-price strong { font-size: 2rem; letter-spacing: -.04em; color: var(--ink); }
+.offer-price span, .offer-hold-note, .offer-progress, .offer-payment-summary { font-size: .8rem; }
+.offer-commitment .offer-hold-note { margin-top: 0; }
+.offer-counts { margin-top: var(--space-4); }
+.offer-counts .counts { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+.offer-counts .count { padding: var(--space-2); }
+.offer-counts .count-label { font-size: .7rem; }
+.offer-counts .count-value { font-size: 1.65rem; margin-top: var(--space-1); }
+.offer-counts .count-caption { font-size: .65rem; margin-top: var(--space-1); min-height: 0; }
+.offer-progress { margin-block: var(--space-3) var(--space-4); }
+.offer-progress p + p { margin-top: 0; }
+.offer-progress progress { margin-block: var(--space-1) var(--space-2); background: var(--surface-soft); }
+.offer-progress progress::-webkit-progress-bar { background: var(--surface-soft); }
+.offer-settled .count-authorized { background: var(--surface-soft); border-color: var(--line); }
+.offer-settled .count-authorized .count-label, .offer-settled .count-authorized .count-value { color: var(--muted); }
+.offer-quantity-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); align-items: start; margin-top: var(--space-3); }
+.offer-quantity-form .field { display: grid; grid-template-columns: auto minmax(52px, 1fr); gap: var(--space-2); align-items: center; }
+.offer-quantity-form .field-help { grid-column: 1 / -1; margin: 0; font-size: .7rem; }
+.offer-quantity-form select { width: 100%; min-height: 44px; }
+.offer-quantity-form .button { min-height: 44px; padding: 10px 14px; }
+.offer-pledge > p { margin-top: var(--space-3); }
+.offer-disclosure { border-top: 1px solid var(--line); padding-block: var(--space-3); font-size: .8rem; }
+.offer-disclosure summary { cursor: pointer; font-weight: 650; min-height: 28px; padding-block: var(--space-1); }
+.offer-disclosure .card, .offer-disclosure .money-terms { padding: var(--space-4); margin-block: var(--space-3) 0; }
+.offer-disclosure h2 { font-size: 1.15rem; }
+.offer-disclosure .money-terms ol { margin-top: var(--space-3); }
+.offer-disclosure .outcome-map-scroll svg { width: 600px; }
+.offer-pledge .notice { padding: var(--space-3); font-size: .8rem; }
+.offer-pledge #pledge-feedback { font-size: .8rem; margin-block: var(--space-3); }
+.offer-mobile-bar { display: none; }
+@media (max-width: 760px) {
+    html:has(.offer-page) { scroll-padding-top: 56px; }
+    .offer-layout { grid-template-columns: minmax(0, 1fr); }
+    .offer-commitment { position: static; max-height: none; overflow: visible; padding: var(--space-4); scroll-margin-top: 0; }
+    .offer-page { padding-bottom: var(--space-6); }
+    .offer-page:has(.offer-mobile-bar) ~ .site-footer { padding-bottom: 112px; }
+    .offer-page > h1 { font-size: 2rem; }
+    .offer-details .term-list { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); }
+    .offer-mobile-bar:not([hidden]) { position: fixed; inset: auto 0 0; z-index: 200; display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4) max(var(--space-3), env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow); }
+    .offer-mobile-bar > div { min-width: 0; }
+    .offer-mobile-bar > div > span { display: block; color: var(--muted); font-size: .7rem; }
+    .offer-mobile-bar strong { display: block; font-size: 1.2rem; }
+    .offer-mobile-bar .button { padding-inline: var(--space-3); }
+    .offer-disclosure summary { min-height: 44px; }
+}

@@ -10,24 +10,24 @@
          viewBox="0 0 600 390" width="600" height="390">
         <title id="outcome-svg-title">Payment outcome map</title>
         <desc id="outcome-svg-desc">Authorize a PayPal hold. Enough authorized holds and maker confirmation lead to a capture attempt, which can fail. Only completed captures are paid. Insufficient holds, maker cancellation, or an expired confirmation deadline lead to hold release attempts. A capture shortfall leads to attempts to refund completed payments and release remaining holds. Pending or failed cleanup is not confirmed.</desc>
-        <g fill="none" stroke="#52616b" stroke-width="2" aria-hidden="true">
+        <g fill="none" stroke="var(--muted)" stroke-width="2" aria-hidden="true">
             <path d="M300 48 V68 M300 116 V130 H25 V214 H40 M300 130 H575 V214 H560 M135 238 H25 V354 H40 M180 238 V265 H465 V238"/>
             <path d="M294 62 L300 68 L306 62 M34 208 L40 214 L34 220 M566 208 L560 214 L566 220 M34 348 L40 354 L34 360 M459 244 L465 238 L471 244"/>
         </g>
-        <g font-family="sans-serif" font-size="18" text-anchor="middle" fill="#172b36" aria-hidden="true">
-            <rect data-step="AUTHORIZATION" x="205" y="0" width="190" height="48" rx="6" fill="#fff" th:attr="stroke=${step == 'AUTHORIZATION' ? '#005ea8' : '#52616b'},stroke-width=${step == 'AUTHORIZATION' ? 4 : 1}"/>
+        <g font-family="sans-serif" font-size="18" text-anchor="middle" fill="var(--ink)" aria-hidden="true">
+            <rect data-step="AUTHORIZATION" x="205" y="0" width="190" height="48" rx="6" fill="var(--surface)" th:attr="stroke=${step == 'AUTHORIZATION' ? 'var(--focus)' : 'var(--control-line)'},stroke-width=${step == 'AUTHORIZATION' ? 4 : 1}"/>
             <text x="300" y="30">Authorize</text>
-            <rect data-step="HOLD" x="205" y="68" width="190" height="48" rx="6" fill="#fff" th:attr="stroke=${step == 'HOLD' ? '#005ea8' : '#52616b'},stroke-width=${step == 'HOLD' ? 4 : 1}"/>
+            <rect data-step="HOLD" x="205" y="68" width="190" height="48" rx="6" fill="var(--surface)" th:attr="stroke=${step == 'HOLD' ? 'var(--focus)' : 'var(--control-line)'},stroke-width=${step == 'HOLD' ? 4 : 1}"/>
             <text x="300" y="98">Authorized hold</text>
             <text x="135" y="157" font-size="16">Minimum holds +</text><text x="135" y="178" font-size="16">maker confirms</text>
             <text x="465" y="157" font-size="16">Below minimum /</text><text x="465" y="178" font-size="16">cancelled / expired</text>
-            <rect data-step="CAPTURE" x="40" y="190" width="190" height="48" rx="6" fill="#fff" th:attr="stroke=${step == 'CAPTURE' ? '#005ea8' : '#52616b'},stroke-width=${step == 'CAPTURE' ? 4 : 1}"/>
+            <rect data-step="CAPTURE" x="40" y="190" width="190" height="48" rx="6" fill="var(--surface)" th:attr="stroke=${step == 'CAPTURE' ? 'var(--focus)' : 'var(--control-line)'},stroke-width=${step == 'CAPTURE' ? 4 : 1}"/>
             <text x="135" y="210">Attempt capture</text><text x="135" y="230" font-size="16">Completed = paid</text>
-            <rect data-step="RELEASE" x="370" y="190" width="190" height="48" rx="6" fill="#fff" th:attr="stroke=${step == 'RELEASE' ? '#005ea8' : '#52616b'},stroke-width=${step == 'RELEASE' ? 4 : 1}"/>
+            <rect data-step="RELEASE" x="370" y="190" width="190" height="48" rx="6" fill="var(--surface)" th:attr="stroke=${step == 'RELEASE' ? 'var(--focus)' : 'var(--control-line)'},stroke-width=${step == 'RELEASE' ? 4 : 1}"/>
             <text x="465" y="220">Attempt release</text>
             <text x="135" y="310" font-size="16">Capture shortfall</text>
             <text x="325" y="290" font-size="16">Shortfall: remaining holds</text>
-            <rect data-step="REFUND" x="40" y="330" width="190" height="48" rx="6" fill="#fff" th:attr="stroke=${step == 'REFUND' ? '#005ea8' : '#52616b'},stroke-width=${step == 'REFUND' ? 4 : 1}"/>
+            <rect data-step="REFUND" x="40" y="330" width="190" height="48" rx="6" fill="var(--surface)" th:attr="stroke=${step == 'REFUND' ? 'var(--focus)' : 'var(--control-line)'},stroke-width=${step == 'REFUND' ? 4 : 1}"/>
             <text x="135" y="350">Attempt refund</text><text x="135" y="370" font-size="16">Completed payments</text>
         </g>
     </svg>

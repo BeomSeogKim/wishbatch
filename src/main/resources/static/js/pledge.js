@@ -1,4 +1,25 @@
 (() => {
+    const panel = document.getElementById('offer-commitment');
+    if (!panel) return;
+    const state = panel.querySelector('[data-live-field="state"]');
+    if (state) {
+        function showSettlement() {
+            const settled = /^(?:Funded|Not funded)\b/i.test(state.textContent.trim());
+            panel.classList.toggle('offer-settled', settled);
+            panel.querySelectorAll('[data-offer-hold-progress]').forEach(block => { block.hidden = settled; });
+        }
+        new MutationObserver(showSettlement).observe(state, {childList: true, characterData: true, subtree: true});
+        showSettlement();
+    }
+    panel.querySelectorAll('[data-offer-progress]').forEach(progress => {
+        const count = panel.querySelector('[data-live-field="' + progress.dataset.offerProgress + '"]');
+        if (!count) return;
+        new MutationObserver(() => { progress.value = count.textContent; })
+            .observe(count, {childList: true, characterData: true, subtree: true});
+    });
+})();
+
+(() => {
     const checkout = document.getElementById('pledge-checkout');
     if (!checkout) return;
     const feedback = document.getElementById('pledge-feedback');
