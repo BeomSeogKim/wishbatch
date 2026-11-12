@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Leave a wish', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <section th:unless="${workspaceFound}" class="empty-state">
+        <h1>Page not found</h1>
+        <p>We could not find this page. Check the link or return to the home page.</p>
+        <a class="button button-secondary" th:href="@{/}">Go home</a>
+    </section>
+    <th:block th:if="${workspaceFound}">
+        <header class="page-heading">
+            <p class="eyebrow">A little inspiration</p>
+            <h1>What would you love to see?</h1>
+            <p><strong th:text="${maker.name}">Maker</strong> <span th:text="${maker.description}">Maker description</span></p>
+            <p>A wish is stated interest, not an order. Nothing is charged, and no account is needed.</p>
+        </header>
+        <aside th:if="${campaignOpen}" class="notice notice-info">
+            <p>The maker has an offer open. <a th:href="@{/w/{token}/offer(token=${token})}">See the offer and its terms</a>.</p>
+        </aside>
+        <div th:if="${wishSubmitted == true}" class="notice notice-info" role="status">
+            Thanks for sharing your wish! The maker can now read it. This is not an order, and nothing was charged.
+        </div>
+        <div class="two-column">
+            <section class="card form-stack" aria-labelledby="wish-form-title">
+                <h2 id="wish-form-title">Leave a wish</h2>
+                <form th:action="@{/w/{token}(token=${token})}" method="post" class="form-stack">
+                    <p th:if="${formError}" th:text="${formError}" class="notice notice-error" role="alert"></p>
+                    <div class="field">
+                        <label for="wish-text">Your wish</label>
+                        <p id="wish-help" class="field-help">Tell the maker what you would like, in your own words. Up to 500 characters.</p>
+                        <textarea id="wish-text" name="text" rows="6" required maxlength="500"
+                                  th:text="${wishForm.text}" th:attr="aria-invalid=${textError != null}"
+                                  aria-describedby="wish-help wish-count wish-error"></textarea>
+                        <p id="wish-count" class="field-help" role="status" aria-live="polite" aria-atomic="true">
+                            <span id="wish-length" th:text="${#strings.length(wishForm.text)}">0</span> / 500 characters
+                        </p>
+                        <p id="wish-error" class="field-error" th:text="${textError}" th:attr="role=${textError != null ? 'alert' : null}"></p>
+                    </div>
+                    <div class="field">
+                        <label for="display-name">Display name (optional)</label>
+                        <input id="display-name" name="displayName" maxlength="255" th:value="${wishForm.displayName}"
+                               th:attr="aria-invalid=${nameError != null}" aria-describedby="name-help name-error">
+                        <p id="name-help" class="field-help">Shown beside your wish. Leave blank to appear as Anonymous.</p>
+                        <p id="name-error" class="field-error" th:text="${nameError}" th:attr="role=${nameError != null ? 'alert' : null}"></p>
+                    </div>
+                    <button class="button button-primary" type="submit">Share my wish</button>
+                </form>
+            </section>
+            <section class="card form-stack" aria-labelledby="recent-wishes-title">
+                <h2 id="recent-wishes-title">Recent wishes</h2>
+                <p class="field-help">A few ideas from this workspace. These are wishes, not orders.</p>
+                <p th:if="${#lists.isEmpty(recentWishes)}" class="empty-state">No wishes here yet. Yours can be the first.</p>
+                <ul th:unless="${#lists.isEmpty(recentWishes)}">
+                    <li th:each="wish : ${recentWishes}">
+                        <p th:text="${wish.text}">A fan wish</p>
+                        <p class="field-help" th:text="${wish.displayName ?: 'Anonymous'}">Anonymous</p>
+                    </li>
+                </ul>
+            </section>
+        </div>
+        <script>
+            const wishText = document.getElementById('wish-text');
+            const wishLength = document.getElementById('wish-length');
+            wishText.addEventListener('input', () => {
+                wishLength.textContent = wishText.value.length;
+            });
+        </script>
+    </th:block>
+</main>
+</body>
+</html>

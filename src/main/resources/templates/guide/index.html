@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Testing guide', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <header class="page-heading">
+        <p class="eyebrow">Try the complete flow</p>
+        <h1>Testing guide</h1>
+        <p class="lead">From fan wishes to a batch result in about five minutes. You play both the maker and a fan.</p>
+    </header>
+    <section class="notice notice-info" aria-labelledby="before-title">
+        <h2 id="before-title">Before you start</h2>
+        <p>This product only talks to the PayPal sandbox. No real money moves.</p>
+        <p>Use the sandbox buyer account given in the submission's testing instructions, or your own PayPal sandbox personal account. Keep its details in the PayPal window.</p>
+    </section>
+    <section class="preview-section" aria-labelledby="path-title">
+        <div class="section-heading"><h2 id="path-title">Follow these steps</h2></div>
+        <ol class="testing-list">
+            <li>
+                <strong>Start a demo.</strong> The button below creates a separate sample workspace and opens the maker home. Keep that tab open throughout the test.
+                <form th:action="@{/demo}" method="post" class="hero-action">
+                    <button class="button button-primary" type="submit">Start a demo</button>
+                </form>
+            </li>
+            <li><strong>Look at the wishes.</strong> On the maker home, open Wishes to read the sample fan requests. You can also open the fan wish page and leave a request in your own words. A wish is not an order and nothing is charged.</li>
+            <li><strong>Run the analysis and read the evidence.</strong> Open Proposal and run the analysis. Read the proposed product, quoted wishes, and the groups showing which requests it can serve. AI groups the wishes; the maker chooses the offer.</li>
+            <li><strong>Confirm the offer.</strong> Use the proposal to open Offer. Review the product, price, delivery terms, minimum batch, capacity, and campaign window. Keep the demo minimum at 3 units, confirm that you can produce and deliver the offer, and publish it.</li>
+            <li><strong>Open the fan offer page.</strong> From the maker workspace, open the fan offer link in a new tab. Review the exact offer and payment terms while keeping the maker tab available.</li>
+            <li><strong>Authorize with PayPal: choose quantity 3.</strong> Set the quantity to 3, then use the PayPal button and approve with a sandbox personal account. One approval covers the demo minimum. Return to the fan page and check that the authorization is recorded. A hold is not a completed payment; capture can still fail.</li>
+            <li><strong>Confirm production as the maker.</strong> Return to the maker tab, open Campaign, and refresh to see the authorized units. When the minimum is met, confirm production so the application can request payment capture.</li>
+            <li><strong>See the result.</strong> Open the maker's result page and inspect the payment states and timeline, including PayPal IDs. The batch is funded only when enough payments complete. If a payment fails or is pending, read its status instead of treating the authorization as paid.</li>
+        </ol>
+    </section>
+    <section class="card" aria-labelledby="counts-title">
+        <h2 id="counts-title">Three counts, three meanings</h2>
+        <p>Stated interest counts wishes compatible with the offer. Authorized holds count offer units with payment authorization. Paid counts units whose payments have completed. Wishes are never added to authorized or paid units, and holds are never treated as completed payments.</p>
+    </section>
+    <section class="preview-section" aria-labelledby="cancel-title">
+        <div class="section-heading"><h2 id="cancel-title">Optional: try cancellation</h2></div>
+        <p>Start a fresh demo from this guide and repeat the steps through publishing and authorizing a pledge. This takes a second PayPal approval. Before confirming production, return to the maker's Campaign page and cancel the campaign. Check the fan pledge status and the maker timeline for the hold-release outcome. PayPal releases the hold; when the amount reappears depends on PayPal and your bank or card.</p>
+    </section>
+</main>
+</body>
+</html>
