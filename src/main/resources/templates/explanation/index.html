@@ -16,8 +16,9 @@
                 <dt>Not served</dt><dd th:text="${counts.notServed}"></dd>
                 <dt>Excluded by price</dt><dd th:text="${counts.excludedByPrice}"></dd>
             </dl>
+            <p th:if="${!#lists.isEmpty(evidence.quotes)}" class="sample-label">Sample data: quotes from synthetic demo wishes</p>
             <figure class="evidence" th:each="quote : ${evidence.quotes}">
-                <blockquote><p th:text="${quote}"></p></blockquote><figcaption>Anonymous synthetic wish</figcaption>
+                <blockquote><p th:text="${quote}"></p></blockquote><figcaption>Anonymous fan</figcaption>
             </figure>
             <p>Personal free-text wishes are not quoted because they have not been verified for public sharing.</p>
             <p th:if="${#lists.isEmpty(evidence.quotes)}">No public synthetic quotes are available for this offer.</p>
@@ -43,7 +44,7 @@
         <h2>What the maker confirmed</h2>
         <p th:text="${spec}"></p>
         <dl class="term-list">
-            <th:block th:each="variant : ${variants}"><dt th:text="${variant.key}"></dt><dd th:text="${variant.value}"></dd></th:block>
+            <th:block th:each="variant : ${variants}"><dt th:text="${@makerDisplay.catalogLabel(variant.key)}"></dt><dd th:text="${@makerDisplay.catalogLabel(variant.value)}"></dd></th:block>
             <dt>Price per unit</dt><dd th:text="${price}"></dd>
             <dt>Minimum units</dt><dd th:text="${minimum}"></dd>
             <dt>Capacity</dt><dd th:text="${capacity}"></dd>

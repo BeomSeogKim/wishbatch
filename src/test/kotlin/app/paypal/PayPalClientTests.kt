@@ -47,7 +47,7 @@ class PayPalClientTests {
                         "breakdown":{"item_total":{"currency_code":"USD","value":"18.51"}}},
                     "items":[{"name":"Published print batch","quantity":"3",
                         "unit_amount":{"currency_code":"USD","value":"6.17"}}]}],
-                "payment_source":{"paypal":{"experience_context":{"shipping_preference":"GET_FROM_FILE"}}}
+                "payment_source":{"paypal":{"experience_context":{"shipping_preference":"GET_FROM_FILE","brand_name":"Wishbatch"}}}
             }"""))
             .andRespond(withSuccess("""{"id":"ORDER1","status":"CREATED"}""", MediaType.APPLICATION_JSON)
                 .header("PayPal-Debug-Id", "create-debug"))

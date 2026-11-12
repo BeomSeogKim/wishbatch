@@ -313,7 +313,7 @@ class BatchExplanationTests @Autowired constructor(
                 }
             val campaignId = transactions.execute {
                 val offer = Offer(workspace.id, proposal.optionId, stored.run.id, title, "Maker-confirmed terms",
-                    emptyMap(), 200, "USD", "Ships later", "US", 2, 10)
+                    mapOf("finish" to "matte"), 200, "USD", "Ships later", "US", 2, 10)
                 entityManager.persist(offer)
                 Campaign(offer.id, CampaignState.OPEN, openedAt = now, closesAt = now.plusSeconds(900),
                     confirmDeadline = now.plusSeconds(44100)).also(entityManager::persist).id
@@ -336,8 +336,10 @@ class BatchExplanationTests @Autowired constructor(
                     recorded == quote && sourceWishes.getValue(wishId).text.contains(quote)
                 }, "Public evidence must match a recorded quote and its compatible synthetic source wish")
             }
-            assertContains(html, "Anonymous synthetic wish")
+            assertContains(html, "Anonymous fan")
+            assertContains(html, "Sample data: quotes from synthetic demo wishes")
             assertContains(html, "stored analysis of synthetic demo wishes")
+            assertContains(html, "<dt>Finish</dt><dd>Matte</dd>")
             assertContains(html, "Creating a workspace does not run a new analysis.")
             assertFalse(html.contains("AI grouped wishes against the maker's feasible options"))
             assertContains(html, "Production and delivery are the maker's responsibility.")

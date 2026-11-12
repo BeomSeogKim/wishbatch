@@ -64,7 +64,8 @@ class PayPalClient internal constructor(
                 "items" to listOf(mapOf("name" to request.offerTitle, "quantity" to request.quantity.toString(),
                     "unit_amount" to unitAmount)),
             )),
-            "payment_source" to mapOf("paypal" to mapOf("experience_context" to mapOf("shipping_preference" to "GET_FROM_FILE"))),
+            "payment_source" to mapOf("paypal" to mapOf("experience_context" to mapOf(
+                "shipping_preference" to "GET_FROM_FILE", "brand_name" to "Wishbatch"))),
         )) { body -> OrderDetails(OrderId(body.requiredText("id"))) to orderStatus(body) }
     }
 
