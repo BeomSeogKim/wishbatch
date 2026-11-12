@@ -59,5 +59,8 @@ class OfferDraftController(private val drafts: OfferDraftService) {
 
     @ExceptionHandler(InvalidOfferDraftException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun invalid(): String = "offerdraft/unavailable"
+    fun invalid(@PathVariable token: String, model: Model): String {
+        model.addAttribute("token", token)
+        return "offerdraft/unavailable"
+    }
 }

@@ -51,5 +51,8 @@ class WishGlossController(private val glosses: WishGlossService) {
 
     @ExceptionHandler(IllegalArgumentException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun invalid(): String = "gloss/invalid"
+    fun invalid(@PathVariable token: String, model: Model): String {
+        model.addAttribute("token", token)
+        return "gloss/invalid"
+    }
 }

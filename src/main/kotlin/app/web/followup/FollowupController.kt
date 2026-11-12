@@ -77,7 +77,8 @@ class FollowupController(private val followups: FollowupService) {
 
     @ExceptionHandler(InvalidFollowupException::class, InvalidWishReviewException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun invalid(model: Model): String {
+    fun invalid(@PathVariable token: String, model: Model): String {
+        model.addAttribute("token", token)
         model.addAttribute("followupError", "This question or answer could not be saved. Return to the question page and choose an approved option.")
         return "followup/invalid"
     }

@@ -13,23 +13,37 @@
     <p th:if="${questionError}" class="notice notice-error" role="alert" th:text="${questionError}">Drafting unavailable.</p>
     <p th:if="${questionsDrafted == true}" class="notice notice-info" role="status">Drafting finished. Review the questions below before approving them.</p>
     <p th:if="${questionApproved == true}" class="notice notice-info" role="status">Question approved. Fans with a matching wish can now answer it.</p>
-    <section th:if="${page.runId == null or page.option == null}" class="card">
+    <section th:if="${page.state.name() == 'UNAVAILABLE'}" class="card">
         <h2>No proposed option to clarify</h2>
         <p>Review an analysis with a proposed option before drafting follow-up questions.</p>
+        <a th:href="@{/w/{token}/maker/proposal(token=${token})}">Open the latest proposal</a>
     </section>
-    <section th:if="${page.option != null}" class="card form-stack">
+    <section th:if="${page.state.name() == 'STALE'}" class="notice notice-warning" role="status">
+        <h2>Questions need a current analysis</h2>
+        <p>The wishes, recorded evidence, or maker review have changed. Review the latest proposal and run analysis again before drafting questions.</p>
+        <a th:href="@{/w/{token}/maker/proposal(token=${token})}">Open the latest proposal</a>
+    </section>
+    <section th:if="${page.state.name() == 'NO_ELIGIBLE'}" class="card">
+        <h2>No eligible questions yet</h2>
+        <p>No supported conditions with grounded evidence need clarification in this analysis. Other conditions still need maker review.</p>
+        <a th:href="@{/w/{token}/maker/proposal(token=${token})}">Review the proposal</a>
+    </section>
+    <section th:if="${page.state.name() == 'FAILED'}" class="notice notice-error" role="status">
+        <h2>Question drafting was unavailable</h2>
+        <p>The saved drafting attempt did not produce questions. Review the proposal before continuing.</p>
+        <a th:href="@{/w/{token}/maker/proposal(token=${token})}">Review the proposal</a>
+    </section>
+    <section th:if="${page.state.name() == 'READY' and page.option != null}" class="card form-stack">
         <h2 th:text="${page.option.name}">Proposed option</h2>
         <p>Draft at most three short questions for wishes labelled Depends. Unrelated conditions still need review.</p>
-        <p th:if="${page.failure != null}" class="notice notice-info">Question drafting was unavailable for this analysis. Existing questions are unchanged.</p>
         <div th:if="${#lists.isEmpty(page.questions)}">
             <p class="empty-state">No follow-up questions are saved for this analysis.</p>
-            <p th:if="${page.drafted and page.failure == null}">No supported variant questions were found. Other conditions still need maker review.</p>
-            <form th:if="${!page.drafted and page.failure == null}" th:action="@{/w/{token}/maker/questions(token=${token})}" method="post">
+            <form th:if="${!page.drafted}" th:action="@{/w/{token}/maker/questions(token=${token})}" method="post">
                 <button class="button button-primary" type="submit">Draft follow-up questions</button>
             </form>
         </div>
     </section>
-    <section th:each="question : ${page.questions}" class="card form-stack" th:attr="aria-labelledby=${'question-title-' + question.id}">
+    <section th:if="${page.state.name() == 'READY'}" th:each="question : ${page.questions}" class="card form-stack" th:attr="aria-labelledby=${'question-title-' + question.id}">
         <h2 th:id="${'question-title-' + question.id}" th:text="${question.text}">Follow-up question</h2>
         <p class="field-help"><span th:text="${#lists.size(question.wishIds)}">0</span> wishes share this condition. These are stated wishes, not orders.</p>
         <div th:if="${question.approved}">

@@ -7,6 +7,8 @@
         <h1>Question could not be saved</h1>
         <p class="notice notice-error" role="alert" th:text="${followupError}">Return to the question page and choose an approved option.</p>
         <p>Use your browser's Back button to return to the question page.</p>
+        <a th:href="@{/w/{token}(token=${token})}">Return to wishes</a>
+        <a th:href="@{/w/{token}/maker/questions(token=${token})}">Review follow-up questions</a>
     </section>
 </main>
 </body>

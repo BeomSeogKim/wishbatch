@@ -8,20 +8,26 @@
         <h1>Reply to wishes this batch does not serve</h1>
         <p>Review the fan's own words and the validated analysis reason before approving each group.</p>
         <p>Only approved replies can appear beside the relevant wish. Approval sends no messages.</p>
-        <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${replies.runId})}">Back to proposal</a>
+        <a th:href="@{/w/{token}/maker/proposal(token=${token})}">Back to proposal</a>
     </header>
     <p th:if="${replyError}" th:text="${replyError}" class="notice notice-error" role="alert"></p>
+    <section th:if="${replies.status == 'REANALYSIS_REQUIRED'}" class="notice notice-warning" role="status">
+        <h2>Review the current analysis before drafting replies</h2>
+        <p>The current wishes no longer match the analysis. Open the latest proposal and run analysis again before creating replies.</p>
+        <a th:href="@{/w/{token}/maker/proposal(token=${token})}">Open the latest proposal</a>
+    </section>
     <p th:if="${replies.status == 'EMPTY'}" class="empty-state">No request groups need a reply in this analysis.</p>
-    <form th:if="${replies.status == 'READY'}" method="post"
+    <form th:if="${replies.status == 'READY' or replies.status == 'REFRESH_REQUIRED'}" method="post"
           th:action="@{/w/{token}/maker/replies/generate(token=${token})}" data-reply-generation>
         <input type="hidden" name="run" th:value="${replies.runId}">
         <input type="hidden" name="evidenceHash" th:value="${replies.evidenceHash}">
-        <p>Generate once for this analysis. Only supported exact analysis explanations can be used; other wording is rejected. No automatic retries are made.</p>
+        <p th:if="${replies.status == 'REFRESH_REQUIRED'}" class="notice notice-info">The selected analysis or reviewed evidence has changed. Earlier drafts and approvals are no longer current. Draft replies for the latest analysis.</p>
+        <p>Only supported exact analysis explanations can be used; other wording is rejected. No automatic retries are made.</p>
         <button class="button button-primary" type="submit">Draft replies</button>
         <p role="status" aria-live="polite" data-reply-loading hidden>Drafting replies. Please wait.</p>
     </form>
     <p th:if="${replies.status == 'GENERATING'}" class="notice notice-info" role="status">Drafting has started. Reload to check its result. An interrupted attempt is not retried.</p>
-    <div th:if="${replies.status != 'READY' and replies.status != 'EMPTY' and replies.status != 'GENERATING' and replies.status != 'DRAFTED'}"
+    <div th:if="${replies.status != 'READY' and replies.status != 'EMPTY' and replies.status != 'GENERATING' and replies.status != 'DRAFTED' and replies.status != 'REANALYSIS_REQUIRED' and replies.status != 'REFRESH_REQUIRED'}"
          class="notice notice-error" role="alert">
         <p>Replies are unavailable for this attempt. No draft has been published. Review the analysis before continuing.</p>
         <p th:text="${replies.status}"></p>

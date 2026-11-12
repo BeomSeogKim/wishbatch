@@ -3,6 +3,7 @@ package app.web.followup
 import app.campaign.followup.FollowupAnswerRecord
 import app.campaign.followup.FollowupDraftResult
 import app.campaign.followup.FollowupPage
+import app.campaign.followup.FollowupPageState
 import app.campaign.followup.FollowupQuestion
 import app.campaign.followup.FollowupService
 import app.campaign.followup.InvalidFollowupException
@@ -101,14 +102,30 @@ class FollowupControllerTests @Autowired constructor(
         var html = mvc.get("/w/$token/maker/questions").andReturn().response.contentAsString
         assertContains(html, "No follow-up questions are saved")
         assertContains(html, "Draft follow-up questions")
-        `when`(followups.makerPage(token)).thenReturn(FollowupPage(run, option, emptyList(), "NOT_CONFIGURED"))
+        `when`(followups.makerPage(token)).thenReturn(FollowupPage(run, option, emptyList(), "NOT_CONFIGURED", state = FollowupPageState.FAILED))
         html = mvc.get("/w/$token/maker/questions").andReturn().response.contentAsString
         assertContains(html, "Question drafting was unavailable")
         assertFalse(html.contains("Draft follow-up questions</button>"))
-        `when`(followups.makerPage(token)).thenReturn(FollowupPage(null, null, emptyList(), null))
+        `when`(followups.makerPage(token)).thenReturn(FollowupPage(null, null, emptyList(), null, state = FollowupPageState.UNAVAILABLE))
         html = mvc.get("/w/$token/maker/questions").andReturn().response.contentAsString
         assertContains(html, "No proposed option to clarify")
         assertFalse(html.contains("Draft follow-up questions</button>"))
+    }
+
+    @Test
+    fun `stale and ineligible questions explain the next step without draft forms`() {
+        for ((state, message) in listOf(
+            FollowupPageState.STALE to "Questions need a current analysis",
+            FollowupPageState.NO_ELIGIBLE to "No eligible questions yet",
+        )) {
+            `when`(followups.makerPage(token)).thenReturn(FollowupPage(run, option, emptyList(), null, state = state))
+            val html = mvc.get("/w/$token/maker/questions").andExpect { status { isOk() } }
+                .andReturn().response.contentAsString
+            assertContains(html, message)
+            assertContains(html, "/w/$token/maker/proposal")
+            assertFalse(html.contains("Draft follow-up questions</button>"))
+        }
+        verify(followups, never()).draft(token)
     }
 
     @Test
