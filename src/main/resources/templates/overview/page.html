@@ -24,28 +24,28 @@
             <p th:if="${overview.state.name() == 'FUNDED'}">FUNDED records that the paid minimum was met at settlement. It is a historical outcome; current payment records may differ.</p>
             <p th:if="${overview.state.name() == 'NOT_FUNDED'}">The campaign did not fund. Refunds and hold releases may still need attention.</p>
             <p th:if="${overview.deadline != null}">Deadline: <time th:datetime="${overview.deadline}" th:text="${@humanDisplay.time(overview.deadline)}"></time><span th:if="${overview.expired}"> · Passed; the recorded state may be stale.</span></p>
-            <p th:if="${overview.minimum != null}">Minimum: <span th:text="${overview.minimum}"></span> units.</p>
+            <p th:if="${overview.minimum != null}">Minimum: <span th:text="${overview.minimum}"></span> <span th:text="${overview.minimum == 1 ? 'unit' : 'units'}"></span>.</p>
         </th:block>
         <ul>
-            <li>Interested in this offer: <strong th:text="${overview.interest == null ? 'No offer interest available' : overview.interest}"></strong> wishes.<span th:if="${overview.conditional != null}" th:text="${' ' + overview.conditional + ' more depend on a condition.'}"></span></li>
-            <li>Authorized holds: <strong th:text="${overview.authorized == null ? 'Unknown (no campaign)' : overview.authorized}"></strong> units.</li>
-            <li>Completed payments: <strong th:text="${overview.paid == null ? 'Unknown (no campaign)' : overview.paid}"></strong> units.</li>
+            <li>Interested in this offer: <strong th:text="${overview.interest == null ? 'No offer interest available' : overview.interest}"></strong><span th:if="${overview.interest != null}" th:text="${overview.interest == 1 ? ' wish' : ' wishes'}"></span>.<span th:if="${overview.conditional != null}" th:text="${' ' + overview.conditional + (overview.conditional == 1 ? ' more depends on a condition.' : ' more depend on a condition.')}"></span></li>
+            <li>Authorized holds: <strong th:text="${overview.authorized == null ? 'Unknown (no campaign)' : overview.authorized}"></strong><span th:if="${overview.authorized != null}" th:text="${overview.authorized == 1 ? ' unit' : ' units'}"></span>.</li>
+            <li>Completed payments: <strong th:text="${overview.paid == null ? 'Unknown (no campaign)' : overview.paid}"></strong><span th:if="${overview.paid != null}" th:text="${overview.paid == 1 ? ' unit' : ' units'}"></span>.</li>
         </ul>
-        <p th:if="${overview.analysisAt != null}">Analysis recorded <time th:datetime="${overview.analysisAt}" th:text="${@humanDisplay.time(overview.analysisAt)}"></time>. <span th:text="${overview.newWishes}"></span> newer visible wishes are outside this snapshot.</p>
+        <p th:if="${overview.analysisAt != null}">Analysis recorded <time th:datetime="${overview.analysisAt}" th:text="${@humanDisplay.time(overview.analysisAt)}"></time>. <span th:text="${overview.newWishes}"></span> <span th:text="${overview.newWishes == 1 ? 'newer visible wish is' : 'newer visible wishes are'}"></span> outside this snapshot.</p>
     </section>
     <section class="preview-section card" aria-labelledby="attention">
         <h2 id="attention">Needs attention</h2>
         <p th:if="${overview.attention.isEmpty()}">No payment attention is recorded in this snapshot.</p>
         <ul th:unless="${overview.attention.isEmpty()}"><li th:each="item : ${overview.attention}" th:text="${item}"></li></ul>
-        <p th:if="${overview.questionDrafts > 0}"><span th:text="${overview.questionDrafts}"></span> follow-up question drafts need review. <a th:href="@{/w/{token}/maker/questions(token=${token})}">Review questions</a></p>
+        <p th:if="${overview.questionDrafts > 0}"><span th:text="${overview.questionDrafts}"></span> <span th:text="${overview.questionDrafts == 1 ? 'follow-up question draft needs' : 'follow-up question drafts need'}"></span> review. <a th:href="@{/w/{token}/maker/questions(token=${token})}">Review questions</a></p>
     </section>
     <section class="preview-section card" aria-labelledby="evidence">
         <h2 id="evidence">Review and evidence</h2>
         <p th:if="${overview.booksAt == null}">PayPal comparison: unknown; no check is recorded for this campaign.</p>
         <p th:if="${overview.booksAt != null}">Last PayPal comparison: <time th:datetime="${overview.booksAt}" th:text="${@humanDisplay.time(overview.booksAt)}"></time>. Unknown: <span th:text="${overview.booksUnknown}"></span>; mismatches: <span th:text="${overview.booksMismatch}"></span>. This is a dated observation.</p>
-        <p th:if="${overview.unavailableRecords > 0}"><span th:text="${overview.unavailableRecords}"></span> pledge decision records are unavailable; wish association and verdict are unknown.</p>
+        <p th:if="${overview.unavailableRecords > 0}"><span th:text="${overview.unavailableRecords}"></span> <span th:text="${overview.unavailableRecords == 1 ? 'pledge decision record is' : 'pledge decision records are'}"></span> unavailable; wish association and verdict are unknown.</p>
         <p>Decision records do not establish an individual pledge-to-wish association.</p>
-        <p th:if="${overview.changedRecords > 0}"><span th:text="${overview.changedRecords}"></span> pledge decision records need integrity review.</p>
+        <p th:if="${overview.changedRecords > 0}"><span th:text="${overview.changedRecords}"></span> <span th:text="${overview.changedRecords == 1 ? 'pledge decision record needs' : 'pledge decision records need'}"></span> integrity review.</p>
         <ul>
             <li><a th:href="@{/w/{token}/maker/proposal(token=${token})}">Review analysis and wishes</a></li>
             <li><a th:href="@{/w/{token}/maker/questions(token=${token})}">Review follow-up questions</a></li>

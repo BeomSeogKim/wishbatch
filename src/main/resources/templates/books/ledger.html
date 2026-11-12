@@ -58,7 +58,7 @@
     </section>
     <section class="preview-section" th:unless="${history.isEmpty()}">
         <h2>Check history</h2>
-        <ol><li th:each="entry : ${history}"><a th:href="@{/w/{token}/maker/books(token=${token},campaignId=${campaignId},checkId=${entry.id})}" th:text="${@humanDisplay.time(entry.checkedAt)}"></a> · <span th:text="${entry.pledges.size()}"></span> pledges</li></ol>
+        <ol><li th:each="entry : ${history}"><a th:href="@{/w/{token}/maker/books(token=${token},campaignId=${campaignId},checkId=${entry.id})}" th:text="${@humanDisplay.time(entry.checkedAt)}"></a> · <span th:text="${entry.pledges.size()}"></span> <span th:text="${entry.pledges.size() == 1 ? 'pledge' : 'pledges'}"></span></li></ol>
     </section>
 </main>
 </body>

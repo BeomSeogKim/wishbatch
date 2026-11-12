@@ -12,16 +12,16 @@
             <div><dt>Completed</dt><dd><time th:datetime="${summary.time}" th:text="${summary.time}">Time</time></dd></div>
             <div><dt>Input hash</dt><dd th:text="${summary.inputHash}">Hash</dd></div>
         </dl>
-        <p><strong th:text="${summary.representedWishCount}">0</strong> wishes represented in this run. The attempted or read count is unavailable.</p>
-        <p><strong th:text="${summary.newWishCount}">0</strong> visible wishes were added after this analysis; they are separate from this snapshot.</p>
+        <p><strong th:text="${summary.representedWishCount}">0</strong> <span th:text="${summary.representedWishCount == 1 ? 'wish' : 'wishes'}"></span> represented in this run. The attempted or read count is unavailable.</p>
+        <p><strong th:text="${summary.newWishCount}">0</strong> <span th:text="${summary.newWishCount == 1 ? 'visible wish was' : 'visible wishes were'}"></span> added after this analysis; <span th:text="${summary.newWishCount == 1 ? 'it is' : 'they are'}"></span> separate from this snapshot.</p>
         <h3>Original validation flags</h3>
         <p th:if="${summary.flags.isEmpty()}">No validation flags are recorded for this run.</p>
         <ul th:unless="${summary.flags.isEmpty()}">
-            <li th:each="flag : ${summary.flags}"><strong th:text="${flag.label}">Rule</strong>: <span th:text="${flag.count}">0</span> flags. <span th:text="${flag.meaning}">Meaning</span></li>
+            <li th:each="flag : ${summary.flags}"><strong th:text="${flag.label}">Rule</strong>: <span th:text="${flag.count}">0</span> <span th:text="${flag.count == 1 ? 'flag' : 'flags'}"></span>. <span th:text="${flag.meaning}">Meaning</span></li>
         </ul>
         <p>Flags are validation observations, not a count of removed outputs. One item can have more than one flag.</p>
         <h3>Maker overrides</h3>
-        <p><span th:text="${summary.overrideCount}">0</span> recorded overrides. Overrides do not rewrite the original run or its flags.</p>
+        <p><span th:text="${summary.overrideCount}">0</span> <span th:text="${summary.overrideCount == 1 ? 'recorded override' : 'recorded overrides'}"></span>. Overrides do not rewrite the original run or its flags.</p>
         <p>Translations and drafts are aids; source quotes are the original evidence. AI does not publish an offer. Counts and amounts are computed by code or set by the maker.</p>
         <p>Compatible wishes are stated interest. Authorized units and paid units are separate payment measures.</p>
     </th:block>

@@ -12,7 +12,7 @@
         <h2 id="wish-heading">Your wish, in your words</h2>
         <blockquote th:if="${trace.wish != null}" th:text="${trace.wish}"></blockquote>
         <p th:if="${trace.wish == null}" th:text="${trace.wishExplanation}"></p>
-        <p th:if="${trace.evidenceCount != null}">Selected supporting evidence: <span th:text="${trace.evidenceCount}"></span> wishes. This sample is not the total interested count.</p>
+        <p th:if="${trace.evidenceCount != null}">Selected supporting evidence: <span th:text="${trace.evidenceCount}"></span> <span th:text="${trace.evidenceCount == 1 ? 'wish' : 'wishes'}"></span>. This sample is not the total interested count.</p>
     </section>
     <section class="card" aria-labelledby="reading-heading">
         <h2 id="reading-heading">How it was read</h2>
@@ -58,7 +58,7 @@
     </section>
     <section class="card" aria-labelledby="terms-heading">
         <h2 id="terms-heading">The terms you agreed to</h2>
-        <p th:if="${trace.amount != null}"><span th:text="${trace.quantity}"></span> units · <strong th:text="${@humanDisplay.money(trace.amount, trace.currency)}"></strong> total</p>
+        <p th:if="${trace.amount != null}"><span th:text="${trace.quantity}"></span> <span th:text="${trace.quantity == 1 ? 'unit' : 'units'}"></span> · <strong th:text="${@humanDisplay.money(trace.amount, trace.currency)}"></strong> total</p>
         <p th:if="${trace.terms == null}">The earlier offer snapshot is unavailable. Current terms are not substituted for it.</p>
         <th:block th:if="${trace.terms != null}" th:with="terms=${trace.terms}">
             <h3 th:text="${terms.title}"></h3>
