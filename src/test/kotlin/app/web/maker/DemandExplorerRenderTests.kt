@@ -99,7 +99,7 @@ class DemandExplorerRenderTests(
         val reviewed = mvc.get("/w/${workspace.token}/maker/offer") { param("run", run.id.toString()) }
             .andExpect { status { isOk() } }.andReturn()
         assertEquals(0, assertIs<DemandExplorer>(reviewed.modelAndView!!.model["demand"]).compatible)
-        assertContains(reviewed.response.contentAsString, "No Compatible wishes for this option.")
+        assertContains(reviewed.response.contentAsString, "No interested or conditional wishes for this option.")
         val reviewedProposal = mvc.get("/w/${workspace.token}/maker/proposal") { param("run", run.id.toString()) }
             .andExpect { status { isOk() } }.andReturn()
         assertEquals(0, assertIs<DemandExplorer>(reviewedProposal.modelAndView!!.model["demand"]).compatible)
