@@ -198,8 +198,8 @@ class WishGlossServiceTests @Autowired constructor(
         assertTrue(glosses.read(fixture.token, fixture.run.id).rows.all { !it.selectable && it.saved?.englishGloss == null })
         val html = mvc.get("/w/${fixture.token}/maker/glosses") { param("run", fixture.run.id.toString()) }
             .andReturn().response.contentAsString
-        assertContains(html, "No translation needed (machine-inferred English)")
-        assertContains(html, "Language remains unknown")
+        assertContains(html, "Machine-inferred English")
+        assertContains(html, "Language uncertain")
         assertEquals(GlossResult.Failed(GlossFailure.LIMIT_REACHED), glosses.generate(fixture.token, fixture.run.id, fixture.ids))
         assertEquals(1, translator.requests.size)
     }
@@ -228,8 +228,8 @@ class WishGlossServiceTests @Autowired constructor(
         val path = "/w/${fixture.token}/maker/glosses"
         val initial = mvc.get(path) { param("run", fixture.run.id.toString()) }.andExpect { status { isOk() } }
             .andReturn().response.contentAsString
-        assertContains(initial, "Translation is unavailable")
-        assertContains(initial, "Language: Unknown")
+        assertContains(initial, "No translated reading aids yet")
+        assertContains(initial, "Unchecked wishes")
         assertContains(initial, "&lt;script&gt;")
         assertContains(initial, "name=\"_csrf\"")
         assertTrue(translator.requests.isEmpty())
@@ -259,7 +259,8 @@ class WishGlossServiceTests @Autowired constructor(
         }.andExpect { status { is3xxRedirection() }; flash { attribute("glossNotice", "Translation is unavailable. Original wishes are unchanged.") } }
         val html = mvc.get(path) { param("run", fixture.run.id.toString()) }.andReturn().response.contentAsString
         assertContains(html, "\ubb34\uad11 2\uc7a5")
-        assertContains(html, "Translation is unavailable")
+        assertContains(html, "No translated reading aids yet")
+        assertContains(html, "Unchecked wishes")
         mvc.securePost(path) { param("run", fixture.run.id.toString()) }.andExpect { status { isBadRequest() } }
         mvc.get(path) { param("run", UUID.randomUUID().toString()) }.andExpect { status { isNotFound() } }
     }

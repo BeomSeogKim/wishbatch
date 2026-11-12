@@ -7,6 +7,8 @@ import app.campaign.port.AnalysisFailure
 import app.campaign.review.InvalidWishReviewException
 import app.campaign.workspace.WorkspaceNotFoundException
 import org.springframework.http.HttpStatus
+import app.web.errors.helperToken
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -77,8 +79,8 @@ class FollowupController(private val followups: FollowupService) {
 
     @ExceptionHandler(InvalidFollowupException::class, InvalidWishReviewException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun invalid(@PathVariable token: String, model: Model): String {
-        model.addAttribute("token", token)
+    fun invalid(request: HttpServletRequest, model: Model): String {
+        model.addAttribute("token", helperToken(request))
         model.addAttribute("followupError", "This question or answer could not be saved. Return to the question page and choose an approved option.")
         return "followup/invalid"
     }

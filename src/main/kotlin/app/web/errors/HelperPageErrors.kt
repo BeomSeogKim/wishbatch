@@ -43,3 +43,6 @@ fun wantsHtml(request: HttpServletRequest): Boolean = try {
 } catch (_: IllegalArgumentException) {
     false
 }
+
+fun helperToken(request: HttpServletRequest): String? =
+    (request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as? Map<*, *>)?.get("token") as? String

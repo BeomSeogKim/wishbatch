@@ -1,5 +1,7 @@
 package app.web.errors
 
+import app.campaign.offerdraft.InvalidOfferDraftException
+import app.campaign.offerdraft.OfferDraftService
 import app.campaign.replies.InvalidReplyEvidenceException
 import app.campaign.replies.ReplyService
 import app.campaign.replies.MakerReplies
@@ -22,6 +24,9 @@ class HelperPageErrorsTests @Autowired constructor(private val mvc: MockMvc) {
     @MockitoBean
     private lateinit var replies: ReplyService
 
+    @MockitoBean
+    private lateinit var drafts: OfferDraftService
+
     @Test
     fun `missing parameters render html for browsers and json for api clients`() {
         listOf("questions", "maker/glosses", "maker/replies", "maker/offer-draft").forEach { path ->
@@ -32,6 +37,16 @@ class HelperPageErrorsTests @Autowired constructor(private val mvc: MockMvc) {
                 status { isBadRequest() }; content { contentTypeCompatibleWith(MediaType.APPLICATION_JSON) }
             }
         }
+    }
+
+    @Test
+    fun `invalid offer draft keeps a proposal recovery link`() {
+        val run = UUID.randomUUID()
+        `when`(drafts.page("example", run)).thenThrow(InvalidOfferDraftException())
+        val html = mvc.get("/w/example/maker/offer-draft?run=$run").andExpect {
+            status { isBadRequest() }; view { name("offerdraft/unavailable") }
+        }.andReturn().response.contentAsString
+        assertContains(html, "/w/example/maker/proposal")
     }
 
     @Test

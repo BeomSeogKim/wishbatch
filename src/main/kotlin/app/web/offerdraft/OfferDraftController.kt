@@ -5,6 +5,8 @@ import app.campaign.offerdraft.OfferDraftGeneration
 import app.campaign.offerdraft.OfferDraftService
 import app.campaign.workspace.WorkspaceNotFoundException
 import org.springframework.http.HttpStatus
+import app.web.errors.helperToken
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -59,8 +61,8 @@ class OfferDraftController(private val drafts: OfferDraftService) {
 
     @ExceptionHandler(InvalidOfferDraftException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun invalid(@PathVariable token: String, model: Model): String {
-        model.addAttribute("token", token)
+    fun invalid(request: HttpServletRequest, model: Model): String {
+        model.addAttribute("token", helperToken(request))
         return "offerdraft/unavailable"
     }
 }

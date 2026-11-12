@@ -37,9 +37,12 @@ class WishGlossUnavailableTests @Autowired constructor(
         val run = runs.latest(workspace.token)!!.run.id
         val before = glosses.read(workspace.token, run)
         assertTrue(before.rows.isNotEmpty())
-        val wish = before.rows.first().wishId
+        val wish = before.rows.first { it.selectable }.wishId
+        val savedBefore = before.rows.associate { it.wishId to listOf(it.saved?.status, it.saved?.attempts, it.saved?.englishGloss) }
         assertEquals(GlossResult.Failed(GlossFailure.NOT_CONFIGURED), glosses.generate(workspace.token, run, listOf(wish)))
-        assertTrue(glosses.read(workspace.token, run).rows.all { it.saved == null })
+        assertEquals(savedBefore, glosses.read(workspace.token, run).rows.associate {
+            it.wishId to listOf(it.saved?.status, it.saved?.attempts, it.saved?.englishGloss)
+        })
         val path = "/w/${workspace.token}/maker/glosses"
         mvc.securePost(path) { param("run", run.toString()); param("wishIds", wish.toString()) }.andExpect {
             status { is3xxRedirection() }
@@ -47,7 +50,7 @@ class WishGlossUnavailableTests @Autowired constructor(
         }
         val html = mvc.get(path) { param("run", run.toString()) }.andExpect { status { isOk() } }
             .andReturn().response.contentAsString
-        assertContains(html, "No translated reading aids yet")
+        assertContains(html, "English reading aids")
         assertContains(html, "Unchecked wishes")
         assertEquals(before.rows.map { it.original }, glosses.read(workspace.token, run).rows.map { it.original })
     }

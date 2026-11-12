@@ -218,7 +218,10 @@ class FollowupControllerTests @Autowired constructor(
         `when`(followups.answer(token, question.id, wish, "invented")).thenThrow(InvalidFollowupException())
         mvc.securePost("/w/$token/questions/${question.id}") {
             param("wish", wish.toString()); param("choice", "invented")
-        }.andExpect { status { isBadRequest() }; view { name("followup/invalid") } }
+        }.andExpect {
+            status { isBadRequest() }; view { name("followup/invalid") }
+            content { string(org.hamcrest.Matchers.containsString("/w/$token/maker/questions")) }
+        }
         `when`(followups.answer(token, question.id, wish, "matte")).thenThrow(InvalidWishReviewException())
         mvc.securePost("/w/$token/questions/${question.id}") {
             param("wish", wish.toString()); param("choice", "matte")
