@@ -154,15 +154,15 @@
         </section>
         <section class="preview-section proposal-meta" aria-labelledby="run-details">
             <div class="section-heading"><h2 id="run-details">About this analysis.</h2></div>
-            <p><span class="badge badge-neutral" th:text="${stored.run.isSeed ? 'Stored seed run' : 'Live analysis'}">Stored seed run</span></p>
+            <p><span class="badge badge-neutral" th:text="${stored.run.isSeed ? 'Stored synthetic reference' : 'Live analysis'}">Stored synthetic reference</span></p>
             <dl class="details-list">
-                <div><dt>Model</dt><dd th:text="${stored.run.model}">Model</dd></div>
-                <div><dt>Model call completed</dt><dd><time th:datetime="${stored.run.createdAt}" th:text="${@makerDisplay.time(stored.run.createdAt)}">Time</time></dd></div>
+                <div th:if="${!stored.run.isSeed}"><dt>Model</dt><dd th:text="${stored.run.model}">Model</dd></div>
+                <div th:if="${!stored.run.isSeed}"><dt>Model call completed</dt><dd><time th:datetime="${stored.run.createdAt}" th:text="${@makerDisplay.time(stored.run.createdAt)}">Time</time></dd></div>
                 <div><dt>Live runs in this workspace</dt><dd th:text="${liveRunCount}">0</dd></div>
             </dl>
             <p th:text="'Validation items dropped or flagged: ' + ${stored.flags.size()} + '. Checks remove unsupported quotes, unknown references, and disallowed suggestions.'">Validation summary</p>
-            <p th:if="${stored.run.isSeed}">This result came from a real model call on the sample wishes. It is available even when live analysis is unavailable.</p>
-            <p>Evidence checks confirm that quotes exist. They do not guarantee that the model understood a fan correctly.</p>
+            <p th:if="${stored.run.isSeed}">This stored synthetic reference illustrates the sample wishes. It is available even when live analysis is unavailable.</p>
+            <p>Evidence checks confirm that quotes exist. They do not establish that a wish was interpreted correctly.</p>
         </section>
     </th:block>
     <script>
