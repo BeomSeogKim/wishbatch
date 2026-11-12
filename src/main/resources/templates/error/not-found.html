@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Not found', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <header class="page-heading">
+        <p class="eyebrow">Not found</p>
+        <h1>This page is unavailable.</h1>
+        <p class="lead">Check the link or return home to start a new demo.</p>
+        <a class="button button-primary" th:href="@{/}">Return home</a>
+    </header>
+</main>
+</body>
+</html>

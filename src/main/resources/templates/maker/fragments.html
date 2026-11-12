@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="steps(token, current)" aria-label="Maker steps">
+    <ol class="step-rail">
+        <li th:each="route, step : ${ {'options', 'wishes', 'proposal', 'offer', 'campaign', 'result'} }"
+            th:classappend="${step.count == current} ? 'is-current'"
+            th:attr="aria-current=${step.count == current ? 'step' : null}">
+            <span class="step-number" th:text="${step.count}">1</span>
+            <a th:href="@{/w/{token}/maker/{route}(token=${token},route=${route})}"
+               th:text="${ {'Options', 'Wishes', 'Proposal', 'Offer', 'Campaign', 'Settlement'}[step.index]}">Options</a>
+        </li>
+    </ol>
+</nav>
+</body>
+</html>

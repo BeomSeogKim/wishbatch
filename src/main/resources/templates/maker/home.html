@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Maker workspace', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <header class="page-heading">
+        <p class="eyebrow">Maker workspace</p>
+        <h1>Your next batch starts here.</h1>
+        <p class="lead">Your demo already has product options and fan wishes. Review the options, then listen to the wishes before shaping an offer.</p>
+        <p class="sample-label">Costs and production limits are demo-scale.</p>
+    </header>
+    <div th:replace="~{maker/fragments :: steps(${token}, 1)}"></div>
+    <section class="preview-section" aria-labelledby="next-step">
+        <div class="card">
+            <p class="eyebrow">Start with Options</p>
+            <h2 id="next-step">See what you can make.</h2>
+            <p>Compare feasible formats, variants, costs, and production limits.</p>
+            <a class="button button-primary" th:href="@{/w/{token}/maker/options(token=${token})}">Review options</a>
+        </div>
+    </section>
+    <section class="preview-section" aria-labelledby="fan-pages">
+        <div class="section-heading">
+            <h2 id="fan-pages">Try the fan experience.</h2>
+            <p>Fan pages open in a new tab so you can keep this workspace open.</p>
+        </div>
+        <div class="two-column">
+            <div class="card">
+                <h3>Collect wishes</h3>
+                <p>Fans can share what they would like. Wishes are not orders.</p>
+                <a th:href="@{/w/{token}(token=${token})}" target="_blank" rel="noopener noreferrer">Open fan wish page (new tab)</a>
+            </div>
+            <div class="card">
+                <h3>Share an offer</h3>
+                <a th:if="${fanOfferUrl != null}" th:href="${fanOfferUrl}" target="_blank" rel="noopener noreferrer">Open fan offer page (new tab)</a>
+                <p th:unless="${fanOfferUrl != null}">The fan offer page will be available after an offer is published.</p>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

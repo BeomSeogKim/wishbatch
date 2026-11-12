@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Wishes', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <header class="page-heading">
+        <a th:href="@{/w/{token}/maker(token=${token})}">Maker home</a>
+        <h1>Listen to the wishes.</h1>
+        <p class="lead">Review stated interest before shaping a proposal. Hide a wish to exclude it from the next analysis; unhide it to include it again.</p>
+    </header>
+    <div th:replace="~{maker/fragments :: steps(${token}, 2)}"></div>
+    <section class="preview-section" aria-label="Wish review">
+        <div class="count count-interest">
+            <p class="count-label">Stated interest</p>
+            <p class="count-value" th:text="${visibleWishCount}">40</p>
+            <p>Visible wishes. Wishes are not orders.</p>
+        </div>
+        <p class="notice notice-info">Imported comments inform analysis only. They are not contact permission or purchase consent.</p>
+        <div th:if="${wishes.isEmpty()}" class="empty-state">
+            <h2>No wishes yet.</h2>
+            <p>Collect a fan wish before requesting a proposal.</p>
+            <a th:href="@{/w/{token}(token=${token})}" target="_blank" rel="noopener noreferrer">Open fan wish page (new tab)</a>
+        </div>
+        <div th:if="${!wishes.isEmpty() and visibleWishCount == 0}" class="notice notice-info">
+            <p>All wishes are hidden. Unhide a wish before requesting a proposal.</p>
+        </div>
+        <div th:unless="${wishes.isEmpty()}" class="table-scroll" tabindex="0" role="region" aria-label="Fan wishes">
+            <table>
+                <caption>Fan wishes, including hidden wishes</caption>
+                <thead><tr><th scope="col">Display name</th><th scope="col">Wish</th><th scope="col">Source</th><th scope="col">Time (UTC)</th><th scope="col">Visibility</th></tr></thead>
+                <tbody><tr th:each="wish : ${wishes}" th:id="${'wish-' + wish.id}">
+                    <th scope="row" th:text="${wish.displayName ?: 'Anonymous fan'}">Fan</th>
+                    <td th:text="${wish.text}">Wish text</td>
+                    <td><span class="badge badge-neutral" th:text="${wish.source.name() == 'ONSITE' ? 'On-site' : 'Imported'}">Imported</span></td>
+                    <td><time th:datetime="${wish.createdAt}" th:text="${wish.createdAt}">Time</time></td>
+                    <td>
+                        <span class="badge badge-neutral" th:text="${wish.hidden ? 'Hidden' : 'Visible'}">Visible</span>
+                        <form th:action="@{/w/{token}/maker/wishes(token=${token})}" method="post">
+                            <input type="hidden" name="wishId" th:value="${wish.id}">
+                            <input type="hidden" name="hidden" th:value="${!wish.hidden}">
+                            <button class="button button-secondary" type="submit" th:text="${wish.hidden ? 'Unhide' : 'Hide'}"
+                                    th:attr="aria-label=${(wish.hidden ? 'Unhide wish by ' : 'Hide wish by ') + (wish.displayName ?: 'Anonymous fan')}">Hide</button>
+                        </form>
+                    </td>
+                </tr></tbody>
+            </table>
+        </div>
+        <div class="button-row">
+            <a class="button button-primary" th:href="@{/w/{token}/maker/proposal(token=${token})}">Review proposal</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

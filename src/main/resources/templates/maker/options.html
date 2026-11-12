@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Options', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <header class="page-heading">
+        <a th:href="@{/w/{token}/maker(token=${token})}">Maker home</a>
+        <h1>Options you can produce.</h1>
+        <p class="lead">Start with feasible products before reviewing fan wishes.</p>
+        <p class="sample-label">Costs and production limits are demo-scale.</p>
+    </header>
+    <div th:replace="~{maker/fragments :: steps(${token}, 1)}"></div>
+    <section class="preview-section" aria-label="Product options">
+        <div th:if="${options.isEmpty()}" class="empty-state">
+            <h2>No options yet.</h2>
+            <p>This workspace has no product options to review.</p>
+        </div>
+        <div th:unless="${options.isEmpty()}" class="table-scroll" tabindex="0" role="region" aria-label="Option catalog">
+            <table>
+                <caption>Feasible product catalog · demo-scale numbers</caption>
+                <thead><tr>
+                    <th scope="col">Name</th><th scope="col">Format</th><th scope="col">Variants</th>
+                    <th scope="col">Unit cost</th><th scope="col">Minimum batch</th><th scope="col">Capacity</th>
+                    <th scope="col">Lead time</th><th scope="col">Ship region</th>
+                </tr></thead>
+                <tbody><tr th:each="option : ${options}">
+                    <th scope="row" th:text="${option.name}">Product</th>
+                    <td><span th:text="${option.format}">Format</span>
+                        <dl><th:block th:each="attribute : ${option.fixedAttributes}">
+                            <dt th:text="${attribute.key}">Attribute</dt><dd th:text="${attribute.value}">Value</dd>
+                        </th:block></dl>
+                    </td>
+                    <td><dl><th:block th:each="variant : ${option.allowedVariants}">
+                        <dt th:text="${variant.key}">Variant</dt><dd th:text="${#strings.listJoin(variant.value, ', ')}">Values</dd>
+                    </th:block></dl><span th:if="${option.allowedVariants.isEmpty()}">No variants</span></td>
+                    <td th:text="${unitCosts[option.id]} + ' / unit'">USD $1.00 / unit</td>
+                    <td th:text="${option.minBatch} + ' units'">3 units</td>
+                    <td th:text="${option.maxCapacity} + ' units'">10 units</td>
+                    <td th:text="${option.leadTimeText}">Lead time</td>
+                    <td th:text="${option.shipRegion}">Region</td>
+                </tr></tbody>
+            </table>
+        </div>
+        <div class="button-row">
+            <a class="button button-primary" th:href="@{/w/{token}/maker/wishes(token=${token})}">Review wishes</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>
