@@ -104,6 +104,27 @@ IMPORTED stated interest. Stable option and wish keys map to workspace-local
 UUIDs through `optionId` and `wishId`, so stored analysis can remap references
 without sharing records. Workspace creation seeds only options and wishes;
 analysis storage and payment reconciliation belong to their own services.
+## PayPal client
+
+`app.paypal.PayPalClient` implements `PaymentGateway` with the
+[Orders](https://developer.paypal.com/api/orders/v2) and
+[Payments](https://developer.paypal.com/api/payments/v2) APIs. `PayPalProperties`
+reads `PAYPAL_BASE_URL`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET`. Only the
+exact default URL `https://api-m.sandbox.paypal.com` permits startup. Resource
+IDs are encoded and redirects are disabled. Missing credentials permit startup
+but calls return `PaymentResult.Failed` with `errorCode = "NOT_CONFIGURED"`.
+
+Tokens refresh 30 seconds before expiry. Connection/read timeouts are 10/20
+seconds; transport failures and 5xx allow three retries with the original
+mutation key. A 4xx is never retried. Every response's debug ID is logged,
+including OAuth and retries; results retain the final response's ID or the
+last received ID after a timeout. Credentials and payer data are never logged.
+
+Orders request shipping and authorization; captures are full and final, and
+refunds are full. Money conversion is exact. Authorization results carry the
+nested resource's status and available payer, shipping, and expiry fields.
+Callers reconcile ambiguous failures before changing domain state. HTTP-layer
+stub tests require neither network nor credentials.
 
 ## Configuration
 
