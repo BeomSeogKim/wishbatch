@@ -1,6 +1,7 @@
 package app.campaign.review
 
 import app.campaign.analysisrun.AnalysisRunService
+import app.campaign.analysisrun.StoredSeedAnalysis
 import app.campaign.model.AnalysisRun
 import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.WishKind
@@ -8,6 +9,7 @@ import app.campaign.port.AnalysisOutput
 import app.campaign.port.SecondReading
 import app.campaign.port.WishReadingComparison
 import app.campaign.rules.optionWishCounts
+import app.campaign.workspace.SeedCatalog
 import app.campaign.workspace.WorkspaceService
 import app.web.security.securePost
 import jakarta.persistence.EntityManager
@@ -19,6 +21,9 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
+import java.io.ByteArrayInputStream
+import java.nio.file.Files
+import java.nio.file.Path
 import java.time.Instant
 import java.util.UUID
 import kotlin.test.assertContains
@@ -154,9 +159,25 @@ class WishReviewTests(
     fun `legacy seed and no proposal still allow review without inventing an agreement rate`() {
         val token = workspaces.create().token
         val original = runs.latest(token)!!
-        assertEquals(null, original.output.secondReading)
-        assertContains(page(token, original.run.id), "No second reading is recorded for this result.")
-        val run = store(token, original.output.copy(proposal = null, noProposalReason = "No proposal.", notServed = emptyList()))
+        assertNotNull(original.output.secondReading)
+        val bytes = Files.readAllBytes(Path.of("evaluation/scenarios/frozen/illustrator/analysis-run.json"))
+        val thread = Thread.currentThread()
+        val loader = thread.contextClassLoader
+        val legacy = try {
+            thread.contextClassLoader = object : ClassLoader(loader) {
+                override fun getResourceAsStream(name: String): java.io.InputStream? =
+                    if (name == "seed/analysis-run.json") ByteArrayInputStream(bytes) else super.getResourceAsStream(name)
+            }
+            StoredSeedAnalysis(SeedCatalog(), mapper).forWorkspace(workspaces.findByToken(token)!!,
+                workspaces.listOptions(token), workspaces.listWishes(token))
+        } finally {
+            thread.contextClassLoader = loader
+        }
+        assertEquals("synthetic-reference", legacy.model)
+        assertEquals(null, legacy.validated.output.secondReading)
+        val legacyRun = store(token, legacy.validated.output, legacy.model)
+        assertContains(page(token, legacyRun.id), "No second reading is recorded for this result.")
+        val run = store(token, legacy.validated.output.copy(proposal = null, noProposalReason = "No proposal.", notServed = emptyList()), legacy.model)
         val html = page(token, run.id)
         assertContains(html, "Review each wish.")
         for (wish in original.output.wishes) assertContains(html, "id=\"wish-${wish.wishId}\"")
@@ -177,9 +198,9 @@ class WishReviewTests(
         }
     }
 
-    private fun store(token: String, output: AnalysisOutput): AnalysisRun {
+    private fun store(token: String, output: AnalysisOutput, model: String = "test-model"): AnalysisRun {
         val previous = assertNotNull(runs.latest(token)).run
-        return AnalysisRun(previous.workspaceId, "test-model", previous.inputHash, mapper.writeValueAsString(output),
+        return AnalysisRun(previous.workspaceId, model, previous.inputHash, mapper.writeValueAsString(output),
             createdAt = Instant.parse("2090-01-01T00:00:00Z")).also {
             entityManager.persist(it)
             entityManager.flush()
