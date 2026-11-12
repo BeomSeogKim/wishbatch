@@ -48,6 +48,11 @@ class ProposalController(private val workspaces: WorkspaceService, private val r
             model.addAttribute("optionCounts", optionWishCounts(output))
             model.addAttribute("proposedCounts", optionWishCounts(output).singleOrNull { it.optionId == option?.id })
             if (option != null) {
+                model.addAttribute("optionFormat", catalogLabel(option.format))
+                model.addAttribute("optionAttributes", option.fixedAttributes.mapKeys { catalogLabel(it.key) }
+                    .mapValues { catalogLabel(it.value) })
+                model.addAttribute("suggestedVariants", output.proposal.suggestedVariants.mapKeys { catalogLabel(it.key) }
+                    .mapValues { catalogLabel(it.value) })
                 val currency = Currency.getInstance(option.currency)
                 val amount = BigDecimal.valueOf(option.unitCost, currency.defaultFractionDigits)
                 val format = NumberFormat.getCurrencyInstance(Locale.US).apply { this.currency = currency }
@@ -56,8 +61,8 @@ class ProposalController(private val workspaces: WorkspaceService, private val r
             val verdicts = output.verdicts.filter { it.optionId == option?.id }.associateBy { it.wishId }
             val rows = output.wishes.mapNotNull { analyzed ->
                 wishes[analyzed.wishId]?.let { wish ->
-                    analyzed.wishId to ProposalWish(wish, analyzed.needs,
-                        verdicts[analyzed.wishId]?.reason ?: "Praise, noise, or instructions rather than a product request.")
+                    analyzed.wishId to ProposalWish(wish, analyzed.needs.map { it.copy(value = catalogText(it.value)) },
+                        catalogText(verdicts[analyzed.wishId]?.reason ?: "Praise, noise, or instructions rather than a product request."))
                 }
             }.toMap()
             model.addAttribute("compatibleWishes", output.verdicts.filter {
@@ -66,9 +71,16 @@ class ProposalController(private val workspaces: WorkspaceService, private val r
             model.addAttribute("dependsWishes", output.verdicts.filter {
                 it.optionId == option?.id && it.verdict == CompatibilityVerdict.CONDITIONAL
             }.mapNotNull { rows[it.wishId] })
-            model.addAttribute("notServedGroups", output.notServed.map { group ->
-                ProposalWishGroup(group.label, group.reason, group.wishIds.mapNotNull { rows[it] })
-            })
+            val notServedGroups = output.notServed.map { group ->
+                ProposalWishGroup(catalogText(group.label), catalogText(group.reason), group.wishIds.mapNotNull { rows[it] })
+            }
+            val previewIds = notServedGroups.flatMap { it.wishes }.take(3).map { it.wish.id }.toSet()
+            model.addAttribute("notServedPreview", notServedGroups.map { group ->
+                group.copy(wishes = group.wishes.filter { it.wish.id in previewIds })
+            }.filter { it.wishes.isNotEmpty() })
+            model.addAttribute("notServedRemaining", notServedGroups.map { group ->
+                group.copy(wishes = group.wishes.filter { it.wish.id !in previewIds })
+            }.filter { it.wishes.isNotEmpty() })
             model.addAttribute("nonRequestWishes", output.wishes.filter { it.kind == WishKind.NOT_A_REQUEST }
                 .mapNotNull { rows[it.wishId] })
         }
@@ -88,6 +100,19 @@ class ProposalController(private val workspaces: WorkspaceService, private val r
     @ExceptionHandler(WorkspaceNotFoundException::class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     fun notFound(): String = "error/not-found"
+
+    private fun catalogLabel(value: String): String = when (value) {
+        "postcard-set" -> "Postcard set"
+        "art-print" -> "Art print"
+        "sticker-sheet" -> "Sticker sheet"
+        "designCount" -> "Designs in a set"
+        "cut" -> "Cut style"
+        else -> value.replace(Regex("([a-z])([A-Z])"), "$1 $2")
+            .replace('-', ' ').replace('_', ' ').replaceFirstChar { it.titlecase(Locale.US) }
+    }
+
+    private fun catalogText(value: String): String =
+        Regex("postcard-set|art-print|sticker-sheet|designCount|die-cut").replace(value) { catalogLabel(it.value) }
 
     private fun failureMessage(reason: AnalysisFailure): String = when (reason) {
         AnalysisFailure.NOT_CONFIGURED -> "Live analysis is not configured. A model API key is needed to re-run. Your last valid analysis is still shown."

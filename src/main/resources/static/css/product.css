@@ -296,3 +296,9 @@ tbody th { min-width: 180px; }
 @media (prefers-reduced-motion: no-preference) {
     .button { transition: background-color .15s ease; }
 }
+
+.proposal-nav { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6); padding-block: var(--space-4); border-block: 1px solid var(--line); }
+.proposal-disclosure { margin-top: var(--space-4); }
+.proposal-disclosure > summary { cursor: pointer; padding: var(--space-3); color: var(--accent); border: 1px solid var(--line); border-radius: var(--radius-small); }
+.proposal-reason { margin-top: var(--space-6); }
+.proposal-wish { overflow-wrap: anywhere; }

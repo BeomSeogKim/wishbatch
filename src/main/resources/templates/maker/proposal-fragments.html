@@ -19,9 +19,21 @@
     <h3><span th:text="${title}">Compatible</span> <span class="badge badge-neutral" th:text="${rows.size()}">0</span></h3>
     <p class="muted" th:text="${explanation}">Group explanation</p>
     <p th:if="${rows.isEmpty()}">No wishes in this group.</p>
-    <div class="proposal-wish-list">
-        <th:block th:each="row : ${rows}"><article th:replace="~{maker/proposal-fragments :: wish(${row})}"></article></th:block>
-    </div>
+    <div th:replace="~{maker/proposal-fragments :: wishList(${rows.size() > 3 ? rows.subList(0, 3) : rows})}"></div>
+    <details th:if="${rows.size() > 3}" class="proposal-disclosure">
+        <summary th:text="'Show all ' + ${rows.size()} + ' wishes in ' + ${title}">Show all wishes</summary>
+        <div th:replace="~{maker/proposal-fragments :: wishList(${rows.subList(3, rows.size())})}"></div>
+    </details>
 </section>
+<div th:fragment="wishList(rows)" class="proposal-wish-list">
+    <th:block th:each="row : ${rows}"><article th:replace="~{maker/proposal-fragments :: wish(${row})}"></article></th:block>
+</div>
+<div th:fragment="reasonGroups(groups)">
+    <section th:each="group : ${groups}" class="proposal-reason">
+        <h4 th:text="${group.label}">Conflict reason</h4>
+        <p class="muted" th:text="${group.reason}">Why these wishes are not served</p>
+        <div th:replace="~{maker/proposal-fragments :: wishList(${group.wishes})}"></div>
+    </section>
+</div>
 </body>
 </html>

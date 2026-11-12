@@ -250,6 +250,90 @@ class ProposalControllerTests(
     }
 
     @Test
+    fun `catalog formats attributes and variants render as human labels`() {
+        for ((format, label) in mapOf("postcard-set" to "Postcard set", "art-print" to "Art print",
+            "sticker-sheet" to "Sticker sheet")) {
+            val token = workspaces.create().token
+            val option = workspaces.listOptions(token).single { it.format == format }
+            val output = runs.latest(token)!!.output
+            val variants = option.allowedVariants.mapValues { it.value.first() }
+            store(token, output.copy(proposal = Proposal(option.id, variants, emptyList()), notServed = emptyList()))
+            val html = page(token)
+            assertContains(html, "<p>$label</p>")
+            assertFalse(html.contains(format))
+            if (format == "sticker-sheet") {
+                assertContains(html, "<dt>Cut style</dt><dd>Die cut</dd>")
+            } else {
+                assertContains(html, "<dt>Size</dt><dd>")
+                assertContains(html, "<dt>Designs in a set</dt><dd>")
+                assertContains(html, "<dt>Suggested ${if (format == "postcard-set") "Finish" else "Paper"}</dt><dd>Matte</dd>")
+            }
+            assertFalse(html.contains("designCount"))
+            assertFalse(html.contains("die-cut"))
+        }
+    }
+
+    @Test
+    fun `wish groups preview three and disclose the rest while preserving conflict reasons`() {
+        for (size in listOf(0, 3, 6)) {
+            val token = workspaces.create().token
+            val output = runs.latest(token)!!.output
+            val optionId = output.proposal!!.optionId
+            val wishes = workspaces.listWishes(token).take(size * 4)
+            val groups = listOf("compatible", "depends", "not-served", "not-a-request")
+                .mapIndexed { index, name -> name to wishes.drop(index * size).take(size) }.toMap()
+            val notServed = groups.getValue("not-served")
+            val reasonGroups = listOf(
+                NotServedGroup("Different format", notServed.take(2).map { it.id }, "Requires another format."),
+                NotServedGroup("Different size", notServed.drop(2).map { it.id }, "Requires another size."),
+            ).filter { it.wishIds.isNotEmpty() }
+            store(token, output.copy(
+                wishes = wishes.map { AnalyzedWish(it.id,
+                    if (it in groups.getValue("not-a-request")) WishKind.NOT_A_REQUEST else WishKind.REQUEST, emptyList()) },
+                verdicts = listOf("compatible" to CompatibilityVerdict.COMPATIBLE,
+                    "depends" to CompatibilityVerdict.CONDITIONAL, "not-served" to CompatibilityVerdict.INCOMPATIBLE)
+                    .flatMap { (name, verdict) -> groups.getValue(name).map { WishVerdict(it.id, optionId, verdict, name) } },
+                proposal = Proposal(optionId, emptyMap(), emptyList()),
+                notServed = reasonGroups, questionsForMaker = emptyList(),
+            ))
+            val html = page(token)
+            for ((name, rows) in groups) {
+                val section = html.substringAfter("id=\"$name\"")
+                    .substringBefore(if (name == "not-a-request") "About this analysis." else "id=\"${groups.keys.elementAt(groups.keys.indexOf(name) + 1)}\"")
+                assertContains(section, "class=\"badge badge-neutral\">$size</span>")
+                if (size > 3) {
+                    val preview = section.substringBefore("<details")
+                    val disclosure = section.substringAfter("<details").substringBefore("</details>")
+                    assertEquals(3, Regex("<article\\b").findAll(preview).count())
+                    assertEquals(size - 3, Regex("<article\\b").findAll(disclosure).count())
+                    assertFalse(disclosure.substringBefore('>').contains("open"))
+                    assertContains(disclosure, "Show all $size")
+                    rows.take(3).forEach { assertContains(preview, "id=\"wish-${it.id}\"") }
+                    rows.drop(3).forEach { assertContains(disclosure, "id=\"wish-${it.id}\"") }
+                    if (name == "not-served") {
+                        assertContains(preview, "Different format")
+                        assertContains(preview, "Different size")
+                        assertContains(disclosure, "Different size")
+                        assertContains(disclosure, "Requires another size.")
+                    }
+                } else {
+                    assertFalse(section.contains("<details"))
+                    assertEquals(size, Regex("<article\\b").findAll(section).count())
+                }
+            }
+            assertContains(html, "aria-label=\"Proposal sections\"")
+            assertContains(html, "href=\"#wish-groups\"")
+        }
+    }
+
+    @Test
+    fun `maker proposal card explains what the step shows`() {
+        val token = workspaces.create().token
+        val html = mvc.get("/w/$token/maker").andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "See the proposed batch, quoted evidence, wish groups, and questions to settle before making an offer.")
+    }
+
+    @Test
     fun `unknown tokens use the shared not found response for reads and posts`() {
         for (token in listOf("missing", "x".repeat(43))) {
             mvc.get("/w/$token/maker/proposal").andExpect {

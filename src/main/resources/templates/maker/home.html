@@ -20,6 +20,7 @@
     <section th:if="${makerStep > 1}" class="preview-section" aria-labelledby="current-step">
         <div class="card">
             <h2 id="current-step" th:text="${makerStep == 6 ? 'Review the settlement.' : (makerStep == 5 ? 'Follow the campaign.' : 'Review your proposal.')} "></h2>
+            <p th:if="${makerStep == 3}">See the proposed batch, quoted evidence, wish groups, and questions to settle before making an offer.</p>
             <p th:if="${makerCampaign != null}" th:text="${@makerDisplay.words(makerCampaign.state)}"></p>
             <a th:if="${makerStep == 3}" class="button button-primary" th:href="@{/w/{token}/maker/proposal(token=${token},run=${offerRun})}">Review proposal</a>
             <a th:if="${makerStep == 5}" class="button button-primary" th:href="@{/w/{token}/maker/campaign(token=${token})}">Open campaign dashboard</a>

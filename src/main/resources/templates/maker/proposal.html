@@ -54,7 +54,7 @@
         <section th:if="${proposedOption != null}" class="proposal-hero" aria-labelledby="proposed-option">
             <p class="eyebrow">Proposed batch · for your review</p>
             <h2 id="proposed-option" th:text="${proposedOption.name}">Postcard set</h2>
-            <p th:text="${proposedOption.format}">Format</p>
+            <p th:text="${optionFormat}">Format</p>
             <nav class="proposal-summary" aria-label="Wish groups for this proposal">
                 <a href="#compatible"><strong th:text="${proposedCounts.compatible}">0</strong> Compatible</a>
                 <a href="#depends"><strong th:text="${proposedCounts.depends}">0</strong> Depends</a>
@@ -62,10 +62,9 @@
                 <a href="#not-a-request"><strong th:text="${proposedCounts.notARequest}">0</strong> Not a request</a>
             </nav>
             <p>Stated interest, not orders. The model compared each wish with every catalog option.</p>
-            <p><a href="#rationale">Read the quoted evidence</a> · <a href="#option-counts">Compare all options</a> · <a href="#maker-questions">Review open questions</a></p>
             <dl class="details-list proposal-catalog">
-                <div th:each="attribute : ${proposedOption.fixedAttributes}"><dt th:text="${attribute.key}">Attribute</dt><dd th:text="${attribute.value}">Value</dd></div>
-                <div th:each="variant : ${stored.output.proposal.suggestedVariants}"><dt th:text="'Suggested ' + ${variant.key}">Suggested variant</dt><dd th:text="${variant.value}">Value</dd></div>
+                <div th:each="attribute : ${optionAttributes}"><dt th:text="${attribute.key}">Attribute</dt><dd th:text="${attribute.value}">Value</dd></div>
+                <div th:each="variant : ${suggestedVariants}"><dt th:text="'Suggested ' + ${variant.key}">Suggested variant</dt><dd th:text="${variant.value}">Value</dd></div>
                 <div><dt>Catalog unit cost</dt><dd th:text="${unitCost} + ' / unit'">USD $6.50 / unit</dd></div>
                 <div><dt>Minimum batch</dt><dd th:text="${proposedOption.minBatch} + ' units'">3 units</dd></div>
                 <div><dt>Capacity</dt><dd th:text="${proposedOption.maxCapacity} + ' units'">10 units</dd></div>
@@ -95,6 +94,13 @@
         </form>
     </div>
     <th:block th:if="${stored != null}">
+        <nav class="proposal-nav" aria-label="Proposal sections">
+            <a th:if="${proposedOption != null}" href="#rationale">Quoted evidence</a>
+            <a href="#option-counts">All options</a>
+            <a href="#maker-questions">Open questions</a>
+            <a th:if="${proposedOption != null}" href="#wish-groups">Wish groups</a>
+            <a href="#run-details">Analysis details</a>
+        </nav>
         <section th:if="${proposedOption != null}" class="preview-section" aria-labelledby="rationale">
             <div class="section-heading"><p class="eyebrow">Why this batch</p><h2 id="rationale">A claim needs a fan's words.</h2>
                 <p>Each quote is checked against its source. The interpretation is still yours to judge.</p></div>
@@ -137,10 +143,12 @@
             <div th:replace="~{maker/proposal-fragments :: wishGroup('compatible', 'Compatible', 'No stated hard condition conflicts with this option.', ${compatibleWishes})}"></div>
             <div th:replace="~{maker/proposal-fragments :: wishGroup('depends', 'Depends', 'A variant, price, or unanswered question still matters.', ${dependsWishes})}"></div>
             <section id="not-served" class="proposal-group"><h3>Not served <span class="badge badge-neutral" th:text="${proposedCounts.notServed}">0</span></h3><p class="muted">A hard condition conflicts with this option.</p>
-                <p th:if="${notServedGroups.isEmpty()}">No wishes in this group.</p>
-                <div th:each="group : ${notServedGroups}">
-                    <div th:replace="~{maker/proposal-fragments :: wishGroup(null, ${group.label}, ${group.reason}, ${group.wishes})}"></div>
-                </div>
+                <p th:if="${proposedCounts.notServed == 0}">No wishes in this group.</p>
+                <div th:replace="~{maker/proposal-fragments :: reasonGroups(${notServedPreview})}"></div>
+                <details th:if="${proposedCounts.notServed > 3}" class="proposal-disclosure">
+                    <summary th:text="'Show all ' + ${proposedCounts.notServed} + ' not served wishes'">Show all wishes</summary>
+                    <div th:replace="~{maker/proposal-fragments :: reasonGroups(${notServedRemaining})}"></div>
+                </details>
             </section>
             <div th:replace="~{maker/proposal-fragments :: wishGroup('not-a-request', 'Not a request', 'These wishes do not express a product request and do not count toward interest.', ${nonRequestWishes})}"></div>
         </section>
