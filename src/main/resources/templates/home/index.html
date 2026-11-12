@@ -5,36 +5,28 @@
     <section class="hero shell" aria-labelledby="hero-title">
         <div class="hero-copy">
             <p class="eyebrow"><span class="small-line" aria-hidden="true"></span> For makers &amp; their people</p>
-            <h1 id="hero-title">Many wishes.<br>One batch.<br><span>Made with clarity.</span></h1>
-            <p class="hero-promise">Shape your fans' wishes into one offer, then make the batch when enough payments complete.</p>
+            <h1 id="hero-title">Many wishes.<br><span>One clear batch.</span></h1>
+            <p class="hero-promise">Fans want different things. Find a batch you can make, then see whether enough payments complete.</p>
             <form th:action="@{/demo}" method="post" class="hero-action">
                 <button class="button button-primary" type="submit">Start a demo <span aria-hidden="true">&#8599;</span></button>
                 <span class="action-note">Explore a sample maker workspace.</span>
             </form>
             <a class="quiet-link" th:href="@{/guide}">Read the testing guide <span aria-hidden="true">&#8594;</span></a>
         </div>
-        <div class="hero-visual" aria-label="Synthetic example: a desk print moving from wishes to a batch">
-            <div class="visual-caption"><span class="status-dot" aria-hidden="true"></span> A little idea, taking shape <span class="sample-label">Sample</span></div>
-            <div class="print-stage">
-                <span class="wish-note note-one">Something for my desk.</span>
-                <span class="wish-note note-two">Small print, please!</span>
-                <div class="art-print">
-                    <svg viewBox="0 0 220 260" role="img" aria-labelledby="art-title">
-                        <title id="art-title">Original illustration of a sun rising over layered hills</title>
-                        <rect width="220" height="260" fill="#f4ead8"/>
-                        <circle cx="143" cy="84" r="37" fill="#bd643f"/>
-                        <path d="M0 168Q65 82 129 165T260 161V260H0Z" fill="#83917a"/>
-                        <path d="M0 218Q76 118 149 196T260 183V260H0Z" fill="#365f51"/>
-                        <path d="M0 251Q104 185 220 239V260H0Z" fill="#183d34"/>
-                        <path d="M33 35h28M47 21v28" stroke="#baab8d" stroke-width="1.5"/>
-                    </svg>
-                    <span>THE SLOW MORNING / 01</span>
-                </div>
-                <span class="print-stamp">A5<br>desk print</span>
+        <div class="hero-overview">
+            <p class="eyebrow">From wishes to a batch</p>
+            <ol class="overview-steps">
+                <li><strong>01 / Listen</strong><span>Fans share wishes; AI groups them against your feasible options.</span></li>
+                <li><strong>02 / Shape</strong><span>You review the evidence and set the offer and terms.</span></li>
+                <li><strong>03 / Confirm</strong><span>Fans authorize holds; you confirm production when the minimum is met.</span></li>
+            </ol>
+            <p class="sample-label">Synthetic example</p>
+            <div class="sample-counts" aria-label="Example campaign counts">
+                <div><span>Stated interest</span><strong>48</strong><small>Wishes, not orders</small></div>
+                <div><span>Authorized holds</span><strong>24</strong><small>Units held, not paid</small></div>
+                <div><span>Paid</span><strong>0</strong><small>Units with completed payments</small></div>
             </div>
-            <div class="sample-offer"><div><p class="eyebrow">One clear offer</p><h2>The slow morning print</h2></div><span class="badge badge-neutral">Maker confirmed</span></div>
-            <div class="sample-counts"><div><span>Stated interest</span><strong>48</strong></div><div><span>Authorized holds</span><strong>24</strong></div><div><span>Paid</span><strong>0</strong></div></div>
-            <p class="visual-footnote">Illustrative counts. Wishes and holds are not payments.</p>
+            <p class="overview-trust">PayPal places the holds. Only completed payments count as paid; captures can fail. If too few complete, payments are refunded and remaining holds released.</p>
         </div>
     </section>
     <section id="how-it-works" class="how-section shell" aria-labelledby="how-title">

@@ -35,6 +35,21 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
     }
 
     @Test
+    fun `landing overview explains the journey and payment counts`() {
+        val html = mvc.get("/").andReturn().response.contentAsString
+        val overview = html.substringAfter("class=\"hero shell\"").substringBefore("id=\"how-it-works\"")
+
+        listOf(
+            "Fans want different things",
+            "01 / Listen", "02 / Shape", "03 / Confirm",
+            "Stated interest", "Authorized holds", "Paid",
+            "Wishes, not orders", "Units held, not paid", "Units with completed payments",
+            "Synthetic example", "PayPal places the holds", "captures can fail",
+            "payments are refunded and remaining holds released"
+        ).forEach { assertContains(overview, it) }
+    }
+
+    @Test
     fun `styleguide renders the shared components with synthetic examples`() {
         val html = mvc.get("/styleguide").andExpect {
             status { isOk() }
