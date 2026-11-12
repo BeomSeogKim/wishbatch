@@ -56,7 +56,9 @@
     }
 }
 * { box-sizing: border-box; }
-html { scroll-padding-top: 64px; }
+html { scroll-padding-top: 96px; }
+[id] { scroll-margin-top: 16px; }
+@media (max-width: 600px) { html { scroll-padding-top: 144px; } }
 body { margin: 0; background: var(--canvas); color: var(--ink); font: 16px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
 button, input, select, textarea { font: inherit; }
 button, a, input, select, textarea, summary { -webkit-tap-highlight-color: transparent; }
@@ -65,7 +67,7 @@ a:hover { text-decoration-thickness: 2px; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
 h1, h2, h3, p, figure { margin: 0; }
 h1, h2, h3 { line-height: 1.12; letter-spacing: -.04em; font-weight: 650; text-wrap: balance; }
-h1 { font-size: clamp(2.75rem, 5.6vw, 4.6rem); }
+h1 { font-size: clamp(2.75rem, 5.6vw, 4.6rem); overflow-wrap: anywhere; }
 h2, .h2 { font-size: clamp(1.9rem, 3.2vw, 2.6rem); }
 h3, .h3 { font-size: 1.25rem; letter-spacing: -.025em; }
 p + p { margin-top: var(--space-3); }
@@ -332,3 +334,9 @@ main > .notice + .two-column, main > .notice + .card { margin-top: var(--space-6
 @media (min-width: 800px) {
     .offer-evidence-quotes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+.demo-guide { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 10px 16px; font-size: .875rem; }
+.notice.demo-guide a { margin-top: 0; }
+.notice.demo-guide .demo-guide-next { display: inline-flex; min-height: 36px; padding: 6px 12px; color: var(--ink); }
+.outcome-map-scroll { max-width: 100%; overflow-x: auto; }
+.outcome-map-scroll svg { width: 440px; max-width: none; height: auto; }

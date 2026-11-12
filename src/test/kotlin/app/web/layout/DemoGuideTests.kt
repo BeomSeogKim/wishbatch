@@ -46,6 +46,7 @@ class DemoGuideTests @Autowired constructor(
             .andReturn().response.contentAsString
         assertContains(maker, "Demo guide")
         assertContains(maker, "Maker: wishes")
+        assertContains(maker, "class=\"button button-secondary demo-guide-next\"")
         assertContains(maker, "href=\"/w/$token/maker/proposal\"")
         assertContains(maker, "Switch to fan view")
         assertContains(maker, "<form")

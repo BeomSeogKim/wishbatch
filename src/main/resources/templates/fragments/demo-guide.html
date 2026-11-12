@@ -1,10 +1,9 @@
-<section th:fragment="guide(guide)" class="shell notice notice-info" aria-label="Demo guide">
-    <strong>Demo guide</strong> · <span th:text="${guide.location}">Maker home</span>
-    <p>Next: <a th:href="${guide.nextUrl}" th:text="${guide.next}">Review the options</a></p>
+<section th:fragment="guide(guide)" class="shell notice notice-info demo-guide" aria-label="Demo guide">
+    <span><strong>Demo guide</strong> · <span th:text="${guide.location}">Maker home</span></span>
+    <a class="button button-secondary demo-guide-next" th:href="${guide.nextUrl}" th:text="${'Next: ' + guide.next}">Next: Review the options</a>
     <a th:href="${guide.switchUrl}" th:text="${guide.switchLabel}">Switch view</a>
-    <p th:if="${guide.explanationUrl != null}"><a th:href="@{${guide.explanationUrl}}">How this batch was chosen</a></p>
-    <p th:if="${guide.decisionRecordUrl != null}">Decision record:
-        <a th:href="@{${guide.decisionRecordUrl}}">View</a> ·
+    <a th:if="${guide.explanationUrl != null}" th:href="@{${guide.explanationUrl}}">Batch explanation</a>
+    <span th:if="${guide.decisionRecordUrl != null}"><a th:href="@{${guide.decisionRecordUrl}}">Decision record</a> ·
         <a th:href="@{${guide.decisionRecordUrl + '.json'}}">JSON</a>
-    </p>
+    </span>
 </section>

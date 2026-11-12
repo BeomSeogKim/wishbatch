@@ -4,8 +4,9 @@
 <section th:fragment="map(step, status)" class="card" aria-labelledby="outcome-map-title">
     <h2 id="outcome-map-title">Where the money can go</h2>
     <p>PayPal sandbox demo: no real money moves. PayPal places the hold; the product does not hold funds.</p>
+    <div class="outcome-map-scroll" tabindex="0" role="region" aria-label="Payment outcome map, scroll horizontally to see the full diagram">
     <svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="outcome-svg-title outcome-svg-desc"
-         viewBox="0 0 440 314" width="100%" style="max-width: 440px; height: auto">
+         viewBox="0 0 440 314" width="440" height="314">
         <title id="outcome-svg-title">Payment outcome map</title>
         <desc id="outcome-svg-desc">Authorize a PayPal hold. Enough authorized holds and maker confirmation lead to a capture attempt, which can fail. Only completed captures are paid. Insufficient holds, maker cancellation, or an expired confirmation deadline lead to hold release attempts. A capture shortfall leads to attempts to refund completed payments and release remaining holds. Pending or failed cleanup is not confirmed.</desc>
         <g fill="none" stroke="#52616b" stroke-width="2" aria-hidden="true">
@@ -30,6 +31,7 @@
             <text x="100" y="281">Attempt refund</text><text x="100" y="297" font-size="12">Completed payments</text>
         </g>
     </svg>
+    </div>
     <p th:if="${step != null}" aria-current="step"><strong th:text="${'Current status: ' + status}"></strong></p>
     <p>Pending or failed release and refund attempts are not confirmed. Release and refund timing depends on PayPal and your bank or card.</p>
 </section>
