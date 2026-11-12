@@ -4,7 +4,7 @@
 .offer-details { display: grid; gap: var(--space-6); min-width: 0; }
 .offer-details h2 { font-size: 1.6rem; }
 .offer-details .term-list { margin-bottom: 0; }
-.offer-commitment { position: sticky; top: 56px; padding: var(--space-6); min-width: 0; max-height: calc(100dvh - 72px); overflow-y: auto; scroll-margin-top: 64px; }
+.offer-commitment { position: sticky; top: 56px; padding: var(--space-6); min-width: 0; scroll-margin-top: 64px; }
 .offer-price { margin-top: var(--space-2); font-variant-numeric: tabular-nums; }
 .offer-price strong { font-size: 2rem; letter-spacing: -.04em; color: var(--ink); }
 .offer-price span, .offer-hold-note, .offer-progress, .offer-payment-summary { font-size: .8rem; }
@@ -32,14 +32,15 @@
 .offer-disclosure .card, .offer-disclosure .money-terms { padding: var(--space-4); margin-block: var(--space-3) 0; }
 .offer-disclosure h2 { font-size: 1.15rem; }
 .offer-disclosure .money-terms ol { margin-top: var(--space-3); }
-.offer-disclosure .outcome-map-scroll svg { width: 600px; }
+.offer-outcomes { margin-top: var(--space-6); min-width: 0; }
+.offer-outcomes .outcome-map-scroll svg { width: 600px; margin-inline: auto; }
 .offer-pledge .notice { padding: var(--space-3); font-size: .8rem; }
 .offer-pledge #pledge-feedback { font-size: .8rem; margin-block: var(--space-3); }
 .offer-mobile-bar { display: none; }
 @media (max-width: 760px) {
     html:has(.offer-page) { scroll-padding-top: 56px; }
     .offer-layout { grid-template-columns: minmax(0, 1fr); }
-    .offer-commitment { position: static; max-height: none; overflow: visible; padding: var(--space-4); scroll-margin-top: 0; }
+    .offer-commitment { position: static; padding: var(--space-4); scroll-margin-top: 0; }
     .offer-page { padding-bottom: var(--space-6); }
     .offer-page:has(.offer-mobile-bar) ~ .site-footer { padding-bottom: 112px; }
     .offer-page > h1 { font-size: 2rem; }

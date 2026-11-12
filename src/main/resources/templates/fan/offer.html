@@ -94,12 +94,15 @@
                     </section>
                 </details>
                 <details class="offer-disclosure">
-                    <summary>Campaign status &amp; payment outcomes</summary>
+                    <summary>Campaign status</summary>
                     <section th:replace="~{livecampaign/fragments :: progress(${campaign})}"></section>
-                    <section th:replace="~{fan/outcome-map :: map(${null}, ${null})}"></section>
                 </details>
             </aside>
         </div>
+        <details class="offer-disclosure offer-outcomes">
+            <summary>Payment outcomes</summary>
+            <section th:replace="~{fan/outcome-map :: map(${null}, ${null})}"></section>
+        </details>
         <nav th:if="${campaignOpen and total != null}" data-live-action="pledge" class="offer-mobile-bar" aria-label="Review your pledge">
             <div><span>Reviewed total · <span th:text="${quantity}"></span> <span th:text="${quantity == 1 ? 'unit' : 'units'}"></span></span><strong th:text="${@humanDisplay.money(quote.amount, quote.currency)}"></strong></div>
             <a class="button button-primary" href="#offer-commitment">Review checkout</a>
