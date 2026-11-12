@@ -8,6 +8,23 @@
         <a th:href="${helper.url}" th:text="${helper.action}">Review</a>
     </article>
 </section>
+<section th:fragment="runMetrics(metrics, failureCategory)" aria-label="Measured run metrics">
+    <h3>Measured run metrics</h3>
+    <p th:if="${metrics == null}">Elapsed time and token usage are unavailable for this recorded run.</p>
+    <th:block th:if="${metrics != null}">
+        <p>Measured elapsed time: <strong th:text="${#numbers.formatDecimal(metrics.elapsedSeconds, 1, 2)} + ' seconds'">Unavailable</strong>.</p>
+        <p th:if="${metrics.tokenUsage == null}">Token usage unavailable; missing measurements are not zero.</p>
+        <th:block th:if="${metrics.tokenUsage != null}">
+            <p th:text="${metrics.usageComplete ? 'Complete returned token usage.' : 'Partial returned token usage; some measurements are unavailable.'}">Usage completeness</p>
+            <dl class="details-list">
+                <div><dt>Input tokens</dt><dd th:text="${metrics.tokenUsage.inputTokens != null ? metrics.tokenUsage.inputTokens : 'Unavailable'}">Unavailable</dd></div>
+                <div><dt>Output tokens</dt><dd th:text="${metrics.tokenUsage.outputTokens != null ? metrics.tokenUsage.outputTokens : 'Unavailable'}">Unavailable</dd></div>
+                <div><dt>Reasoning tokens (reported separately)</dt><dd th:text="${metrics.tokenUsage.reasoningTokens != null ? metrics.tokenUsage.reasoningTokens : 'Unavailable'}">Unavailable</dd></div>
+            </dl>
+        </th:block>
+    </th:block>
+    <p>Recorded failure category: <span th:text="${failureCategory != null ? @humanDisplay.state(failureCategory) : 'Unavailable'}">Unavailable</span>.</p>
+</section>
 <article th:fragment="wish(row)" class="card proposal-wish" th:id="'wish-' + ${row.wish.id}" tabindex="-1">
     <p class="eyebrow" th:text="${row.wish.displayName ?: 'Anonymous fan'}">Fan</p>
     <blockquote><p th:text="${row.wish.text}">The full source wish.</p></blockquote>

@@ -8,7 +8,7 @@
 .ux-proposal .proposal-hero .button-row { margin-top: var(--space-3); }
 .ux-proposal .proposal-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); margin-block: var(--space-3); }
 .ux-proposal .proposal-summary > div { padding: var(--space-2) var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
-.ux-proposal .proposal-summary blockquote { margin: var(--space-2) 0; overflow-wrap: anywhere; }
+.ux-proposal .proposal-summary blockquote { margin: var(--space-2) 0 0; overflow-wrap: anywhere; font-size: .875rem; line-height: 1.45; }
 .ux-proposal .proposal-summary strong { display: block; font-size: 1.4rem; }
 .ux-proposal .proposal-catalog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-6); }
 .ux-proposal .proposal-evidence, .ux-proposal .proposal-wish-list { display: grid; gap: var(--space-4); margin-top: var(--space-6); }
@@ -43,7 +43,10 @@
 @media (max-width: 600px) {
     .proposal-helpers { grid-template-columns: 1fr; }
     .ux-proposal .proposal-nav { gap: var(--space-2) var(--space-4); font-size: .875rem; }
-    .ux-proposal .proposal-hero { padding: var(--space-3); }
+    .ux-proposal .page-heading { padding-block: var(--space-2); }
+    .ux-proposal .page-heading h1 { font-size: 1.5rem; margin-top: var(--space-2); }
+    .ux-proposal .page-heading .lead { font-size: .875rem; line-height: 1.45; }
+    .ux-proposal .proposal-hero { padding: var(--space-3); margin-block: var(--space-2); }
     .ux-proposal .proposal-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .ux-proposal .proposal-summary > div { padding: var(--space-2); }
     .ux-proposal .proposal-catalog { grid-template-columns: 1fr; }

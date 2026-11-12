@@ -5,7 +5,7 @@
     <h2 id="boundary-title">Analysis evidence and boundaries</h2>
     <p th:if="${summary == null}">No analysis run is available.</p>
     <th:block th:if="${summary != null}">
-        <p th:text="${summary.seed ? 'Stored synthetic reference' : 'Live analysis'}">Run type</p>
+        <p th:text="${summary.seed ? 'Precomputed analysis' : 'Live analysis'}">Run type</p>
         <dl class="details-list">
             <div><dt>Run ID</dt><dd th:text="${summary.runId}">Run ID</dd></div>
             <div><dt>Model</dt><dd th:text="${summary.model}">Model</dd></div>

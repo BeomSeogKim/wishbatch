@@ -7,7 +7,7 @@
     <h2 id="demand-heading">Explore price and demand</h2>
     <p>Interest in this offer at each candidate price, not orders, authorized holds, or completed payments. Price-only conditions resolve when the quoted limit covers the price; other unresolved conditions stay conditional.</p>
     <p th:text="${demand.optionName + ': ' + demand.compatible + ' interested in this offer. Minimum: ' + demand.minimum + ' units.'}"></p>
-    <p th:if="${referencePrice != null}" id="demand-reference" th:text="${referenceLabel + ': ' + @makerDisplay.money(referencePrice, demand.currency) + ' · Minimum: ' + demand.minimum + ' units'}"></p>
+    <p th:if="${referencePrice != null}" id="demand-reference" th:text="${referenceLabel + ': ' + @humanDisplay.money(referencePrice, demand.currency) + ' · Minimum: ' + demand.minimum + ' units'}"></p>
     <p th:if="${demand.wishes.isEmpty()}">No interested or conditional wishes for this option.</p>
     <p class="muted" th:text="${demand.missing + ' without a quoted limit · ' + demand.ambiguous + ' ambiguous · ' + demand.unbounded + ' explicitly unbounded'}"></p>
     <p th:if="${demand.noSeriesReason != null}" th:text="${demand.noSeriesReason}"></p>
@@ -21,7 +21,7 @@
             <thead><tr><th scope="col">Unit price</th><th scope="col">Interested in this offer</th><th scope="col">Minimum units</th><th scope="col">Exact evidence</th></tr></thead>
             <tbody>
             <tr th:each="point : ${demand.points}">
-                <th scope="row" th:text="${@makerDisplay.money(point.priceMinor, demand.currency)}"></th>
+                <th scope="row" th:text="${@humanDisplay.money(point.priceMinor, demand.currency)}"></th>
                 <td th:text="${point.compatible}"></td>
                 <td th:text="${point.minimum}"></td>
                 <td>
@@ -48,7 +48,7 @@
     <details id="demand-quotes">
         <summary>Price evidence for interested and conditional wishes</summary>
             <article th:each="wish : ${demand.wishes}" th:id="${'demand-quote-' + wish.wishId}" class="evidence">
-            <p th:text="${wish.price.status.name() == 'QUOTED_LIMIT' ? 'Maximum unit price: ' + @makerDisplay.money(wish.price.maximumMinor, demand.currency) : (wish.price.status.name() == 'MISSING' ? 'No quoted price limit; willingness at this price is unknown.' : (wish.price.status.name() == 'EXPLICITLY_UNBOUNDED' ? 'Explicitly no price limit.' : 'Ambiguous or unsupported price limit; no price exclusion inferred.'))}"></p>
+            <p th:text="${wish.price.status.name() == 'QUOTED_LIMIT' ? 'Maximum unit price: ' + @humanDisplay.money(wish.price.maximumMinor, demand.currency) : (wish.price.status.name() == 'MISSING' ? 'No quoted price limit; willingness at this price is unknown.' : (wish.price.status.name() == 'EXPLICITLY_UNBOUNDED' ? 'Explicitly no price limit.' : 'Ambiguous or unsupported price limit; no price exclusion inferred.'))}"></p>
             <blockquote th:each="quote : ${wish.price.quotes}"><p style="white-space: pre-wrap" th:text="${quote}"></p></blockquote>
             <p th:if="${wish.price.quotes.isEmpty()}" style="white-space: pre-wrap" th:text="${wish.text}"></p>
             <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${runId})} + ${'#wish-' + wish.wishId}">View exact source wish</a>

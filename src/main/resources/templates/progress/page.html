@@ -13,6 +13,7 @@
         <form method="post" th:action="@{/w/{token}/maker/analysis-progress(token=${token})}">
             <button id="analysis-progress-start" type="submit" class="button button-primary" th:disabled="${active}">Start live analysis</button>
         </form>
+        <p>Two readings and a proposal share a 120-second deadline. A timeout or failed attempt does not replace the last valid result.</p>
         <p>Your last valid analysis remains available if a new attempt fails or is interrupted.</p>
         <p th:if="${job == null}">No live progress recorded yet.</p>
     </section>
@@ -26,6 +27,8 @@
         <p id="progress-failure" th:attr="hidden=${job.status == 'FAILED' || job.status == 'INTERRUPTED' ? null : 'hidden'}">This attempt did not complete. Your last valid analysis is still available.</p>
         <p><a th:href="@{/w/{token}/maker/analysis-progress(token=${token},job=${job.id})}">Refresh recorded progress</a></p>
         <p id="progress-checkpoint-warning" th:attr="hidden=${job.checkpointIncomplete ? null : 'hidden'}">Some progress checkpoints could not be recorded. Recorded validation counts may be incomplete. Your last valid analysis remains available.</p>
+        <section th:replace="~{maker/proposal-fragments :: runMetrics(${job.metrics}, ${job.failureCategory})}"></section>
+        <p>Metrics above are the measurements recorded when this page loaded. Refresh recorded progress for the latest measurements; live provisional counts are not elapsed time or token usage.</p>
         <h3>Validation actions</h3>
         <p>Counts record actual validator flags, including rejected attempts. V2 records ungrounded evidence removed; a flag does not count a fan or payment.</p>
         <ul id="progress-validation"><li th:each="entry : ${job.validationCounts}" th:text="${entry.key + ': ' + entry.value}"></li></ul>
