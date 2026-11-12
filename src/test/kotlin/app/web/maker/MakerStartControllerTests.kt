@@ -47,6 +47,26 @@ class MakerStartControllerTests(
     }
 
     @Test
+    fun `each scenario starts with a stored run and shows its maker to fans`() {
+        assertEquals(listOf("illustrator", "ceramicist", "textile"), catalog.scenarios.map { it.key })
+        for (scenario in catalog.scenarios) {
+            val url = mvc.post("/demo") { param("scenario", scenario.key) }
+                .andExpect { status { is3xxRedirection() } }.andReturn().response.redirectedUrl!!
+            val token = url.split('/')[2]
+            assertEquals(scenario.key, workspaces.scenario(token).key)
+            assertEquals(scenario.definition.options.map { it.name }.toSet(),
+                workspaces.listOptions(token).map { it.name }.toSet())
+            assertEquals(40, workspaces.listWishes(token).size)
+            mvc.get("/w/$token").andExpect {
+                status { isOk() }
+                model { attribute("maker", scenario.definition.maker) }
+            }
+            mvc.get("/w/$token/maker").andExpect { model { attributeExists("offerRun") } }
+        }
+        mvc.post("/demo") { param("scenario", "unknown") }.andExpect { status { isBadRequest() } }
+    }
+
+    @Test
     fun `maker home opens at the stored proposal and shows the fan wish link`() {
         val token = workspaces.create().token
         val html = mvc.get("/w/$token/maker").andExpect {

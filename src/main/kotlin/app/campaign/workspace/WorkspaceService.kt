@@ -34,14 +34,15 @@ class WorkspaceService(
     private val tokenPattern = Regex("[A-Za-z0-9_-]{43}")
 
     @Transactional
-    fun create(): Workspace {
+    fun create(scenario: String = "illustrator"): Workspace {
+        val seed = seedCatalog.scenario(scenario)
         val bytes = ByteArray(32).also(random::nextBytes)
         val workspace = Workspace(
             token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes),
             createdAt = clock.instant(),
         )
         entityManager.persist(workspace)
-        for (seed in seedCatalog.definition.options) {
+        for (seed in seed.definition.options) {
             entityManager.persist(Option(
                 workspaceId = workspace.id,
                 name = seed.name,
@@ -57,7 +58,7 @@ class WorkspaceService(
                 id = seedCatalog.optionId(workspace.id, seed.key),
             ))
         }
-        for (seed in seedCatalog.wishes) {
+        for (seed in seed.wishes) {
             entityManager.persist(Wish(
                 workspaceId = workspace.id,
                 text = seed.text,
@@ -69,6 +70,11 @@ class WorkspaceService(
         }
         analysisRuns.attachSeed(workspace, listOptions(workspace.token), listWishes(workspace.token))
         return workspace
+    }
+
+    fun scenario(token: String): SeedScenario {
+        val workspace = lookup(token) ?: throw WorkspaceNotFoundException()
+        return seedCatalog.forOptions(workspace.id, listOptions(token))
     }
 
     fun findByToken(token: String): Workspace? = lookup(token)

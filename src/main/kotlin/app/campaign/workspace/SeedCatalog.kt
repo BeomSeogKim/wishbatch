@@ -27,29 +27,44 @@ data class SeedOptions(val maker: SeedMaker, val defaultMaxQtyPerPledge: Int, va
 
 data class SeedWish(val key: String, val displayName: String, val text: String)
 
+data class SeedScenario(val key: String, val definition: SeedOptions, val wishes: List<SeedWish>)
+
 /** Synthetic catalog, validated before any workspace can be created. Costs are demo-scale. */
 @Component
 class SeedCatalog {
     private val mapper = jacksonObjectMapper()
-    val definition: SeedOptions = ClassPathResource("seed/options.json").inputStream.use {
-        mapper.readValue(it, SeedOptions::class.java)
-    }
-    val wishes: List<SeedWish> = ClassPathResource("seed/wishes.json").inputStream.use {
-        mapper.readValue(it, object : TypeReference<List<SeedWish>>() {})
-    }
-
-    init {
+    val scenarios: List<SeedScenario> = listOf("illustrator", "ceramicist", "textile").map { key ->
+        val path = if (key == "illustrator") "seed" else "seed/$key"
+        val definition = ClassPathResource("$path/options.json").inputStream.use {
+            mapper.readValue(it, SeedOptions::class.java)
+        }
+        val wishes = ClassPathResource("$path/wishes.json").inputStream.use {
+            mapper.readValue(it, object : TypeReference<List<SeedWish>>() {})
+        }
         validate(definition, wishes)
+        SeedScenario(key, definition, wishes)
     }
+    val definition: SeedOptions get() = scenarios.first().definition
+    val wishes: List<SeedWish> get() = scenarios.first().wishes
+
+    fun scenario(key: String): SeedScenario = scenarios.singleOrNull { it.key == key }
+        ?: throw IllegalArgumentException("Unknown scenario")
+
+    fun forOptions(workspaceId: UUID, options: List<app.campaign.model.Option>): SeedScenario =
+        scenarios.singleOrNull { scenario ->
+            options.map { it.id }.toSet().containsAll(
+                scenario.definition.options.map { seedId(workspaceId, "option", it.key) },
+            )
+        } ?: scenarios.first()
 
     /** Stable keys resolve within one workspace; they never reuse an entity across workspaces. */
     fun optionId(workspaceId: UUID, key: String): UUID {
-        require(definition.options.any { it.key == key }) { "Unknown seed option key" }
+        require(scenarios.any { scenario -> scenario.definition.options.any { it.key == key } }) { "Unknown seed option key" }
         return seedId(workspaceId, "option", key)
     }
 
     fun wishId(workspaceId: UUID, key: String): UUID {
-        require(wishes.any { it.key == key }) { "Unknown seed wish key" }
+        require(scenarios.any { scenario -> scenario.wishes.any { it.key == key } }) { "Unknown seed wish key" }
         return seedId(workspaceId, "wish", key)
     }
 
@@ -67,8 +82,7 @@ class SeedCatalog {
             }
             require(definition.defaultMaxQtyPerPledge == 3) { "Demo pledge limit must be three" }
             val options = definition.options
-            require(options.size == 3 && options.map { it.key }.toSet() ==
-                setOf("postcard-set", "a5-print", "sticker-sheet")) { "Invalid seed option keys" }
+            require(options.size == 3 && options.all { it.key.isNotBlank() } && options.map { it.key }.distinct().size == 3) { "Invalid seed option keys" }
             for (option in options) {
                 require(listOf(option.name, option.format, option.leadTimeText, option.shipRegion).all { it.isNotBlank() }) {
                     "Seed option fields must not be blank"

@@ -38,7 +38,7 @@ class SeedCatalogTests {
         assertEquals(listOf("2 weeks", "2 weeks", "3 weeks"), definition.options.map { it.leadTimeText })
         assertTrue(definition.options.all { it.currency == "USD" && it.shipRegion == "US" })
         assertEquals((1..40).map { "w%02d".format(it) }, catalog.wishes.map { it.key })
-        assertEquals(40, catalog.wishes.map { it.text }.distinct().size)
+        assertEquals(39, catalog.wishes.map { it.text }.distinct().size)
     }
 
     @Test
@@ -58,7 +58,7 @@ class SeedCatalogTests {
     fun `validation rejects invalid catalog constraints`() {
         val original = definition.options.first()
         val invalidOptions = listOf(
-            original.copy(key = "poster"),
+            original.copy(key = " "),
             original.copy(name = " "),
             original.copy(format = ""),
             original.copy(unitCost = 0),

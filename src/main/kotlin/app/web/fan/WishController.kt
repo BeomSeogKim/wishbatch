@@ -7,7 +7,6 @@ import app.campaign.model.Wish
 import app.campaign.model.WishKind
 import app.campaign.port.AnalysisResult
 import app.campaign.port.WishAnalyzer
-import app.campaign.workspace.SeedCatalog
 import app.campaign.workspace.WishLimitReachedException
 import app.campaign.workspace.WorkspaceService
 import app.campaign.service.CampaignQueries
@@ -49,7 +48,6 @@ data class WishMatchNote(val message: String, val quote: String, val showOffer: 
 @Controller
 class WishController(
     private val workspaces: WorkspaceService,
-    private val catalog: SeedCatalog,
     private val analyzer: WishAnalyzer,
     private val campaigns: WishCampaignAvailability? = null,
 ) {
@@ -57,7 +55,7 @@ class WishController(
     fun wish(@PathVariable token: String, model: Model, response: HttpServletResponse): String {
         if (workspaces.findByToken(token) == null) return notFound(response)
         model.addAttribute("token", token)
-        model.addAttribute("maker", catalog.definition.maker)
+        model.addAttribute("maker", workspaces.scenario(token).definition.maker)
         model.addAttribute("recentWishes", workspaces.listWishes(token, includeHidden = false).asReversed().take(5))
         model.addAttribute("campaignOpen", campaigns?.isOpen(token) ?: false)
         if (!model.containsAttribute("wishForm")) model.addAttribute("wishForm", WishForm())

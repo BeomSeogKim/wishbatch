@@ -1,5 +1,6 @@
 package app.campaign.analysisrun
 
+import app.campaign.model.WishKind
 import app.campaign.model.Option
 import app.campaign.model.Wish
 import app.campaign.model.Workspace
@@ -28,16 +29,21 @@ data class SeedAnalysisFixture(
 
 @Component
 class StoredSeedAnalysis(private val catalog: SeedCatalog, private val mapper: JsonMapper) {
-    private val fixture: SeedAnalysisFixture by lazy {
-        ClassPathResource("seed/analysis-run.json").inputStream.use {
-            mapper.readValue(it, SeedAnalysisFixture::class.java)
+    private val fixtures: Map<String, SeedAnalysisFixture> by lazy {
+        catalog.scenarios.associate { scenario ->
+            val path = if (scenario.key == "illustrator") "seed" else "seed/${scenario.key}"
+            scenario.key to ClassPathResource("$path/analysis-run.json").inputStream.use {
+                mapper.readValue(it, SeedAnalysisFixture::class.java)
+            }
         }
     }
 
     fun forWorkspace(workspace: Workspace, options: List<Option>, wishes: List<Wish>): AnalysisResult.Success {
-        val stored = fixture
-        require(stored.optionKeys.values.toSet() == catalog.definition.options.map { it.key }.toSet())
-        require(stored.wishKeys.values.toSet() == catalog.wishes.map { it.key }.toSet())
+        val scenario = catalog.forOptions(workspace.id, options)
+        val stored = fixtures.getValue(scenario.key)
+        require(stored.optionKeys.size == 3 && stored.optionKeys.values.toSet() == scenario.definition.options.map { it.key }.toSet())
+        require(stored.wishKeys.size == 40 && stored.wishKeys.values.toSet() == scenario.wishes.map { it.key }.toSet())
+        validateSeedCoverage(stored)
         val optionIds = stored.optionKeys.mapValues { (_, key) -> catalog.optionId(workspace.id, key) }
         val wishIds = stored.wishKeys.mapValues { (_, key) -> catalog.wishId(workspace.id, key) }
         require(options.map { it.id }.toSet() == optionIds.values.toSet())
@@ -86,4 +92,15 @@ class StoredSeedAnalysis(private val catalog: SeedCatalog, private val mapper: J
             inputHash = analysisInputHash(options, wishes),
         )
     }
+}
+
+internal fun validateSeedCoverage(stored: SeedAnalysisFixture) {
+    val output = stored.validated.output
+    val roster = output.wishes.map { it.wishId }
+    require(roster.size == stored.wishKeys.size && roster.toSet() == stored.wishKeys.keys)
+    val requests = output.wishes.filter { it.kind == WishKind.REQUEST }.map { it.wishId }.toSet()
+    val pairs = output.verdicts.map { it.wishId to it.optionId }
+    val expected = requests.flatMap { wish -> stored.optionKeys.keys.map { option -> wish to option } }.toSet()
+    require(pairs.size == expected.size && pairs.toSet() == expected)
+    require(output.optionIds.size == stored.optionKeys.size && output.optionIds.toSet() == stored.optionKeys.keys)
 }

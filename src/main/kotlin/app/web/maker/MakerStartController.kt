@@ -32,7 +32,10 @@ class MakerStartController(
 ) {
 
     @PostMapping("/demo")
-    fun startDemo(): String = "redirect:/w/${workspaces.create().token}/maker"
+    fun startDemo(@RequestParam(defaultValue = "illustrator") scenario: String): String {
+        if (scenario !in setOf("illustrator", "ceramicist", "textile")) throw InvalidScenarioException()
+        return "redirect:/w/${workspaces.create(scenario).token}/maker"
+    }
 
     @GetMapping("/w/{token}/maker")
     fun home(@PathVariable token: String, model: Model): String {
@@ -99,3 +102,6 @@ class MakerStartController(
     @ResponseStatus(HttpStatus.NOT_FOUND)
     fun notFound(): String = "error/not-found"
 }
+
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+class InvalidScenarioException : RuntimeException()

@@ -1,5 +1,5 @@
 {
-  "model" : "gpt-6.1-sol",
+  "model" : "synthetic-reference",
   "validated" : {
     "output" : {
       "wishes" : [ {
@@ -979,17 +979,17 @@
         "wishId" : "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
         "verdict" : "CONDITIONAL",
-        "reason" : "Would A6 fit the intended desk corner?"
+        "reason" : "The conflicting size requirements need clarification."
       }, {
         "wishId" : "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
         "optionId" : "dae69934-6ecb-320e-bd8b-c017aca8b83a",
         "verdict" : "CONDITIONAL",
-        "reason" : "Would A5 fit the intended desk corner?"
+        "reason" : "The conflicting size requirements need clarification."
       }, {
         "wishId" : "5deecfde-f2d1-3917-a9c0-f5d577076f3c",
         "optionId" : "40cff624-64c2-36fd-9a6b-380edba72ddc",
         "verdict" : "CONDITIONAL",
-        "reason" : "What sheet dimensions would fit the desk corner?"
+        "reason" : "The conflicting size requirements need clarification."
       }, {
         "wishId" : "ad1a211b-8f76-3b2b-bb59-bb4c8e613f18",
         "optionId" : "e4ccce28-49b2-3152-9ad6-a6101534cd40",
@@ -1279,7 +1279,7 @@
       "message" : "Groups rebuilt from incompatible verdicts."
     } ]
   },
-  "inputHash" : "0f35018b7eedb2e3aeda035e1af859c19466dc88a869ed06103a8137b44592c0",
+  "inputHash" : "53b459c891c61023c805234693fc7f0c1cc13abc63f3ebb54f1a74401618f26d",
   "completedAt" : "2026-11-12T08:55:29.331650Z",
   "seedWorkspaceId" : "00000000-0000-0000-0000-000000000000",
   "optionKeys" : {
