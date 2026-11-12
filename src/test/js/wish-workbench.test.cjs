@@ -80,6 +80,8 @@ function browser({cdn = true, failCreate = false, sourceRows} = {}) {
     const checkboxes = data.map(row => ({value: row.id, checked: false, disabled: !!row.disabled}));
     const bulk = element({querySelectorAll: () => checkboxes});
     const status = element();
+    const exportButton = element({hidden: true});
+    const exports = [];
     const description = element();
     const evidenceFilter = element({hidden: true, querySelector: () => description});
     const clearEvidence = element();
@@ -87,6 +89,7 @@ function browser({cdn = true, failCreate = false, sourceRows} = {}) {
     const detailContent = element();
     const elements = {'data-workbench-table': table, 'data-workbench-grid': container,
         'data-workbench-filters': filters, 'data-workbench-bulk': bulk, 'data-workbench-status': status,
+        'data-workbench-export': exportButton,
         'data-workbench-evidence-filter': evidenceFilter, 'data-workbench-clear-evidence': clearEvidence,
         'data-workbench-detail': detail, 'data-workbench-detail-content': detailContent};
     const root = element({querySelector: selector => elements[selector.slice(1, -1)]});
@@ -96,6 +99,8 @@ function browser({cdn = true, failCreate = false, sourceRows} = {}) {
     let failUpdate = false;
     const api = {
         getSelectedRows: () => selected,
+        forEachNodeAfterFilterAndSort(callback) { displayed.forEach(data => callback({data})); },
+        exportDataAsCsv(params) { exports.push(params); },
         getDisplayedRowCount: () => displayed.length,
         deselectAll() { selected = []; options.onSelectionChanged({api}); },
         applyColumnState(state) { assert.deepEqual(JSON.parse(JSON.stringify(state)), {defaultState: {sort: null}}); },
@@ -127,7 +132,7 @@ function browser({cdn = true, failCreate = false, sourceRows} = {}) {
     window.getComputedStyle = () => computedStyle;
     vm.runInNewContext(script, {document, window, getComputedStyle: () => computedStyle});
     return {table, container, filters, controls, checkboxes, status, evidenceFilter, description, clearEvidence,
-        window, document, detail, detailContent, applyFilters, priority, get options() { return options; }, get displayed() { return displayed; },
+        window, document, detail, detailContent, applyFilters, priority, exportButton, exports, api, get options() { return options; }, get displayed() { return displayed; },
         failUpdates() { failUpdate = true; },
         select(ids) {
             selected = displayed.filter(row => ids.includes(row.id));
@@ -399,4 +404,34 @@ test('source labels are human readable while raw source remains available', () =
     assert.equal(source.valueFormatter({value: 'IMPORTED'}), 'Imported');
     assert.equal(source.valueFormatter({value: 'ONSITE'}), 'On-site');
     assert.ok(app.displayed.some(row => row.source === 'ONSITE'));
+});
+
+
+test('view export uses filtered and sorted rows, displayed labels, and safe spreadsheet values', () => {
+    const app = browser();
+    assert.equal(app.exportButton.hidden, false);
+    app.filter({q: 'matte'});
+    app.exportButton.handlers.click();
+    const exportOptions = app.exports[0];
+    assert.equal(exportOptions.exportedRows, 'filteredAndSorted');
+    assert.deepEqual(Array.from(app.displayed, row => row.id), ['two']);
+    assert.equal(exportOptions.processCellCallback({value: 'raw', formatValue: () => 'Depends'}), 'Depends');
+    for (const value of ['=1+1', '  +cmd', '\ttext', '-1', '@SUM(A1)']) {
+        assert.equal(exportOptions.processCellCallback({value, formatValue: value => value}), "'" + value);
+    }
+    assert.equal(exportOptions.processHeaderCallback({column: {getColDef: () => ({headerName: '=unsafe'})}}), "'=unsafe");
+    for (const config of [{cdn: false}, {failCreate: true}]) assert.equal(browser(config).exportButton.hidden, true);
+});
+
+test('label columns filter independently and filtering clears selections and updates shown counts', () => {
+    const app = browser();
+    const columns = app.options.columnDefs.filter(column => column.colId);
+    assert.ok(columns.length > 1);
+    assert.ok(columns.every(column => column.filter === 'agTextColumnFilter'));
+    app.select(['one']);
+    app.filter({q: 'matte'});
+    app.options.onFilterChanged({api: app.api});
+    assert.equal(app.checkboxes[0].checked, false);
+    assert.match(app.status.textContent, /1 wish shown; 0 selected/);
+    assert.match(app.status.title, /Depends: 1/);
 });

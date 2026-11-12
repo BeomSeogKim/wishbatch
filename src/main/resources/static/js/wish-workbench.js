@@ -6,6 +6,7 @@
     const filters = root.querySelector('[data-workbench-filters]');
     const bulk = root.querySelector('[data-workbench-bulk]');
     const status = root.querySelector('[data-workbench-status]');
+    const exportButton = root.querySelector('[data-workbench-export]');
     const evidenceFilter = root.querySelector('[data-workbench-evidence-filter]');
     const clearEvidence = root.querySelector('[data-workbench-clear-evidence]');
     if (!table || !container || !filters || !bulk || !status) return;
@@ -94,7 +95,8 @@
         for (const checkbox of checkboxes) checkbox.checked = !checkbox.disabled && selectedIds.has(checkbox.value);
         const optionIds = value('optionId') ? [value('optionId')] : Array.from(new Set(rows.flatMap(row =>
             row.labelsByOption.map(item => item.optionId))));
-        const visible = matchingRows();
+        const visible = [];
+        gridApi.forEachNodeAfterFilterAndSort(node => visible.push(node.data));
         const groups = optionIds.map(optionId => {
             const counts = labels.map(([code, title]) => {
                 const ids = new Set(visible.filter(row => row.labelsByOption.some(item =>
@@ -116,6 +118,7 @@
 
     function fallback() {
         active = false;
+        if (exportButton) exportButton.hidden = true;
         for (const checkbox of checkboxes) checkbox.checked = false;
         if (apply) apply.hidden = false;
         if (priority) priority.hidden = true;
@@ -300,7 +303,7 @@
                 ...Array.from(optionNames, ([optionId, name]) => ({
                     colId: optionId, headerName: name, headerTooltip: name, flex: 1, minWidth: 100, wrapHeaderText: true, autoHeaderHeight: true,
                     valueGetter: params => params.data.labelsByOption.find(item => item.optionId === optionId)?.displayLabel || '',
-                    cellRenderer: labelCell,
+                    cellRenderer: labelCell, filter: 'agTextColumnFilter',
                 })),
                 {field: 'evidence', headerName: 'Quoted evidence', flex: 1.5, minWidth: 110, cellRenderer: evidenceCell},
                 {field: 'flags', headerName: 'Review flags', flex: 1, minWidth: 100, cellRenderer: flagCell},
@@ -321,18 +324,39 @@
             rowSelection: {mode: 'multiRow', selectAll: 'filtered',
                 isRowSelectable: node => selectableIds.has(node.data?.id)},
             onSelectionChanged: event => selectionChanged(event.api),
+            onFilterChanged: event => {
+                if (!active) return;
+                event.api.deselectAll();
+                selectionChanged(event.api);
+            },
             enableCellTextSelection: true,
             ensureDomOrder: true,
         });
-        if (!api?.setGridOption || !api?.getSelectedRows) throw new Error('Grid unavailable');
+        if (!api?.setGridOption || !api?.getSelectedRows || !api?.forEachNodeAfterFilterAndSort) throw new Error('Grid unavailable');
         active = true;
         table.hidden = true;
         if (apply) apply.hidden = true;
+        if (exportButton && api.exportDataAsCsv) exportButton.hidden = false;
         selectionChanged(api);
     } catch (_) {
         fallback();
         return;
     }
+
+    function safeCsv(value) {
+        const text = String(value ?? '');
+        return /^[\s]*[=+@-]|^[\t\r\n]/.test(text) ? "'" + text : text;
+    }
+
+    exportButton?.addEventListener('click', () => {
+        if (!active || !api?.exportDataAsCsv) return;
+        api.exportDataAsCsv({
+            fileName: 'wish-review.csv',
+            exportedRows: 'filteredAndSorted',
+            processCellCallback: params => safeCsv(params.formatValue(params.value)),
+            processHeaderCallback: params => safeCsv(params.column.getColDef().headerName),
+        });
+    });
 
     filters.addEventListener('submit', event => {
         if (!active) return;

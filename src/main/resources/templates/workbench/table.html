@@ -39,6 +39,7 @@
         <button class="button button-secondary" type="submit" data-workbench-apply>Apply filters</button>
     </form>
     <p data-workbench-evidence-filter hidden role="status"><span data-workbench-evidence-description>Evidence filter active</span> <button type="button" data-workbench-clear-evidence>Clear evidence filter</button></p>
+    <button class="button button-secondary" type="button" data-workbench-export hidden>Export this view</button>
     <p data-workbench-status role="status" aria-live="polite"><span th:text="${visibleIds.size()}">0</span> <span th:text="${visibleIds.size() == 1 ? 'wish' : 'wishes'}"></span> shown.</p>
     <details class="workbench-counts">
         <summary>Per-option counts for shown wishes</summary>
