@@ -25,6 +25,10 @@ class TermsCheckDisplay(private val mapper: JsonMapper, private val human: Human
         val quantity = record.path("quantity")
         return buildList {
             add(label)
+            when (record.path("stage").asString("")) {
+                "AUTHORIZATION" -> add("At authorization")
+                "PRE_CAPTURE" -> add("Before capture")
+            }
             if (amount.isIntegralNumber && amount.canConvertToLong() && currency.isString) {
                 val formatted = runCatching { human.money(amount.asLong(), currency.asString()) }.getOrNull()
                 if (formatted != null) add("Expected $formatted")

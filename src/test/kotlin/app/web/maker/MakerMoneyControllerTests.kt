@@ -1,6 +1,7 @@
 package app.web.maker
 
 import app.campaign.model.AnalysisRun
+import app.campaign.model.Event
 import app.campaign.model.CampaignState
 import app.campaign.model.CompatibilityVerdict
 import app.campaign.model.NeedAttribute
@@ -112,9 +113,9 @@ class MakerMoneyControllerTests @Autowired constructor(
 
     @Test
     fun `timeline details translate states without rewriting currency or protocol terms`() {
-        assertEquals("Hold placed -> Paid; USD 30.00; HTTP POST /capture; API", MakerDisplay().detail(
+        assertEquals("Hold placed → Paid; USD 30.00; HTTP POST /capture; API", MakerDisplay().detail(
             "AUTHORIZED -> CAPTURED; USD 30.00; HTTP POST /capture; API"))
-        assertEquals("Settlement in progress -> Not funded: Completed payments below minimum", MakerDisplay().detail(
+        assertEquals("Settlement in progress → Not funded: Completed payments below minimum", MakerDisplay().detail(
             "SETTLING -> NOT_FUNDED: CAPTURE_SHORTFALL"))
     }
 
@@ -299,6 +300,20 @@ class MakerMoneyControllerTests @Autowired constructor(
         val home = page(fixture.workspace.token, "")
         assertContains(home, "Open campaign dashboard")
         assertContains(home, "href=\"/w/${fixture.workspace.token}/offer\"")
+    }
+
+    @Test
+    fun `books checks show recorded comparisons and keep raw evidence collapsed`() {
+        val fixture = fixture()
+        publish(fixture)
+        val raw = """{"pledges":[{"after":{"match":"MATCH"}}],"marker":"raw-evidence"}"""
+        events.saveAndFlush(Event(ref(fixture).campaignId, "BOOKS_CHECK", detail = raw, createdAt = clock.instant().plusSeconds(1)))
+        for (route in listOf("campaign", "result")) {
+            val html = page(fixture.workspace.token, route)
+            assertContains(html, "1 pledge · 1 matched")
+            assertEquals(2, Regex("<details><summary>Raw record</summary><pre>").findAll(html).count())
+            assertEquals(2, Regex("raw-evidence").findAll(html).count())
+        }
     }
 
     @Test

@@ -66,7 +66,7 @@ class MakerDisplay(private val humanDisplay: HumanDisplay = HumanDisplay()) {
     fun shortId(value: Any?): String = humanDisplay.shortId(value)
     fun detail(value: String): String = Regex("\\b[A-Z][A-Z_]+\\b").replace(value) {
         if (it.value in stateTokens) words(it.value) else it.value
-    }
+    }.replace(" -> ", " → ")
     private val stateTokens = (CampaignState.entries.map { it.name } +
         CampaignReason.entries.map { it.name } + PledgeState.entries.map { it.name }).toSet()
 
