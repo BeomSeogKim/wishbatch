@@ -16,7 +16,7 @@
             </div>
             <section th:if="${option != null}" class="preview-section">
                 <p>
-                    <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${analysis.id})}">Review the proposal and its evidence</a> · <a th:href="@{/w/{token}/maker/campaign(token=${token})}">Campaign dashboard</a>
+                    <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${analysis.id})}">Review the proposal and its evidence</a> · <a th:href="@{/w/{token}/maker/campaign(token=${token})}">Campaign dashboard</a> · <a th:href="@{/w/{token}/maker/offer-draft(token=${token},run=${analysis.id})}">Review text draft</a>
                 </p>
                 <div th:if="${errors != null}" class="notice notice-error" role="alert">
                     <p th:each="error : ${errors.values()}" th:text="${error}">
@@ -24,6 +24,14 @@
                 </div>
                 <form method="post" th:action="@{/w/{token}/maker/offer(token=${token})}">
                     <input type="hidden" name="run" th:value="${analysis.id}">
+                    <input th:if="${fields['reviewedDraftApplied'] == 'true'}" type="hidden" name="reviewedDraftApplied" value="true">
+                    <p th:if="${fields['reviewedDraftApplied'] == 'true'}" class="notice" role="status">Reviewed draft: check the title and specification before confirming publication.</p>
+                    <div th:if="${reviewedDraft != null}" class="notice">
+                        <input type="hidden" name="draft" th:value="${reviewedDraft.id}">
+                        <input type="hidden" name="draftSourceHash" th:value="${reviewedDraft.sourceHash}">
+                        <button type="submit" name="action" value="use-reviewed-draft" formnovalidate class="button button-secondary">Use reviewed draft</button>
+                        <p class="field-help">Copy the reviewed title and description into this form. Your other entries are retained. Review and confirm the exact offer separately.</p>
+                    </div>
                     <div class="two-column">
                         <div class="card">
                             <h2>Product and delivery</h2>

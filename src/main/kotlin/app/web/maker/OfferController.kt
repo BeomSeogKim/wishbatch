@@ -4,6 +4,8 @@ import app.campaign.model.AnalysisRun
 import app.campaign.demand.exploreDemand
 import app.campaign.model.NeedAttribute
 import app.campaign.model.Option
+import app.campaign.offerdraft.InvalidOfferDraftException
+import app.campaign.offerdraft.OfferDraftService
 import app.campaign.port.AnalysisOutput
 import app.campaign.review.WishReviewService
 import app.campaign.review.reviewedAnalysis
@@ -40,6 +42,7 @@ class OfferController(
     private val campaigns: CampaignService,
     private val display: MakerDisplay,
     private val reviews: WishReviewService,
+    private val drafts: OfferDraftService,
 ) {
     @GetMapping("/w/{token}/maker/offer")
     fun offer(@PathVariable token: String, @RequestParam(required = false) run: UUID?, model: Model): String {
@@ -56,6 +59,10 @@ class OfferController(
             model.addAttribute("fields", defaults(option, output!!, analysis!!))
         }
         if (option != null) {
+            model.addAttribute("reviewedDraft", try {
+                drafts.page(token, analysis!!.id).takeUnless { it.published }?.draft
+                    ?.takeIf { it.reviewedAt != null && it.failure == null }
+            } catch (_: InvalidOfferDraftException) { null })
             @Suppress("UNCHECKED_CAST")
             val fields = model.getAttribute("fields") as Map<String, String>
             val price = fields["unitPrice"]?.toLongOrNull()?.takeIf { it > 0 }
@@ -92,6 +99,20 @@ class OfferController(
         val output = output(analysis)
         val option = output?.proposal?.let { proposal -> workspaces.listOptions(token).find { it.id == proposal.optionId } }
         val errors = linkedMapOf<String, String>()
+        if (fields["action"] == "use-reviewed-draft") {
+            val updated = fields.toMutableMap()
+            try {
+                val draftId = fields["draft"]?.let { runCatching { UUID.fromString(it) }.getOrNull() }
+                    ?: throw InvalidOfferDraftException()
+                updated.putAll(drafts.reviewedCopy(token, runId, draftId, fields["draftSourceHash"].orEmpty()))
+                updated["reviewedDraftApplied"] = "true"
+            } catch (_: InvalidOfferDraftException) {
+                errors["offer"] = "This reviewed draft is unavailable or stale. Review the current source before using it."
+            }
+            redirect.addFlashAttribute("fields", updated)
+            if (errors.isNotEmpty()) redirect.addFlashAttribute("errors", errors)
+            return "redirect:/w/$token/maker/offer?run=$runId"
+        }
         if (option == null || output == null) {
             errors["offer"] = "This analysis has no available proposal. Review the evidence before creating an offer."
         } else {

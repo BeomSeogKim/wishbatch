@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Draft unavailable', ~{::main})}">
+    <body>
+        <main id="main" class="shell">
+            <h1>Draft unavailable</h1>
+            <p>The proposal, source evidence or review has changed, or this draft cannot be edited. Review the current proposal before continuing.</p>
+            <a th:href="@{/w/{token}/maker/proposal(token=${token})}">Review current proposal</a>
+        </main>
+    </body>
+</html>

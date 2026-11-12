@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Review offer draft', ~{::main})}">
+    <body>
+        <main id="main" class="shell">
+            <header class="page-heading">
+                <p class="eyebrow">Maker draft</p>
+                <h1>Review offer text</h1>
+                <p class="lead">A draft needs your review. Check each product claim; text checks cannot establish that your edits are true. Confirm exact terms separately before publication.</p>
+            </header>
+            <p><a th:href="@{/w/{token}/maker/offer(token=${token},run=${page.runId})}">Return to the editable offer form</a></p>
+            <p th:if="${draftNotice != null}" class="notice" role="status" th:text="${draftNotice}"></p>
+            <p th:if="${page.generationFailed}" class="notice" role="status">The latest draft attempt was unavailable. Any earlier saved draft remains below.</p>
+            <section class="card">
+                <h2 th:text="${page.option.name}"></h2>
+                <p th:if="${page.published}">This analysis already has a published offer. Its terms cannot receive draft edits.</p>
+                <form th:if="${page.canGenerate}" method="post" th:action="@{/w/{token}/maker/offer-draft/generate(token=${token})}">
+                    <input type="hidden" name="run" th:value="${page.runId}">
+                    <input type="hidden" name="sourceHash" th:value="${page.sourceHash}">
+                    <button class="button button-secondary" type="submit">Generate text draft</button>
+                    <p class="field-help">At most two generation attempts per analysis run. Generation begins only when you click.</p>
+                </form>
+                <p th:unless="${page.canGenerate}">Draft unavailable for generation.</p>
+            </section>
+            <section th:if="${page.draft != null}" class="card preview-section">
+                <h2>Generated draft</h2>
+                <p th:if="${page.draft.failure != null}">Draft unavailable.</p>
+                <div th:if="${page.draft.failure == null}">
+                    <p th:text="${page.draft.generatedTitle}"></p>
+                    <p th:text="${page.draft.generatedDescription}"></p>
+                    <form th:unless="${page.published}" method="post" th:action="@{/w/{token}/maker/offer-draft/save(token=${token})}">
+                        <h3>Reviewed draft</h3>
+                        <input type="hidden" name="run" th:value="${page.runId}">
+                        <input type="hidden" name="draft" th:value="${page.draft.id}">
+                        <input type="hidden" name="sourceHash" th:value="${page.sourceHash}">
+                        <div class="field">
+                            <label for="draft-title">Draft title</label>
+                            <input id="draft-title" name="title" maxlength="120" required th:value="${page.draft.reviewedTitle != null ? page.draft.reviewedTitle : page.draft.generatedTitle}">
+                        </div>
+                        <div class="field">
+                            <label for="draft-description">Draft description</label>
+                            <textarea id="draft-description" name="description" rows="7" maxlength="1000" required th:text="${page.draft.reviewedDescription != null ? page.draft.reviewedDescription : page.draft.generatedDescription}"></textarea>
+                        </div>
+                        <button class="button button-primary" type="submit">Save reviewed draft</button>
+                        <p class="field-help">Saving keeps a draft. Set price, variants, batch limits and delivery terms in the offer form.</p>
+                    </form>
+                </div>
+                <div th:if="${!page.removals.isEmpty()}">
+                    <h3>Removed generated text</h3>
+                    <ul><li th:each="removal : ${page.removals}"><span th:text="${removal.text}"></span> — <span th:text="${removal.reason}"></span></li></ul>
+                </div>
+            </section>
+            <section class="card preview-section">
+                <h2>Source quotations</h2>
+                <p>Original wishes are evidence of stated interest. They are separate from the draft and are not production promises.</p>
+                <figure th:each="item : ${page.evidence}">
+                    <blockquote th:text="${item.quote}"></blockquote>
+                    <figcaption><a th:href="@{/w/{token}/maker/proposal(token=${token},run=${page.runId})} + '#wish-' + ${item.wishId}">View source wish</a></figcaption>
+                </figure>
+            </section>
+        </main>
+    </body>
+</html>
