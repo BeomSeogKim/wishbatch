@@ -1,17 +1,21 @@
 package app.web
 
+import app.campaign.workspace.SeedCatalog
 import app.web.home.HomeController
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Import
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.web.util.HtmlUtils
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @WebMvcTest(HomeController::class)
+@Import(SeedCatalog::class)
 class HomeControllerTests(@Autowired private val mvc: MockMvc) {
 
     @Test
@@ -32,6 +36,20 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
         assertEquals(3, Regex("href=\"/guide\"[^>]*>[^<]*(?:Read the testing guide|Testing guide)", RegexOption.IGNORE_CASE).findAll(html).count())
         assertContains(html, "href=\"/#how-it-works\"")
         assertContains(html, "id=\"testing\"")
+    }
+
+    @Test
+    fun `demo selector renders each catalog scenario in the post form`() {
+        val html = mvc.get("/").andReturn().response.contentAsString
+        val form = html.substringAfter("<form action=\"/demo\"").substringBefore("</form>")
+        assertContains(form, "<label for=\"scenario\">Choose a sample maker</label>")
+        assertContains(form, "<select id=\"scenario\" name=\"scenario\">")
+        val catalog = SeedCatalog()
+        assertEquals(listOf("illustrator", "ceramicist", "textile"), catalog.scenarios.map { it.key })
+        catalog.scenarios.forEach { scenario ->
+            val label = "${scenario.definition.maker.name} — ${scenario.definition.maker.description}"
+            assertContains(HtmlUtils.htmlUnescape(form), "value=\"${scenario.key}\">$label</option>")
+        }
     }
 
     @Test
@@ -58,7 +76,7 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
             "Stated interest", "Authorized holds", "Paid",
             "Wishes, not orders", "Units held, not paid", "Units with completed payments",
             "Synthetic example", "PayPal places the holds", "captures can fail",
-            "payments are refunded and remaining holds released"
+            "refunds and hold releases are attempted", "Timing depends on PayPal and your bank or card"
         ).forEach { assertContains(overview, it) }
     }
 

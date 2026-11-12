@@ -8,8 +8,14 @@
             <h1 id="hero-title">Many wishes.<br><span>One clear batch.</span></h1>
             <p class="hero-promise">Fans want different things. Find a batch you can make, then see whether enough payments complete.</p>
             <form th:action="@{/demo}" method="post" class="hero-action">
+                <div class="field scenario-field">
+                    <label for="scenario">Choose a sample maker</label>
+                    <select id="scenario" name="scenario">
+                        <option th:each="scenario : ${scenarios}" th:value="${scenario.key}"
+                                th:text="|${scenario.definition.maker.name} — ${scenario.definition.maker.description}|">Sample maker</option>
+                    </select>
+                </div>
                 <button class="button button-primary" type="submit">Start a demo <span aria-hidden="true">&#8599;</span></button>
-                <span class="action-note">Explore a sample maker workspace.</span>
             </form>
             <a class="quiet-link" th:href="@{/guide}">Read the testing guide <span aria-hidden="true">&#8594;</span></a>
         </div>
@@ -26,7 +32,7 @@
                 <div><span>Authorized holds</span><strong>24</strong><small>Units held, not paid</small></div>
                 <div><span>Paid</span><strong>0</strong><small>Units with completed payments</small></div>
             </div>
-            <p class="overview-trust">PayPal places the holds. Only completed payments count as paid; captures can fail. If too few complete, payments are refunded and remaining holds released.</p>
+            <p class="overview-trust">PayPal places the holds. Only completed payments count as paid; captures can fail. If too few complete, refunds and hold releases are attempted. Timing depends on PayPal and your bank or card.</p>
         </div>
     </section>
     <section id="how-it-works" class="how-section shell" aria-labelledby="how-title">
@@ -40,7 +46,7 @@
     <section class="clarity-section shell" aria-labelledby="clarity-title">
         <div class="section-heading"><p class="eyebrow">Different numbers. Different meanings.</p><h2 id="clarity-title">Interest is a signal.<br>Payment is a commitment.</h2><p>Keep the whole picture in view, from the first wish to the final payment.</p></div>
         <div><p class="sample-label example-label">Synthetic campaign example / minimum 30 units</p><div th:replace="~{fragments/components :: counts(48, 24, 0, 30)}"></div></div>
-        <p class="clarity-note">If too few payments complete, completed payments are refunded and remaining holds are released. Timing depends on PayPal and your bank or card.</p>
+        <p class="clarity-note">If too few payments complete, refunds of completed payments and releases of remaining holds are attempted. Timing depends on PayPal and your bank or card.</p>
     </section>
     <section id="testing" class="testing-section shell" aria-labelledby="testing-title">
         <div><p class="eyebrow">Take a closer look</p><h2 id="testing-title">A safe place to try the flow.</h2><p>This prototype uses the PayPal sandbox. Production and delivery are the maker's responsibility.</p></div>

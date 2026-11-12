@@ -88,7 +88,9 @@ svg { display: block; max-width: 100%; }
 .hero h1 { margin-top: 18px; }
 .hero h1 span { color: var(--accent); }
 .hero-promise { max-width: 470px; font-size: 1.05rem; color: var(--muted); margin-top: 20px; }
-.hero-action { display: flex; align-items: center; gap: 16px; margin-top: 24px; }
+.hero-action { display: grid; gap: 14px; margin-top: 24px; }
+.hero-action .button { justify-self: start; }
+.scenario-field { max-width: 470px; }
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 24px; min-height: 48px; border: 1px solid transparent; border-radius: var(--radius-small); padding: 12px 22px; font-weight: 650; font-size: .875rem; line-height: 1.4; text-decoration: none; cursor: pointer; text-align: center; }
 .button-primary { background: var(--accent); color: var(--on-accent); }
 .button-primary:hover { background: var(--accent-hover); }
@@ -97,7 +99,6 @@ svg { display: block; max-width: 100%; }
 .button-danger { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
 .button-danger:hover { text-decoration: underline; }
 .button:disabled { background: var(--surface-soft); color: var(--muted); border-color: var(--line); cursor: not-allowed; }
-.action-note { max-width: 135px; color: var(--muted); font-size: .73rem; line-height: 1.5; }
 .quiet-link { display: inline-flex; align-items: center; gap: 10px; font-size: .83rem; font-weight: 550; }
 .hero-copy > .quiet-link { margin-top: 20px; }
 .hero-overview { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
@@ -240,8 +241,6 @@ tbody th { min-width: 180px; }
 @media (max-width: 1000px) {
     .shell { width: calc(100% - 64px); }
     .hero { gap: 36px; padding-block: 56px 64px; }
-    .hero-action { flex-wrap: wrap; }
-    .action-note { max-width: none; }
     .count { padding: 20px; }
     .clarity-section { padding: 32px; }
     .step-rail { grid-template-columns: repeat(3, 1fr); row-gap: 20px; }
@@ -260,7 +259,6 @@ tbody th { min-width: 180px; }
     .hero-promise { max-width: 100%; }
     .hero-overview { padding: 20px; }
     .hero-action { gap: 12px; }
-    .action-note { font-size: .7rem; max-width: 125px; }
     .how-section, .testing-section { padding-block: 48px; }
     .journey-grid, .counts, .two-column, .testing-section { grid-template-columns: 1fr; }
     .journey-grid { gap: 28px; margin-top: 28px; }

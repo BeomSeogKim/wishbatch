@@ -1,8 +1,10 @@
 package app.web
 
+import app.campaign.workspace.SeedCatalog
 import app.web.home.HomeController
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Import
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
@@ -10,6 +12,7 @@ import org.springframework.test.web.servlet.get
 import kotlin.test.assertContains
 
 @WebMvcTest(HomeController::class)
+@Import(SeedCatalog::class)
 @TestPropertySource(properties = ["PRODUCT_NAME=Batch Studio"])
 class ProductNameTests(@Autowired private val mvc: MockMvc) {
 
