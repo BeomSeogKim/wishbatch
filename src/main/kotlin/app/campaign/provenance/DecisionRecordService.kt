@@ -4,11 +4,14 @@ import app.campaign.followup.FollowupAnswerRecord
 import app.campaign.followup.FollowupQuestion
 import app.campaign.model.AnalysisRun
 import app.campaign.model.Campaign
+import app.campaign.model.Option
 import app.campaign.model.Offer
 import app.campaign.model.Pledge
 import app.campaign.model.Wish
 import app.campaign.model.WishKind
 import app.campaign.port.AnalysisOutput
+import app.campaign.reading.OfferWishReading
+import app.campaign.reading.readingInput
 import app.campaign.review.WishReviewOverride
 import app.campaign.terms.SealedOfferChanged
 import app.campaign.terms.SealedOfferTerms
@@ -167,7 +170,61 @@ class DecisionRecordService(
             payload.put("recordedAt", clock.instant().toString())
             append(record, "PAYMENT", hashing.canonical(payload))
         }
+        appendReading(record, saved)
     }
+
+    /** Reconciliation can link saved evidence but cannot create a historical record baseline. */
+    fun linkReading(pledgeId: UUID) {
+        val pledge = entities.find(Pledge::class.java, pledgeId, LockModeType.PESSIMISTIC_WRITE) ?: return
+        val record = entities.find(PledgeDecisionRecord::class.java, pledgeId) ?: return
+        val campaign = entities.find(Campaign::class.java, pledge.campaignId) ?: return
+        check(record.campaignId == campaign.id && record.offerId == campaign.offerId) { "Stored decision record identity changed" }
+        check(chainValid(record, entries(pledgeId))) { "Stored decision record failed integrity verification" }
+        appendReading(record, pledge)
+    }
+
+    private fun appendReading(record: PledgeDecisionRecord, pledge: Pledge) {
+        val wishId = pledge.wishId ?: return
+        val history = entries(pledge.id)
+        val wishEntry = history.singleOrNull { it.kind == "WISH" }?.let { mapper.readTree(it.payload) } ?: return
+        if (wishEntry.path("wishId").asString() != wishId.toString()) return
+        val reading = entities.createQuery(
+            "select r from OfferWishReading r where r.offerId = :offer and r.wishId = :wish and r.workspaceId = :workspace",
+            OfferWishReading::class.java,
+        ).setParameter("offer", record.offerId).setParameter("wish", wishId)
+            .setParameter("workspace", record.workspaceId).resultList.singleOrNull() ?: return
+        val snapshot = reading.sourceId?.let { source("OFFER_WISH_READING", it, record.workspaceId) } ?: return
+        if (!readingSourceValid(snapshot, record.workspaceId, record.offerId, wishId)) return
+        if (history.any { it.kind == "READING" &&
+                mapper.readTree(it.payload).path("assessmentId").asString() == snapshot.sourceId.toString() }) return
+        val payload = mapper.readTree(snapshot.payload).deepCopy() as tools.jackson.databind.node.ObjectNode
+        payload.put("assessmentHash", snapshot.hash)
+        append(record, "READING", hashing.canonical(payload))
+    }
+
+    /** A reading binds the exact linked wish, frozen catalog input, and immutable offer seal. */
+    fun readingSourceValid(snapshot: DecisionSourceSnapshot, workspaceId: UUID, offerId: UUID, wishId: UUID): Boolean = runCatching {
+        if (snapshot.sourceType != "OFFER_WISH_READING" || snapshot.workspaceId != workspaceId ||
+            hashing.sha256(snapshot.payload) != snapshot.hash) return false
+        val payload = mapper.readTree(snapshot.payload)
+        if (payload.path("assessmentId").asString() != snapshot.sourceId.toString() ||
+            payload.path("workspaceId").asString() != workspaceId.toString() ||
+            payload.path("wishId").asString() != wishId.toString() ||
+            payload.path("offerId").asString() != offerId.toString() ||
+            payload.path("scope").asString() != "FORMAT_ASSESSMENT") return false
+        val offer = entities.find(Offer::class.java, offerId)?.takeIf { it.workspaceId == workspaceId } ?: return false
+        val wish = entities.find(Wish::class.java, wishId)?.takeIf { it.workspaceId == workspaceId } ?: return false
+        val option = entities.find(Option::class.java, offer.optionId)?.takeIf { it.workspaceId == workspaceId } ?: return false
+        val seal = sealedOffer(workspaceId, offerId) ?: return false
+        val input = readingInput(hashing, option, wish, offer, seal.termsHash)
+        if (payload.path("inputHash").asString() != hashing.sha256(input) ||
+            hashing.canonical(payload.path("input")) != input ||
+            payload.path("termsHash").asString() != seal.termsHash ||
+            payload.path("optionId").asString() != option.id.toString()) return false
+        val quote = payload.get("quote")?.takeUnless { it.isNull }?.asString()
+        if (quote != null && (quote.isBlank() || !wish.text.contains(quote))) return false
+        payload.path("availability").asString() in setOf("AVAILABLE", "PENDING")
+    }.getOrDefault(false)
 
     internal fun source(type: String, id: UUID, workspaceId: UUID): DecisionSourceSnapshot? = entities.createQuery(
         "select s from DecisionSourceSnapshot s where s.sourceType = :type and s.sourceId = :id and s.workspaceId = :workspace",
@@ -267,6 +324,17 @@ class DecisionRecordService(
             val wishIds = mapper.readTree(analysis.payload).get("wishes").toList().map { UUID.fromString(it.get("wishId").asString()) }
             val wishes = wishIds.map { entities.find(Wish::class.java, it) ?: return false }
             if (wishes.any { it.workspaceId != record.workspaceId } || analysis.payload != analysisPayload(run, wishes)) return false
+        }
+        for (entry in entries.filter { it.kind == "READING" }) {
+            if (recordedWishId == null) return false
+            val payload = mapper.readTree(entry.payload)
+            val id = UUID.fromString(payload.path("assessmentId").asString())
+            val snapshot = source("OFFER_WISH_READING", id, record.workspaceId) ?: return false
+            if (!readingSourceValid(snapshot, record.workspaceId, record.offerId, recordedWishId) ||
+                payload.path("assessmentHash").asString() != snapshot.hash) return false
+            val evidence = payload.deepCopy() as tools.jackson.databind.node.ObjectNode
+            evidence.remove("assessmentHash")
+            if (hashing.canonical(evidence) != snapshot.payload) return false
         }
         true
     }.getOrDefault(false)

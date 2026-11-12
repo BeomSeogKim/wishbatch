@@ -300,6 +300,7 @@ class CampaignService(
     }
 
     private fun reconcileLocked(context: Context) {
+        context.pledges.filter { it.wishId != null }.forEach(provenance::linkReading)
         applyDeadlines(context)
         context.pledges.filter { it.state == PledgeState.CREATED && payments.attempted(it, PaymentAction.AUTHORIZE) &&
             payments.recheckDue(it, if (it.authorizationId == null) PaymentAction.AUTHORIZE else PaymentAction.READ_AUTHORIZATION) }

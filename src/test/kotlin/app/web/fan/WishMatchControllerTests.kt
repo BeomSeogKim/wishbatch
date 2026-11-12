@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Primary
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
 import java.time.Duration
 import java.util.concurrent.CopyOnWriteArrayList
@@ -36,12 +35,15 @@ import kotlin.test.assertTrue
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
 @Import(WishMatchControllerTests.MatchConfiguration::class)
 class WishMatchControllerTests @Autowired constructor(
     private val mvc: MockMvc,
     private val workspaces: WorkspaceService,
     private val provider: MatchProvider,
+    private val entities: jakarta.persistence.EntityManager,
+    private val persistence: app.campaign.service.CampaignPersistence,
+    private val records: app.campaign.provenance.DecisionRecordService,
+    private val clock: java.time.Clock,
 ) {
     @MockitoBean
     private lateinit var campaigns: WishCampaignAvailability
@@ -91,7 +93,7 @@ class WishMatchControllerTests @Autowired constructor(
             val (note, html) = submit(token, "A postcard please")
             assertNull(note)
             assertContains(html, "Thanks for sharing your wish!")
-            assertFalse(html.contains("href=\"/w/$token/offer"))
+            assertFalse(html.contains("href=\"/w/$token/offer?wishId="))
             assertEquals(41, workspaces.listWishes(token).size)
         }
         provider.failure = null
@@ -115,7 +117,7 @@ class WishMatchControllerTests @Autowired constructor(
             val (note, html) = submit(token, text)
             assertNull(note)
             assertFalse(html.contains("You wrote:"))
-            assertFalse(html.contains("href=\"/w/$token/offer"))
+            assertFalse(html.contains("href=\"/w/$token/offer?wishId="))
         }
     }
 
@@ -128,7 +130,7 @@ class WishMatchControllerTests @Autowired constructor(
             val (note, html) = submit(token, "A postcard please")
             assertNull(note)
             assertFalse(html.contains("<q>"))
-            assertFalse(html.contains("href=\"/w/$token/offer"))
+            assertFalse(html.contains("href=\"/w/$token/offer?wishId="))
         }
     }
 
@@ -167,7 +169,16 @@ class WishMatchControllerTests @Autowired constructor(
     private fun openWorkspace(): String {
         val token = workspaces.create().token
         `when`(campaigns.isOpen(token)).thenReturn(true)
-        `when`(campaigns.openOption(token)).thenReturn(workspaces.listOptions(token).first())
+        val workspace = workspaces.findByToken(token)!!
+        val option = workspaces.listOptions(token).first()
+        persistence.checkpoint {
+            val offer = app.campaign.model.Offer(workspace.id, option.id, java.util.UUID.randomUUID(),
+                "Published format", "Exact format", emptyMap(), 650, "USD", "Shipping included", "US", 1, 10)
+            entities.persist(offer)
+            entities.persist(app.campaign.model.Campaign(offer.id, app.campaign.model.CampaignState.OPEN,
+                openedAt = clock.instant().minusSeconds(1), closesAt = clock.instant().plusSeconds(3600)))
+            records.recordOffer(offer)
+        }
         return token
     }
 

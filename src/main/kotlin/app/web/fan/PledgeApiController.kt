@@ -1,5 +1,6 @@
 package app.web.fan
 
+import app.campaign.reading.OfferWishReadingService
 import app.campaign.model.PledgeState
 import app.campaign.service.CampaignQueries
 import app.campaign.service.CampaignRef
@@ -44,6 +45,7 @@ class PledgeApiController(
     private val references: PledgeReferences,
     private val campaigns: CampaignService,
     private val messages: MessageSource,
+    private val readings: OfferWishReadingService,
 ) {
     @PostMapping("/w/{token}/api/pledges")
     fun start(@PathVariable token: String, @RequestBody request: StartPledgeRequest, session: HttpSession): ResponseEntity<PledgeResponse> {
@@ -52,9 +54,11 @@ class PledgeApiController(
             is ServiceResult.Success -> result.value
             is ServiceResult.Rejected -> return rejected(token, result)
         }
+        val campaignId = request.campaignId ?: quote.campaignId
+        val wishId = request.wishId ?: session.getAttribute("followup.wish.$token") as? UUID
+        if (wishId != null) runCatching { readings.assessForCampaign(workspace.id, campaignId, wishId) }
         return when (val result = campaigns.startPledge(
-            CampaignRef(workspace.id, request.campaignId ?: quote.campaignId), request.quantity,
-            request.wishId ?: session.getAttribute("followup.wish.$token") as? UUID,
+            CampaignRef(workspace.id, campaignId), request.quantity, wishId,
         )) {
             is ServiceResult.Success -> ResponseEntity.status(201).body(
                 payload(token, PledgeOutcome.CREATED, result.value, "Approve in PayPal to request a hold. No pledge has counted yet."))

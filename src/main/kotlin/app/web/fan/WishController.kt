@@ -1,17 +1,11 @@
 package app.web.fan
 
-import app.campaign.model.CompatibilityVerdict
-import app.campaign.model.NeedStrength
-import app.campaign.model.Option
 import app.campaign.model.Wish
-import app.campaign.model.WishKind
-import app.campaign.port.AnalysisResult
-import app.campaign.port.WishAnalyzer
+import app.campaign.reading.OfferWishReadingService
 import app.campaign.replies.ReplyService
 import app.campaign.workspace.WishLimitReachedException
 import app.campaign.workspace.WorkspaceService
 import app.campaign.service.CampaignQueries
-import app.campaign.service.ServiceResult
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSession
 import org.springframework.stereotype.Controller
@@ -26,23 +20,13 @@ import java.util.UUID
 
 fun interface WishCampaignAvailability {
     fun isOpen(token: String): Boolean
-
-    fun openOption(token: String): Option? = null
 }
 
 @Component
 class OpenWishCampaign(
     private val campaigns: CampaignQueries,
-    private val workspaces: WorkspaceService,
 ) : WishCampaignAvailability {
     override fun isOpen(token: String): Boolean = campaigns.isOpenForPledges(token)
-
-    override fun openOption(token: String): Option? {
-        if (!isOpen(token)) return null
-        val campaign = (campaigns.currentCampaign(token) as? ServiceResult.Success)?.value ?: return null
-        if (!isOpen(token)) return null
-        return workspaces.listOptions(token).singleOrNull { it.id == campaign.offer.optionId }
-    }
 }
 
 data class WishForm(val text: String = "", val displayName: String = "")
@@ -51,7 +35,7 @@ data class WishMatchNote(val message: String, val quote: String, val showOffer: 
 @Controller
 class WishController(
     private val workspaces: WorkspaceService,
-    private val analyzer: WishAnalyzer,
+    private val readings: OfferWishReadingService,
     private val campaigns: WishCampaignAvailability? = null,
     private val replies: ReplyService,
 ) {
@@ -106,24 +90,16 @@ class WishController(
     }
 
     private fun matchNote(token: String, wish: Wish): WishMatchNote? {
-        val option = campaigns?.openOption(token) ?: return null
-        val result = analyzer.classify(option, wish) as? AnalysisResult.Success ?: return null
-        val output = result.validated.output
-        val analyzed = output.wishes.singleOrNull { it.wishId == wish.id && it.kind == WishKind.REQUEST } ?: return null
-        val verdict = output.verdicts.singleOrNull { it.wishId == wish.id && it.optionId == option.id } ?: return null
-        val needs = analyzed.needs.filter { it.quote.isNotBlank() && wish.text.contains(it.quote) }
-        if (needs.isEmpty()) return null
-        val evidence = needs.filter { it.strength != NeedStrength.PREFERENCE }.ifEmpty { needs }
-        val quote = wish.text.substring(
-            evidence.minOf { wish.text.indexOf(it.quote) },
-            evidence.maxOf { wish.text.indexOf(it.quote) + it.quote.length },
-        )
-        return when (verdict.verdict) {
-            CompatibilityVerdict.COMPATIBLE -> WishMatchNote("This matches the product format. Check the price, finish, and delivery terms in the offer.", quote, true)
-            CompatibilityVerdict.CONDITIONAL -> WishMatchNote(
+        val reading = readings.assessOpen(token, wish.id) ?: return null
+        if (reading.path("availability").asString() != "AVAILABLE" || reading.path("kind").asString() != "REQUEST") return null
+        val quote = reading.get("quote")?.takeUnless { it.isNull }?.asString() ?: return null
+        return when (reading.path("verdict").asString()) {
+            "COMPATIBLE" -> WishMatchNote("This matches the product format. Check the price, finish, and delivery terms in the offer.", quote, true)
+            "CONDITIONAL" -> WishMatchNote(
                 "This may match, depending on whether the offer meets your condition:", quote, true)
-            CompatibilityVerdict.INCOMPATIBLE -> WishMatchNote(
+            "INCOMPATIBLE" -> WishMatchNote(
                 "The open offer is not what you asked for; your wish is saved for a future batch", quote, false)
+            else -> null
         }
     }
 

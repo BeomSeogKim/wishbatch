@@ -17,6 +17,11 @@ data class TraceTerms(
     val delivery: String?, val region: String?, val minimum: String?, val capacity: String?,
     val variants: List<TraceReference>,
 )
+data class TraceReading(
+    val available: Boolean, val verdict: String?, val reason: String?, val quote: String?,
+    val model: String?, val completedAt: Instant?, val inputHash: String?, val assessmentId: String?, val assessmentHash: String?,
+    val pendingReason: String?, val attempts: Int, val retryAllowed: Boolean,
+)
 data class PledgeTraceView(
     val wish: String?, val wishHash: String?, val wishExplanation: String,
     val verdict: String?, val readingReason: String?, val readingAgreement: String,
@@ -25,6 +30,7 @@ data class PledgeTraceView(
     val offerId: String?, val termsHash: String?, val terms: TraceTerms?,
     val payments: List<TracePayment>, val evidenceCount: Int?,
     val quantity: Int?, val amount: Long?, val currency: String?,
+    val reading: TraceReading?, val readingIntegrityIssue: Boolean,
 )
 
 internal fun pledgeTrace(record: PledgeDecisionView): PledgeTraceView {
@@ -35,6 +41,25 @@ internal fun pledgeTrace(record: PledgeDecisionView): PledgeTraceView {
     val comparison = verdict?.get("readingAgreement")?.takeUnless { it.isNull }
     val review = verdict?.get("review")?.takeUnless { it.isNull }
     val payment = record.entries.firstOrNull { it.kind == "PAYMENT" }?.payload
+    val latestReading = record.entries.lastOrNull { it.kind == "READING" }?.payload
+    val reading = latestReading?.takeIf {
+        record.integrity == "INTACT" && it.text("scope") == "FORMAT_ASSESSMENT"
+    }?.let {
+        val available = it.text("availability") == "AVAILABLE"
+        val attempts = it.get("attempts")?.asInt() ?: 0
+        TraceReading(available,
+            if (available) it.text("verdict") ?: it.text("kind")?.takeIf { kind -> kind == "NOT_A_REQUEST" } else null,
+            if (available) it.text("reason") else null, if (available) it.text("quote") else null,
+            if (available) it.text("model") else null,
+            if (available) it.text("completedAt")?.let { time -> runCatching { Instant.parse(time) }.getOrNull() } else null,
+            it.text("inputHash"), it.text("assessmentId"), it.text("assessmentHash"),
+            when {
+                available -> null
+                attempts >= 2 -> "The reading was not completed. Both attempts have been used; no retries remain. No automatic retry will run."
+                it.text("failureReason") != null -> "The last attempt did not produce a usable reading."
+                else -> "A reading has not been completed for this wish and offer."
+            }, attempts, !available && attempts < 2 && it.get("retryAllowed")?.asBoolean() == true)
+    }
     return PledgeTraceView(
         wish.text("text"), wish.text("textHash"),
         if (wish.text("traceScope") == "OFFER_EVIDENCE")
@@ -63,6 +88,7 @@ internal fun pledgeTrace(record: PledgeDecisionView): PledgeTraceView {
                     .mapNotNull { (key, label) -> payment.text(key)?.let { TraceReference(label, it) } }, entry.hash)
         }, wish?.get("supportingWishIds")?.takeIf { it.isArray }?.size(),
         payment?.get("quantity")?.asInt(), payment?.get("amountMinor")?.asLong(), payment.text("currency"),
+        reading, latestReading != null && record.integrity != "INTACT",
     )
 }
 

@@ -34,6 +34,14 @@ class PledgeProvenanceCheckpoint(
         }
     }
 
+    fun linkReading(pledge: Pledge) {
+        try {
+            persistence.checkpoint { records.linkReading(pledge.id) }
+        } catch (failure: RuntimeException) {
+            logFailure(failure)
+        }
+    }
+
     private fun logFailure(failure: RuntimeException) {
         val causes = generateSequence<Throwable>(failure) { it.cause }.take(8).toList()
         val sql = causes.filterIsInstance<SQLException>().firstOrNull()

@@ -12,9 +12,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import tools.jackson.databind.json.JsonMapper
+import java.time.Instant
 import java.util.UUID
 import kotlin.test.assertContains
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 @SpringBootTest
@@ -61,6 +64,73 @@ class PledgeTraceControllerTests @Autowired constructor(private val mvc: MockMvc
         assertNull(pledgeTrace(noWish).wish)
         val legacy = record("PAYMENT" to """{"state":"CAPTURED","createdAt":"2026-01-01T00:00:00Z"}""")
         assertNull(pledgeTrace(legacy).payments.single().recordedAt)
+    }
+
+    @Test
+    fun `latest completed reading renders its own evidence without combining original analysis metadata`() {
+        val record = record(
+            "VERDICT" to """{"verdict":"CONDITIONAL","reason":"Original reason","model":"original-model","analysisRunId":"original-run","inputHash":"original-input","readingAgreement":{"needsYourEyes":true},"review":{"verdict":"COMPATIBLE","source":"MAKER","reason":"Original review","revision":1}}""",
+            "READING" to """{"availability":"PENDING","scope":"FORMAT_ASSESSMENT","attempts":0,"retryAllowed":true}""",
+            "READING" to """{"availability":"AVAILABLE","scope":"FORMAT_ASSESSMENT","assessmentId":"assessment-1","assessmentHash":"assessment-hash","inputHash":"reading-input","kind":"REQUEST","verdict":"COMPATIBLE","quote":"A blue postcard","reason":"The postcard format matches.","model":"reading-model","completedAt":"2026-11-12T15:01:02.123456Z","attempts":1,"retryAllowed":false}""",
+        )
+        val reading = assertNotNull(pledgeTrace(record).reading)
+        assertEquals("COMPATIBLE", reading.verdict)
+        assertEquals("assessment-1", reading.assessmentId)
+        assertEquals(Instant.parse("2026-11-12T15:01:02.123456Z"), reading.completedAt)
+        assertFalse(reading.retryAllowed)
+        `when`(records.findPledgeByToken(token, pledgeId)).thenReturn(record)
+        val html = mvc.get("/w/$token/pledges/$pledgeId/trace").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        listOf("A blue postcard", "The postcard format matches.", "reading-model", "reading-input", "assessment-1", "assessment-hash",
+            "2026-11-12T15:01:02.123456Z", "product format only", "does not verify price, finish, or delivery terms")
+            .forEach { assertContains(html, it) }
+        listOf("Original reason", "original-model", "Original review", "The two readings differed.", "Reading pending", "Try reading again")
+            .forEach { assertFalse(html.contains(it), it) }
+    }
+
+    @Test
+    fun `pending reading exposes a protected retry and stops at the two attempt limit`() {
+        val pending = record(
+            "VERDICT" to """{"verdict":"COMPATIBLE","model":"old-model","reason":"Old reading reason","analysisRunId":"old-run"}""",
+            "READING" to """{"availability":"PENDING","scope":"FORMAT_ASSESSMENT","failureReason":"PROVIDER_UNAVAILABLE","attempts":1,"retryAllowed":true}""",
+        )
+        val reading = assertNotNull(pledgeTrace(pending).reading)
+        assertNull(reading.verdict)
+        assertNull(reading.model)
+        assertNull(reading.completedAt)
+        `when`(records.findPledgeByToken(token, pledgeId)).thenReturn(pending)
+        val html = mvc.get("/w/$token/pledges/$pledgeId/trace").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        listOf("Reading pending", "The last attempt did not produce a usable reading.", "Try reading again",
+            "action=\"/w/$token/pledges/$pledgeId/trace/reading\"", "name=\"_csrf\"")
+            .forEach { assertContains(html, it) }
+        listOf("old-model", "old-run", "Old reading reason").forEach { assertFalse(html.contains(it), it) }
+        val capped = record("READING" to """{"availability":"PENDING","scope":"FORMAT_ASSESSMENT","attempts":2,"retryAllowed":false}""")
+        assertFalse(assertNotNull(pledgeTrace(capped).reading).retryAllowed)
+        `when`(records.findPledgeByToken(token, pledgeId)).thenReturn(capped)
+        val cappedHtml = mvc.get("/w/$token/pledges/$pledgeId/trace").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        assertContains(cappedHtml, "Reading not completed")
+        assertContains(cappedHtml, "no retries remain. No automatic retry will run.")
+        assertFalse(cappedHtml.contains("Reading pending"))
+        assertFalse(cappedHtml.contains("trace/reading"))
+    }
+
+    @Test
+    fun `changed record hides later reading and preserves original evidence with integrity issue`() {
+        val changed = record(
+            "VERDICT" to """{"verdict":"CONDITIONAL","reason":"Original recorded reason"}""",
+            "READING" to """{"availability":"AVAILABLE","scope":"FORMAT_ASSESSMENT","verdict":"COMPATIBLE","reason":"Untrusted later reason","model":"untrusted-model","attempts":1}""",
+        ).copy(integrity = "CHANGED", issues = listOf("Assessment source differs from its snapshot."))
+        val trace = pledgeTrace(changed)
+        assertNull(trace.reading)
+        assertEquals("CONDITIONAL", trace.verdict)
+        `when`(records.findPledgeByToken(token, pledgeId)).thenReturn(changed)
+        val html = mvc.get("/w/$token/pledges/$pledgeId/trace").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        listOf("The record has an integrity issue.", "Original recorded reason", "Assessment source differs from its snapshot.")
+            .forEach { assertContains(html, it) }
+        listOf("Untrusted later reason", "untrusted-model", "trace/reading").forEach { assertFalse(html.contains(it), it) }
     }
 
     @Test

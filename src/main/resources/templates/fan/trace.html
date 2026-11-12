@@ -16,6 +16,34 @@
     </section>
     <section class="card" aria-labelledby="reading-heading">
         <h2 id="reading-heading">How it was read</h2>
+        <p th:if="${trace.readingIntegrityIssue}" role="alert">The record has an integrity issue. The later reading cannot be trusted; the original recorded evidence is shown below.</p>
+        <div th:if="${trace.reading != null}" th:with="reading=${trace.reading}">
+            <h3 th:text="${reading.available ? 'Reading of this wish' : (reading.attempts >= 2 ? 'Reading not completed' : 'Reading pending')}"></h3>
+            <p>This assessment checks the product format only. It does not verify price, finish, or delivery terms.</p>
+            <th:block th:if="${reading.available}">
+                <p th:if="${reading.verdict != null}"><strong th:text="${@humanDisplay.state(reading.verdict)}"></strong> for the offered format.</p>
+                <p th:text="${reading.reason}"></p>
+                <blockquote th:if="${reading.quote != null}" th:text="${reading.quote}"></blockquote>
+                <p th:if="${reading.quote == null}">An exact source quote is unavailable.</p>
+                <p>Model: <span th:text="${reading.model ?: 'Unavailable'}"></span></p>
+                <p>Completed: <time th:datetime="${reading.completedAt}" th:text="${reading.completedAt == null ? 'Unavailable' : @humanDisplay.time(reading.completedAt)}"></time></p>
+            </th:block>
+            <th:block th:unless="${reading.available}">
+                <p th:text="${reading.pendingReason}"></p>
+                <p><span th:text="${reading.attempts}"></span> of 2 reading attempts used.</p>
+                <form th:if="${reading.retryAllowed}" method="post" th:action="@{/w/{token}/pledges/{id}/trace/reading(token=${token},id=${record.pledgeId})}">
+                    <button type="submit" th:text="${reading.attempts == 0 ? 'Read this wish' : 'Try reading again'}"></button>
+                </form>
+            </th:block>
+            <details><summary>Reading evidence</summary>
+                <dl class="term-list">
+                    <dt>Assessment</dt><dd th:text="${reading.assessmentId ?: 'Unavailable'}"></dd>
+                    <dt>Reading input</dt><dd th:text="${reading.inputHash ?: 'Unavailable'}"></dd>
+                    <dt>Assessment snapshot</dt><dd th:text="${reading.assessmentHash ?: 'Unavailable'}"></dd>
+                </dl>
+            </details>
+        </div>
+        <th:block th:if="${trace.reading == null and (!trace.readingIntegrityIssue or trace.verdict != null)}">
         <p th:if="${trace.verdict != null}"><strong th:text="${@humanDisplay.state(trace.verdict)}"></strong> for the offered option.</p>
         <p th:if="${trace.verdict == null}">No individual verdict was recorded for this pledge's wish and offered option.</p>
         <p th:if="${trace.readingReason != null}" th:text="${trace.readingReason}"></p>
@@ -26,6 +54,7 @@
             <p th:text="${trace.reviewReason}"></p>
         </div>
         <p th:if="${trace.model != null}">Model: <span th:text="${trace.model}"></span> · Run <span th:title="${trace.runId}" th:text="${@humanDisplay.shortId(trace.runId)}"></span></p>
+        </th:block>
     </section>
     <section class="card" aria-labelledby="terms-heading">
         <h2 id="terms-heading">The terms you agreed to</h2>
@@ -66,7 +95,7 @@
         <details><summary>Evidence hashes</summary>
             <dl class="term-list">
                 <dt>Wish text</dt><dd th:text="${trace.wishHash ?: 'Unavailable'}"></dd>
-                <dt>Analysis input</dt><dd th:text="${trace.inputHash ?: 'Unavailable'}"></dd>
+                <dt>Original analysis input</dt><dd th:text="${trace.inputHash ?: 'Unavailable'}"></dd>
                 <dt>Offer terms</dt><dd th:text="${trace.termsHash ?: 'Unavailable'}"></dd>
                 <dt>Latest record entry</dt><dd th:text="${record.lastHash ?: 'Unavailable'}"></dd>
             </dl>
