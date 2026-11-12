@@ -16,7 +16,7 @@ sealed interface OfferDraftGeneration {
     data class Unavailable(val reason: String) : OfferDraftGeneration
 }
 
-/** Implementations must reserve the shared daily call quota and make one request without retry. */
+/** Implementations must reserve the shared auxiliary UTC daily quota and make one request without retry. */
 fun interface OfferDraftGenerator {
     fun generate(input: OfferDraftInput, timeout: Duration, maxOutputTokens: Int): OfferDraftGeneration
 }

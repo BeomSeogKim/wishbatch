@@ -27,6 +27,7 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
@@ -60,7 +61,7 @@ class OfflineOfferGenerator : OfferDraftGenerator {
 
 @TestConfiguration
 class OfflineOfferConfiguration {
-    @Bean fun offlineOfferGenerator() = OfflineOfferGenerator()
+    @Bean @Primary fun offlineOfferGenerator() = OfflineOfferGenerator()
 }
 
 @SpringBootTest
@@ -181,6 +182,18 @@ class OfferDraftServiceTests @Autowired constructor(
         assertNull(changed.draft)
         assertEquals(OfferDraftGeneration.Unavailable("ATTEMPT_LIMIT"), drafts.generate(f.token, f.run.id, changed.sourceHash))
         assertEquals(2, generator.calls.size)
+    }
+
+    @Test
+    fun `missing configuration and shared quota rejection consume no workspace attempt`() {
+        val f = fixture()
+        val hash = drafts.page(f.token, f.run.id).sourceHash
+        for (reason in listOf("NOT_CONFIGURED", "RUN_LIMIT_REACHED")) {
+            generator.result = OfferDraftGeneration.Unavailable(reason)
+            assertEquals(generator.result, drafts.generate(f.token, f.run.id, hash))
+            assertNull(drafts.page(f.token, f.run.id).draft)
+        }
+        assertTrue(drafts.page(f.token, f.run.id).canGenerate)
     }
 
     @Test

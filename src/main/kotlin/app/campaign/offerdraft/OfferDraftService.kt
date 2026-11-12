@@ -18,7 +18,6 @@ import tools.jackson.databind.json.JsonMapper
 import java.security.MessageDigest
 import java.time.Clock
 import java.time.Duration
-import java.util.Optional
 import java.util.UUID
 
 class InvalidOfferDraftException : RuntimeException()
@@ -43,7 +42,7 @@ class OfferDraftService(
     private val runs: AnalysisRunService,
     private val mapper: JsonMapper,
     private val clock: Clock,
-    private val generator: Optional<OfferDraftGenerator>,
+    private val generator: OfferDraftGenerator,
     @Value("\${LLM_DAILY_RUN_CAP:100}") private val dailyCap: Int,
 ) {
     private data class Source(val workspace: Workspace, val option: Option, val input: OfferDraftInput)
@@ -57,7 +56,7 @@ class OfferDraftService(
         val published = published(source.workspace.id, runId)
         return OfferDraftPage(runId, source.option, source.input.sourceHash, source.input.evidence, draft,
             latest?.let { mapper.readValue(it.removalsJson, Array<OfferDraftRemoval>::class.java).toList() }.orEmpty(),
-            generator.isPresent && dailyCap > 0 && attempts.size < 2 && !published, published, latest?.failure != null)
+            dailyCap > 0 && attempts.size < 2 && !published, published, latest?.failure != null)
     }
 
     @Transactional
@@ -67,13 +66,15 @@ class OfferDraftService(
         requireCurrent(source, sourceHash)
         if (published(source.workspace.id, runId)) throw InvalidOfferDraftException()
         if (dailyCap <= 0) return OfferDraftGeneration.Unavailable("CALL_LIMIT")
-        val provider = generator.orElse(null) ?: return OfferDraftGeneration.Unavailable("NOT_CONFIGURED")
         val attemptNumber = attempts(source.workspace.id, runId).size + 1
         if (attemptNumber > 2) return OfferDraftGeneration.Unavailable("ATTEMPT_LIMIT")
         val result = try {
-            provider.generate(source.input, Duration.ofSeconds(15), 1536)
+            generator.generate(source.input, Duration.ofSeconds(15), 1536)
         } catch (_: RuntimeException) {
             OfferDraftGeneration.Unavailable("PROVIDER_FAILURE")
+        }
+        if (result is OfferDraftGeneration.Unavailable && result.reason in setOf("NOT_CONFIGURED", "RUN_LIMIT_REACHED")) {
+            return result
         }
         // Re-read effective evidence after the request; a changed review cannot authorize old copy.
         val current = source(token, runId)
