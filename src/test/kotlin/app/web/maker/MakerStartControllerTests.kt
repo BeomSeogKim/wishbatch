@@ -203,6 +203,9 @@ class MakerStartControllerTests(
         assertEquals(1, pages.toSet().size)
         assertShell(pages.first())
         assertContains(pages.first(), "This page is unavailable.")
+        assertContains(pages.first(), "<title>Not found | Wishbatch</title>")
+        assertContains(pages.first(), "<span>Wishbatch</span>")
+        assertContains(pages.first(), "<strong>Wishbatch</strong>")
         assertFalse(pages.first().contains(wishId.toString()))
     }
 
