@@ -48,7 +48,7 @@ class PayPalClient internal constructor(
                 "value" to BigDecimal.valueOf(request.amount.minorUnits, scale(request.amount.currency)).toPlainString(),
             ))),
             "payment_source" to mapOf("paypal" to mapOf("experience_context" to mapOf("shipping_preference" to "GET_FROM_FILE"))),
-        )) { body -> OrderDetails(OrderId(body.requiredText("id"))) to status(body) }
+        )) { body -> OrderDetails(OrderId(body.requiredText("id"))) to orderStatus(body) }
 
     override fun authorizeOrder(orderId: OrderId, idempotencyKey: String) =
         call(HttpMethod.POST, "/v2/checkout/orders/${segment(orderId.value)}/authorize", idempotencyKey, emptyMap<String, Any>()) { body ->
@@ -68,7 +68,8 @@ class PayPalClient internal constructor(
 
     override fun voidAuthorization(authorizationId: AuthorizationId, idempotencyKey: String) =
         call(HttpMethod.POST, "/v2/payments/authorizations/${segment(authorizationId.value)}/void", idempotencyKey,
-            emptyMap<String, Any>()) { VoidDetails(authorizationId) to PaymentStatus.VOIDED }
+            emptyMap<String, Any>(), emptyResponse = VoidDetails(authorizationId) to PaymentStatus.VOIDED,
+        ) { body -> VoidDetails(authorizationId) to authorizationStatus(body) }
 
     override fun refundCapture(captureId: CaptureId, idempotencyKey: String) =
         call(HttpMethod.POST, "/v2/payments/captures/${segment(captureId.value)}/refund", idempotencyKey,
@@ -87,17 +88,17 @@ class PayPalClient internal constructor(
             orderId ?: body.path("supplementary_data").path("related_ids").text("order_id")?.let(::OrderId),
             email, address,
             body.path("supplementary_data").path("related_ids").text("capture_id")?.let(::CaptureId),
-        ) to status(body)
+        ) to authorizationStatus(body)
 
     private fun capture(body: JsonNode, authorizationId: AuthorizationId? = null) = CaptureDetails(
         CaptureId(body.requiredText("id")), money(body),
         authorizationId ?: body.path("supplementary_data").path("related_ids").text("authorization_id")?.let(::AuthorizationId),
-    ) to status(body)
+    ) to captureStatus(body)
 
     private fun refund(body: JsonNode, captureId: CaptureId? = null) = RefundDetails(
         RefundId(body.requiredText("id")), money(body),
         captureId ?: body.path("supplementary_data").path("related_ids").text("capture_id")?.let(::CaptureId),
-    ) to status(body)
+    ) to refundStatus(body)
 
     private fun shipping(body: JsonNode): ShippingAddress? {
         if (body.isMissingNode || body.isNull) return null
@@ -117,13 +118,43 @@ class PayPalClient internal constructor(
     private fun segment(value: String) = UriUtils.encodePathSegment(value, UTF_8)
     private fun JsonNode.text(field: String): String? = path(field).let { if (it.isString) it.asString() else null }
     private fun JsonNode.requiredText(field: String) = requireNotNull(text(field))
-    private fun status(body: JsonNode) = when (val value = body.requiredText("status")) {
+    private fun orderStatus(body: JsonNode) = when (body.requiredText("status")) {
+        "CREATED", "PAYER_ACTION_REQUIRED" -> PaymentStatus.CREATED
+        "SAVED" -> PaymentStatus.PENDING
+        "APPROVED" -> PaymentStatus.APPROVED
+        "VOIDED" -> PaymentStatus.VOIDED
+        "COMPLETED" -> PaymentStatus.COMPLETED
+        else -> error("Unexpected order status")
+    }
+
+    private fun authorizationStatus(body: JsonNode) = when (body.requiredText("status")) {
+        "CREATED" -> PaymentStatus.CREATED
+        "CAPTURED", "PARTIALLY_CAPTURED" -> PaymentStatus.CAPTURED
         "DENIED" -> PaymentStatus.DECLINED
-        else -> PaymentStatus.valueOf(value)
+        "VOIDED" -> PaymentStatus.VOIDED
+        "PENDING" -> PaymentStatus.PENDING
+        else -> error("Unexpected authorization status")
+    }
+
+    private fun captureStatus(body: JsonNode) = when (body.requiredText("status")) {
+        "COMPLETED" -> PaymentStatus.COMPLETED
+        "DECLINED" -> PaymentStatus.DECLINED
+        "PARTIALLY_REFUNDED", "PENDING" -> PaymentStatus.PENDING
+        "REFUNDED" -> PaymentStatus.REFUNDED
+        "FAILED" -> PaymentStatus.FAILED
+        else -> error("Unexpected capture status")
+    }
+
+    private fun refundStatus(body: JsonNode) = when (body.requiredText("status")) {
+        "CANCELLED", "FAILED" -> PaymentStatus.FAILED
+        "PENDING" -> PaymentStatus.PENDING
+        "COMPLETED" -> PaymentStatus.COMPLETED
+        else -> error("Unexpected refund status")
     }
 
     private fun <T> call(
         method: HttpMethod, path: String, key: String, body: Any? = null,
+        emptyResponse: Pair<T, PaymentStatus>? = null,
         parse: (JsonNode) -> Pair<T, PaymentStatus>,
     ): PaymentResult<T> {
         if (!properties.configured) return PaymentResult.Failed(PaymentStatus.FAILED, errorCode = "NOT_CONFIGURED")
@@ -134,6 +165,9 @@ class PayPalClient internal constructor(
         response as PaymentResult.Received
         val received = response.resource
         if (received.code !in 200..299) return failure(received)
+        if (received.code == 204 && emptyResponse != null) {
+            return PaymentResult.Received(emptyResponse.first, emptyResponse.second, received.debugId)
+        }
         return try {
             val (resource, status) = parse(if (received.body.isBlank()) json.createObjectNode() else json.readTree(received.body))
             PaymentResult.Received(resource, status, received.debugId)

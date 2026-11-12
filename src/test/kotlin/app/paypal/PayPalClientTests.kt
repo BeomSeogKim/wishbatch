@@ -53,6 +53,60 @@ class PayPalClientTests {
     }
 
     @Test
+    fun `create maps documented order states without claiming buyer approval`() {
+        token()
+        val statuses = mapOf(
+            "CREATED" to PaymentStatus.CREATED,
+            "PAYER_ACTION_REQUIRED" to PaymentStatus.CREATED,
+            "SAVED" to PaymentStatus.PENDING,
+            "APPROVED" to PaymentStatus.APPROVED,
+            "VOIDED" to PaymentStatus.VOIDED,
+            "COMPLETED" to PaymentStatus.COMPLETED,
+        )
+        for (status in statuses.keys) {
+            expect(HttpMethod.POST, "/v2/checkout/orders", "create-key", """{"id":"ORDER1","status":"$status"}""")
+        }
+        for ((providerStatus, status) in statuses) {
+            assertEquals(PaymentResult.Received(OrderDetails(OrderId("ORDER1")), status, "response-debug"),
+                client.createAuthorizeOrder(CreateAuthorizeOrder(UUID.randomUUID(), Money(1234, "USD")), "create-key"), providerStatus)
+        }
+        server.verify()
+    }
+
+    @Test
+    fun `authorization responses preserve documented statuses on authorize read and void`() {
+        token()
+        val statuses = mapOf(
+            "CREATED" to PaymentStatus.CREATED,
+            "CAPTURED" to PaymentStatus.CAPTURED,
+            "DENIED" to PaymentStatus.DECLINED,
+            "PARTIALLY_CAPTURED" to PaymentStatus.CAPTURED,
+            "VOIDED" to PaymentStatus.VOIDED,
+            "PENDING" to PaymentStatus.PENDING,
+        )
+        for (status in statuses.keys) {
+            val authorization = """{"id":"AUTH1","status":"$status",$amount}"""
+            expect(HttpMethod.POST, "/v2/checkout/orders/ORDER1/authorize", "authorize-key", """{
+                "id":"ORDER1","status":"COMPLETED",
+                "purchase_units":[{"payments":{"authorizations":[$authorization]}}]
+            }""")
+            expect(HttpMethod.GET, "/v2/payments/authorizations/AUTH1", null, authorization)
+            expect(HttpMethod.POST, "/v2/payments/authorizations/AUTH1/void", "void-key", authorization)
+        }
+        for ((providerStatus, status) in statuses) {
+            val authorized = received(client.authorizeOrder(OrderId("ORDER1"), "authorize-key"))
+            assertEquals(status, authorized.status, providerStatus)
+            assertEquals(AuthorizationId("AUTH1"), authorized.resource.authorizationId)
+            val read = received(client.readAuthorization(AuthorizationId("AUTH1"), "read-key"))
+            assertEquals(status, read.status, providerStatus)
+            assertEquals(AuthorizationId("AUTH1"), read.resource.authorizationId)
+            assertEquals(PaymentResult.Received(VoidDetails(AuthorizationId("AUTH1")), status, "response-debug"),
+                client.voidAuthorization(AuthorizationId("AUTH1"), "void-key"), providerStatus)
+        }
+        server.verify()
+    }
+
+    @Test
     fun `authorize uses nested status and returns payer shipping and expiry`(output: CapturedOutput) {
         token()
         expect(HttpMethod.POST, "/v2/checkout/orders/ORDER1/authorize", "authorize-key", """{
@@ -85,10 +139,10 @@ class PayPalClientTests {
     @Test
     fun `read authorization preserves missing evidence and terminal resource statuses`() {
         token()
-        for (status in listOf("CAPTURED", "VOIDED", "EXPIRED")) {
+        for (status in listOf("CAPTURED", "VOIDED")) {
             expect(HttpMethod.GET, "/v2/payments/authorizations/AUTH1", null, """{"id":"AUTH1","status":"$status",$amount}""")
         }
-        for (status in listOf(PaymentStatus.CAPTURED, PaymentStatus.VOIDED, PaymentStatus.EXPIRED)) {
+        for (status in listOf(PaymentStatus.CAPTURED, PaymentStatus.VOIDED)) {
             val result = received(client.readAuthorization(AuthorizationId("AUTH1"), "read-key"))
             assertEquals(status, result.status)
             assertNull(result.resource.orderId)
@@ -101,18 +155,30 @@ class PayPalClientTests {
     }
 
     @Test
-    fun `capture is full and final and pending is not completed`() {
+    fun `capture and read accept documented statuses without treating partial refunds as complete`() {
         token()
-        for (status in listOf("COMPLETED", "PENDING", "DECLINED")) {
+        val statuses = mapOf(
+            "COMPLETED" to PaymentStatus.COMPLETED,
+            "PENDING" to PaymentStatus.PENDING,
+            "DECLINED" to PaymentStatus.DECLINED,
+            "PARTIALLY_REFUNDED" to PaymentStatus.PENDING,
+            "REFUNDED" to PaymentStatus.REFUNDED,
+            "FAILED" to PaymentStatus.FAILED,
+        )
+        for (status in statuses.keys) {
             expect(HttpMethod.POST, "/v2/payments/authorizations/AUTH1/capture", "capture-key",
                 """{"id":"CAP1","status":"$status",$amount}""", """{"final_capture":true}""")
+            expect(HttpMethod.GET, "/v2/payments/captures/CAP1", null, """{"id":"CAP1","status":"$status",$amount}""")
         }
-        for (status in listOf(PaymentStatus.COMPLETED, PaymentStatus.PENDING, PaymentStatus.DECLINED)) {
+        for ((providerStatus, status) in statuses) {
             val result = received(client.capture(AuthorizationId("AUTH1"), "capture-key"))
-            assertEquals(status, result.status)
+            assertEquals(status, result.status, providerStatus)
             assertEquals(CaptureId("CAP1"), result.resource.captureId)
             assertEquals(AuthorizationId("AUTH1"), result.resource.authorizationId)
             assertEquals(Money(1234, "USD"), result.resource.amount)
+            val read = received(client.readCapture(CaptureId("CAP1"), "read-key"))
+            assertEquals(status, read.status, providerStatus)
+            assertEquals(CaptureId("CAP1"), read.resource.captureId)
         }
         server.verify()
     }
@@ -129,16 +195,39 @@ class PayPalClientTests {
     }
 
     @Test
-    fun `full refund preserves pending and completed outcomes`() {
+    fun `void requires a status in a 200 representation`() {
         token()
-        for (status in listOf("PENDING", "COMPLETED")) {
+        for (body in listOf("", "{}", "[]", "true")) {
+            expect(HttpMethod.POST, "/v2/payments/authorizations/AUTH1/void", "void-key", body)
+        }
+        repeat(4) {
+            assertEquals(PaymentResult.Failed(PaymentStatus.FAILED, "response-debug", "INVALID_RESPONSE"),
+                client.voidAuthorization(AuthorizationId("AUTH1"), "void-key"))
+        }
+        server.verify()
+    }
+
+    @Test
+    fun `full refund and read preserve every documented outcome`() {
+        token()
+        val statuses = mapOf(
+            "PENDING" to PaymentStatus.PENDING,
+            "COMPLETED" to PaymentStatus.COMPLETED,
+            "FAILED" to PaymentStatus.FAILED,
+            "CANCELLED" to PaymentStatus.FAILED,
+        )
+        for (status in statuses.keys) {
             expect(HttpMethod.POST, "/v2/payments/captures/CAP1/refund", "refund-key",
                 """{"id":"REF1","status":"$status",$amount}""", "{}")
+            expect(HttpMethod.GET, "/v2/payments/refunds/REF1", null, """{"id":"REF1","status":"$status",$amount}""")
         }
-        for (status in listOf(PaymentStatus.PENDING, PaymentStatus.COMPLETED)) {
+        for ((providerStatus, status) in statuses) {
             val result = received(client.refundCapture(CaptureId("CAP1"), "refund-key"))
-            assertEquals(status, result.status)
+            assertEquals(status, result.status, providerStatus)
             assertEquals(RefundDetails(RefundId("REF1"), Money(1234, "USD"), CaptureId("CAP1")), result.resource)
+            val read = received(client.readRefund(RefundId("REF1"), "read-key"))
+            assertEquals(status, read.status, providerStatus)
+            assertEquals(RefundId("REF1"), read.resource.refundId)
         }
         server.verify()
     }
@@ -323,6 +412,39 @@ class PayPalClientTests {
         repeat(3) {
             assertEquals(PaymentResult.Failed(PaymentStatus.FAILED, "response-debug", "INVALID_RESPONSE"),
                 client.readCapture(CaptureId("CAP1"), "key"))
+        }
+        server.verify()
+    }
+
+    @Test
+    fun `unknown and cross resource statuses fail every response mapping`() {
+        token()
+        val calls = listOf<() -> PaymentResult<*>>(
+            { client.createAuthorizeOrder(CreateAuthorizeOrder(UUID.randomUUID(), Money(1234, "USD")), "key") },
+            { client.authorizeOrder(OrderId("ORDER1"), "key") },
+            { client.readAuthorization(AuthorizationId("AUTH1"), "key") },
+            { client.capture(AuthorizationId("AUTH1"), "key") },
+            { client.readCapture(CaptureId("CAP1"), "key") },
+            { client.voidAuthorization(AuthorizationId("AUTH1"), "key") },
+            { client.refundCapture(CaptureId("CAP1"), "key") },
+            { client.readRefund(RefundId("REF1"), "key") },
+        )
+        for (status in listOf("UNKNOWN", "TRANSPORT_FAILURE", "EXPIRED")) {
+            val body = """{"id":"RESOURCE1","status":"$status",$amount}"""
+            expect(HttpMethod.POST, "/v2/checkout/orders", "key", body)
+            expect(HttpMethod.POST, "/v2/checkout/orders/ORDER1/authorize", "key",
+                """{"purchase_units":[{"payments":{"authorizations":[$body]}}]}""")
+            expect(HttpMethod.GET, "/v2/payments/authorizations/AUTH1", null, body)
+            expect(HttpMethod.POST, "/v2/payments/authorizations/AUTH1/capture", "key", body)
+            expect(HttpMethod.GET, "/v2/payments/captures/CAP1", null, body)
+            expect(HttpMethod.POST, "/v2/payments/authorizations/AUTH1/void", "key", body)
+            expect(HttpMethod.POST, "/v2/payments/captures/CAP1/refund", "key", body)
+            expect(HttpMethod.GET, "/v2/payments/refunds/REF1", null, body)
+        }
+        repeat(3) {
+            calls.forEach { call ->
+                assertEquals(PaymentResult.Failed(PaymentStatus.FAILED, "response-debug", "INVALID_RESPONSE"), call())
+            }
         }
         server.verify()
     }
