@@ -37,6 +37,7 @@
                 </section>
                 <div th:replace="~{livecampaign/fragments :: counts(${campaign})}">
                 </div>
+                <p><a th:href="@{/w/{token}/maker/campaign/{id}/charts(token=${token},id=${campaign.id})}">View campaign counts and recorded history</a></p>
                 <section class="two-column preview-section">
                     <div class="card">
                         <h2>Batch progress</h2>
