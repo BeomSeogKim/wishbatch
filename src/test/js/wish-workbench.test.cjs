@@ -181,7 +181,7 @@ test('grid selection mirrors form checkboxes and filter changes clear invisible 
     assert.deepEqual(app.checkboxes.map(input => input.checked), [false, false, false]);
     app.select(['two']);
     assert.deepEqual(app.checkboxes.filter(input => input.checked).map(input => input.value), ['two']);
-    assert.match(app.status.textContent, /1 wishes shown; 1 selected.*not purchases/);
+    assert.match(app.status.textContent, /1 wish shown; 1 selected.*not purchases/);
     assert.equal(app.options.rowSelection.mode, 'multiRow');
     assert.equal(app.options.rowSelection.selectAll, 'filtered');
 });
@@ -322,7 +322,7 @@ test('filter selects update on change and known sources remain searchable', () =
     app.filters.handlers.change();
     assert.deepEqual(Array.from(app.displayed, row => row.id), ['two']);
     assert.equal(app.checkboxes.some(input => input.checked), false);
-    assert.match(app.status.textContent, /1 wishes shown/);
+    assert.match(app.status.textContent, /1 wish shown/);
     app.controls.q.value = '';
     app.controls.optionId.value = 'card';
     app.controls.label.value = 'INCOMPATIBLE';

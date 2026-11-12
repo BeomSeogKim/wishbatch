@@ -103,7 +103,8 @@
             });
             return `${optionNames.get(optionId) || optionId} (${counts.join(', ')})`;
         });
-        status.textContent = `${gridApi.getDisplayedRowCount()} wishes shown; ${selectedIds.size} selected. Stated interest, not purchases.`;
+        const shown = gridApi.getDisplayedRowCount();
+        status.textContent = `${shown} ${shown === 1 ? 'wish' : 'wishes'} shown; ${selectedIds.size} selected. Stated interest, not purchases.`;
         status.title = groups.join('; ');
         const counts = root.querySelector('[data-workbench-counts]');
         if (counts) counts.replaceChildren(...groups.map(group => {
