@@ -31,6 +31,7 @@
     </nav>
 </header>
 <div class="sandbox-notice"><span class="sandbox-dot" aria-hidden="true"></span><span th:text="#{sandbox.notice}">Sandbox demo. No real money moves.</span></div>
+<div class="sandbox-notice" role="status" th:if="${@layoutModel.temporaryDatabase()}">Temporary demo data: the configured database is unavailable. Changes here are lost on restart and are not saved to your configured database.</div>
 <th:block th:if="${demoGuide != null}"><div th:replace="~{fragments/demo-guide :: guide(${demoGuide})}"></div></th:block>
 <main th:replace="${content}"></main>
 <footer class="site-footer shell">
