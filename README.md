@@ -50,16 +50,17 @@ Community for review tables and charts.
 
 ## Where AG Grid and AG Charts are used
 
-- **Wish review:** AG Grid supports row detail, bulk maker decisions, and
-  individual option-label filters. Export the filtered, sorted view to CSV when
-  the interactive grid is available. Original wishes and the server-rendered
-  table remain available.
-- **Demand and campaign charts:** AG Charts plots interest at candidate prices,
-  compares options, and displays campaign counts and recorded history inline.
-  Selecting a demand point or option bar filters the active wish workbench; exact
-  data and evidence remain available in tables.
-- **Books check:** AG Grid presents local and PayPal observations per pledge,
-  with sorting, filtering, pinned match columns, CSV export, and money-trail links.
+- **Wish review:** The proposal and review page use AG Grid for row detail,
+  bulk decisions, and individual option-label filters. Export the filtered,
+  sorted view to CSV when the interactive grid is available. Original wishes
+  and the server-rendered table remain available.
+- **Demand and campaign charts:** AG Charts on the proposal plots price demand
+  and option comparisons; selecting a point or bar filters the active embedded
+  workbench. Campaign charts appear inline and on a separate page; history points
+  focus source rows. Exact data and evidence remain available in tables.
+- **Books and money trail:** AG Grid presents local and PayPal observations per
+  pledge. The books ledger supports sorting, filtering, pinned match columns,
+  CSV export, and links to the money-trail ledger.
 
 ## Getting started
 
