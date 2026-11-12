@@ -4,25 +4,32 @@ function initializeBooksLedger() {
     const fallback = document.getElementById('books-fallback');
     const grid = document.getElementById('books-grid');
     const fields = ['pledge', 'units', 'amount', 'localBefore', 'providerBefore', 'matchBefore', 'localAfter', 'providerAfter', 'matchAfter'];
+    const display = window.WishbatchDisplay;
     const columnDefs = Array.from(table.tHead.rows[0].cells, (cell, index) => ({
         field: fields[index], headerName: cell.textContent.trim(), minWidth: index === 4 || index === 7 ? 350 : 150,
-        ...(index === 1 ? { filter: 'agNumberColumnFilter' } : {})
+        ...(index === 1 ? { filter: 'agNumberColumnFilter' } : {}),
+        ...(index === 5 ? { pinned: 'left' } : {}),
+        ...([3, 5, 6, 8].includes(index) ? { valueFormatter: params => display.state(params.value) } : {}),
+        ...(index === 0 ? { valueFormatter: params => display.shortId(params.value), tooltipField: 'pledge' } : {}),
+        ...([4, 7].includes(index) ? { tooltipField: fields[index] } : {})
     }));
+    columnDefs.unshift(columnDefs.splice(5, 1)[0]);
     const rowData = Array.from(table.tBodies[0].rows, row => Object.fromEntries(fields.map((field, index) => {
         const cell = row.cells[index];
         const entries = Array.from(cell.querySelectorAll('li'), item => item.textContent.trim());
-        return [field, index === 1 ? Number(cell.textContent) : entries.length ? entries.join('; ') : cell.textContent.trim()];
+        return [field, index === 1 ? Number(cell.textContent) : entries.length ? entries.join('; ') : (cell.getAttribute('title') || cell.textContent.trim())];
     })));
     try {
         grid.hidden = false;
-        grid.style.height = '32rem';
         const api = window.agGrid.createGrid(grid, {
             columnDefs, rowData,
             defaultColDef: { sortable: true, filter: true, resizable: true, floatingFilter: true },
-            theme: window.agGrid.themeQuartz.withParams({ fontFamily: 'inherit' }),
+            theme: window.agGrid.themeQuartz.withParams({ fontFamily: 'inherit', backgroundColor: 'var(--surface)', foregroundColor: 'var(--ink)', headerBackgroundColor: 'var(--surface-soft)', borderColor: 'var(--line)', accentColor: 'var(--accent)' }),
+            domLayout: 'autoHeight',
             loadThemeGoogleFonts: false,
             pagination: true, paginationPageSize: 20, paginationPageSizeSelector: [20, 50, 100],
             enableCellTextSelection: true,
+            enableBrowserTooltips: true,
             defaultCsvExportParams: {
                 processCellCallback: params => {
                     const value = String(params.value ?? '');

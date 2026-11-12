@@ -11,6 +11,7 @@ function browser({available = true, fail = false, readyState = 'complete'} = {})
         textContent, hidden: false, style: {}, attributes: {}, listeners: {},
         addEventListener(event, callback) { this.listeners[event] = callback; },
         setAttribute(name, value) { this.attributes[name] = value; },
+        getAttribute(name) { return this.attributes[name] || null; },
         querySelectorAll(selector) { assert.equal(selector, 'li'); return entries.map(textContent => ({textContent})); }
     });
     const elements = Object.fromEntries(['books-fallback', 'books-grid', 'books-search', 'books-export',
@@ -44,6 +45,7 @@ function browser({available = true, fail = false, readyState = 'complete'} = {})
             return api;
         }
     }} : {};
+    window.WishbatchDisplay = {state: value => ({MATCH: 'Match', UNKNOWN: 'Unknown'}[value] || value), shortId: value => value.slice(0, 8) + '…'};
     const documentListeners = {};
     const document = {
         readyState,
@@ -73,8 +75,16 @@ test('grid supports sorting filters safe CSV and the accessible table toggle', (
     assert.equal(options.defaultColDef.sortable, true);
     assert.equal(options.defaultColDef.filter, true);
     assert.equal(options.defaultColDef.floatingFilter, true);
-    assert.equal(options.columnDefs[1].filter, 'agNumberColumnFilter');
-    assert.equal(options.columnDefs[4].headerName, 'PayPal before');
+    assert.equal(options.columnDefs[0].field, 'matchBefore');
+    assert.equal(options.columnDefs[0].pinned, 'left');
+    assert.equal(options.columnDefs[0].valueFormatter({value: 'UNKNOWN'}), 'Unknown');
+    assert.equal(options.columnDefs[0].valueFormatter({value: 'MATCH'}), 'Match');
+    assert.equal(options.columnDefs[2].filter, 'agNumberColumnFilter');
+    assert.equal(options.columnDefs[5].headerName, 'PayPal before');
+    assert.equal(options.columnDefs[5].tooltipField, 'providerBefore');
+    assert.equal(options.enableBrowserTooltips, true);
+    assert.equal(options.domLayout, 'autoHeight');
+    assert.equal(calls.theme[0].backgroundColor, 'var(--surface)');
     assert.equal(options.rowData[0].units, 3);
     assert.equal(options.rowData[0].amount, 'USD 19.50');
     assert.equal(options.rowData[0].providerBefore, 'ORDER order-id: COMPLETED; CAPTURE capture-id: PENDING');

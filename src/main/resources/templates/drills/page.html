@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Reliability drills', ~{::main})}">
 <body>
-<main id="main" class="shell">
+<main id="main" class="shell drills-page">
+    <link rel="stylesheet" th:href="@{/css/ux-books-drills.css}">
     <header class="page-heading">
         <p class="eyebrow">Educational payment playback</p>
         <h1>Reliability drills</h1>
@@ -12,19 +13,25 @@
         <a class="button button-secondary" th:href="@{/w/{token}/maker(token=${token})}">Back to maker</a>
     </header>
 
+    <nav class="drill-choices" aria-label="Choose a simulation">
+        <h2>Choose a simulation</h2>
+        <ul><li th:each="choice : ${drills}"><a th:href="${'#' + choice.id}" th:text="${choice.title}"></a></li></ul>
+        <p>Choose a scenario, then review its simulated checkpoints and evidence.</p>
+    </nav>
+
     <section th:each="drill : ${drills}" class="preview-section" th:id="${drill.id}" data-drill="simulation">
         <h2 th:text="${drill.title}"></h2>
         <p class="notice">Simulation — no PayPal calls or real campaign changes</p>
         <p th:text="${drill.summary}"></p>
 
-        <div class="table-scroll">
+        <div class="table-scroll drill-table" tabindex="0" role="region" aria-label="Simulated campaign checkpoints">
             <table>
                 <caption>Simulated campaign and counts before and after playback</caption>
                 <thead><tr><th scope="col">Checkpoint</th><th scope="col">Campaign</th><th scope="col">Stated interest</th><th scope="col">Authorized holds</th><th scope="col">Paid</th><th scope="col">Needs attention</th></tr></thead>
                 <tbody>
                 <tr th:each="checkpoint : ${ {drill.before, drill.after} }">
                     <th scope="row" th:text="${checkpointStat.first ? 'Before' : 'After'}"></th>
-                    <td><span th:text="${checkpoint.campaignState}"></span><span th:if="${checkpoint.reason != null}" th:text="${' / ' + checkpoint.reason}"></span></td>
+                    <td><span th:title="${checkpoint.campaignState}" th:text="${@humanDisplay.state(checkpoint.campaignState)}"></span><span th:if="${checkpoint.reason != null}" th:text="${' / ' + checkpoint.reason}"></span></td>
                     <td th:text="${checkpoint.counts.statedInterest}"></td>
                     <td th:text="${checkpoint.counts.authorizedHolds}"></td>
                     <td th:text="${checkpoint.counts.paid}"></td>
@@ -34,7 +41,9 @@
             </table>
         </div>
 
-        <div class="table-scroll">
+        <details>
+            <summary>View simulated operation timeline</summary>
+        <div class="table-scroll drill-table" tabindex="0" role="region" aria-label="Simulated operation timeline">
             <table>
                 <caption>Simulated operation timeline. Times are relative sample times, never production observations.</caption>
                 <thead><tr><th scope="col">Simulated time</th><th scope="col">Operation and evidence</th><th scope="col">Provider ID / original key</th><th scope="col">Result</th><th scope="col">Campaign / counts / attention</th></tr></thead>
@@ -43,27 +52,30 @@
                     <th scope="row" th:text="${step.timeLabel}"></th>
                     <td><strong th:text="${step.operation}"></strong><p th:if="${step.endpoint != null}"><code th:text="${step.endpoint}"></code></p><p th:text="${step.detail}"></p></td>
                     <td><p th:if="${step.providerId != null}">Simulated ID: <code th:text="${step.providerId}"></code></p><p th:if="${step.key != null}">Original idempotency key: <code th:text="${step.key}"></code></p></td>
-                    <td th:text="${step.status}"></td>
-                    <td><p th:text="${step.snapshot.campaignState}"></p><p>Stated interest: <span th:text="${step.snapshot.counts.statedInterest}"></span>; Authorized holds: <span th:text="${step.snapshot.counts.authorizedHolds}"></span>; Paid: <span th:text="${step.snapshot.counts.paid}"></span>.</p><ul><li th:each="attention : ${step.snapshot.needsAttention}" th:text="${attention}"></li></ul></td>
+                    <td th:title="${step.status}" th:text="${@humanDisplay.state(step.status)}"></td>
+                    <td><p th:title="${step.snapshot.campaignState}" th:text="${@humanDisplay.state(step.snapshot.campaignState)}"></p><p>Stated interest: <span th:text="${step.snapshot.counts.statedInterest}"></span>; Authorized holds: <span th:text="${step.snapshot.counts.authorizedHolds}"></span>; Paid: <span th:text="${step.snapshot.counts.paid}"></span>.</p><ul><li th:each="attention : ${step.snapshot.needsAttention}" th:text="${attention}"></li></ul></td>
                 </tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="table-scroll">
+        </details>
+        <details>
+            <summary>View simulated books and raw evidence</summary>
+        <div class="table-scroll drill-table" tabindex="0" role="region" aria-label="Simulated payment books">
             <table>
                 <caption>Simulated local and provider books. Amounts use integer minor units; evidence includes resource identity checks.</caption>
                 <thead><tr><th scope="col">Simulated pledge</th><th scope="col">Units / amount</th><th scope="col">Local before</th><th scope="col">Provider before</th><th scope="col">Comparison before</th><th scope="col">Local after</th><th scope="col">Provider after</th><th scope="col">Comparison after</th></tr></thead>
                 <tbody>
                 <tr th:each="row : ${drill.books}">
                     <th scope="row" th:text="${row.pledgeId}"></th>
-                    <td><span th:text="${row.quantity}"></span> units / <span th:text="${@makerDisplay.money(row.amount, row.currency)}"></span></td>
-                    <td th:text="${row.before.state}"></td>
+                    <td><span th:text="${row.quantity}"></span> units / <span th:text="${@humanDisplay.money(row.amount, row.currency)}"></span></td>
+                    <td th:title="${row.before.state}" th:text="${@humanDisplay.state(row.before.state)}"></td>
                     <td><ul><li th:each="resource : ${row.before.resources}"><span th:text="${resource.kind + ' ' + resource.id + ': ' + (resource.providerStatus ?: (resource.status ?: 'UNKNOWN'))}"></span><span th:if="${resource.amount != null}" th:text="${' / ' + resource.amount + ' minor units ' + (resource.currency ?: 'UNKNOWN')}"></span><span th:text="${resource.evidenceMatches ? ' / identity and amount evidence consistent' : ' / evidence missing or inconsistent'}"></span></li></ul><span th:if="${row.before.resources.isEmpty()}">Unknown: provider evidence unavailable</span></td>
-                    <td th:text="${row.before.match}"></td>
-                    <td th:text="${row.after.state}"></td>
+                    <td th:title="${row.before.match}" th:text="${@humanDisplay.state(row.before.match)}"></td>
+                    <td th:title="${row.after.state}" th:text="${@humanDisplay.state(row.after.state)}"></td>
                     <td><ul><li th:each="resource : ${row.after.resources}"><span th:text="${resource.kind + ' ' + resource.id + ': ' + (resource.providerStatus ?: (resource.status ?: 'UNKNOWN'))}"></span><span th:if="${resource.amount != null}" th:text="${' / ' + resource.amount + ' minor units ' + (resource.currency ?: 'UNKNOWN')}"></span><span th:text="${resource.evidenceMatches ? ' / identity and amount evidence consistent' : ' / evidence missing or inconsistent'}"></span></li></ul><span th:if="${row.after.resources.isEmpty()}">Unknown: provider evidence unavailable</span></td>
-                    <td th:text="${row.after.match}"></td>
+                    <td th:title="${row.after.match}" th:text="${@humanDisplay.state(row.after.match)}"></td>
                 </tr>
                 </tbody>
             </table>
@@ -72,6 +84,8 @@
         <ul><li th:each="effect : ${drill.writeEffects}"><code th:text="${effect.key}"></code>: <span th:text="${effect.value}"></span></li></ul>
         <p th:if="${drill.writeEffects.isEmpty()}">No simulated write completed.</p>
         <p>Effective simulated webhook processing: <span th:text="${drill.webhookProcessings}"></span>.</p>
+        </details>
+        <p><a href="#main">Choose another simulation</a></p>
     </section>
 </main>
 </body>
