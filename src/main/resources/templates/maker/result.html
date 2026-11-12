@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Settlement result', ~{::main})}">
+    <body>
+        <main id="main" class="shell">
+            <header class="page-heading">
+                <p class="eyebrow">Maker settlement</p>
+                <h1>What happened to the batch?</h1>
+            </header>
+            <div th:replace="~{maker/fragments :: steps(${token}, ${makerStep})}">
+            </div>
+            <div th:replace="~{maker/settlement-fragments :: alerts}">
+            </div>
+            <div th:if="${campaign == null}" class="empty-state preview-section">
+                <h2>No campaign result yet.</h2>
+                <p>Publish an offer to begin collecting pledges.</p>
+                <a class="button button-primary" th:href="@{/w/{token}/maker/offer(token=${token})}">Create offer</a>
+            </div>
+            <div th:if="${campaign != null}">
+                <section class="preview-section">
+                    <h2 th:text="${campaign.offer.title}">
+                    </h2>
+                    <div th:if="${terminal}" class="notice" th:classappend="${campaign.result.productionReleased ? 'notice-info' : 'notice-warning'}">
+                        <h2 th:text="${campaign.result.productionReleased ? 'Funded' : 'Not funded'}">
+                        </h2>
+                        <p th:if="${campaign.reason != null}" th:text="${@makerDisplay.words(campaign.reason)}">
+                        </p>
+                        <p th:if="${campaign.result.productionReleased}">Enough payments completed. Production is released under the maker's offer and delivery terms.</p>
+                        <p th:unless="${campaign.result.productionReleased}">Production is not released. Completed payments are refunded and remaining holds are released; any unresolved payment is listed below.</p>
+                    </div>
+                    <div th:unless="${terminal}" class="empty-state">
+                        <h2>Settlement is not final.</h2>
+                        <p th:text="${@makerDisplay.words(campaign.state)}">
+                        </p>
+                        <a class="button button-primary" th:href="@{/w/{token}/maker/campaign(token=${token})}">Open campaign dashboard</a>
+                    </div>
+                </section>
+                <div th:replace="~{fragments/components :: counts(${campaign.counts.statedInterest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}">
+                </div>
+                <section class="two-column preview-section">
+                    <div class="card">
+                        <h2>Paid total</h2>
+                        <p th:text="${@makerDisplay.money(paidAmount, campaign.offer.currency)}">
+                        </p>
+                        <p th:text="${campaign.result.paidUnits + ' units with completed payments retained'}">
+                        </p>
+                    </div>
+                    <div class="card">
+                        <h2>Refunded total</h2>
+                        <p th:text="${@makerDisplay.money(refundedAmount, campaign.offer.currency)}">
+                        </p>
+                        <p th:text="${campaign.result.refundedUnits + ' units with completed refunds'}">
+                        </p>
+                        <p th:text="${campaign.result.releasedUnits + ' units with released holds'}">
+                        </p>
+                    </div>
+                </section>
+                <p>Pending and failed refunds are not included in completed refund totals. When released or refunded money reappears depends on PayPal and the bank or card.</p>
+                <div th:replace="~{maker/settlement-fragments :: pledges(${campaign})}">
+                </div>
+                <div th:replace="~{maker/settlement-fragments :: attention(${campaign})}">
+                </div>
+                <div th:replace="~{maker/settlement-fragments :: timeline(${campaign})}">
+                </div>
+                <p class="preview-section" th:if="${terminal}">
+                    <a class="button button-primary" th:href="@{/w/{token}/maker/offer(token=${token},run=${campaign.offer.analysisRunId})}">Start a new offer from this proposal</a>
+                </p>
+                <p>
+                    <a th:href="@{/w/{token}/maker/campaign(token=${token})}">Campaign dashboard</a> · <a th:href="@{/w/{token}/result(token=${token})}" target="_blank" rel="noopener noreferrer">Open public result (new tab)</a>
+                </p>
+            </div>
+        </main>
+    </body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <body>
+        <div th:fragment="input(name, label, type, fields, errors, help)" class="field">
+            <label th:for="${name}" th:text="${label}">
+            </label>
+            <input th:id="${name}" th:name="${name}" th:type="${type}" th:value="${fields.get(name)}" required th:attr="min=${type == 'number' ? (name == 'minBatch' ? option.minBatch : 1) : null},max=${name == 'capacity' ? option.maxCapacity : null},step=${type == 'number' ? '1' : null},aria-describedby=${name + '-help ' + name + '-error'},aria-invalid=${errors != null and errors.containsKey(name)}">
+            <p class="field-help" th:id="${name + '-help'}" th:text="${help}">
+            </p>
+            <p class="field-error" th:id="${name + '-error'}" th:text="${errors != null ? errors.get(name) : ''}">
+            </p>
+        </div>
+        <div th:fragment="alerts">
+            <div th:if="${error != null}" class="notice notice-error" role="alert">
+                <p th:text="${error}">
+                </p>
+            </div>
+            <div th:if="${notice != null}" class="notice notice-warning" role="status">
+                <p th:text="${notice}">
+                </p>
+            </div>
+        </div>
+        <section th:fragment="pledges(campaign)" class="preview-section" aria-labelledby="pledges-heading">
+            <h2 id="pledges-heading">Every pledge</h2>
+            <p th:if="${campaign.pledges.isEmpty()}" class="empty-state">No pledges yet. Stated interest is not a payment commitment.</p>
+            <div th:unless="${campaign.pledges.isEmpty()}" class="table-scroll" tabindex="0" role="region" aria-label="Pledge payment states">
+                <table>
+                    <caption>Quantities, exact amounts, and current payment states</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Payer (masked)</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Amount</th>
+                            <th scope="col">Payment state</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pledge : ${campaign.pledges}">
+                            <th scope="row">
+                                <span th:text="${pledge.payerEmailMasked ?: 'Payer unavailable'}">
+                                </span>
+                                <br>
+                                <small th:text="${pledge.id}">
+                                </small>
+                            </th>
+                            <td th:text="${pledge.quantity + ' units'}">
+                            </td>
+                            <td th:text="${@makerDisplay.money(pledge.amount, pledge.currency)}">
+                            </td>
+                            <td>
+                                <span th:if="${@makerDisplay.pledge(pledge.state).isEmpty()}" th:text="#{${'pledge.' + pledge.state.name()}}">
+                                </span>
+                                <span th:unless="${@makerDisplay.pledge(pledge.state).isEmpty()}" th:text="${@makerDisplay.pledge(pledge.state)}">
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section th:fragment="attention(campaign)" class="preview-section" aria-labelledby="attention-heading">
+            <h2 id="attention-heading">Needs attention</h2>
+            <p th:if="${campaign.needsAttention.isEmpty()}">No unresolved payments reported.</p>
+            <ul th:unless="${campaign.needsAttention.isEmpty()}">
+                <li th:each="item : ${campaign.needsAttention}">
+                    <span th:text="${item.pledgeId}">
+                    </span>: <span th:text="${@makerDisplay.words(item.state)}">
+                    </span>
+                    <span th:if="${item.reason != null}" th:text="${' — ' + @makerDisplay.words(item.reason)}">
+                    </span>
+                </li>
+            </ul>
+            <p th:unless="${campaign.needsAttention.isEmpty()}">These payments remain unresolved even if the campaign has ended. A pending payment is not counted as paid.</p>
+        </section>
+        <section th:fragment="timeline(campaign)" class="preview-section" aria-labelledby="timeline-heading">
+            <h2 id="timeline-heading">Campaign and payment timeline</h2>
+            <ol class="timeline">
+                <li th:each="event : ${campaign.timeline}">
+                    <time th:datetime="${event.time}" th:text="${event.time}">
+                    </time>
+                    <strong th:text="${@makerDisplay.words(event.type)}">
+                    </strong>
+                    <p th:if="${event.pledgeId != null}">Pledge: <span th:text="${event.pledgeId}">
+                        </span>
+                    </p>
+                    <p th:if="${event.endpoint != null}">Endpoint: <span th:text="${event.endpoint}">
+                        </span>
+                    </p>
+                    <p th:if="${event.providerId != null}">Provider ID: <span th:text="${event.providerId}">
+                        </span>
+                    </p>
+                    <p th:if="${event.status != null}">Status: <span th:text="${event.status}">
+                        </span>
+                    </p>
+                    <p th:if="${event.detail != null}" th:text="${event.detail}">
+                    </p>
+                </li>
+            </ol>
+        </section>
+    </body>
+</html>

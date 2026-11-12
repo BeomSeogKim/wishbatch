@@ -1,5 +1,9 @@
 package app.web.maker
 
+import app.campaign.model.CampaignState
+import app.campaign.service.CampaignService
+import app.campaign.service.ServiceResult
+import app.campaign.store.AnalysisRunRepository
 import app.campaign.workspace.WishNotFoundException
 import app.campaign.workspace.WorkspaceNotFoundException
 import app.campaign.workspace.WorkspaceService
@@ -20,15 +24,34 @@ import java.util.Locale
 import java.util.UUID
 
 @Controller
-class MakerStartController(private val workspaces: WorkspaceService) {
+class MakerStartController(
+    private val workspaces: WorkspaceService,
+    private val campaignLookup: MakerCampaignLookup,
+    private val campaigns: CampaignService,
+    private val analyses: AnalysisRunRepository,
+) {
 
     @PostMapping("/demo")
     fun startDemo(): String = "redirect:/w/${workspaces.create().token}/maker"
 
     @GetMapping("/w/{token}/maker")
     fun home(@PathVariable token: String, model: Model): String {
-        model.addAttribute("workspace", workspaces.findByToken(token) ?: throw WorkspaceNotFoundException())
-        model.addAttribute("fanOfferUrl", null)
+        val workspace = workspaces.findByToken(token) ?: throw WorkspaceNotFoundException()
+        val campaign = campaignLookup.current(workspace.id)?.let { ref ->
+            (campaigns.readCampaign(ref) as? ServiceResult.Success)?.value
+        }
+        val run = analyses.findByWorkspaceId(workspace.id).maxByOrNull { it.createdAt }
+        val terminal = campaign?.state in setOf(CampaignState.FUNDED, CampaignState.NOT_FUNDED)
+        model.addAttribute("workspace", workspace)
+        model.addAttribute("makerCampaign", campaign)
+        model.addAttribute("offerRun", run?.id)
+        model.addAttribute("makerStep", when {
+            terminal -> 6
+            campaign != null -> 5
+            run != null -> 3
+            else -> 1
+        })
+        model.addAttribute("fanOfferUrl", campaign?.let { "/w/$token/offer" })
         return "maker/home"
     }
 

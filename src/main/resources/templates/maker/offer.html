@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Confirm an offer', ~{::main})}">
+    <body>
+        <main id="main" class="shell">
+            <header class="page-heading">
+                <p class="eyebrow">Maker offer</p>
+                <h1>Make the offer exact.</h1>
+                <p class="lead">Review the evidence, then set the product and delivery terms you can meet. Published terms cannot be edited.</p>
+            </header>
+            <div th:replace="~{maker/fragments :: steps(${token}, ${makerStep})}">
+            </div>
+            <div th:if="${option == null}" class="empty-state preview-section">
+                <h2>No proposal is available.</h2>
+                <p>Review a valid analysis with a feasible proposal before creating an offer.</p>
+                <a class="button button-primary" th:href="@{/w/{token}/maker/proposal(token=${token})}">Review proposal</a>
+            </div>
+            <section th:if="${option != null}" class="preview-section">
+                <p>
+                    <a th:href="@{/w/{token}/maker/proposal(token=${token},run=${analysis.id})}">Review the proposal and its evidence</a> · <a th:href="@{/w/{token}/maker/campaign(token=${token})}">Campaign dashboard</a>
+                </p>
+                <div th:if="${errors != null}" class="notice notice-error" role="alert">
+                    <p th:each="error : ${errors.values()}" th:text="${error}">
+                    </p>
+                </div>
+                <form method="post" th:action="@{/w/{token}/maker/offer(token=${token})}">
+                    <input type="hidden" name="run" th:value="${analysis.id}">
+                    <div class="two-column">
+                        <div class="card">
+                            <h2>Product and delivery</h2>
+                            <div th:replace="~{maker/settlement-fragments :: input('title', 'Exact title', 'text', ${fields}, ${errors}, 'Required product title.')} ">
+                            </div>
+                            <div class="field">
+                                <label for="specText">Exact specification</label>
+                                <textarea id="specText" name="specText" rows="7" required aria-describedby="specText-help specText-error" th:attr="aria-invalid=${errors != null and errors.containsKey('specText')}" th:text="${fields['specText']}">
+                                </textarea>
+                                <p id="specText-help" class="field-help">Include fixed attributes, selected variants, and answers to the open questions below.</p>
+                                <p id="specText-error" class="field-error" th:text="${errors != null ? errors['specText'] : ''}">
+                                </p>
+                            </div>
+                            <div class="field" th:each="variant : ${option.allowedVariants}">
+                                <label th:for="${'variant.' + variant.key}" th:text="${variant.key}">
+                                </label>
+                                <select th:id="${'variant.' + variant.key}" th:name="${'variant.' + variant.key}" required>
+                                    <option th:each="value : ${variant.value}" th:value="${value}" th:selected="${fields['variant.' + variant.key] == value}" th:text="${value}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="deliveryTerms">Delivery terms</label>
+                                <textarea id="deliveryTerms" name="deliveryTerms" rows="3" required aria-describedby="deliveryTerms-error" th:attr="aria-invalid=${errors != null and errors.containsKey('deliveryTerms')}" th:text="${fields['deliveryTerms']}">
+                                </textarea>
+                                <p id="deliveryTerms-error" class="field-error" th:text="${errors != null ? errors['deliveryTerms'] : ''}">
+                                </p>
+                            </div>
+                            <div class="field">
+                                <label for="shipRegion">Ship region</label>
+                                <input id="shipRegion" type="text" th:value="${option.shipRegion}" readonly aria-describedby="shipRegion-help">
+                                <p id="shipRegion-help" class="field-help">Ship region is fixed for this product option.</p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2>Price and batch limits</h2>
+                            <div th:replace="~{maker/settlement-fragments :: input('unitPrice', ${'Unit price (' + option.currency + ' minor units)'}, 'number', ${fields}, ${errors}, 'Use a positive whole number of minor units; for USD, 100 means USD 1.00.')} ">
+                            </div>
+                            <p class="field-help">Unit cost: <strong th:text="${@makerDisplay.money(option.unitCost, option.currency)}">
+                                </strong>. A price below cost is allowed.</p>
+                            <p id="price-warning" class="notice notice-warning" role="status" th:attr="data-cost=${option.unitCost}" hidden>The unit price is below the option's unit cost.</p>
+                            <div th:replace="~{maker/settlement-fragments :: input('minBatch', 'Minimum batch (units)', 'number', ${fields}, ${errors}, ${'At least ' + option.minBatch + ' units; no greater than your capacity.'})} ">
+                            </div>
+                            <div th:replace="~{maker/settlement-fragments :: input('capacity', 'Capacity (units)', 'number', ${fields}, ${errors}, ${'From 1 to ' + option.maxCapacity + ' units.'})} ">
+                            </div>
+                            <div th:replace="~{maker/settlement-fragments :: input('maxQtyPerPledge', 'Maximum quantity per pledge', 'number', ${fields}, ${errors}, 'From 1 to your capacity. Default: 3 units.')} ">
+                            </div>
+                            <div class="field">
+                                <label for="duration">Campaign duration</label>
+                                <select id="duration" name="duration" required aria-describedby="duration-error" th:attr="aria-invalid=${errors != null and errors.containsKey('duration')}">
+                                    <option value="15" th:selected="${fields['duration'] == '15'}">15 minutes</option>
+                                    <option value="120" th:selected="${fields['duration'] == '120'}">2 hours</option>
+                                    <option value="1440" th:selected="${fields['duration'] == '1440'}">24 hours</option>
+                                    <option value="2880" th:selected="${fields['duration'] == '2880'}">48 hours</option>
+                                </select>
+                                <p id="duration-error" class="field-error" th:text="${errors != null ? errors['duration'] : ''}">
+                                </p>
+                            </div>
+                            <p>Closing and confirmation deadlines are set when you publish. Confirmation is due 12 hours after closing.</p>
+                        </div>
+                    </div>
+                    <section class="card preview-section" aria-labelledby="questions">
+                        <h2 id="questions">Questions from the analysis</h2>
+                        <p>Answer each question in the specification or explicitly dismiss it.</p>
+                        <p th:if="${output.questionsForMaker.isEmpty()}">No open questions in this analysis.</p>
+                        <div class="field" th:each="question, index : ${output.questionsForMaker}">
+                            <label th:for="${'question.' + index.index}" th:text="${question.text}">
+                            </label>
+                            <select th:id="${'question.' + index.index}" th:name="${'question.' + index.index}" required th:attr="aria-describedby=${'question-error-' + index.index},aria-invalid=${errors != null and errors.containsKey('question.' + index.index)}">
+                                <option value="">Choose how this was resolved</option>
+                                <option value="answered" th:selected="${fields['question.' + index.index] == 'answered'}">Answered in the specification</option>
+                                <option value="dismissed" th:selected="${fields['question.' + index.index] == 'dismissed'}">Dismissed for this offer</option>
+                            </select>
+                            <p class="field-error" th:id="${'question-error-' + index.index}" th:text="${errors != null ? errors['question.' + index.index] : ''}">
+                            </p>
+                        </div>
+                    </section>
+                    <div class="preview-section">
+                        <label class="checkbox-field">
+                            <input type="checkbox" name="canDeliver" value="true" required aria-describedby="canDeliver-error" th:checked="${fields['canDeliver'] == 'true'}" th:attr="aria-invalid=${errors != null and errors.containsKey('canDeliver')}">
+                            <span>I can produce and deliver this as specified.</span>
+                        </label>
+                        <p id="canDeliver-error" class="field-error" th:text="${errors != null ? errors['canDeliver'] : ''}">
+                        </p>
+                        <p>The maker chooses this offer. Delivery and production are not guaranteed by the product.</p>
+                        <button class="button button-primary" type="submit">Publish offer and open campaign</button>
+                    </div>
+                </form>
+                <script>
+                    const price = document.getElementById('unitPrice');
+                    const warning = document.getElementById('price-warning');
+                    function showPriceWarning() {
+                    try { warning.hidden = price.value === '' || BigInt(price.value) >= BigInt(warning.dataset.cost); }
+                    catch { warning.hidden = true; }
+                    }
+                    price.addEventListener('input', showPriceWarning);
+                    showPriceWarning();
+                </script>
+            </section>
+        </main>
+    </body>
+</html>
