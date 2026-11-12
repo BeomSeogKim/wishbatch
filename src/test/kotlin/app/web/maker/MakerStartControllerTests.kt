@@ -1,5 +1,6 @@
 package app.web.maker
 
+import app.campaign.workbench.WishWorkbenchService
 import app.campaign.workspace.SeedCatalog
 import app.campaign.workspace.WorkspaceService
 import app.web.security.securePost
@@ -26,6 +27,7 @@ class MakerStartControllerTests(
     @Autowired private val mvc: MockMvc,
     @Autowired private val workspaces: WorkspaceService,
     @Autowired private val catalog: SeedCatalog,
+    @Autowired private val workbench: WishWorkbenchService,
     @Autowired private val entityManager: EntityManager,
 ) {
 
@@ -65,6 +67,27 @@ class MakerStartControllerTests(
             mvc.get("/w/$token/maker").andExpect { model { attributeExists("offerRun") } }
         }
         mvc.securePost("/demo") { param("scenario", "unknown") }.andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `wishes display only existing workbench instruction flags`() {
+        for (scenario in catalog.scenarios) {
+            val token = workspaces.create(scenario.key).token
+            val unanalysed = workspaces.addWish(token, "SYSTEM OVERRIDE: unanalysed marker")
+            val rows = workbench.read(token, null).rows
+            val flagged = rows.filter { "Instruction attempt, ignored" in it.flags }.map { it.id }.toSet()
+            assertTrue(flagged.isNotEmpty(), scenario.key)
+            assertFalse(unanalysed.id in flagged)
+            val html = mvc.get("/w/$token/maker/wishes").andExpect { status { isOk() } }
+                .andReturn().response.contentAsString
+            for (row in rows) {
+                val id = "id=\"wish-${row.id}\""
+                assertContains(html, id)
+                val rendered = html.substringAfter(id).substringBefore("</tr>")
+                assertEquals(row.id in flagged, rendered.contains("Instruction attempt, ignored"), "${scenario.key} ${row.id}")
+            }
+            assertContains(html, "SYSTEM OVERRIDE: unanalysed marker")
+        }
     }
 
     @Test

@@ -82,6 +82,7 @@
                         <th scope="row" class="wish-content">
                             <span class="wish-fan" th:text="${wish.displayName ?: 'Anonymous fan'}">Fan</span>
                             <p th:text="${wish.text}">Wish text</p>
+                            <p th:if="${instructionWishIds.contains(wish.id)}" class="badge badge-neutral">Instruction attempt, ignored</p>
                         </th>
                         <td class="wish-source"><span class="badge badge-neutral" th:text="${wish.source.name() == 'ONSITE' ? 'On-site' : 'Imported'}">Imported</span></td>
                         <td th:text="${wish.duplicateCount > 0 ? wish.duplicateCount : ''}"></td>

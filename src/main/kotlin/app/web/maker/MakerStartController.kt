@@ -4,6 +4,7 @@ import app.campaign.model.CampaignState
 import app.campaign.service.CampaignService
 import app.campaign.service.ServiceResult
 import app.campaign.store.AnalysisRunRepository
+import app.campaign.workbench.WishWorkbenchService
 import app.campaign.workspace.WishNotFoundException
 import app.campaign.workspace.WorkspaceNotFoundException
 import app.campaign.workspace.WorkspaceService
@@ -29,6 +30,7 @@ class MakerStartController(
     private val campaignLookup: MakerCampaignLookup,
     private val campaigns: CampaignService,
     private val analyses: AnalysisRunRepository,
+    private val workbench: WishWorkbenchService,
 ) {
 
     @PostMapping("/demo")
@@ -75,6 +77,8 @@ class MakerStartController(
     fun wishes(@PathVariable token: String, model: Model): String {
         val wishes = workspaces.listWishes(token)
         model.addAttribute("wishes", wishes)
+        model.addAttribute("instructionWishIds", workbench.read(token, null).rows
+            .filter { "Instruction attempt, ignored" in it.flags }.map { it.id }.toSet())
         model.addAttribute("visibleWishCount", wishes.count { !it.hidden })
         return "maker/wishes"
     }
