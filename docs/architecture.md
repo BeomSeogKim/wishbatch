@@ -125,6 +125,58 @@ refunds are full. Money conversion is exact. Authorization results carry the
 nested resource's status and available payer, shipping, and expiry fields.
 Callers reconcile ambiguous failures before changing domain state. HTTP-layer
 stub tests require neither network nor credentials.
+## Wish analysis
+
+`DefaultWishAnalyzer` implements `WishAnalyzer` using the OpenAI Responses API.
+It sends only the snapshot's product fields and wish IDs/text, separates data
+from instructions, and requests a strict JSON schema. Instructions distinguish
+hard purchase conditions, preferences, unknowns, and non-requests before comparing
+each request with every option. A null proposal is a valid outcome.
+
+Validation applies before returning any result:
+
+- V1 drops unknown wish and option references and records a flag.
+- V2 drops ungrounded needs and rationale, flagging quotes that are not literal
+  substrings after Unicode whitespace normalization.
+- V3 discards model commercial terms. A quoted fan price limit is evidence in
+  exact minor units, never an offer price or production decision.
+- V4 drops variant suggestions outside the selected option's allowed values.
+- V5 rejects multiple proposals rather than choosing one silently.
+- V6 rebuilds not-served groups from the selected option's incompatible verdicts.
+
+The validator also requires a complete, unique wish roster and one verdict for
+each request/option pair. Quote validation proves textual grounding, not semantic
+correctness; classifications and normalized fan limits still require review.
+The shared `analysisInputHash` identifies the exact input; `optionWishCounts`
+computes display counts from validated output. Success returns the provider's
+model ID, injected-clock completion time, hash, output, and validation flags for
+the caller to persist as an immutable run. No campaign or payment state changes.
+
+`LLM_API_KEY` is optional at startup; attempts without it return `NOT_CONFIGURED`.
+`LLM_MODEL` defaults to `gpt-6.1-sol`; `LLM_DAILY_RUN_CAP` defaults to 10 provider
+calls per UTC day (zero disables calls). The synchronized cap is shared by the
+singleton analyzer across workspaces, includes failures/retries, and resets on
+process restart. Multiple server processes need a shared cap before scaling.
+Invalid JSON or invalid output gets at most one retry within a total 60-second
+monotonic budget. Transport failures and refusals are typed failures without
+automatic retries. Calls have a 10-second connect timeout and the remaining run
+budget as their request deadline. Inputs are limited to 200 wishes of at most
+500 characters and a 160,000-character data envelope; output is capped at 16,000
+tokens. Workspace run quotas and retaining the previous valid run belong to the
+caller, which has the required persistence context.
+
+For a one-shot seed run, build the executable JAR, inject credentials, set
+`LLM_SEED_RUN=true`, and provide `LLM_SEED_OPTIONS_FILE`, `LLM_SEED_WISHES_FILE`,
+and `LLM_SEED_OUTPUT_FILE`. Input files are JSON arrays of `Option` and `Wish`
+using their Kotlin property names, UUIDs, and ISO timestamps. Use stable IDs for
+fixtures. Run with `--spring.main.web-application-type=none`. The runner writes
+the serialized `AnalysisResult.Success` only after validation, refuses to
+overwrite an existing file, reports model/latency/flags and shared counts, then
+closes the application. It is disabled by default; tests use fake providers only.
+
+API contracts: [Responses](https://developers.openai.com/api/reference/resources/responses/methods/create),
+[structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
+and [error codes](https://developers.openai.com/api/docs/guides/error-codes).
 
 ## Configuration
 
