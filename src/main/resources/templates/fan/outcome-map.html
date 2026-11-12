@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="map(step, status)" class="card" aria-labelledby="outcome-map-title">
+    <h2 id="outcome-map-title">Where the money can go</h2>
+    <p>PayPal sandbox demo: no real money moves. PayPal places the hold; The product does not hold funds.</p>
+    <ol aria-label="Payment outcome map">
+        <li>Authorize with PayPal
+            <strong th:if="${step == 'AUTHORIZATION'}" aria-current="step" th:text="${'Current status: ' + status}"></strong>
+            <ul><li>Authorized hold: no payment has been captured yet.
+                <strong th:if="${step == 'HOLD'}" aria-current="step" th:text="${'Current status: ' + status}"></strong>
+                <ul>
+                    <li>Enough authorized holds and maker confirmation → attempt capture. Capture can fail.
+                        <strong th:if="${step == 'CAPTURE'}" aria-current="step" th:text="${'Current status: ' + status}"></strong>
+                        <ul>
+                            <li>Completed capture → paid. Only completed payments count toward the paid minimum.</li>
+                            <li>Capture shortfall → refund completed payments and release remaining holds.</li>
+                        </ul>
+                    </li>
+                    <li>Insufficient holds, maker cancellation, or an expired confirmation deadline → release remaining holds.</li>
+                </ul>
+            </li></ul>
+        </li>
+        <li>Release of a hold
+            <strong th:if="${step == 'RELEASE'}" aria-current="step" th:text="${'Current status: ' + status}"></strong>
+        </li>
+        <li>Refund of a completed payment
+            <strong th:if="${step == 'REFUND'}" aria-current="step" th:text="${'Current status: ' + status}"></strong>
+        </li>
+    </ol>
+    <p>Pending or failed release and refund attempts are not confirmed. Release and refund timing depends on PayPal and your bank or card.</p>
+</section>
+</body>
+</html>

@@ -30,6 +30,7 @@
             <section th:replace="~{fan/offer-evidence :: why(${offerEvidence})}"></section>
         </th:block>
         <div th:replace="~{fragments/components :: counts(${campaign.counts.statedInterest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}"></div>
+        <section th:replace="~{fan/outcome-map :: map(${null}, ${null})}"></section>
         <section th:if="${campaignOpen}" class="card" aria-label="Authorize a pledge">
             <h2>Choose your quantity</h2>
             <form method="get" th:action="@{/w/{token}/offer(token=${token})}">

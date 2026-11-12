@@ -1,6 +1,7 @@
 package app.web.fan
 
 import app.campaign.model.PledgeState
+import app.campaign.outcome.outcomeStep
 import app.campaign.service.CampaignService
 import app.campaign.service.PledgeReferences
 import app.campaign.service.Rejection
@@ -38,6 +39,7 @@ class PledgeStatusController(
         model.addAttribute("canWithdraw", lookup.canWithdraw)
         model.addAttribute("amount", displayMoney(lookup.pledge.amount, lookup.pledge.currency))
         model.addAttribute("sentence", pledgeSentence(lookup.pledge.state, messages))
+        model.addAttribute("outcomeStep", outcomeStep(lookup.pledge.state).name)
         model.addAttribute("next", when (lookup.pledge.state) {
             PledgeState.CREATED -> "Check this status before trying again if you already approved in PayPal. Otherwise, return to the offer to try again."
             PledgeState.ABANDONED -> "Return to the offer to try again if it is still open."

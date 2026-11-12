@@ -29,6 +29,7 @@
         </form>
         <a th:href="@{/w/{token}/pledges/{id}(token=${token},id=${pledge.id})}">Refresh status</a>
     </section>
+    <section th:replace="~{fan/outcome-map :: map(${outcomeStep}, ${sentence})}"></section>
     <section th:if="${resultAvailable}" class="card" aria-label="Campaign result">
         <h2 th:text="${resultTitle}"></h2>
         <p th:text="${resultReason}"></p>
