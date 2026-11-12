@@ -1,26 +1,44 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Wishes', ~{::main})}">
 <body>
-<main id="main" class="shell">
+<main id="main" class="shell ux-wishes">
+    <link rel="stylesheet" th:href="@{/css/ux-wishes.css}">
+    <script defer th:src="@{/js/ux-wishes.js}"></script>
     <header class="page-heading">
         <a th:href="@{/w/{token}/maker(token=${token})}">Maker home</a>
         <h1>Listen to the wishes.</h1>
-        <p class="lead">Review fan wishes before shaping a proposal. Hide a wish to exclude it from the next analysis; unhide it to include it again.</p>
+        <p class="lead">Review fan wishes before shaping a proposal.</p>
+        <div class="button-row">
+            <a class="button button-primary" th:href="@{/w/{token}/maker/proposal(token=${token})}">Review proposal</a>
+        </div>
     </header>
     <div th:replace="~{maker/fragments :: steps(${token}, 2)}"></div>
     <section class="preview-section" aria-label="Wish review">
-        <div class="count count-interest">
-            <p class="count-label">Visible wishes</p>
-            <p class="count-value" th:text="${visibleWishCount}">40</p>
-            <p>Includes comments that may not be product requests. Wishes are not orders.</p>
+        <div class="wish-counts">
+            <div class="count count-interest">
+                <p class="count-label">Visible wishes</p>
+                <p class="count-value" th:text="${visibleWishCount}">40</p>
+            </div>
+            <div class="count">
+                <p class="count-label">Hidden wishes</p>
+                <p class="count-value" th:text="${wishes.size() - visibleWishCount}">0</p>
+            </div>
+            <div class="count">
+                <p class="count-label">Total wishes</p>
+                <p class="count-value" th:text="${wishes.size()}">40</p>
+            </div>
         </div>
-        <form class="form-stack wish-import" th:action="@{/w/{token}/maker/wishes(token=${token})}" method="post">
-            <label for="comments">Import wishes (one per line, up to 100 lines)</label>
-            <p class="notice notice-info">Imported comments inform analysis only. They are not contact permission or purchase consent.</p>
-            <p>Repeated text and spacing-only differences merge into one wish. Duplicate occurrences do not count as additional fans or orders. Each line must be at most 500 characters.</p>
-            <textarea id="comments" name="comments" rows="6"></textarea>
-            <button class="button button-secondary" type="submit">Import wishes</button>
-        </form>
+        <p class="wish-count-note">Includes comments that may not be product requests. Wishes are not orders. They never count as authorized holds or completed payments.</p>
+        <details class="wish-import-panel">
+            <summary>Import wishes</summary>
+            <form class="form-stack wish-import" th:action="@{/w/{token}/maker/wishes(token=${token})}" method="post">
+                <label for="comments">Import wishes (one per line, up to 100 lines)</label>
+                <p class="notice notice-info">Imported comments inform analysis only. They are not contact permission or purchase consent.</p>
+                <p>Repeated text and spacing-only differences merge into one wish. Duplicate occurrences do not count as additional fans or orders. Each line must be at most 500 characters.</p>
+                <textarea id="comments" name="comments" rows="6"></textarea>
+                <button class="button button-secondary" type="submit">Import wishes</button>
+            </form>
+        </details>
         <p th:if="${importResult != null}" role="status"
            th:text="|Retained ${importResult.added}; merged ${importResult.merged}; skipped ${importResult.skipped}: ${importResult.tooLong} over 500 characters, ${importResult.overLimit} over the 200-wish limit, ${importResult.overPasteLimit} beyond the first 100 lines.|"></p>
         <div th:if="${wishes.isEmpty()}" class="empty-state">
@@ -31,31 +49,54 @@
         <div th:if="${!wishes.isEmpty() and visibleWishCount == 0}" class="notice notice-info">
             <p>All wishes are hidden. Unhide a wish before requesting a proposal.</p>
         </div>
-        <div th:unless="${wishes.isEmpty()}" class="table-scroll" tabindex="0" role="region" aria-label="Fan wishes">
-            <table class="wish-table">
-                <caption>Fan wishes, including hidden wishes</caption>
-                <thead><tr><th scope="col">Display name</th><th scope="col">Wish</th><th scope="col">Source</th><th scope="col">Duplicate occurrences</th><th scope="col">Received (UTC)</th><th scope="col">Visibility</th></tr></thead>
-                <tbody><tr th:each="wish : ${wishes}" th:id="${'wish-' + wish.id}">
-                    <th scope="row" th:text="${wish.displayName ?: 'Anonymous fan'}">Fan</th>
-                    <td th:text="${wish.text}">Wish text</td>
-                    <td><span class="badge badge-neutral" th:text="${wish.source.name() == 'ONSITE' ? 'On-site' : 'Imported'}">Imported</span></td>
-                    <td th:text="${wish.duplicateCount}">0</td>
-                    <td><time th:datetime="${wish.createdAt}" th:text="${@makerDisplay.time(wish.createdAt)}">Time</time></td>
-                    <td>
-                        <span class="badge badge-neutral" th:text="${wish.hidden ? 'Hidden' : 'Visible'}">Visible</span>
-                        <form th:action="@{/w/{token}/maker/wishes(token=${token})}" method="post">
-                            <input type="hidden" name="wishId" th:value="${wish.id}">
-                            <input type="hidden" name="hidden" th:value="${!wish.hidden}">
-                            <button class="button button-secondary" type="submit" th:text="${wish.hidden ? 'Unhide' : 'Hide'}"
-                                    th:attr="aria-label=${(wish.hidden ? 'Unhide wish by ' : 'Hide wish by ') + (wish.displayName ?: 'Anonymous fan')}">Hide</button>
-                        </form>
-                    </td>
-                </tr></tbody>
-            </table>
-        </div>
-        <div class="button-row">
-            <a class="button button-primary" th:href="@{/w/{token}/maker/proposal(token=${token})}">Review proposal</a>
-        </div>
+        <p th:if="${wishSelectionError != null}" class="notice notice-error" role="alert" th:text="${wishSelectionError}"></p>
+        <p th:if="${wishSelectionResult != null}" class="notice notice-info" role="status" th:text="${wishSelectionResult}"></p>
+        <form th:unless="${wishes.isEmpty()}" id="wish-selection"
+              th:action="@{/w/{token}/maker/wishes(token=${token})}" method="post">
+            <div class="wish-bulk-bar">
+                <div>
+                    <h2 class="h3">Fan wishes</h2>
+                    <p id="wish-selection-count" role="status" aria-live="polite">Select wishes below.</p>
+                </div>
+                <label class="wish-select-all" hidden>
+                    <input type="checkbox" id="wish-select-all"> Select all
+                </label>
+                <div class="wish-bulk-actions">
+                    <button class="button button-secondary" type="submit" name="hidden" value="true">Hide selected</button>
+                    <button class="button button-secondary" type="submit" name="hidden" value="false">Unhide selected</button>
+                </div>
+            </div>
+            <p id="wish-selection-help" class="wish-selection-help">Select any wishes, then choose Hide or Unhide. Hidden wishes are excluded from the next analysis; previous analysis stays unchanged.</p>
+            <div class="wish-list-region" role="region" aria-label="Fan wishes">
+                <table class="ux-wishes-table">
+                    <caption>Fan wishes, including hidden wishes</caption>
+                    <thead><tr><th scope="col">Select</th><th scope="col">Wish</th><th scope="col">Source</th><th scope="col">Duplicates</th><th scope="col">Details</th><th scope="col">Visibility</th></tr></thead>
+                    <tbody><tr th:each="wish, row : ${wishes}" th:id="${'wish-' + wish.id}">
+                        <td class="wish-select-cell">
+                            <label class="wish-select-label">
+                                <input type="checkbox" name="wishIds" th:value="${wish.id}" aria-describedby="wish-selection-help"
+                                       th:attr="aria-label=${'Select wish ' + row.count + ' by ' + (wish.displayName ?: 'Anonymous fan')}">
+                                <span class="wish-row-number" th:text="${row.count}">1</span>
+                            </label>
+                        </td>
+                        <th scope="row" class="wish-content">
+                            <span class="wish-fan" th:text="${wish.displayName ?: 'Anonymous fan'}">Fan</span>
+                            <p th:text="${wish.text}">Wish text</p>
+                        </th>
+                        <td class="wish-source"><span class="badge badge-neutral" th:text="${wish.source.name() == 'ONSITE' ? 'On-site' : 'Imported'}">Imported</span></td>
+                        <td th:text="${wish.duplicateCount > 0 ? wish.duplicateCount : ''}"></td>
+                        <td class="wish-received">
+                            <details>
+                                <summary th:attr="aria-label=${'Details for wish ' + row.count}">Details</summary>
+                                <p>Received (UTC)</p>
+                                <time th:datetime="${wish.createdAt}" th:text="${@makerDisplay.time(wish.createdAt)}">Time</time>
+                            </details>
+                        </td>
+                        <td class="wish-visibility"><span class="badge badge-neutral" th:text="${wish.hidden ? 'Hidden' : 'Visible'}">Visible</span></td>
+                    </tr></tbody>
+                </table>
+            </div>
+        </form>
     </section>
 </main>
 </body>

@@ -73,9 +73,30 @@ class MakerStartController(
 
     @GetMapping("/w/{token}/maker/wishes")
     fun wishes(@PathVariable token: String, model: Model): String {
-        model.addAttribute("wishes", workspaces.listWishes(token))
-        model.addAttribute("visibleWishCount", workspaces.listWishes(token, includeHidden = false).size)
+        val wishes = workspaces.listWishes(token)
+        model.addAttribute("wishes", wishes)
+        model.addAttribute("visibleWishCount", wishes.count { !it.hidden })
         return "maker/wishes"
+    }
+
+    @PostMapping("/w/{token}/maker/wishes", params = ["hidden", "!wishId"])
+    fun setSelectedWishesHidden(
+        @PathVariable token: String,
+        @RequestParam(defaultValue = "") wishIds: List<UUID>,
+        @RequestParam hidden: Boolean,
+        redirectAttributes: RedirectAttributes,
+    ): String {
+        val scopedIds = workspaces.listWishes(token).map { it.id }.toSet()
+        if (wishIds.isEmpty() || wishIds.size > 200) {
+            redirectAttributes.addFlashAttribute("wishSelectionError", "Select between one and 200 wishes.")
+        } else {
+            if (wishIds.any { it !in scopedIds }) throw WishNotFoundException()
+            val selected = wishIds.distinct()
+            selected.forEach { workspaces.setWishHidden(token, it, hidden) }
+            redirectAttributes.addFlashAttribute("wishSelectionResult",
+                "${if (hidden) "Hidden" else "Unhidden"} ${selected.size} selected wishes.")
+        }
+        return "redirect:/w/$token/maker/wishes"
     }
 
     @PostMapping("/w/{token}/maker/wishes", params = ["wishId", "hidden"])

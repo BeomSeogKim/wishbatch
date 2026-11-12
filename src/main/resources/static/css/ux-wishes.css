@@ -1,0 +1,52 @@
+.ux-wishes .page-heading { padding-block: var(--space-6); }
+.ux-wishes .page-heading h1 { font-size: clamp(2rem, 3.5vw, 3rem); margin-top: var(--space-3); }
+.ux-wishes .page-heading .lead { font-size: 1rem; margin-top: var(--space-4); }
+.ux-wishes .page-heading .button-row { margin-top: var(--space-4); }
+.ux-wishes .preview-section { padding-block: var(--space-6); }
+.ux-wishes .wish-counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.ux-wishes .wish-counts .count { padding: var(--space-4); }
+.ux-wishes .wish-counts .count-value { margin-top: var(--space-2); font-size: 2rem; }
+.ux-wishes .wish-count-note, .ux-wishes .wish-selection-help { margin-block: var(--space-3); color: var(--muted); font-size: .875rem; }
+.ux-wishes .wish-import-panel { margin-block: var(--space-6); border: 1px solid var(--line); border-radius: var(--radius-small); padding: var(--space-4); background: var(--surface); }
+.ux-wishes .wish-import-panel summary { cursor: pointer; font-weight: 650; }
+.ux-wishes .wish-import { margin-bottom: 0; gap: var(--space-3); }
+.ux-wishes .wish-import textarea { max-width: 100%; }
+.ux-wishes .wish-bulk-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); border-block: 1px solid var(--line); padding-block: var(--space-4); }
+.ux-wishes .wish-bulk-bar > div:first-child { margin-right: auto; }
+.ux-wishes #wish-selection-count { color: var(--muted); font-size: .875rem; margin-top: var(--space-1); }
+.ux-wishes .wish-bulk-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ux-wishes .wish-select-all:not([hidden]), .ux-wishes .wish-select-label { display: flex; align-items: center; gap: var(--space-2); min-height: 44px; cursor: pointer; }
+.ux-wishes input[type="checkbox"] { width: 20px; height: 20px; margin: 0; flex-shrink: 0; accent-color: var(--accent); }
+.ux-wishes .wish-row-number { font-size: .75rem; color: var(--muted); }
+.ux-wishes .wish-list-region { border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
+.ux-wishes .ux-wishes-table { width: 100%; min-width: 0; table-layout: fixed; font-size: .875rem; }
+.ux-wishes .ux-wishes-table caption { text-align: left; padding: var(--space-3) var(--space-4); color: var(--muted); font-size: .75rem; }
+.ux-wishes .ux-wishes-table th, .ux-wishes .ux-wishes-table td { padding: var(--space-3); vertical-align: top; overflow-wrap: anywhere; }
+.ux-wishes .ux-wishes-table thead th { font-size: .7rem; }
+.ux-wishes .ux-wishes-table thead th:first-child { width: 70px; }
+.ux-wishes .ux-wishes-table thead th:nth-child(2) { width: 46%; }
+.ux-wishes .wish-content { min-width: 0; font-weight: 400; }
+.ux-wishes .wish-fan { display: block; font-size: .75rem; color: var(--muted); margin-bottom: var(--space-1); }
+.ux-wishes .wish-received { font-size: .75rem; color: var(--muted); }
+.ux-wishes .wish-received summary { cursor: pointer; }
+@media (max-width: 700px) {
+    .ux-wishes .wish-counts { gap: var(--space-2); }
+    .ux-wishes .wish-counts .count { padding: var(--space-3); }
+    .ux-wishes .wish-counts .count-label { font-size: .7rem; }
+    .ux-wishes .wish-bulk-actions { width: 100%; }
+    .ux-wishes .wish-bulk-actions button { flex: 1; padding-inline: var(--space-3); }
+    .ux-wishes .ux-wishes-table, .ux-wishes .ux-wishes-table tbody { display: block; }
+    .ux-wishes .ux-wishes-table caption { display: block; width: 100%; }
+    .ux-wishes .ux-wishes-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .ux-wishes .ux-wishes-table tr { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; padding: var(--space-3); gap: var(--space-2); border-top: 1px solid var(--line); }
+    .ux-wishes .ux-wishes-table th, .ux-wishes .ux-wishes-table td { padding: 0; border: 0; }
+    .ux-wishes .wish-select-cell { grid-column: 1; grid-row: 1 / 5; }
+    .ux-wishes .wish-select-label { flex-wrap: wrap; align-content: start; }
+    .ux-wishes .wish-content { grid-column: 2 / 4; grid-row: 1; }
+    .ux-wishes .wish-source { grid-column: 2; grid-row: 2; }
+    .ux-wishes .wish-visibility { grid-column: 3; grid-row: 2; }
+    .ux-wishes .ux-wishes-table td:nth-child(4) { grid-column: 2 / 4; grid-row: 3; color: var(--muted); font-size: .75rem; }
+    .ux-wishes .ux-wishes-table td:nth-child(4)::before { content: "Duplicate occurrences: "; }
+    .ux-wishes .ux-wishes-table td:nth-child(4):empty { display: none; }
+    .ux-wishes .wish-received { grid-column: 2 / 4; grid-row: 4; }
+}
