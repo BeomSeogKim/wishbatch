@@ -10,7 +10,7 @@ function setup(agGrid) {
     const fallback = { hidden: false };
     const table = {
         tHead: { rows: [{ cells: [{ textContent: 'Pledge ID' }, { textContent: 'Match at check' }] }] },
-        tBodies: [{ rows: [{ cells: [{ textContent: '=unsafe' }, { textContent: 'Match' }] }] }],
+        tBodies: [{ rows: [{ cells: [{ textContent: '=unsafe', querySelector: selector => selector === 'a' ? {cloneNode: () => ({href: '/w/synthetic/pledges/example/trace'})} : null }, { textContent: 'Match' }] }] }],
     };
     const root = { querySelector(selector) {
         return { '[data-comparison-table]': table, '[data-comparison-grid]': grid,
@@ -37,6 +37,7 @@ test('grid enhances the table and protects exported formula values', () => {
     assert.equal(options.rowData[0]['1'], 'Match');
     assert.equal(options.columnDefs[1].pinned, 'left');
     assert.equal(options.domLayout, 'autoHeight');
+    assert.equal(options.columnDefs[0].cellRenderer({value: '=unsafe', data: options.rowData[0]}).href, '/w/synthetic/pledges/example/trace');
     grid.button.handler();
     assert.equal(exportParams.processCellCallback({ value: ' =1+1' }), "' =1+1");
     assert.equal(exportParams.processCellCallback({ value: 'normal' }), 'normal');

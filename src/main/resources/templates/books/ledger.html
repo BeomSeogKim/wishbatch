@@ -40,7 +40,7 @@
                 <thead><tr><th scope="col">Pledge</th><th scope="col">Units</th><th scope="col">Amount</th><th scope="col">Local before</th><th scope="col">PayPal before</th><th scope="col">Match before</th><th scope="col">Local after</th><th scope="col">PayPal after</th><th scope="col">Match after</th></tr></thead>
                 <tbody>
                 <tr th:each="row : ${check.pledges}">
-                    <th scope="row" th:title="${row.pledgeId}" th:text="${@humanDisplay.shortId(row.pledgeId)}"></th>
+                    <th scope="row" th:title="${row.pledgeId}"><a th:href="@{/w/{token}/pledges/{id}/trace(token=${token},id=${row.pledgeId})}" th:title="${row.pledgeId}" th:text="${@humanDisplay.shortId(row.pledgeId)}"></a></th>
                     <td th:text="${row.quantity}"></td>
                     <td th:text="${@humanDisplay.money(row.amount, row.currency)}"></td>
                     <td th:title="${row.before.state}" th:text="${@humanDisplay.state(row.before.state)}"></td>

@@ -41,6 +41,7 @@ import app.campaign.store.EventRepository
 import app.campaign.store.OfferRepository
 import app.campaign.store.OptionRepository
 import app.campaign.store.PledgeRepository
+import app.campaign.store.WishRepository
 import app.campaign.store.WorkspaceRepository
 import app.testing.InMemoryPaymentGateway
 import app.testing.PaymentCall
@@ -92,6 +93,7 @@ class CampaignServiceTests @Autowired constructor(
     private val records: DecisionRecordService,
     private val provenance: PledgeProvenanceCheckpoint,
     private val terms: TermsCheckService,
+    private val wishes: WishRepository,
 ) {
     private val start = Instant.parse("2026-01-01T00:00:00Z")
     private val ownedWorkspaces = mutableListOf<UUID>()
@@ -616,7 +618,7 @@ class CampaignServiceTests @Autowired constructor(
     @Test
     fun `enabled demo simulation fails only the next capture and records its synthetic source`() {
         val simulationService = CampaignService(persistence, offers, options, analyses, campaigns,
-            pledges, events, payments, mapper, clock, true, records, provenance, terms)
+            pledges, events, payments, mapper, clock, true, records, provenance, terms, wishes)
         val fixture = fixture(minimum = 2)
         val simulated = authorized(fixture, 1)
         val captured = authorized(fixture, 1)

@@ -12,6 +12,7 @@ function browser({available = true, fail = false, readyState = 'complete'} = {})
         addEventListener(event, callback) { this.listeners[event] = callback; },
         setAttribute(name, value) { this.attributes[name] = value; },
         getAttribute(name) { return this.attributes[name] || null; },
+        querySelector(selector) { assert.equal(selector, 'a'); return textContent === 'pledge-id' ? {cloneNode() { return {href: '/w/synthetic/pledges/pledge-id/trace'}; }} : null; },
         querySelectorAll(selector) { assert.equal(selector, 'li'); return entries.map(textContent => ({textContent})); }
     });
     const elements = Object.fromEntries(['books-fallback', 'books-grid', 'books-search', 'books-export',
@@ -85,6 +86,7 @@ test('grid supports sorting filters safe CSV and the accessible table toggle', (
     assert.equal(options.enableBrowserTooltips, true);
     assert.equal(options.domLayout, 'autoHeight');
     assert.equal(calls.theme[0].backgroundColor, 'var(--surface)');
+    assert.equal(options.columnDefs.find(column => column.field === 'pledge').cellRenderer({value: 'pledge-id', data: options.rowData[0]}).href, '/w/synthetic/pledges/pledge-id/trace');
     assert.equal(options.rowData[0].units, 3);
     assert.equal(options.rowData[0].amount, 'USD 19.50');
     assert.equal(options.rowData[0].providerBefore, 'ORDER order-id: COMPLETED; CAPTURE capture-id: PENDING');

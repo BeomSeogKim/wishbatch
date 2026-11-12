@@ -10,6 +10,8 @@ import app.campaign.model.Offer
 import app.campaign.model.Option
 import app.campaign.model.Pledge
 import app.campaign.model.PledgeState
+import app.campaign.model.Wish
+import app.campaign.model.WishSource
 import app.campaign.model.WishKind
 import app.campaign.model.Workspace
 import app.campaign.port.AnalysisOutput
@@ -37,6 +39,7 @@ import app.campaign.store.EventRepository
 import app.campaign.store.OfferRepository
 import app.campaign.store.OptionRepository
 import app.campaign.store.PledgeRepository
+import app.campaign.store.WishRepository
 import app.campaign.store.WorkspaceRepository
 import app.campaign.terms.TermsSealQuery
 import app.campaign.workspace.WorkspaceService
@@ -57,6 +60,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.http.MediaType
+import org.springframework.mock.web.MockHttpSession
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
@@ -72,6 +76,7 @@ import java.util.UUID
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -86,6 +91,7 @@ class FanPaymentControllerTests @Autowired constructor(
     private val offers: OfferRepository,
     private val campaigns: CampaignRepository,
     private val pledges: PledgeRepository,
+    private val wishes: WishRepository,
     private val events: EventRepository,
     private val gateway: InMemoryPaymentGateway,
     private val clock: FanPaymentClock,
@@ -130,6 +136,7 @@ class FanPaymentControllerTests @Autowired constructor(
             offers.deleteAll(workspaceOffers)
             analyses.deleteAll(analyses.findByWorkspaceId(workspaceId))
             options.deleteAll(options.findByWorkspaceId(workspaceId))
+            wishes.deleteAll(wishes.findByWorkspaceId(workspaceId))
             workspaces.deleteById(workspaceId)
         }
     }
@@ -155,6 +162,7 @@ class FanPaymentControllerTests @Autowired constructor(
         assertEquals(Money(400, "USD"), call.request.amount)
         assertEquals(id, call.request.pledgeId)
         assertEquals(PledgeState.CREATED, pledges.findById(id).orElseThrow().state)
+        assertNull(pledges.findById(id).orElseThrow().wishId)
 
         gateway.authorizeOrderResults.add(received(AuthorizationDetails(
             AuthorizationId("synthetic-authorization"), Money(400, "USD"), start.plusSeconds(86_400),
@@ -169,6 +177,57 @@ class FanPaymentControllerTests @Autowired constructor(
         assertFalse(approved.contains("private-buyer"))
         assertFalse(approved.contains("example.test"))
         assertEquals(PledgeState.AUTHORIZED, pledges.findById(id).orElseThrow().state)
+    }
+
+    @Test
+    fun `explicit wish wins over session and session wish is used when the request omits it`() {
+        val fixture = fixture()
+        val sessionWish = wishes.saveAndFlush(Wish(fixture.workspace.id, "A small moon print", WishSource.ONSITE,
+            createdAt = start))
+        val explicitWish = wishes.saveAndFlush(Wish(fixture.workspace.id, "A blue moon print", WishSource.ONSITE,
+            createdAt = start))
+        val session = MockHttpSession().apply { setAttribute("followup.wish.${fixture.workspace.token}", sessionWish.id) }
+        for (explicit in listOf(false, true)) {
+            gateway.createOrderResults.add(received(OrderDetails(OrderId("synthetic-order-$explicit")), PaymentStatus.CREATED))
+            val wishField = if (explicit) ",\"wishId\":\"${explicitWish.id}\"" else ""
+            val response = mvc.securePost("${fixture.path}/api/pledges", session) {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"quantity":1$wishField}"""
+            }.andExpect { status { isCreated() } }.andReturn().response.contentAsString
+            val pledgeId = UUID.fromString(mapper.readTree(response)["pledgeId"].asString())
+            assertEquals(if (explicit) explicitWish.id else sessionWish.id, pledges.findById(pledgeId).orElseThrow().wishId)
+        }
+    }
+
+    @Test
+    fun `foreign and missing wish references reject before a payment or pledge is created`() {
+        val fixture = fixture()
+        val other = fixture()
+        val foreignWish = wishes.saveAndFlush(Wish(other.workspace.id, "A different workspace wish", WishSource.ONSITE,
+            createdAt = start))
+        for (wishId in listOf(foreignWish.id, UUID.randomUUID())) {
+            mvc.securePost("${fixture.path}/api/pledges") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"quantity":1,"wishId":"$wishId"}"""
+            }.andExpect { status { isNotFound() } }
+            mvc.get("${fixture.path}/offer") { param("wishId", wishId.toString()) }
+                .andExpect { status { isNotFound() } }
+        }
+        assertTrue(pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(fixture.campaign.id).isEmpty())
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+    }
+
+    @Test
+    fun `offer keeps an explicit or session wish in its model and wish links carry the reference`() {
+        val fixture = fixture()
+        val wish = wishes.saveAndFlush(Wish(fixture.workspace.id, "A print for my desk", WishSource.ONSITE, createdAt = start))
+        val session = MockHttpSession().apply { setAttribute("followup.wish.${fixture.workspace.token}", wish.id) }
+        mvc.get("${fixture.path}/offer") { param("wishId", wish.id.toString()) }
+            .andExpect { status { isOk() }; model { attribute("wishId", wish.id) } }
+        mvc.get("${fixture.path}/offer") { this.session = session }
+            .andExpect { status { isOk() }; model { attribute("wishId", wish.id) } }
+        val html = mvc.get(fixture.path) { this.session = session }.andReturn().response.contentAsString
+        assertContains(html, "${fixture.path}/offer?wishId=${wish.id}")
     }
 
     @Test

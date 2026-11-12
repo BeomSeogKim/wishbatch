@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Verify this record', ~{::main})}">
+<body>
+<main id="main" class="shell stack">
+    <header class="page-header">
+        <p class="eyebrow">Maker · Sandbox</p>
+        <h1>Verify this record</h1>
+        <p>Recomputed from stored entry contents, their order, previous hashes, and the saved record head.</p>
+        <a th:href="@{/w/{token}/maker/decision-record(token=${token})}">Back to decision record</a>
+    </header>
+    <p th:if="${#lists.isEmpty(record.pledges)}">No pledges to verify.</p>
+    <article class="card stack" th:each="pledge : ${record.pledges}">
+        <h2>Pledge <span th:text="${@humanDisplay.shortId(pledge.pledgeId)}" th:title="${pledge.pledgeId}"></span></h2>
+        <p th:if="${pledge.chainVerification == null}">Unavailable: no lifecycle record was saved for this pledge.</p>
+        <th:block th:if="${pledge.chainVerification != null}">
+            <p th:if="${pledge.chainVerification.intact}"><strong>Chain intact.</strong> All <span th:text="${pledge.chainVerification.checkedEntries}"></span> entries match their stored hashes.</p>
+            <p th:unless="${pledge.chainVerification.intact}"><strong>Chain breaks at entry <span th:text="${pledge.chainVerification.firstBrokenPosition}"></span>.</strong> <span th:text="${pledge.chainVerification.reason}"></span></p>
+        </th:block>
+        <ul th:if="${!#lists.isEmpty(pledge.issues)}"><li th:each="issue : ${pledge.issues}" th:text="${issue}"></li></ul>
+        <a th:href="@{/w/{token}/pledges/{id}/trace(token=${token},id=${pledge.pledgeId})}">Open pledge trace</a>
+    </article>
+    <p>Verification compares stored data. It does not establish missing history, payment completion, or an independent signature.</p>
+</main>
+</body>
+</html>

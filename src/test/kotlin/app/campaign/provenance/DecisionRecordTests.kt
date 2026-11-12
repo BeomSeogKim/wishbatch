@@ -1,5 +1,8 @@
 package app.campaign.provenance
 
+import app.campaign.followup.FollowupAnswerRecord
+import app.campaign.followup.FollowupQuestion
+import app.campaign.model.NeedAttribute
 import app.campaign.model.AnalysisRun
 import app.campaign.model.Campaign
 import app.campaign.model.CompatibilityVerdict
@@ -14,6 +17,9 @@ import app.campaign.model.Workspace
 import app.campaign.port.AnalysisOutput
 import app.campaign.port.AnalyzedWish
 import app.campaign.port.WishVerdict
+import app.campaign.port.SecondReading
+import app.campaign.port.WishReadingComparison
+import app.campaign.review.WishReviewOverride
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -320,7 +326,7 @@ class DecisionRecordTests @Autowired constructor(
         assertContains(html, "Download JSON")
         assertContains(html, "&lt;script&gt;")
         assertFalse(html.contains("<script>"))
-        assertContains(html, "Wish association and individual verdict are unavailable")
+        assertContains(html, "A pledge without a wish traces to the offer's evidence set.")
         val json = mvc.get("$path.json").andExpect {
             status { isOk() }
             content { contentType("application/json") }
@@ -340,6 +346,140 @@ class DecisionRecordTests @Autowired constructor(
         assertNull(query.findByToken("missing"))
     }
 
+    @Test
+    fun `linked wish records exact text offered reading agreement and maker revision`() {
+        val fixture = fixture(linkWish = true)
+        val revision = WishReviewOverride(fixture.workspace.id, fixture.run.id, fixture.wish.id, fixture.offer.optionId,
+            CompatibilityVerdict.INCOMPATIBLE, CompatibilityVerdict.COMPATIBLE, "This finish cannot meet the request.", now, 1)
+            .also(entities::persist)
+        snapshot(fixture)
+        val saved = document(fixture).pledges.single()
+        val wish = saved.entries[0].payload
+        assertEquals("AVAILABLE", wish["availability"].asString())
+        assertEquals(fixture.wish.id.toString(), wish["wishId"].asString())
+        assertEquals(fixture.wish.text, wish["text"].asString())
+        assertEquals(DecisionRecordHash(mapper).sha256(fixture.wish.text), wish["textHash"].asString())
+        val verdict = saved.entries[1].payload
+        assertEquals("COMPATIBLE", verdict["originalVerdict"].asString())
+        assertEquals("INCOMPATIBLE", verdict["verdict"].asString())
+        assertEquals(revision.id.toString(), verdict["makerOverride"]["id"].asString())
+        assertEquals("MAKER", verdict["review"]["source"].asString())
+        assertFalse(verdict["readingAgreement"]["needsYourEyes"].asBoolean())
+        assertEquals(fixture.offer.optionId.toString(), verdict["optionId"].asString())
+        assertTrue(assertNotNull(saved.chainVerification).intact)
+        assertNotNull(saved.entries.last().payload["recordedAt"])
+        assertEquals(saved, query.findPledgeByToken(fixture.workspace.token, fixture.pledge.id))
+        assertNull(query.findPledgeByToken(fixture().workspace.token, fixture.pledge.id))
+        records.recordPledge(fixture.pledge)
+        assertEquals(saved, document(fixture).pledges.single())
+    }
+
+    @Test
+    fun `non request wish preserves its known reading without inventing an option verdict`() {
+        val fixture = fixture(linkWish = true, wishKind = WishKind.NOT_A_REQUEST)
+        snapshot(fixture)
+        val verdict = document(fixture).pledges.single().entries[1].payload
+        assertEquals("AVAILABLE", verdict["availability"].asString())
+        assertEquals("NOT_A_REQUEST", verdict["kind"].asString())
+        assertTrue(verdict["verdict"].isNull)
+        assertEquals("This was read as not a request.", verdict["reason"].asString())
+    }
+
+    @Test
+    fun `fan resolution snapshot preserves all contributing questions and answers`() {
+        val fixture = fixture(linkWish = true)
+        val questions = listOf("finish", "size").map { key ->
+            FollowupQuestion(fixture.workspace.id, fixture.run.id, fixture.offer.optionId,
+                if (key == "finish") NeedAttribute.FINISH else NeedAttribute.SIZE, key,
+                "Would this $key work?", listOf("yes", "no"), listOf(fixture.wish.id), now, approved = true)
+                .also(entities::persist)
+        }
+        val answers = questions.map {
+            FollowupAnswerRecord(fixture.workspace.id, fixture.run.id, fixture.offer.optionId,
+                it.id, fixture.wish.id, "yes", now).also(entities::persist)
+        }
+        val review = WishReviewOverride(fixture.workspace.id, fixture.run.id, fixture.wish.id, fixture.offer.optionId,
+            CompatibilityVerdict.COMPATIBLE, CompatibilityVerdict.CONDITIONAL, "Fan confirmed both conditions.", now, 1,
+            source = "FAN_ANSWER", answerId = answers.last().id).also(entities::persist)
+        val originalRun = fixture.run.resultJson
+        records.recordWishReview(review, answers, questions)
+        records.recordWishReview(review, answers.reversed(), questions.reversed())
+        snapshot(fixture)
+        val document = document(fixture)
+        val source = document.sources.single { it.sourceType == "REVIEW" }
+        assertTrue(source.intact)
+        assertEquals(2, source.payload["answers"].size())
+        assertEquals(2, source.payload["questions"].size())
+        assertEquals(originalRun, fixture.run.resultJson)
+        val verdict = document.pledges.single().entries[1].payload
+        assertEquals("FAN_ANSWER", verdict["review"]["source"].asString())
+        assertTrue(verdict["makerOverride"].isNull)
+        assertEquals(source.hash, verdict["reviewSnapshotHash"].asString())
+        assertEquals(source.payload, verdict["reviewEvidence"])
+        assertEquals("INTACT", document.pledges.single().integrity)
+    }
+
+    @Test
+    fun `wish free pledge explicitly traces to offer evidence without inventing personal words`() {
+        val fixture = fixture()
+        snapshot(fixture)
+        val wish = document(fixture).pledges.single().entries.first().payload
+        assertEquals("OFFER_EVIDENCE", wish["traceScope"].asString())
+        assertTrue(wish["text"].isNull)
+        assertTrue(wish["wishId"].isNull)
+        assertEquals(listOf(fixture.wish.id.toString()), wish["supportingWishIds"].toList().map { it.asString() })
+    }
+
+    @Test
+    fun `wish added after offered analysis is linked without inventing a reading`() {
+        val fixture = fixture()
+        snapshot(fixture)
+        val laterWish = Wish(fixture.workspace.id, "Could this come in blue?", WishSource.ONSITE, createdAt = now)
+            .also(entities::persist)
+        val pledge = Pledge(fixture.pledge.campaignId, 1, fixture.offer.unitPrice, "USD", createdAt = now,
+            wishId = laterWish.id).also(entities::persist)
+        records.recordPledge(pledge)
+        val saved = assertNotNull(query.findPledgeByToken(fixture.workspace.token, pledge.id))
+        assertEquals(laterWish.text, saved.entries[0].payload["text"].asString())
+        assertEquals("UNAVAILABLE", saved.entries[1].payload["availability"].asString())
+        assertTrue(saved.entries[1].payload["verdict"].isNull)
+        assertEquals("INTACT", saved.integrity)
+    }
+
+    @Test
+    fun `verification returns first changed entry and tampered copy never changes stored rows`() {
+        val fixture = fixture(linkWish = true)
+        snapshot(fixture)
+        val before = document(fixture)
+        val simulation = assertNotNull(query.simulateTamperedCopyByToken(fixture.workspace.token))
+        assertTrue(simulation.usesStoredRecord)
+        assertTrue(simulation.original.intact)
+        assertFalse(simulation.tamperedCopy.intact)
+        assertEquals(1, simulation.tamperedCopy.firstBrokenPosition)
+        assertEquals(before, document(fixture))
+        entities.createNativeQuery("update decision_record_entries set payload = '{}' where pledge_id = :id and position = 2")
+            .setParameter("id", fixture.pledge.id).executeUpdate()
+        entities.clear()
+        val changed = assertNotNull(document(fixture).pledges.single().chainVerification)
+        assertFalse(changed.intact)
+        assertEquals(2, changed.firstBrokenPosition)
+        assertEquals(1, changed.checkedEntries)
+    }
+
+    @Test
+    fun `verification action reports intact and first broken entry`() {
+        val fixture = fixture()
+        snapshot(fixture)
+        val path = "/w/${fixture.workspace.token}/maker/decision-record/verify"
+        assertContains(mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString, "Chain intact.")
+        entities.createNativeQuery("delete from decision_record_entries where pledge_id = :id and position = 4")
+            .setParameter("id", fixture.pledge.id).executeUpdate()
+        entities.clear()
+        val html = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "Chain breaks at entry <span>4</span>")
+        mvc.get("/w/missing/maker/decision-record/verify").andExpect { status { isNotFound() } }
+    }
+
     private fun snapshot(fixture: Fixture) {
         records.recordAnalysis(fixture.run, listOf(fixture.wish))
         records.recordOffer(fixture.offer)
@@ -348,14 +488,17 @@ class DecisionRecordTests @Autowired constructor(
 
     private fun document(fixture: Fixture) = assertNotNull(query.findByToken(fixture.workspace.token))
 
-    private fun fixture(): Fixture {
+    private fun fixture(linkWish: Boolean = false, wishKind: WishKind = WishKind.REQUEST): Fixture {
         val workspace = Workspace(UUID.randomUUID().toString(), now).also(entities::persist)
         val wish = Wish(workspace.id, "Please make a matte <script>print</script>.", WishSource.ONSITE,
             "private-display", now).also(entities::persist)
         val optionId = UUID.randomUUID()
-        val output = AnalysisOutput(listOf(AnalyzedWish(wish.id, WishKind.REQUEST, emptyList())),
-            listOf(WishVerdict(wish.id, optionId, CompatibilityVerdict.COMPATIBLE, "Matte option")),
-            null, "No proposal", emptyList(), emptyList(), emptyList(), listOf(optionId))
+        val output = AnalysisOutput(listOf(AnalyzedWish(wish.id, wishKind, emptyList())),
+            if (wishKind == WishKind.REQUEST) listOf(WishVerdict(wish.id, optionId, CompatibilityVerdict.COMPATIBLE, "Matte option")) else emptyList(),
+            null, "No proposal", emptyList(), emptyList(), emptyList(), listOf(optionId),
+            SecondReading(1, 1, listOf(WishReadingComparison(wish.id, optionId, wishKind,
+                wishKind, CompatibilityVerdict.COMPATIBLE.takeIf { wishKind == WishKind.REQUEST },
+                CompatibilityVerdict.COMPATIBLE.takeIf { wishKind == WishKind.REQUEST }))))
         val run = AnalysisRun(workspace.id, "synthetic-model", "original-input", mapper.writeValueAsString(output),
             isSeed = true, createdAt = now).also(entities::persist)
         val offer = Offer(workspace.id, optionId, run.id, "Print <script>offer</script>", "Matte print",
@@ -364,7 +507,7 @@ class DecisionRecordTests @Autowired constructor(
         val campaign = Campaign(offer.id).also(entities::persist)
         val pledge = Pledge(campaign.id, 1, offer.unitPrice, "USD", payerEmailMasked = "private-email",
             shippingAddress = ShippingAddress("private-name", "private-street", null, "CA", "City", "00000", "US"),
-            lastError = "private-error", createdAt = now).also(entities::persist)
+            lastError = "private-error", createdAt = now, wishId = if (linkWish) wish.id else null).also(entities::persist)
         entities.flush()
         return Fixture(workspace, wish, run, offer, pledge)
     }

@@ -8,12 +8,14 @@ import app.campaign.workspace.WorkspaceService
 import app.campaign.terms.TermsSealQuery
 import app.paypal.PayPalProperties
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpSession
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import java.math.BigDecimal
+import java.util.UUID
 
 @Controller("fanOfferController")
 class OfferController(
@@ -29,8 +31,15 @@ class OfferController(
         @RequestParam(defaultValue = "1") quantity: Int,
         model: Model,
         response: HttpServletResponse,
+        @RequestParam(required = false) wishId: UUID? = null,
+        session: HttpSession? = null,
     ): String {
         val workspace = workspaces.findByToken(token) ?: return fanNotFound(response)
+        val linkedWishId = wishId ?: session?.getAttribute("followup.wish.$token") as? UUID
+        if (linkedWishId != null && workspaces.listWishes(token).none { it.id == linkedWishId }) {
+            return fanNotFound(response)
+        }
+        model.addAttribute("wishId", linkedWishId)
         val campaign = when (val result = campaigns.currentCampaign(token)) {
             is ServiceResult.Success -> result.value
             is ServiceResult.Rejected -> return fanNotFound(response)

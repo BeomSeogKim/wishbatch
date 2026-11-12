@@ -36,6 +36,8 @@ The compatibility upgrade still precedes JPA for these settings.
 - `wishes.duplicate_count` is `INTEGER NOT NULL DEFAULT 0`. Existing nulls
   become zero; existing nonnull counts and original wish text are preserved.
   This counts additional imported occurrences, never fans or payment units.
+- `pledges.wish_id` is a nullable UUID. Existing pledges remain unlinked;
+  neither offer evidence nor browser history is used to backfill a wish.
 
 The compatibility step runs on every startup and is idempotent. It inspects
 only the current connection schema and does not drop tables or rows. Unknown
@@ -52,6 +54,7 @@ Relative to the earlier sandbox schema:
 | Partial refund | Expanded `pledges.state` enum/check | Preserve state, quantity, and amount |
 | Duplicate import | `wishes.duplicate_count` | Backfill zero |
 | Decision provenance | `decision_source_snapshots`, `pledge_decision_records`, `decision_record_entries` | New empty tables; unavailable historical evidence stays unavailable |
+| Pledge wish trace | Nullable `pledges.wish_id` | Preserve null for existing pledges |
 | Maker review | `wish_review_overrides` | New empty table |
 | Follow-up questions | `followup_draft_attempts`, `followup_questions`, `followup_answers`; nullable `wish_review_overrides.answer_id` | New tables empty; existing review answer references remain null |
 | Webhook inbox | `paypal_webhook_events` | Existing enabled-configuration initializer creates it if absent |

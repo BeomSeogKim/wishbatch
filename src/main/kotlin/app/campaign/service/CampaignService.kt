@@ -32,6 +32,7 @@ import app.campaign.store.EventRepository
 import app.campaign.store.OfferRepository
 import app.campaign.store.OptionRepository
 import app.campaign.store.PledgeRepository
+import app.campaign.store.WishRepository
 import app.campaign.terms.TermsCheckOutcome
 import app.campaign.terms.TermsCheckService
 import app.campaign.terms.TermsCheckStage
@@ -59,6 +60,7 @@ class CampaignService(
     private val records: DecisionRecordService,
     private val provenance: PledgeProvenanceCheckpoint,
     private val terms: TermsCheckService,
+    private val wishes: WishRepository,
 ) {
     fun createDraft(workspaceId: UUID, command: DraftOffer): ServiceResult<DraftCreated> = persistence.locked(workspaceId) {
         val option = persistence.checkpoint { options.findByIdAndWorkspaceId(command.optionId, workspaceId) }
@@ -108,14 +110,18 @@ class CampaignService(
         successView(context)
     }
 
-    fun startPledge(ref: CampaignRef, quantity: Int): ServiceResult<PledgeView> = withCampaign(ref) { context ->
+    fun startPledge(ref: CampaignRef, quantity: Int, wishId: UUID? = null): ServiceResult<PledgeView> = withCampaign(ref) { context ->
+        if (wishId != null && persistence.checkpoint { wishes.findByIdAndWorkspaceId(wishId, ref.workspaceId) } == null) {
+            return@withCampaign rejected(Rejection.NOT_FOUND)
+        }
         reconcileLocked(context)
         if (context.campaign.state != CampaignState.OPEN) return@withCampaign rejected(Rejection.INVALID_STATE)
         capacityRejection(context, quantity)?.let { return@withCampaign rejected(it) }
         val amount = try { Math.multiplyExact(context.offer.unitPrice, quantity.toLong()) } catch (_: ArithmeticException) {
             return@withCampaign rejected(Rejection.AMOUNT_OVERFLOW)
         }
-        val pledge = Pledge(context.campaign.id, quantity, amount, context.offer.currency, createdAt = clock.instant())
+        val pledge = Pledge(context.campaign.id, quantity, amount, context.offer.currency,
+            createdAt = clock.instant(), wishId = wishId)
         persistence.checkpoint {
             pledges.saveAndFlush(pledge)
             events.save(Event(context.campaign.id, "PLEDGE_CREATED", pledge.id, detail = "CREATED", createdAt = clock.instant()))

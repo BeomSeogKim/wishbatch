@@ -118,6 +118,7 @@
                         <th scope="row">
                             <span th:text="${row.buyerName ?: 'Name not provided'}"></span><br>
                             <small th:text="${row.payerEmailMasked ?: 'Payer unavailable'}"></small>
+                            <br><a th:href="@{/w/{token}/pledges/{id}/trace(token=${token},id=${row.id})}">Trace pledge</a>
                         </th>
                         <td th:text="${row.quantity}"></td>
                         <td>

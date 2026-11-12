@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Trace my pledge', ~{::main})}">
+<body>
+<main id="main" class="shell fan-page">
+    <header class="page-heading">
+        <p class="eyebrow">Your words to your payment</p>
+        <h1>Trace my pledge</h1>
+        <p>Pledge <span th:title="${record.pledgeId}" th:text="${@humanDisplay.shortId(record.pledgeId)}"></span></p>
+        <a th:href="@{/w/{token}/pledges/{id}(token=${token},id=${record.pledgeId})}">Back to pledge status</a>
+    </header>
+    <section class="card" aria-labelledby="wish-heading">
+        <h2 id="wish-heading">Your wish, in your words</h2>
+        <blockquote th:if="${trace.wish != null}" th:text="${trace.wish}"></blockquote>
+        <p th:if="${trace.wish == null}" th:text="${trace.wishExplanation}"></p>
+        <p th:if="${trace.evidenceCount != null}"><span th:text="${trace.evidenceCount}"></span> wishes in the offer's recorded evidence set.</p>
+    </section>
+    <section class="card" aria-labelledby="reading-heading">
+        <h2 id="reading-heading">How it was read</h2>
+        <p th:if="${trace.verdict != null}"><strong th:text="${@humanDisplay.state(trace.verdict)}"></strong> for the offered option.</p>
+        <p th:if="${trace.verdict == null}">No individual verdict was recorded for this pledge's wish and offered option.</p>
+        <p th:if="${trace.readingReason != null}" th:text="${trace.readingReason}"></p>
+        <p th:text="${trace.readingAgreement}"></p>
+        <div th:if="${trace.reviewVerdict != null}">
+            <h3 th:text="${trace.reviewSource == 'FAN_ANSWER' ? 'Updated from your answers' : 'Maker review'}"></h3>
+            <p><strong th:text="${@humanDisplay.state(trace.reviewVerdict)}"></strong> · revision <span th:text="${trace.reviewRevision}"></span></p>
+            <p th:text="${trace.reviewReason}"></p>
+        </div>
+        <p th:if="${trace.model != null}">Model: <span th:text="${trace.model}"></span> · Run <span th:title="${trace.runId}" th:text="${@humanDisplay.shortId(trace.runId)}"></span></p>
+    </section>
+    <section class="card" aria-labelledby="terms-heading">
+        <h2 id="terms-heading">The terms you agreed to</h2>
+        <p th:if="${trace.amount != null}"><span th:text="${trace.quantity}"></span> units · <strong th:text="${@humanDisplay.money(trace.amount, trace.currency)}"></strong> total</p>
+        <p th:if="${trace.terms == null}">The earlier offer snapshot is unavailable. Current terms are not substituted for it.</p>
+        <th:block th:if="${trace.terms != null}" th:with="terms=${trace.terms}">
+            <h3 th:text="${terms.title}"></h3>
+            <p th:text="${terms.specification}"></p>
+            <dl class="term-list">
+                <dt>Price per unit</dt><dd th:text="${@humanDisplay.money(terms.price, terms.currency)}"></dd>
+                <dt>Delivery terms</dt><dd th:text="${terms.delivery}"></dd>
+                <dt>Shipping region</dt><dd th:text="${terms.region}"></dd>
+                <dt>Minimum batch</dt><dd th:text="${terms.minimum}"></dd>
+                <dt>Capacity</dt><dd th:text="${terms.capacity}"></dd>
+                <th:block th:each="variant : ${terms.variants}"><dt th:text="${@makerDisplay.catalogLabel(variant.label)}"></dt><dd th:text="${variant.value}"></dd></th:block>
+            </dl>
+            <p>Offer version <span th:title="${trace.offerId}" th:text="${@humanDisplay.shortId(trace.offerId)}"></span></p>
+        </th:block>
+    </section>
+    <section class="card" aria-labelledby="payment-heading">
+        <h2 id="payment-heading">Each money step</h2>
+        <p>Times show when this app recorded each checkpoint. PayPal and your bank or card determine release and refund timing.</p>
+        <p th:if="${trace.payments.isEmpty()}">Earlier payment checkpoints are unavailable.</p>
+        <ol class="timeline">
+            <li th:each="step : ${trace.payments}">
+                <strong th:text="${step.label}"></strong>
+                <p th:text="${step.recordedAt == null ? 'Checkpoint time unavailable' : @humanDisplay.time(step.recordedAt)}"></p>
+                <dl class="term-list"><th:block th:each="reference : ${step.references}"><dt th:text="${reference.label}"></dt><dd th:title="${reference.value}" th:text="${@humanDisplay.shortId(reference.value)}"></dd></th:block></dl>
+                <details><summary>Record entry hash</summary><p th:text="${step.hash}"></p></details>
+            </li>
+        </ol>
+    </section>
+    <section class="card" aria-labelledby="record-heading">
+        <h2 id="record-heading">Check this record</h2>
+        <p th:text="${@humanDisplay.state(record.integrity)}"></p>
+        <ul th:unless="${record.issues.isEmpty()}"><li th:each="issue : ${record.issues}" th:text="${issue}"></li></ul>
+        <p>These hashes check the stored evidence chain. They do not prove the interpretation was correct or that delivery will happen.</p>
+        <details><summary>Evidence hashes</summary>
+            <dl class="term-list">
+                <dt>Wish text</dt><dd th:text="${trace.wishHash ?: 'Unavailable'}"></dd>
+                <dt>Analysis input</dt><dd th:text="${trace.inputHash ?: 'Unavailable'}"></dd>
+                <dt>Offer terms</dt><dd th:text="${trace.termsHash ?: 'Unavailable'}"></dd>
+                <dt>Latest record entry</dt><dd th:text="${record.lastHash ?: 'Unavailable'}"></dd>
+            </dl>
+        </details>
+        <a th:href="@{/w/{token}/maker/decision-record(token=${token})}">Open decision record and verify</a>
+    </section>
+</main>
+</body>
+</html>

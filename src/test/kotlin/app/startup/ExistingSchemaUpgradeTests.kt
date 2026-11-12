@@ -29,6 +29,7 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -113,6 +114,7 @@ class ExistingSchemaUpgradeTests {
                         entityManager.transaction.begin()
                         val saved = assertNotNull(entityManager.find(Pledge::class.java, pledge.id))
                         assertEquals(if (it == 0) PledgeState.CAPTURED else PledgeState.PARTIALLY_REFUNDED, saved.state)
+                        assertNull(saved.wishId)
                         assertEquals(2, saved.qty)
                         assertEquals(400L, saved.amount)
                         saved.state = PledgeState.PARTIALLY_REFUNDED
@@ -177,6 +179,7 @@ class ExistingSchemaUpgradeTests {
             if (!nativeEnum) connection.execute("alter table pledges add constraint old_pledge_state check (state in ($labels))")
             connection.execute("alter table pledges add constraint positive_qty check (qty > 0)")
             connection.execute("alter table wishes drop column if exists duplicate_count")
+            connection.execute("alter table pledges drop column if exists wish_id")
         }
     }
 
@@ -191,6 +194,7 @@ class ExistingSchemaUpgradeTests {
                                 val previous = connection.scalar("select state from pledges").toString()
                                 connection.execute("update pledges set state='PARTIALLY_REFUNDED'")
                                 assertEquals(0, connection.scalar("select duplicate_count from wishes"))
+                                assertNull(connection.scalar("select wish_id from pledges"))
                                 connection.execute("update pledges set state='$previous'")
                             }
                             observed.set(true)

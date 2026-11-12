@@ -10,6 +10,7 @@ import app.campaign.service.Rejection
 import app.campaign.service.ServiceResult
 import app.campaign.workspace.WorkspaceService
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import jakarta.servlet.http.HttpSession
 import org.springframework.context.MessageSource
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -22,7 +23,7 @@ import java.util.Locale
 import java.util.UUID
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class StartPledgeRequest(val quantity: Int, val campaignId: UUID? = null)
+data class StartPledgeRequest(val quantity: Int, val campaignId: UUID? = null, val wishId: UUID? = null)
 
 enum class PledgeOutcome { CREATED, AUTHORIZED, REJECTED }
 
@@ -45,7 +46,7 @@ class PledgeApiController(
     private val messages: MessageSource,
 ) {
     @PostMapping("/w/{token}/api/pledges")
-    fun start(@PathVariable token: String, @RequestBody request: StartPledgeRequest): ResponseEntity<PledgeResponse> {
+    fun start(@PathVariable token: String, @RequestBody request: StartPledgeRequest, session: HttpSession): ResponseEntity<PledgeResponse> {
         val workspace = workspaces.findByToken(token) ?: return rejected(token, ServiceResult.Rejected(Rejection.NOT_FOUND))
         val quote = when (val result = queries.quote(token, request.quantity)) {
             is ServiceResult.Success -> result.value
@@ -53,6 +54,7 @@ class PledgeApiController(
         }
         return when (val result = campaigns.startPledge(
             CampaignRef(workspace.id, request.campaignId ?: quote.campaignId), request.quantity,
+            request.wishId ?: session.getAttribute("followup.wish.$token") as? UUID,
         )) {
             is ServiceResult.Success -> ResponseEntity.status(201).body(
                 payload(token, PledgeOutcome.CREATED, result.value, "Approve in PayPal to request a hold. No pledge has counted yet."))

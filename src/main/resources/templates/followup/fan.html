@@ -9,6 +9,7 @@
         <p>The maker approved these choices. Choose a variant only if it meets the condition in your wish.</p>
         <p>Your answer is stated interest, not an order. Nothing is charged. Other conditions may remain Depends.</p>
         <a th:href="@{/w/{token}(token=${token})}">Back to wishes</a>
+        <a th:href="@{/w/{token}/offer(token=${token},wishId=${wishId})}">See the offer for your wish</a>
     </header>
     <p th:if="${answerSaved == true}" class="notice notice-info" role="status">Your answer is saved with its source. The wish is resolved by code when every required condition is covered.</p>
     <section th:if="${#lists.isEmpty(questions)}" class="card">

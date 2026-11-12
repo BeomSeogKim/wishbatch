@@ -22,6 +22,16 @@ internal class ExistingSchemaUpgrade(private val dataSource: DataSource) {
             connection.autoCommit = true
             upgradePledgeState(connection, postgres)
             upgradeDuplicateCount(connection)
+            upgradePledgeWish(connection)
+        }
+    }
+
+    private fun upgradePledgeWish(connection: Connection) {
+        val table = identifier(connection, "pledges")
+        if (!tableExists(connection, table)) return
+        val column = identifier(connection, "wish_id")
+        if (columnInfo(connection, table, column) == null) {
+            execute(connection, "alter table ${qualified(connection, table)} add column ${quote(column)} uuid")
         }
     }
 

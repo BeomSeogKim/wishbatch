@@ -9,9 +9,10 @@
         <p>Stored analysis inputs, maker-confirmed offer versions, and payment checkpoints.</p>
         <a th:href="@{/w/{token}/maker/campaign(token=${token})}">Back to campaign</a>
         <a th:href="@{/w/{token}/maker/decision-record.json(token=${token})}" download>Download JSON</a>
+        <a class="button" th:href="@{/w/{token}/maker/decision-record/verify(token=${token})}">Verify this record</a>
     </header>
     <aside class="card">
-        <p>Wish association and individual verdict are unavailable: pledges do not record a fan's wish link.</p>
+        <p>A linked wish records the fan's words and the reading for this offer. A pledge without a wish traces to the offer's evidence set.</p>
         <p>Only recorded checkpoints appear here. Missing lifecycle snapshots cannot establish prior history.
             Opening this page does not create or repair records.</p>
         <p>Hashes detect differences relative to stored snapshots. They are not digital signatures or independent proof.</p>
@@ -21,15 +22,16 @@
         <h2 id="pledges-title">Pledge records</h2>
         <p th:if="${#lists.isEmpty(record.pledges)}">No pledges in this workspace.</p>
         <article class="card stack" th:each="pledge : ${record.pledges}">
-            <h3>Pledge <span th:text="${pledge.pledgeId}"></span></h3>
-            <p>Snapshot integrity: <strong th:text="${pledge.integrity}"></strong></p>
+            <h3>Pledge <span th:text="${@humanDisplay.shortId(pledge.pledgeId)}" th:title="${pledge.pledgeId}"></span></h3>
+            <p>Snapshot integrity: <strong th:text="${pledge.integrity == 'INTACT' ? 'Intact' : (pledge.integrity == 'CHANGED' ? 'Changed' : 'Unavailable')}"></strong></p>
             <p>Integrity describes recorded data, not completeness of lifecycle history.</p>
+            <a th:href="@{/w/{token}/pledges/{id}/trace(token=${token},id=${pledge.pledgeId})}">Open pledge trace</a>
             <ul th:if="${!#lists.isEmpty(pledge.issues)}">
                 <li th:each="issue : ${pledge.issues}" th:text="${issue}"></li>
             </ul>
             <ol>
                 <li th:each="entry : ${pledge.entries}">
-                    <h4 th:text="${entry.kind}"></h4>
+                    <h4 th:text="${entry.kind == 'WISH' ? 'Fan words' : (entry.kind == 'VERDICT' ? 'Reading for this offer' : (entry.kind == 'OFFER' ? 'Agreed offer' : 'Payment checkpoint'))}"></h4>
                     <details>
                         <summary>Snapshot and hashes</summary>
                         <pre th:text="${entry.payload.toPrettyString()}"></pre>
@@ -43,7 +45,7 @@
                 <p>These dated event observations are outside the hash chain. They are not a financial guarantee or signature.</p>
                 <p th:if="${#lists.isEmpty(pledge.termsChecks)}">Unavailable: no terms checks were recorded.</p>
                 <article th:each="check : ${pledge.termsChecks}">
-                    <p>Observed at <time th:text="${check.checkedAt}"></time></p>
+                    <p>Observed at <time th:text="${@humanDisplay.time(check.checkedAt)}"></time></p>
                     <pre th:text="${check.observation.toPrettyString()}"></pre>
                 </article>
             </section>
@@ -53,7 +55,7 @@
         <h2 id="sources-title">Source snapshots</h2>
         <p th:if="${#lists.isEmpty(record.sources)}">No analysis or offer snapshots were recorded.</p>
         <details class="card" th:each="source : ${record.sources}">
-            <summary><span th:text="${source.sourceType}"></span> <span th:text="${source.sourceId}"></span></summary>
+            <summary><span th:text="${source.sourceType == 'OFFER' ? 'Offer' : (source.sourceType == 'REVIEW' ? 'Reviewed reading' : 'Analysis')}"></span> <span th:text="${@humanDisplay.shortId(source.sourceId)}" th:title="${source.sourceId}"></span></summary>
             <p th:if="${!source.intact}">Stored source hash failed integrity verification.</p>
             <p>SHA-256 (terms hash for an offer): <code th:text="${source.hash}"></code></p>
             <pre th:text="${source.payload.toPrettyString()}"></pre>

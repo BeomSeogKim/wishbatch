@@ -21,6 +21,13 @@ class DecisionRecordController(private val records: DecisionRecordQuery) {
         return "provenance/decision-record"
     }
 
+    @GetMapping("/w/{token}/maker/decision-record/verify")
+    fun verify(@PathVariable token: String, model: Model): String {
+        model.addAttribute("record", read(token))
+        model.addAttribute("token", token)
+        return "provenance/verification"
+    }
+
     @GetMapping("/w/{token}/maker/decision-record.json", produces = [MediaType.APPLICATION_JSON_VALUE])
     fun download(@PathVariable token: String): ResponseEntity<DecisionRecordDocument> = ResponseEntity.ok()
         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"decision-record.json\"")

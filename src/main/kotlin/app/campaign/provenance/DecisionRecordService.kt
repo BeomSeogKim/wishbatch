@@ -1,11 +1,15 @@
 package app.campaign.provenance
 
+import app.campaign.followup.FollowupAnswerRecord
+import app.campaign.followup.FollowupQuestion
 import app.campaign.model.AnalysisRun
 import app.campaign.model.Campaign
 import app.campaign.model.Offer
 import app.campaign.model.Pledge
 import app.campaign.model.Wish
+import app.campaign.model.WishKind
 import app.campaign.port.AnalysisOutput
+import app.campaign.review.WishReviewOverride
 import app.campaign.terms.SealedOfferChanged
 import app.campaign.terms.SealedOfferTerms
 import jakarta.persistence.EntityManager
@@ -13,6 +17,7 @@ import jakarta.persistence.LockModeType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
+import java.time.Clock
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -24,7 +29,11 @@ import java.util.UUID
  */
 @Service
 @Transactional
-class DecisionRecordService(private val entities: EntityManager, private val mapper: JsonMapper) {
+class DecisionRecordService(
+    private val entities: EntityManager,
+    private val mapper: JsonMapper,
+    private val clock: Clock = Clock.systemUTC(),
+) {
     private val hashing = DecisionRecordHash(mapper)
 
     /** Supply the exact analyzed input, including for stored seed runs, at run persistence. */
@@ -42,6 +51,46 @@ class DecisionRecordService(private val entities: EntityManager, private val map
         val payload = analysisPayload(saved, wishes)
         require(payload == requested)
         storeSource(saved.workspaceId, "ANALYSIS", saved.id, payload)
+    }
+
+    fun recordWishReview(
+        review: WishReviewOverride,
+        answers: List<FollowupAnswerRecord>,
+        questions: List<FollowupQuestion>,
+    ) {
+        entities.flush()
+        val saved = requireNotNull(entities.find(WishReviewOverride::class.java, review.id))
+        require(reviewSnapshot(saved) == reviewSnapshot(review))
+        val run = requireNotNull(entities.find(AnalysisRun::class.java, saved.runId))
+        val wish = requireNotNull(entities.find(Wish::class.java, saved.wishId))
+        require(run.workspaceId == saved.workspaceId && wish.workspaceId == saved.workspaceId)
+        require(answers.map { it.id }.distinct().size == answers.size)
+        require(questions.map { it.id }.distinct().size == questions.size)
+        val questionSnapshots = questions.sortedBy { it.id.toString() }.map { question ->
+            val persisted = requireNotNull(entities.find(FollowupQuestion::class.java, question.id))
+            require(persisted.workspaceId == saved.workspaceId && persisted.runId == saved.runId &&
+                persisted.optionId == saved.optionId && persisted.approved && saved.wishId in persisted.wishIds)
+            mapOf("id" to persisted.id, "text" to persisted.text, "attribute" to persisted.attribute,
+                "variantKey" to persisted.variantKey, "choices" to persisted.choices,
+                "wishIds" to persisted.wishIds.sortedBy { it.toString() }, "approved" to true,
+                "createdAt" to persistedTimestamp(persisted.createdAt).toString())
+        }
+        val answerSnapshots = answers.sortedBy { it.id.toString() }.map { answer ->
+            val persisted = requireNotNull(entities.find(FollowupAnswerRecord::class.java, answer.id))
+            require(persisted.workspaceId == saved.workspaceId && persisted.runId == saved.runId &&
+                persisted.optionId == saved.optionId && persisted.wishId == saved.wishId)
+            require(questions.any { it.id == persisted.questionId })
+            val question = requireNotNull(entities.find(FollowupQuestion::class.java, persisted.questionId))
+            require(persisted.choice in question.choices)
+            mapOf("id" to persisted.id, "questionId" to persisted.questionId, "wishId" to persisted.wishId,
+                "choice" to persisted.choice, "createdAt" to persistedTimestamp(persisted.createdAt).toString())
+        }
+        require(saved.source != "FAN_ANSWER" || answers.any { it.id == saved.answerId })
+        storeSource(saved.workspaceId, "REVIEW", saved.id, hashing.canonical(mapOf(
+            "workspaceId" to saved.workspaceId, "runId" to saved.runId, "wishId" to saved.wishId,
+            "optionId" to saved.optionId, "review" to reviewSnapshot(saved),
+            "questions" to questionSnapshots, "answers" to answerSnapshots,
+        )))
     }
 
     /** Call at publication. The offer ID is its version; the stored source hash is its terms hash. */
@@ -87,17 +136,20 @@ class DecisionRecordService(private val entities: EntityManager, private val map
         if (record == null) {
             record = PledgeDecisionRecord(pledge.id, offer.workspaceId, campaign.id, offer.id)
             entities.persist(record)
-            append(record, "WISH", hashing.canonical(mapOf(
-                "availability" to "UNAVAILABLE", "reason" to "No wish association was recorded for this pledge.",
-            )))
             val analysis = source("ANALYSIS", offer.analysisRunId, offer.workspaceId)
             val offerSnapshot = source("OFFER", offer.id, offer.workspaceId)
-            append(record, "VERDICT", hashing.canonical(mapOf(
-                "availability" to "UNAVAILABLE", "reason" to "No wish association was recorded for this pledge.",
-                "analysisRunId" to offer.analysisRunId, "analysisSnapshotHash" to analysis?.hash,
-                "model" to analysis?.let { mapper.readTree(it.payload).get("model").asString() },
-                "inputHash" to analysis?.let { mapper.readTree(it.payload).get("inputHash").asString() },
+            val wish = saved.wishId?.let { id ->
+                requireNotNull(entities.find(Wish::class.java, id))
+                    .also { require(it.workspaceId == offer.workspaceId) }
+            }
+            append(record, "WISH", hashing.canonical(mapOf(
+                "availability" to if (wish == null) "UNAVAILABLE" else "AVAILABLE",
+                "traceScope" to if (wish == null) "OFFER_EVIDENCE" else "WISH",
+                "reason" to if (wish == null) "No wish was linked. This pledge traces to the offer's evidence set." else null,
+                "wishId" to wish?.id, "text" to wish?.text, "textHash" to wish?.text?.let(hashing::sha256),
+                "supportingWishIds" to offer.supportingWishIds.sortedBy { it.toString() },
             )))
+            append(record, "VERDICT", verdictPayload(offer, wish, analysis))
             append(record, "OFFER", hashing.canonical(mapOf(
                 "availability" to if (offerSnapshot == null) "UNAVAILABLE" else "AVAILABLE",
                 "offerId" to offer.id, "termsHash" to offerSnapshot?.hash,
@@ -110,7 +162,11 @@ class DecisionRecordService(private val entities: EntityManager, private val map
         val entries = entries(pledge.id)
         check(chainValid(record, entries)) { "Stored decision record failed integrity verification" }
         val payment = paymentPayload(saved)
-        if (entries.lastOrNull { it.kind == "PAYMENT" }?.payload != payment) append(record, "PAYMENT", payment)
+        if (!paymentMatches(entries.lastOrNull { it.kind == "PAYMENT" }?.payload, payment)) {
+            val payload = mapper.readTree(payment).deepCopy() as tools.jackson.databind.node.ObjectNode
+            payload.put("recordedAt", clock.instant().toString())
+            append(record, "PAYMENT", hashing.canonical(payload))
+        }
     }
 
     internal fun source(type: String, id: UUID, workspaceId: UUID): DecisionSourceSnapshot? = entities.createQuery(
@@ -123,20 +179,77 @@ class DecisionRecordService(private val entities: EntityManager, private val map
         "select e from DecisionRecordEntry e where e.pledgeId = :id order by e.position", DecisionRecordEntry::class.java,
     ).setParameter("id", pledgeId).resultList
 
-    internal fun chainValid(record: PledgeDecisionRecord, entries: List<DecisionRecordEntry>): Boolean = runCatching {
-        var previous: String? = null
-        entries.forEachIndexed { index, entry ->
-            check(entry.pledgeId == record.pledgeId && entry.position == index + 1 && entry.previousHash == previous)
-            check(hashing.canonical(mapper.readTree(entry.payload)) == entry.payload)
-            check(entry.hash == hashing.entry(record, entry.position, entry.kind, entry.payload, previous))
-            previous = entry.hash
-        }
-        entries.isNotEmpty() && entries.size == record.entryCount && previous == record.lastHash
+    internal fun chainValid(record: PledgeDecisionRecord, entries: List<DecisionRecordEntry>): Boolean =
+        DecisionRecordVerification(mapper).verify(record, entries).intact
+
+    internal fun paymentMatches(recorded: String?, current: String): Boolean = recorded != null && runCatching {
+        val payload = mapper.readTree(recorded).deepCopy() as tools.jackson.databind.node.ObjectNode
+        payload.remove("recordedAt")
+        hashing.canonical(payload) == current
     }.getOrDefault(false)
 
+    private fun verdictPayload(offer: Offer, wish: Wish?, analysis: DecisionSourceSnapshot?): String {
+        val run = entities.find(AnalysisRun::class.java, offer.analysisRunId)
+        val output = run?.takeIf { it.workspaceId == offer.workspaceId }
+            ?.let { mapper.readValue(it.resultJson, AnalysisOutput::class.java) }
+        val reading = output?.wishes?.singleOrNull { it.wishId == wish?.id }
+        val original = output?.verdicts?.singleOrNull { it.wishId == wish?.id && it.optionId == offer.optionId }
+        val review = wish?.let {
+            entities.createQuery(
+                "select r from WishReviewOverride r where r.workspaceId = :workspace and r.runId = :run " +
+                    "and r.wishId = :wish and r.optionId = :option order by r.revision desc", WishReviewOverride::class.java,
+            ).setParameter("workspace", offer.workspaceId).setParameter("run", offer.analysisRunId)
+                .setParameter("wish", it.id).setParameter("option", offer.optionId).setMaxResults(1).resultList.singleOrNull()
+        }
+        return hashing.canonical(mapOf(
+            "availability" to if (wish != null && (reading != null || review != null)) "AVAILABLE" else "UNAVAILABLE",
+            "analysisRunId" to offer.analysisRunId, "analysisSnapshotHash" to analysis?.hash,
+            "model" to analysis?.let { mapper.readTree(it.payload).get("model").asString() },
+            "inputHash" to analysis?.let { mapper.readTree(it.payload).get("inputHash").asString() },
+            "optionId" to offer.optionId, "wishId" to wish?.id,
+            "kind" to if (review != null) WishKind.REQUEST else reading?.kind,
+            "originalVerdict" to original?.verdict, "originalReason" to original?.reason, "verdict" to (review?.verdict ?: original?.verdict),
+            "reason" to (review?.reason ?: original?.reason ?: if (wish == null)
+                "No wish was linked. This pledge traces to the offer's evidence set."
+                else if (reading?.kind == WishKind.NOT_A_REQUEST) "This was read as not a request."
+                else "This wish has no recorded reading for the offered option."),
+            "readingAgreement" to output?.secondReading?.comparisons?.singleOrNull {
+                it.wishId == wish?.id && it.optionId == offer.optionId
+            },
+            "makerOverride" to review?.takeIf { it.source == "MAKER" }?.let(::reviewSnapshot),
+            "review" to review?.let(::reviewSnapshot),
+            "reviewSnapshotHash" to review?.let { source("REVIEW", it.id, offer.workspaceId)?.hash },
+            "reviewEvidence" to review?.let { source("REVIEW", it.id, offer.workspaceId) }?.let { mapper.readTree(it.payload) },
+        ))
+    }
+
+    private fun reviewSnapshot(review: WishReviewOverride): Map<String, Any?> = mapOf(
+        "id" to review.id, "revision" to review.revision, "source" to review.source,
+        "verdict" to review.verdict, "previousVerdict" to review.previousVerdict,
+        "reason" to review.reason, "createdAt" to persistedTimestamp(review.createdAt).toString(), "answerId" to review.answerId,
+    )
+
     internal fun sourcesValid(record: PledgeDecisionRecord, entries: List<DecisionRecordEntry>): Boolean = runCatching {
+        val wishEntry = mapper.readTree(entries.single { it.kind == "WISH" }.payload)
+        val recordedWishId = wishEntry.get("wishId")?.takeUnless { it.isNull }?.asString()?.let(UUID::fromString)
+        val pledge = entities.find(Pledge::class.java, record.pledgeId) ?: return false
+        if (recordedWishId != pledge.wishId) return false
+        if (recordedWishId != null) {
+            val wish = entities.find(Wish::class.java, recordedWishId) ?: return false
+            if (wish.workspaceId != record.workspaceId || wishEntry.get("text").asString() != wish.text ||
+                wishEntry.get("textHash").asString() != hashing.sha256(wish.text)) return false
+        }
         val offerEntry = mapper.readTree(entries.single { it.kind == "OFFER" }.payload)
         val verdictEntry = mapper.readTree(entries.single { it.kind == "VERDICT" }.payload)
+        val reviewHash = verdictEntry.get("reviewSnapshotHash")
+        if (reviewHash != null && !reviewHash.isNull) {
+            val reviewId = UUID.fromString(verdictEntry.get("review").get("id").asString())
+            val snapshot = source("REVIEW", reviewId, record.workspaceId)
+            if (!referenceMatches(reviewHash, snapshot)) return false
+            if (snapshot == null || mapper.readTree(snapshot.payload) != verdictEntry.get("reviewEvidence")) return false
+            val review = entities.find(WishReviewOverride::class.java, reviewId) ?: return false
+            if (hashing.canonical(reviewSnapshot(review)) != hashing.canonical(verdictEntry.get("review"))) return false
+        }
         val campaign = entities.find(Campaign::class.java, record.campaignId) ?: return false
         if (campaign.offerId != record.offerId) return false
         val offer = entities.find(Offer::class.java, record.offerId) ?: return false

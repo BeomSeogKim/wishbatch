@@ -1,6 +1,7 @@
 package app.web.drills
 
 import app.campaign.drills.ReliabilityDrills
+import app.campaign.provenance.DecisionRecordQuery
 import app.campaign.workspace.WorkspaceNotFoundException
 import app.campaign.workspace.WorkspaceService
 import org.springframework.http.HttpStatus
@@ -12,12 +13,13 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.ResponseStatus
 
 @Controller
-class ReliabilityDrillsController(private val workspaces: WorkspaceService) {
+class ReliabilityDrillsController(private val workspaces: WorkspaceService, private val records: DecisionRecordQuery) {
     @GetMapping("/w/{token}/maker/reliability-drills")
     fun page(@PathVariable token: String, model: Model): String {
         workspaces.findByToken(token) ?: throw WorkspaceNotFoundException()
         model.addAttribute("token", token)
         model.addAttribute("drills", ReliabilityDrills.play())
+        model.addAttribute("recordSimulation", records.simulateTamperedCopyByToken(token))
         return "drills/page"
     }
 

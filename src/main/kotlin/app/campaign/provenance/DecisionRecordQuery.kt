@@ -23,6 +23,7 @@ data class PledgeDecisionView(
     val pledgeId: UUID, val campaignId: UUID, val offerId: UUID?, val integrity: String, val issues: List<String>,
     val entryCount: Int, val lastHash: String?, val entries: List<DecisionEntryView>,
     val termsChecks: List<RecordedTermsCheckView> = emptyList(),
+    val chainVerification: ChainVerification? = null,
 ) {
     val termsChecksAvailability: String get() = if (termsChecks.isEmpty()) "UNAVAILABLE" else "RECORDED"
 }
@@ -77,21 +78,56 @@ class DecisionRecordQuery(
         return DecisionRecordDocument(workspaceId = workspace.id, sources = sources, pledges = views)
     }
 
+    fun findPledgeByToken(token: String, pledgeId: UUID): PledgeDecisionView? =
+        findByToken(token)?.pledges?.singleOrNull { it.pledgeId == pledgeId }
+
+    fun simulateTamperedCopyByToken(token: String): TamperedRecordSimulation? {
+        val workspace = workspaces.findByToken(token) ?: return null
+        val stored = entities.createQuery(
+            "select r from PledgeDecisionRecord r where r.workspaceId = :id order by r.pledgeId",
+            PledgeDecisionRecord::class.java,
+        ).setParameter("id", workspace.id).setMaxResults(1).resultList.singleOrNull()
+        val hashing = DecisionRecordHash(mapper)
+        val head = stored ?: PledgeDecisionRecord(UUID(0, 1), UUID(0, 2), UUID(0, 3), UUID(0, 4))
+        val entries = if (stored != null) records.entries(head.pledgeId) else {
+            val payload = hashing.canonical(mapOf("message" to "Synthetic wish evidence"))
+            val hash = hashing.entry(head, 1, "WISH", payload, null)
+            head.entryCount = 1
+            head.lastHash = hash
+            listOf(DecisionRecordEntry(head.pledgeId, 1, "WISH", payload, null, hash))
+        }
+        val verifier = DecisionRecordVerification(mapper)
+        val target = entries.firstOrNull()
+        val copy = entries.map { entry ->
+            DecisionRecordEntry(entry.pledgeId, entry.position, entry.kind,
+                if (entry === target) hashing.canonical(mapOf("message" to "Simulated changed copy")) else entry.payload,
+                entry.previousHash, entry.hash, entry.id)
+        }
+        return TamperedRecordSimulation(stored != null, target?.position, verifier.verify(head, entries), verifier.verify(head, copy))
+    }
+
     private fun view(head: PledgeDecisionRecord, pledge: Pledge?): PledgeDecisionView {
         val entries = records.entries(head.pledgeId)
         val issues = buildList {
             if (!records.chainValid(head, entries)) add("Stored hash chain failed integrity verification.")
             if (!records.sourcesValid(head, entries)) add("Analysis input or offer differs from its recorded snapshot, or a source is missing.")
             if (pledge == null || pledge.campaignId != head.campaignId ||
-                entries.lastOrNull { it.kind == "PAYMENT" }?.payload != records.paymentPayload(pledge)
+                !records.paymentMatches(entries.lastOrNull { it.kind == "PAYMENT" }?.payload, records.paymentPayload(pledge))
             ) add("Pledge differs from its last recorded checkpoint, or is missing.")
         }
         return PledgeDecisionView(head.pledgeId, head.campaignId, head.offerId, if (issues.isEmpty()) "INTACT" else "CHANGED",
             issues, head.entryCount, head.lastHash, entries.map {
                 DecisionEntryView(it.position, it.kind, parse(it.payload), it.previousHash, it.hash)
-            })
+            }, chainVerification = DecisionRecordVerification(mapper).verify(head, entries))
     }
 
     private fun parse(payload: String): JsonNode = runCatching { mapper.readTree(payload) }
         .getOrElse { mapper.valueToTree("Invalid stored JSON") }
 }
+
+data class TamperedRecordSimulation(
+    val usesStoredRecord: Boolean,
+    val changedPosition: Int?,
+    val original: ChainVerification,
+    val tamperedCopy: ChainVerification,
+)

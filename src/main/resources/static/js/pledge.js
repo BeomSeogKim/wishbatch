@@ -73,7 +73,8 @@
                 const response = await fetch(checkout.dataset.createUrl, {
                     method: 'POST',
                     headers: requestHeaders(),
-                    body: JSON.stringify({quantity: Number(checkout.dataset.quantity), campaignId: checkout.dataset.campaignId})
+                    body: JSON.stringify({quantity: Number(checkout.dataset.quantity), campaignId: checkout.dataset.campaignId,
+                        wishId: checkout.dataset.wishId || undefined})
                 });
                 const result = await response.json();
                 if (!response.ok) {

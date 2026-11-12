@@ -10,6 +10,7 @@
             [String(index), cell.textContent.trim()], [index + 'Title', cell.title || ''],
             [index + 'Details', cell.querySelector?.('details')],
         ])));
+    rows.forEach((row, index) => { row.traceLink = table.tBodies[0].rows[index].cells[0].querySelector('a'); });
     try {
         grid.hidden = false;
         const api = window.agGrid.createGrid(grid, {
@@ -17,6 +18,7 @@
                 pinned: header === 'Match at check' ? 'left' : undefined,
                 wrapText: true, autoHeight: true,
                 cellRenderer: params => {
+                    if (index === 0 && params.data.traceLink) return params.data.traceLink.cloneNode(true);
                     const details = params.data[index + 'Details'];
                     if (details) return details.cloneNode(true);
                     const span = document.createElement('span');

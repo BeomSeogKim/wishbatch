@@ -13,7 +13,7 @@
         <div class="table-scroll" data-comparison-fallback tabindex="0" role="region" aria-label="Pledge comparison table">
             <table data-comparison-table>
                 <thead><tr><th>Pledge ID</th><th>Current local state</th><th>Pledge amount</th><th>Checked at (UTC)</th><th>Local state at check</th><th>Provider resources at check</th><th>Match at check</th></tr></thead>
-                <tbody><tr th:each="row : ${comparisons}"><td th:title="${row.pledgeId}" th:text="${@humanDisplay.shortId(row.pledgeId)}"></td><td th:text="${@humanDisplay.state(row.currentState)}"></td><td th:text="${@humanDisplay.trailMoney(row.amount)}"></td><td th:text="${row.checkedAt == null ? 'Not checked' : @humanDisplay.time(row.checkedAt)}"></td><td th:text="${@humanDisplay.state(row.checkedState)}"></td><td><details><summary>Provider resource details</summary><p th:text="${row.providerStates}"></p></details></td><td th:title="${row.match}" th:text="${@humanDisplay.state(row.match)}"></td></tr></tbody>
+                <tbody><tr th:each="row : ${comparisons}"><td><a th:href="@{/w/{token}/pledges/{id}/trace(token=${token},id=${row.pledgeId})}" th:title="${row.pledgeId}" th:text="${@humanDisplay.shortId(row.pledgeId)}"></a></td><td th:text="${@humanDisplay.state(row.currentState)}"></td><td th:text="${@humanDisplay.trailMoney(row.amount)}"></td><td th:text="${row.checkedAt == null ? 'Not checked' : @humanDisplay.time(row.checkedAt)}"></td><td th:text="${@humanDisplay.state(row.checkedState)}"></td><td><details><summary>Provider resource details</summary><p th:text="${row.providerStates}"></p></details></td><td th:title="${row.match}" th:text="${@humanDisplay.state(row.match)}"></td></tr></tbody>
             </table>
         </div>
     </section>

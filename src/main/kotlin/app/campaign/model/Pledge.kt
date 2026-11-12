@@ -39,4 +39,5 @@ class Pledge(
     val createdAt: Instant,
     @Id
     val id: UUID = UUID.randomUUID(),
+    val wishId: UUID? = null,
 )

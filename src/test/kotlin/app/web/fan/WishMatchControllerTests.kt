@@ -72,11 +72,12 @@ class WishMatchControllerTests @Autowired constructor(
             val (note, html) = submit(token, text)
             assertContains(html, message)
             assertContains(html, "<q>$text</q>")
-            assertEquals(link, html.contains("href=\"/w/$token/offer\""))
+            val savedWish = workspaces.listWishes(token).single { it.source == WishSource.ONSITE }
+            assertEquals(link, html.contains("href=\"/w/$token/offer?wishId=${savedWish.id}\""))
             assertEquals(text, note?.quote)
             assertEquals(link, note?.showOffer)
             assertFalse(html.contains("Pay now"))
-            assertEquals(text, workspaces.listWishes(token).single { it.source == WishSource.ONSITE }.text)
+            assertEquals(text, savedWish.text)
             val request = provider.calls.last()
             assertEquals(AnalysisStage.CLASSIFY, request.stage)
         }
@@ -90,7 +91,7 @@ class WishMatchControllerTests @Autowired constructor(
             val (note, html) = submit(token, "A postcard please")
             assertNull(note)
             assertContains(html, "Thanks for sharing your wish!")
-            assertFalse(html.contains("href=\"/w/$token/offer\""))
+            assertFalse(html.contains("href=\"/w/$token/offer"))
             assertEquals(41, workspaces.listWishes(token).size)
         }
         provider.failure = null
@@ -114,7 +115,7 @@ class WishMatchControllerTests @Autowired constructor(
             val (note, html) = submit(token, text)
             assertNull(note)
             assertFalse(html.contains("You wrote:"))
-            assertFalse(html.contains("href=\"/w/$token/offer\""))
+            assertFalse(html.contains("href=\"/w/$token/offer"))
         }
     }
 
@@ -127,7 +128,7 @@ class WishMatchControllerTests @Autowired constructor(
             val (note, html) = submit(token, "A postcard please")
             assertNull(note)
             assertFalse(html.contains("<q>"))
-            assertFalse(html.contains("href=\"/w/$token/offer\""))
+            assertFalse(html.contains("href=\"/w/$token/offer"))
         }
     }
 

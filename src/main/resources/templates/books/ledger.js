@@ -13,12 +13,14 @@ function initializeBooksLedger() {
         ...(index === 0 ? { valueFormatter: params => display.shortId(params.value), tooltipField: 'pledge' } : {}),
         ...([4, 7].includes(index) ? { tooltipField: fields[index] } : {})
     }));
+    columnDefs[0].cellRenderer = params => params.data.traceLink?.cloneNode(true) ?? params.value;
     columnDefs.unshift(columnDefs.splice(5, 1)[0]);
     const rowData = Array.from(table.tBodies[0].rows, row => Object.fromEntries(fields.map((field, index) => {
         const cell = row.cells[index];
         const entries = Array.from(cell.querySelectorAll('li'), item => item.textContent.trim());
         return [field, index === 1 ? Number(cell.textContent) : entries.length ? entries.join('; ') : (cell.getAttribute('title') || cell.textContent.trim())];
     })));
+    rowData.forEach((row, index) => { row.traceLink = table.tBodies[0].rows[index].cells[0].querySelector('a'); });
     try {
         grid.hidden = false;
         const api = window.agGrid.createGrid(grid, {

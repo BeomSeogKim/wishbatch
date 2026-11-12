@@ -129,3 +129,10 @@ test('SDK load failure has a retry explanation without creating a pledge', () =>
     assert.match(app.elements['pledge-feedback'].textContent, /No pledge counted.*try again/);
     assert.equal(app.calls.length, 0);
 });
+
+test('carries the selected wish into the pledge request', async () => {
+    const app = browser({responses: [created]});
+    app.elements['pledge-checkout'].dataset.wishId = 'selected-wish';
+    await app.handlers.createOrder();
+    assert.equal(JSON.parse(app.calls[0].options.body).wishId, 'selected-wish');
+});

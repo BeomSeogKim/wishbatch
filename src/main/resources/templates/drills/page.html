@@ -19,6 +19,17 @@
         <p>Choose a scenario, then review its simulated checkpoints and evidence.</p>
     </nav>
 
+    <section class="preview-section" id="record-tampering" data-record-drill="simulation">
+        <h2>Detect a changed record entry</h2>
+        <p class="notice">Simulation — a tampered copy, never a change to the real record</p>
+        <p th:text="${recordSimulation.usesStoredRecord ? 'This simulation copies a stored pledge record in memory.' : 'No pledge record exists yet. This simulation uses a synthetic record copy.'}"></p>
+        <p>Original chain: <strong th:text="${recordSimulation.original.intact ? 'Intact' : 'Already changed'}"></strong>.</p>
+        <p>Only the copy of entry <span th:text="${recordSimulation.changedPosition ?: 'unavailable'}"></span> is changed, while its stored hash is kept.</p>
+        <p th:if="${!recordSimulation.tamperedCopy.intact}"><strong>Verification fails at entry <span th:text="${recordSimulation.tamperedCopy.firstBrokenPosition}"></span>.</strong> <span th:text="${recordSimulation.tamperedCopy.reason}"></span></p>
+        <p>No entries are saved, no payment state changes, and no PayPal calls are made.</p>
+        <a th:href="@{/w/{token}/maker/decision-record/verify(token=${token})}">Verify this record</a>
+    </section>
+
     <section th:each="drill : ${drills}" class="preview-section" th:id="${drill.id}" data-drill="simulation">
         <h2 th:text="${drill.title}"></h2>
         <p class="notice">Simulation — no PayPal calls or real campaign changes</p>
