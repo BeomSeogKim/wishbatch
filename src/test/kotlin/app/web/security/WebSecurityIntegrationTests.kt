@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.web.server.autoconfigure.ServerProperties
+import org.springframework.boot.web.server.servlet.Session
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockHttpSession
@@ -26,7 +28,13 @@ import kotlin.test.assertTrue
 class WebSecurityIntegrationTests @Autowired constructor(
     private val mvc: MockMvc,
     private val workspaces: WorkspaceService,
+    private val serverProperties: ServerProperties,
 ) {
+    @Test
+    fun `session tracking uses cookies only so session ids cannot be rewritten into urls`() {
+        assertEquals(setOf(Session.SessionTrackingMode.COOKIE), serverProperties.servlet.session.trackingModes)
+    }
+
     @Test
     fun `rendered post forms submit with automatic session csrf while unverified actions are rejected`() {
         val page = mvc.get("/").andExpect { status { isOk() } }.andReturn()

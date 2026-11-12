@@ -30,10 +30,10 @@ class BulkWishImportTests @Autowired constructor(
     private val transactionManager: PlatformTransactionManager,
 ) {
     @Test
-    fun `intra batch and repeated paste retain one original wish and count only extra occurrences`() {
+    fun `case spacing and terminal period or exclamation merge without changing original evidence`() {
         val workspace = service.create()
-        val original = "  A matte\tpostcard set please  "
-        val paste = "$original\nA matte postcard set please\nA matte\u00a0postcard set please"
+        val original = "  A matte\tpostcard set please.  "
+        val paste = "$original\nA MATTE postcard set please!\na matte\u00a0postcard set please"
         assertEquals(ImportedWishResult(1, 0, 0, 0, 2), service.addImportedWishes(workspace.token, paste))
         val first = service.listWishes(workspace.token).single { it.text == original }
         assertEquals(WishSource.IMPORTED, first.source)
@@ -55,7 +55,7 @@ class BulkWishImportTests @Autowired constructor(
         val onsite = service.addWish(first.token, "A special matte set", "A fan")
         service.setWishHidden(first.token, onsite.id, true)
         assertEquals(ImportedWishResult(0, 0, 0, 0, 1),
-            service.addImportedWishes(first.token, "A special  matte set"))
+            service.addImportedWishes(first.token, "A SPECIAL  matte set!"))
         assertEquals(ImportedWishResult(1, 0, 0, 0),
             service.addImportedWishes(second.token, "A special matte set"))
         entityManager.flush()
@@ -72,12 +72,16 @@ class BulkWishImportTests @Autowired constructor(
     }
 
     @Test
-    fun `numbers negations variants punctuation and case remain distinct`() {
+    fun `prices ranges negations variants and meaningful punctuation remain distinct`() {
         val token = service.create().token
         val wishes = listOf(
             "I want 5 matte cards", "I want 6 matte cards", "I do not want 5 matte cards",
-            "I want 5 glossy cards", "I want 5 matte cards?", "I want 5 matte Cards",
+            "I want 5 glossy cards", "I want 5 matte cards?",
             "Budget 1.50", "Budget 150", "Size A6", "Size A5", "Size M", "Size L",
+            "Budget $6.50", "Budget $650", "Budget 6.50", "Budget $6.05", "Budget $6.50-7.50",
+            "I want 5-6 matte cards", "I want 56 matte cards", "I want 5/6 matte cards",
+            "I don't want gloss", "I do want gloss", "I want gloss", "I dont want gloss",
+            "No! Gloss please", "No gloss please", "Matte...", "Matte", ".", "!",
         )
         val result = service.addImportedWishes(token, wishes.joinToString("\n"))
         assertEquals(ImportedWishResult(wishes.size, 0, 0, 0), result)

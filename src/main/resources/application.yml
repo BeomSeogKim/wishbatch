@@ -16,3 +16,6 @@ spring:
 
 server:
   port: ${SERVER_PORT:8200}
+  servlet:
+    session:
+      tracking-modes: cookie
