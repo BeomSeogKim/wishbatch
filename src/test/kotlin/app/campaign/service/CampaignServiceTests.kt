@@ -89,7 +89,6 @@ class CampaignServiceTests @Autowired constructor(
     private val mapper: ObjectMapper,
     private val persistence: CampaignPersistence,
     private val payments: CampaignPayments,
-    private val tick: CampaignReconciliationTick,
     private val records: DecisionRecordService,
     private val provenance: PledgeProvenanceCheckpoint,
     private val terms: TermsCheckService,
@@ -645,6 +644,9 @@ class CampaignServiceTests @Autowired constructor(
         clock.current = start.plusSeconds(901)
         voidSuccess(pledge)
         healthyAuthorization(pledge)
+        val tick = CampaignReconciliationTick(object : CampaignRepository by campaigns {
+            override fun findAll(): List<Campaign> = listOf(fixture.campaign)
+        }, offers, service)
         tick.tick()
         assertEquals(CampaignState.NOT_FUNDED, campaigns.findById(fixture.campaign.id).orElseThrow().state)
         assertEquals(CampaignReason.THRESHOLD_NOT_MET, campaigns.findById(fixture.campaign.id).orElseThrow().reason)

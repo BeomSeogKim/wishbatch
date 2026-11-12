@@ -249,7 +249,8 @@ class ModelPersistenceTests @Autowired constructor(private val entityManager: En
             campaign = entityManager.find(Campaign::class.java, campaign.id)
             pledge = entityManager.find(Pledge::class.java, pledge.id)
             assertEquals(state, campaign.state)
-            assertEquals(state.name, entityManager.createNativeQuery("select state from campaigns").singleResult)
+            assertEquals(state.name, entityManager.createNativeQuery("select state from campaigns where id = :id")
+                .setParameter("id", campaign.id).singleResult)
         }
         for (reason in CampaignReason.entries) {
             campaign.reason = reason
@@ -263,7 +264,8 @@ class ModelPersistenceTests @Autowired constructor(private val entityManager: En
             flushAndClear()
             pledge = entityManager.find(Pledge::class.java, pledge.id)
             assertEquals(state, pledge.state)
-            assertEquals(state.name, entityManager.createNativeQuery("select state from pledges").singleResult)
+            assertEquals(state.name, entityManager.createNativeQuery("select state from pledges where id = :id")
+                .setParameter("id", pledge.id).singleResult)
         }
     }
 
