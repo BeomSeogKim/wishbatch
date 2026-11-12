@@ -2,6 +2,7 @@ package app.web.maker
 
 import app.campaign.workspace.SeedCatalog
 import app.campaign.workspace.WorkspaceService
+import app.web.security.securePost
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -31,7 +31,7 @@ class MakerStartControllerTests(
     @Test
     fun `demo starts isolated seeded workspaces and redirects to maker home`() {
         val tokens = (1..2).map {
-            val redirect = mvc.post("/demo").andExpect { status { is3xxRedirection() } }
+            val redirect = mvc.securePost("/demo").andExpect { status { is3xxRedirection() } }
                 .andReturn().response.redirectedUrl!!
             assertTrue(Regex("/w/[A-Za-z0-9_-]{43}/maker").matches(redirect))
             val token = redirect.split('/')[2]
@@ -154,7 +154,7 @@ class MakerStartControllerTests(
     @Test
     fun `bulk paste redirects and displays import results`() {
         val token = workspaces.create().token
-        val result = mvc.post("/w/$token/maker/wishes") {
+        val result = mvc.securePost("/w/$token/maker/wishes") {
             param("comments", " First wish \n\n${"x".repeat(501)}")
         }.andExpect {
             status { is3xxRedirection() }
@@ -165,7 +165,7 @@ class MakerStartControllerTests(
         }.andExpect { status { isOk() } }.andReturn().response.contentAsString
         assertContains(html, "Added 1; skipped 1: 1 over 500 characters")
         assertContains(html, "First wish")
-        mvc.post("/w/missing/maker/wishes") { param("comments", "Wish") }.andExpect {
+        mvc.securePost("/w/missing/maker/wishes") { param("comments", "Wish") }.andExpect {
             status { isNotFound() }
             view { name("error/not-found") }
         }
@@ -177,7 +177,7 @@ class MakerStartControllerTests(
         val second = workspaces.create()
         val wish = workspaces.listWishes(first.token).first()
         for ((hidden, count) in listOf(true to 39, false to 40)) {
-            mvc.post("/w/${first.token}/maker/wishes") {
+            mvc.securePost("/w/${first.token}/maker/wishes") {
                 param("wishId", wish.id.toString())
                 param("hidden", hidden.toString())
             }.andExpect {
@@ -199,7 +199,7 @@ class MakerStartControllerTests(
         val first = workspaces.create()
         val second = workspaces.create()
         val wish = workspaces.listWishes(first.token).first()
-        mvc.post("/w/${second.token}/maker/wishes") {
+        mvc.securePost("/w/${second.token}/maker/wishes") {
             param("wishId", wish.id.toString())
             param("hidden", "true")
         }.andExpect {
@@ -220,7 +220,7 @@ class MakerStartControllerTests(
                     view { name("error/not-found") }
                 }.andReturn().response.contentAsString
             }
-            pages += mvc.post("/w/$token/maker/wishes") {
+            pages += mvc.securePost("/w/$token/maker/wishes") {
                 param("wishId", wishId.toString())
                 param("hidden", "true")
             }.andExpect {

@@ -16,6 +16,7 @@ import app.campaign.store.WorkspaceRepository
 import app.campaign.workspace.WorkspaceService
 import app.testing.InMemoryPaymentGateway
 import app.testing.PaymentCall
+import app.web.security.securePost
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -23,7 +24,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
 import tools.jackson.databind.ObjectMapper
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -53,7 +53,7 @@ class CaptureSimulationControllerTests @Autowired constructor(
         val fixture = createMoneyFixture(workspaces, analyses, mapper, clock)
         try {
             val base = "/w/${fixture.workspace.token}/maker"
-            mvc.post("$base/offer") { validFields(fixture).forEach { (key, value) -> param(key, value) } }
+            mvc.securePost("$base/offer") { validFields(fixture).forEach { (key, value) -> param(key, value) } }
                 .andExpect { status { is3xxRedirection() }; redirectedUrl("$base/campaign") }
             val ref = MakerCampaignLookup(offers, campaignRows).current(fixture.workspace.id)!!
             authorizeMoneyPledge(campaigns, gateway, ref, "simulation", 3, clock)
@@ -61,13 +61,13 @@ class CaptureSimulationControllerTests @Autowired constructor(
             assertContains(html, "Demo simulation")
             assertContains(html, "Simulate next capture failure")
             assertFalse(events.findByCampaignIdOrderByCreatedAtAscIdAsc(ref.campaignId).any { it.type == "SIMULATION_ARMED" })
-            mvc.post("$base/campaign") {
+            mvc.securePost("$base/campaign") {
                 param("action", "simulate")
                 param("campaignId", ref.campaignId.toString())
             }.andExpect { status { is3xxRedirection() } }
             assertEquals(1, events.findByCampaignIdOrderByCreatedAtAscIdAsc(ref.campaignId).count { it.type == "SIMULATION_ARMED" })
             gateway.voidAuthorizationResults.add(PaymentResult.Received(VoidDetails(AuthorizationId("auth-simulation")), PaymentStatus.VOIDED))
-            mvc.post("$base/campaign") {
+            mvc.securePost("$base/campaign") {
                 mapOf("action" to "confirm", "campaignId" to ref.campaignId.toString(), "acknowledged" to "true",
                     "pledgeCount" to "1", "units" to "3", "amount" to "3000").forEach { (key, value) -> param(key, value) }
             }.andExpect { status { is3xxRedirection() }; redirectedUrl("$base/result") }

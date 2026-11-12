@@ -6,7 +6,7 @@ const path = require('node:path');
 
 const script = fs.readFileSync(path.join(__dirname, '../../main/resources/static/js/pledge.js'), 'utf8');
 
-function browser({sdk = true, responses = []} = {}) {
+function browser({sdk = true, responses = [], csrf = true} = {}) {
     const elements = Object.fromEntries([
         'pledge-checkout', 'pledge-feedback', 'pledge-status-link', 'quantity', 'paypal-button-container'
     ].map(id => [id, {hidden: false, disabled: false, textContent: '', addEventListener(event, callback) { this[event] = callback; }}]));
@@ -15,7 +15,10 @@ function browser({sdk = true, responses = []} = {}) {
     let handlers;
     let redirected;
     const context = {
-        document: {getElementById: id => elements[id]},
+        document: {
+            getElementById: id => elements[id],
+            querySelector: selector => csrf ? {content: selector === 'meta[name="_csrf"]' ? 'synthetic-csrf' : 'X-CSRF-TOKEN'} : null
+        },
         window: {
             location: {assign: url => { redirected = url; }},
             paypal: sdk ? {Buttons: options => {
@@ -45,9 +48,20 @@ test('creates the displayed quantity and campaign without an amount, then author
     assert.deepEqual(JSON.parse(app.calls[0].options.body), {quantity: 2, campaignId: 'campaign'});
     assert.equal(app.calls[0].url, '/w/token/api/pledges');
     assert.equal(app.calls[0].options.method, 'POST');
+    assert.equal(app.calls[0].options.headers['X-CSRF-TOKEN'], 'synthetic-csrf');
     await app.handlers.onApprove({orderID: 'sandbox-order'});
     assert.equal(app.calls[1].url, '/w/token/api/pledges/pledge/authorize');
+    assert.equal(app.calls[1].options.headers['X-CSRF-TOKEN'], 'synthetic-csrf');
     assert.equal(app.redirected, created.body.statusUrl);
+});
+
+test('missing request verification requires a reload without creating an order', async () => {
+    const app = browser({csrf: false});
+    await assert.rejects(app.handlers.createOrder());
+    app.handlers.onError();
+    assert.equal(app.calls.length, 0);
+    assert.match(app.elements['pledge-feedback'].textContent, /Reload the page/);
+    assert.equal(app.elements.quantity.disabled, false);
 });
 
 test('cancel and pre-approval errors allow another attempt without authorizing', async () => {

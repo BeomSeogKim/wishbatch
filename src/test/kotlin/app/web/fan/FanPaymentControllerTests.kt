@@ -39,6 +39,7 @@ import app.campaign.workspace.WorkspaceService
 import app.paypal.PayPalProperties
 import app.testing.InMemoryPaymentGateway
 import app.testing.PaymentCall
+import app.web.security.securePost
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -54,7 +55,6 @@ import org.springframework.http.MediaType
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
 import org.springframework.ui.ExtendedModelMap
 import tools.jackson.databind.ObjectMapper
 import java.time.Clock
@@ -124,7 +124,7 @@ class FanPaymentControllerTests @Autowired constructor(
     fun `order ignores client amount and authorization returns an unguessable scoped status URL`() {
         val fixture = fixture()
         gateway.createOrderResults.add(received(OrderDetails(OrderId("synthetic-order")), PaymentStatus.CREATED))
-        val response = mvc.post("${fixture.path}/api/pledges") {
+        val response = mvc.securePost("${fixture.path}/api/pledges") {
             contentType = MediaType.APPLICATION_JSON
             content = """{"quantity":2,"amount":1,"currency":"EUR"}"""
         }.andExpect {
@@ -146,7 +146,7 @@ class FanPaymentControllerTests @Autowired constructor(
             AuthorizationId("synthetic-authorization"), Money(400, "USD"), start.plusSeconds(86_400),
             orderId = OrderId("synthetic-order"), payerEmail = "private-buyer@example.test",
         ), PaymentStatus.CREATED))
-        val approved = mvc.post("${fixture.path}/api/pledges/$id/authorize").andExpect {
+        val approved = mvc.securePost("${fixture.path}/api/pledges/$id/authorize").andExpect {
             status { isOk() }
             jsonPath("$.outcome") { value("AUTHORIZED") }
             jsonPath("$.state") { value("AUTHORIZED") }
@@ -161,7 +161,7 @@ class FanPaymentControllerTests @Autowired constructor(
     fun `invalid quantity capacity and closed campaigns reject order creation before PayPal`() {
         val fixture = fixture(capacity = 3)
         for (quantity in listOf(0, -1, 4)) {
-            mvc.post("${fixture.path}/api/pledges") {
+            mvc.securePost("${fixture.path}/api/pledges") {
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"quantity":$quantity}"""
             }.andExpect {
@@ -170,7 +170,7 @@ class FanPaymentControllerTests @Autowired constructor(
             }
         }
         pledge(fixture, PledgeState.AUTHORIZED, quantity = 3)
-        mvc.post("${fixture.path}/api/pledges") {
+        mvc.securePost("${fixture.path}/api/pledges") {
             contentType = MediaType.APPLICATION_JSON
             content = """{"quantity":1}"""
         }.andExpect {
@@ -178,7 +178,7 @@ class FanPaymentControllerTests @Autowired constructor(
             jsonPath("$.reason") { value("CAPACITY_EXCEEDED") }
         }
         val closed = fixture(state = CampaignState.NOT_FUNDED, reason = CampaignReason.CANCELLED_BY_MAKER)
-        mvc.post("${closed.path}/api/pledges") {
+        mvc.securePost("${closed.path}/api/pledges") {
             contentType = MediaType.APPLICATION_JSON
             content = """{"quantity":1}"""
         }.andExpect {
@@ -198,7 +198,7 @@ class FanPaymentControllerTests @Autowired constructor(
         for ((id, reason, expectedStatus) in listOf(
             Triple(old.id, "INVALID_STATE", 409), Triple(other.campaign.id, "NOT_FOUND", 404),
         )) {
-            mvc.post("${fixture.path}/api/pledges") {
+            mvc.securePost("${fixture.path}/api/pledges") {
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"quantity":1,"campaignId":"$id"}"""
             }.andExpect {
@@ -217,7 +217,7 @@ class FanPaymentControllerTests @Autowired constructor(
         pledge(fixture, PledgeState.AUTHORIZED)
         scriptAuthorization(pending)
         gateway.voidAuthorizationResults.add(received(VoidDetails(AuthorizationId("authorization-${pending.id}")), PaymentStatus.VOIDED))
-        val response = mvc.post("${fixture.path}/api/pledges/${pending.id}/authorize").andExpect {
+        val response = mvc.securePost("${fixture.path}/api/pledges/${pending.id}/authorize").andExpect {
             status { isConflict() }
             jsonPath("$.reason") { value("CAPACITY_EXCEEDED") }
             jsonPath("$.state") { value("VOIDED") }
@@ -234,7 +234,7 @@ class FanPaymentControllerTests @Autowired constructor(
         clock.current = start.plusSeconds(901)
         scriptAuthorization(pending)
         gateway.voidAuthorizationResults.add(received(VoidDetails(AuthorizationId("authorization-${pending.id}")), PaymentStatus.VOIDED))
-        mvc.post("${fixture.path}/api/pledges/${pending.id}/authorize").andExpect {
+        mvc.securePost("${fixture.path}/api/pledges/${pending.id}/authorize").andExpect {
             status { isConflict() }
             jsonPath("$.reason") { value("INVALID_STATE") }
             jsonPath("$.state") { value("VOIDED") }
@@ -251,7 +251,7 @@ class FanPaymentControllerTests @Autowired constructor(
             gateway.voidAuthorizationResults.add(if (voidSucceeds) {
                 received(VoidDetails(AuthorizationId("authorization-${pending.id}")), PaymentStatus.VOIDED)
             } else PaymentResult.Failed(PaymentStatus.FAILED))
-            val response = mvc.post("${fixture.path}/api/pledges/${pending.id}/authorize").andExpect {
+            val response = mvc.securePost("${fixture.path}/api/pledges/${pending.id}/authorize").andExpect {
                 status { isConflict() }
                 jsonPath("$.reason") { value("PAYMENT_MISMATCH") }
                 jsonPath("$.state") { value(if (voidSucceeds) "VOIDED" else "VOID_FAILED") }
@@ -264,7 +264,7 @@ class FanPaymentControllerTests @Autowired constructor(
     fun `unavailable provider returns a typed error and leaves the pledge uncounted`() {
         val fixture = fixture()
         repeat(4) { gateway.createOrderResults.add(PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE)) }
-        mvc.post("${fixture.path}/api/pledges") {
+        mvc.securePost("${fixture.path}/api/pledges") {
             contentType = MediaType.APPLICATION_JSON
             content = """{"quantity":1}"""
         }.andExpect {
@@ -285,7 +285,7 @@ class FanPaymentControllerTests @Autowired constructor(
                 status { isNotFound() }
                 view { name("error/not-found") }
             }
-            mvc.post("${fixture.path}/api/pledges/$id/authorize").andExpect {
+            mvc.securePost("${fixture.path}/api/pledges/$id/authorize").andExpect {
                 status { isNotFound() }
                 jsonPath("$.reason") { value("NOT_FOUND") }
             }
@@ -296,7 +296,7 @@ class FanPaymentControllerTests @Autowired constructor(
                 view { name("error/not-found") }
             }
         }
-        mvc.post("/w/missing/api/pledges") {
+        mvc.securePost("/w/missing/api/pledges") {
             contentType = MediaType.APPLICATION_JSON
             content = """{"quantity":1}"""
         }.andExpect { status { isNotFound() }; jsonPath("$.reason") { value("NOT_FOUND") } }
@@ -420,14 +420,14 @@ class FanPaymentControllerTests @Autowired constructor(
         assertContains(html, "name=\"confirmed\"")
         assertContains(html, "When the amount reappears depends on your bank or card.")
         assertTrue(gateway.calls.drop(firstCall).isEmpty())
-        val unconfirmed = mvc.post(path) { param("action", "withdraw") }.andExpect {
+        val unconfirmed = mvc.securePost(path) { param("action", "withdraw") }.andExpect {
             status { is3xxRedirection() }; redirectedUrl(path)
         }.andReturn()
         assertContains(unconfirmed.flashMap["error"].toString(), "Confirm")
         assertEquals(PledgeState.AUTHORIZED, pledges.findById(pledge.id).orElseThrow().state)
         assertTrue(gateway.calls.drop(firstCall).isEmpty())
         gateway.voidAuthorizationResults.add(received(VoidDetails(AuthorizationId(pledge.authorizationId!!)), PaymentStatus.VOIDED))
-        val withdrawn = mvc.post(path) {
+        val withdrawn = mvc.securePost(path) {
             param("action", "withdraw"); param("confirmed", "true")
         }.andExpect { status { is3xxRedirection() }; redirectedUrl(path) }.andReturn()
         assertContains(withdrawn.flashMap["notice"].toString(), "Hold released by PayPal")
@@ -435,7 +435,7 @@ class FanPaymentControllerTests @Autowired constructor(
         assertContains(released, "Hold released by PayPal")
         assertFalse(released.contains("Withdraw my pledge"))
         assertEquals(PledgeState.VOIDED, pledges.findById(pledge.id).orElseThrow().state)
-        mvc.post(path) { param("action", "withdraw"); param("confirmed", "true") }
+        mvc.securePost(path) { param("action", "withdraw"); param("confirmed", "true") }
             .andExpect { status { is3xxRedirection() } }
         assertEquals(1, gateway.calls.drop(firstCall).filterIsInstance<PaymentCall.VoidAuthorization>().size)
     }
@@ -446,7 +446,7 @@ class FanPaymentControllerTests @Autowired constructor(
             val fixture = fixture(state = state)
             val pledge = pledge(fixture, PledgeState.AUTHORIZED)
             val path = "${fixture.path}/pledges/${pledge.id}"
-            val rejected = mvc.post(path) { param("action", "withdraw"); param("confirmed", "true") }
+            val rejected = mvc.securePost(path) { param("action", "withdraw"); param("confirmed", "true") }
                 .andExpect { status { is3xxRedirection() }; redirectedUrl(path) }.andReturn()
             assertContains(rejected.flashMap["error"].toString(), "before settlement or closing")
         }
@@ -454,7 +454,7 @@ class FanPaymentControllerTests @Autowired constructor(
         val pledge = pledge(fixture, PledgeState.AUTHORIZED)
         val other = fixture()
         for (path in listOf("${other.path}/pledges/${pledge.id}", "${fixture.path}/pledges/invalid", "/w/missing/pledges/${pledge.id}")) {
-            mvc.post(path) { param("action", "withdraw"); param("confirmed", "true") }
+            mvc.securePost(path) { param("action", "withdraw"); param("confirmed", "true") }
                 .andExpect { status { isNotFound() }; view { name("error/not-found") } }
         }
         assertTrue(gateway.calls.drop(firstCall).isEmpty())

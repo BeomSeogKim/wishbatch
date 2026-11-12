@@ -20,6 +20,17 @@
         show('We could not confirm the authorization result. Check this pledge status before trying again.', pledge?.statusUrl);
     }
 
+    function requestHeaders() {
+        const token = document.querySelector('meta[name="_csrf"]')?.content;
+        const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+        if (!token || !header) {
+            show('This page expired. Reload the page before trying checkout again.', pledge?.statusUrl);
+            serverMessage = true;
+            throw new Error('Missing request verification');
+        }
+        return {'Content-Type': 'application/json', [header]: token};
+    }
+
     quantity.addEventListener('change', () => {
         container.hidden = true;
         show('Select Update total to review the server-calculated amount before authorizing.');
@@ -40,7 +51,7 @@
             try {
                 const response = await fetch(checkout.dataset.createUrl, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: requestHeaders(),
                     body: JSON.stringify({quantity: Number(checkout.dataset.quantity), campaignId: checkout.dataset.campaignId})
                 });
                 const result = await response.json();
@@ -66,7 +77,7 @@
             show('Checking your authorization with PayPal.', pledge.statusUrl);
             try {
                 const response = await fetch(`${checkout.dataset.createUrl}/${pledge.pledgeId}/authorize`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'}
+                    method: 'POST', headers: requestHeaders()
                 });
                 const result = await response.json();
                 if (response.ok) {

@@ -24,6 +24,7 @@ import app.campaign.rules.analysisInputHash
 import app.campaign.rules.optionWishCounts
 import app.campaign.workspace.WorkspaceService
 import app.testing.InMemoryWishAnalyzer
+import app.web.security.securePost
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -36,7 +37,6 @@ import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
 import java.time.Instant
@@ -158,7 +158,7 @@ class ProposalControllerTests(
         )
         for ((failure, message) in messages) {
             analyzer.results.add(AnalysisResult.Failure(failure))
-            val result = mvc.post("/w/$token/maker/proposal").andExpect {
+            val result = mvc.securePost("/w/$token/maker/proposal").andExpect {
                 status { is3xxRedirection() }
                 redirectedUrl("/w/$token/maker/proposal")
             }.andReturn()
@@ -198,7 +198,7 @@ class ProposalControllerTests(
         assertContains(html, "No visible wishes to analyze.")
         assertTrue(Regex("<button[^>]*id=\"analysis-submit\"[^>]*disabled").containsMatchIn(html))
         val before = analyzer.calls.size
-        val result = mvc.post("/w/$token/maker/proposal").andExpect { status { is3xxRedirection() } }.andReturn()
+        val result = mvc.securePost("/w/$token/maker/proposal").andExpect { status { is3xxRedirection() } }.andReturn()
         assertContains(result.flashMap["analysisError"].toString(), "no visible wishes")
         assertEquals(before, analyzer.calls.size)
     }
@@ -209,7 +209,7 @@ class ProposalControllerTests(
         val original = assertNotNull(runs.latest(token))
         analyzer.results.add(AnalysisResult.Success("test-live-model", AnalysisValidationResult.Accepted(original.output, emptyList()),
             "replaced-by-fake", Instant.parse("2090-01-01T00:00:00Z")))
-        val result = mvc.post("/w/$token/maker/proposal").andExpect {
+        val result = mvc.securePost("/w/$token/maker/proposal").andExpect {
             status { is3xxRedirection() }
             redirectedUrl("/w/$token/maker/proposal")
         }.andReturn()
@@ -378,7 +378,7 @@ class ProposalControllerTests(
                 status { isNotFound() }
                 view { name("error/not-found") }
             }
-            mvc.post("/w/$token/maker/proposal").andExpect {
+            mvc.securePost("/w/$token/maker/proposal").andExpect {
                 status { isNotFound() }
                 view { name("error/not-found") }
             }

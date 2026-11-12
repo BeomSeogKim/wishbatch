@@ -44,6 +44,7 @@ import app.campaign.store.WorkspaceRepository
 import app.campaign.workspace.WorkspaceService
 import app.testing.InMemoryPaymentGateway
 import app.testing.PaymentCall
+import app.web.security.securePost
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -56,7 +57,6 @@ import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
 import tools.jackson.databind.ObjectMapper
 import java.time.Clock
 import java.time.Instant
@@ -459,10 +459,10 @@ class MakerMoneyControllerTests @Autowired constructor(
         for (route in listOf("offer", "campaign", "result")) {
             mvc.get("/w/missing/maker/$route").andExpect { status { isNotFound() }; view { name("error/not-found") } }
         }
-        mvc.post("/w/missing/maker/offer") { params(validFields(fixture)) }.andExpect { status { isNotFound() } }
-        mvc.post("/w/missing/maker/campaign") { param("action", "cancel") }.andExpect { status { isNotFound() } }
+        mvc.securePost("/w/missing/maker/offer") { params(validFields(fixture)) }.andExpect { status { isNotFound() } }
+        mvc.securePost("/w/missing/maker/campaign") { param("action", "cancel") }.andExpect { status { isNotFound() } }
         mvc.get("/w/${other.workspace.token}/maker/offer?run=${fixture.run.id}").andExpect { status { isNotFound() } }
-        mvc.post("/w/${other.workspace.token}/maker/offer") { params(validFields(fixture)) }.andExpect { status { isNotFound() } }
+        mvc.securePost("/w/${other.workspace.token}/maker/offer") { params(validFields(fixture)) }.andExpect { status { isNotFound() } }
         publish(fixture)
         val mismatch = action(fixture, "cancel", mapOf("campaignId" to UUID.randomUUID().toString())).andReturn()
         assertContains(mismatch.flashMap["error"].toString(), "changed")
@@ -514,14 +514,14 @@ class MakerMoneyControllerTests @Autowired constructor(
     private fun page(token: String, route: String): String = mvc.get("/w/$token/maker${if (route.isEmpty()) "" else "/$route"}")
         .andExpect { status { isOk() } }.andReturn().response.contentAsString
     private fun postOffer(fixture: MoneyFixture, changes: Map<String, String> = emptyMap()) =
-        mvc.post("/w/${fixture.workspace.token}/maker/offer") { params(validFields(fixture) + changes) }
+        mvc.securePost("/w/${fixture.workspace.token}/maker/offer") { params(validFields(fixture) + changes) }
             .andExpect { status { is3xxRedirection() } }
     private fun publish(fixture: MoneyFixture) {
         postOffer(fixture).andExpect { redirectedUrl("/w/${fixture.workspace.token}/maker/campaign") }
     }
     private fun ref(fixture: MoneyFixture) = MakerCampaignLookup(offers, campaignRows).current(fixture.workspace.id)!!
     private fun action(fixture: MoneyFixture, action: String, changes: Map<String, String> = emptyMap()) =
-        mvc.post("/w/${fixture.workspace.token}/maker/campaign") {
+        mvc.securePost("/w/${fixture.workspace.token}/maker/campaign") {
             params(mapOf("action" to action, "campaignId" to ref(fixture).campaignId.toString()) + changes)
         }.andExpect { status { is3xxRedirection() } }
     private fun authorize(fixture: MoneyFixture, name: String, quantity: Int) {

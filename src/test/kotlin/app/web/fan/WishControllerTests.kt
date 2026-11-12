@@ -3,6 +3,7 @@ package app.web.fan
 import app.campaign.model.WishSource
 import app.campaign.workspace.SeedCatalog
 import app.campaign.workspace.WorkspaceService
+import app.web.security.securePost
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,7 +12,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertContains
@@ -55,7 +55,7 @@ class WishControllerTests @Autowired constructor(
     @Test
     fun `submission persists an onsite wish and redirects to a friendly confirmation`() {
         val token = workspaces.create().token
-        val response = mvc.post("/w/$token") {
+        val response = mvc.securePost("/w/$token") {
             param("text", "  A moon moth postcard, please!  ")
             param("displayName", "  Fern  ")
         }.andExpect {
@@ -76,7 +76,7 @@ class WishControllerTests @Autowired constructor(
     @Test
     fun `five hundred characters and an omitted name are accepted`() {
         val token = workspaces.create().token
-        mvc.post("/w/$token") { param("text", "x".repeat(500)) }.andExpect {
+        mvc.securePost("/w/$token") { param("text", "x".repeat(500)) }.andExpect {
             status { is3xxRedirection() }
             flash { attribute("wishSubmitted", true) }
         }
@@ -94,7 +94,7 @@ class WishControllerTests @Autowired constructor(
             " \n " to "Write a little about what you would like.",
             "x".repeat(501) to "Keep your wish to 500 characters or fewer.",
         )) {
-            val response = mvc.post("/w/$token") {
+            val response = mvc.securePost("/w/$token") {
                 param("text", text)
                 param("displayName", "Fern")
             }.andExpect {
@@ -109,7 +109,7 @@ class WishControllerTests @Autowired constructor(
             assertContains(html, "value=\"Fern\"")
             assertEquals(WishForm(text, "Fern"), response.flashMap["wishForm"])
         }
-        mvc.post("/w/$token").andExpect {
+        mvc.securePost("/w/$token").andExpect {
             flash { attribute("textError", "Write a little about what you would like.") }
         }
         assertEquals(40, workspaces.listWishes(token).size)
@@ -118,7 +118,7 @@ class WishControllerTests @Autowired constructor(
     @Test
     fun `overlong display name has its own inline error`() {
         val token = workspaces.create().token
-        val response = mvc.post("/w/$token") {
+        val response = mvc.securePost("/w/$token") {
             param("text", "A small print")
             param("displayName", "n".repeat(256))
         }.andExpect {
@@ -136,7 +136,7 @@ class WishControllerTests @Autowired constructor(
     fun `workspace cap is explained inline and no extra wish is saved`() {
         val token = workspaces.create().token
         repeat(160) { workspaces.addWish(token, "A print $it") }
-        val response = mvc.post("/w/$token") { param("text", "One more") }.andExpect {
+        val response = mvc.securePost("/w/$token") { param("text", "One more") }.andExpect {
             status { is3xxRedirection() }
             flash { attribute("formError", "This workspace has reached its 200-wish limit. Thanks for your interest.") }
         }.andReturn()
@@ -186,7 +186,7 @@ class WishControllerTests @Autowired constructor(
         for (token in listOf("missing", "x".repeat(43))) {
             val read = mvc.get("/w/$token").andExpect { status { isNotFound() }; view { name("error/not-found") } }
                 .andReturn().response.contentAsString
-            val submit = mvc.post("/w/$token") { param("text", "") }
+            val submit = mvc.securePost("/w/$token") { param("text", "") }
                 .andExpect { status { isNotFound() }; view { name("error/not-found") } }.andReturn().response.contentAsString
             assertContains(read, "This page is unavailable.")
             assertContains(read, "Sandbox demo. No real money moves.")
