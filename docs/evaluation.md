@@ -184,19 +184,23 @@ python3 evaluation/evaluate.py \
   evaluation/runs/live-3.json --output evaluation/results.json
 ```
 
-Live collection is an explicit paid operation, separate from tests. Build once,
-then run the following for each new output name. It invokes the existing seed
-generator through `sealbox run -p paypal-hackathon --redact --`, injects credentials
-without reading or printing them, uses an isolated in-memory database, refuses
-existing output files and retains only validated synthetic output and numeric
-telemetry. It does not store raw application logs. A failed attempt must remain
-reported rather than being silently replaced.
+Live collection is an explicit paid operation, separate from tests. Build the
+JAR and inject `LLM_API_KEY` into the environment without printing or tracking
+its value. Use a new output filename for every attempt:
 
 ```sh
 ./gradlew bootJar
-python3 evaluation/run-live.py evaluation/runs/new-run.json \
-  --jar build/libs/wishbatch-0.0.1-SNAPSHOT.jar
+LLM_SEED_RUN=true LLM_SEED_OUTPUT_FILE=evaluation/runs/new-run.json \
+  java -jar build/libs/wishbatch-0.0.1-SNAPSHOT.jar \
+  --spring.main.web-application-type=none
 ```
 
-The collected results are public synthetic evaluation artifacts. They are not
-session logs or a record of private account activity.
+With no database override, this uses an isolated in-memory database. The
+generator refuses an existing output path and writes only validated synthetic
+output. This direct command does not collect the companion numeric telemetry
+used for the three reported fresh runs; do not assign those earlier timings or
+token counts to a new output. Keep failed attempts visible when reporting new
+measurements. Do not commit raw logs, credentials, or account records.
+
+The collected results are public synthetic evaluation artifacts, not customer
+or payment evidence.

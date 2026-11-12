@@ -3,6 +3,10 @@
 This repository contains public technical documentation only. English is
 required. Private conversations and working records do not belong here.
 
+Start with [the product overview](../README.md). For a local walkthrough, follow
+[Running locally](running.md); for claims and their limits, read
+[Evaluation](evaluation.md). The prototype also serves a public `/guide` page.
+
 Read the guide matching the task, rather than loading every policy at startup.
 
 | Guide | Read when |

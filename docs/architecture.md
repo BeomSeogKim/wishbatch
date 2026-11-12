@@ -1,12 +1,15 @@
 # Architecture
 
-The application is one Spring Boot service written in Kotlin, with
-server-rendered pages and a small amount of browser JavaScript for the PayPal
-button. This guide fixes the module boundaries so that independent tasks can
-proceed in parallel without editing each other's code.
+Wishbatch is one Kotlin/Spring Boot service with server-rendered Thymeleaf
+pages, JPA persistence, and a small amount of checkout JavaScript. It connects
+wish interpretation to a maker-confirmed offer and sandbox payment settlement.
+The default runtime uses H2; Compose uses PostgreSQL. Provider calls are isolated
+behind ports, while campaign code owns every money and state decision.
 
-Only the skeleton exists today. The boundaries below are rules for new code,
-not a description of finished features.
+A workspace starts with synthetic data and stored analysis, so the review and
+offer-publication journey works without external keys. Live model analysis and
+PayPal payments require their own credentials. This is a disposable prototype:
+workspace tokens are access links, not separate maker/fan authentication.
 
 ## Modules
 
@@ -42,6 +45,31 @@ Use these terms in code, pages, and documents. Do not introduce synonyms.
 
 Stated interest, authorized holds, and completed payments are three different
 counts. They are stored, computed, and shown separately.
+
+## Public journey
+
+`POST /demo` creates a workspace and redirects to `/w/{token}/maker`.
+Maker routes under that prefix expose options, wish import/hiding, proposal
+review/reanalysis, offer publication, campaign actions, and settlement results.
+The fan routes are `/w/{token}` for wish intake, `/offer` for the current offer,
+`/pledges/{id}` for payment status, and `/result` for the campaign outcome.
+`/guide` explains the journey; `/styleguide` displays synthetic components.
+
+A maker reviews evidence and resolves or dismisses each open question before
+publishing an offer. Publication requires an explicit delivery confirmation.
+The default unit price comes from catalog unit cost, not the model, and is
+editable by the maker. Published terms are immutable. All monetary values used
+for offers and payments come from maker/catalog input and server arithmetic,
+never model output. Extracted fan budgets remain analysis evidence only.
+
+Campaign progression is `DRAFT -> OPEN -> AWAITING_CONFIRMATION -> SETTLING`,
+then `FUNDED` or `NOT_FUNDED`. An authorized minimum permits early confirmation
+from `OPEN` directly to `SETTLING`. Windows are 15 minutes, 2 hours, 24 hours,
+or 48 hours; confirmation expires 12 hours after closing. Below-minimum closing,
+maker cancellation, or expired confirmation ends in `NOT_FUNDED` and cleanup.
+Only enough completed captures produce `FUNDED`. A capture shortfall refunds
+completed captures and voids remaining holds; pending compensation remains
+visible. Neither interest nor an authorization is a completed payment.
 
 ## Contracts
 
@@ -102,51 +130,17 @@ production limits are demo-scale, and the default maximum pledge quantity is
 three, available as `definition.defaultMaxQtyPerPledge`. Seed wishes are
 IMPORTED stated interest. Stable option and wish keys map to workspace-local
 UUIDs through `optionId` and `wishId`, so stored analysis can remap references
-without sharing records. Workspace creation seeds only options and wishes;
-analysis storage and payment reconciliation belong to their own services.
-## PayPal client
+without sharing records. Workspace creation also calls `AnalysisRunService.attachSeed` in the same transaction. `StoredSeedAnalysis`
+checks the canonical input hash, remaps stored option/wish references to the new
+workspace, and persists the result as a labeled seed run. It makes no model call.
 
-`app.paypal.PayPalClient` implements `PaymentGateway` with the
-[Orders](https://developer.paypal.com/api/orders/v2) and
-[Payments](https://developer.paypal.com/api/payments/v2) APIs. `PayPalProperties`
-reads `PAYPAL_BASE_URL`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET`. Only the
-exact default URL `https://api-m.sandbox.paypal.com` permits startup. Resource
-IDs are encoded and redirects are disabled. Missing credentials permit startup
-but calls return `PaymentResult.Failed` with `errorCode = "NOT_CONFIGURED"`.
+The maker can paste wishes one per line. Import considers at most 100 lines,
+skips blank or overlong text, and respects the workspace's 200-wish limit under
+the same lock. It reports added and skipped counts; imported wishes are IMPORTED.
+The seed catalog describes one maker, US shipping, and USD amounts. Shipping
+addresses are retained by payment handling, but their country is not validated
+against the catalog region.
 
-Tokens refresh 30 seconds before expiry. Connection/read timeouts are 10/20
-seconds; transport failures and 5xx allow three retries with the original
-mutation key. A 4xx is never retried. Every response's debug ID is logged,
-including OAuth and retries; results retain the final response's ID or the
-last received ID after a timeout. Credentials and payer data are never logged.
-
-Orders request shipping and authorization; captures are full and final, and
-refunds are full. Money conversion is exact. Authorization results carry the
-nested resource's status and available payer, shipping, and expiry fields.
-Callers reconcile ambiguous failures before changing domain state. HTTP-layer
-stub tests require neither network nor credentials.
-
-Response statuses follow the [Orders v2 schema](https://developer.paypal.com/api/orders/v2/schema.json)
-and [Payments v2 schema](https://developer.paypal.com/api/payments/v2/schema.json):
-
-| Operation | Accepted provider resource statuses | Port mapping when names differ |
-|---|---|---|
-| Create order | `CREATED`, `SAVED`, `APPROVED`, `VOIDED`, `COMPLETED`, `PAYER_ACTION_REQUIRED` | `PAYER_ACTION_REQUIRED` to `CREATED`; `SAVED` to `PENDING` |
-| Authorize order; read authorization | `CREATED`, `CAPTURED`, `DENIED`, `PARTIALLY_CAPTURED`, `VOIDED`, `PENDING` | `DENIED` to `DECLINED`; `PARTIALLY_CAPTURED` to `CAPTURED` |
-| Capture authorization; read capture | `COMPLETED`, `DECLINED`, `PARTIALLY_REFUNDED`, `PENDING`, `REFUNDED`, `FAILED` | `PARTIALLY_REFUNDED` to `PENDING` |
-| Refund capture; read refund | `CANCELLED`, `FAILED`, `PENDING`, `COMPLETED` | `CANCELLED` to `FAILED` |
-| Void authorization | Empty 204, or 200 authorization representation | Empty response to `VOIDED`; representation uses authorization mappings |
-
-Other status names return `INVALID_RESPONSE`, including names valid only for
-another resource. Documented resource states return `PaymentResult.Received`;
-that does not imply the requested operation completed. In particular, a created
-order requiring payer action succeeds before buyer approval. The existing port
-has no partial-payment states: `CAPTURED` on an authorization indicates capture
-evidence, never completed full payment; a partially refunded capture remains
-unresolved as `PENDING`, never a full refund or fully available payment. Callers
-must reconcile the capture/refund resources before counting money. Authorization
-expiry remains available through the expiry field and `AUTHORIZATION_EXPIRED`
-error mapping; `EXPIRED` is not a documented authorization response status.
 ## Wish analysis
 
 `DefaultWishAnalyzer` implements `WishAnalyzer` using two OpenAI Responses stages.
@@ -165,7 +159,9 @@ not-served groups, and up to two alternatives. It cannot change classifications
 or counts. The combined output passes the same validator again. A null proposal
 is valid. Wishes and option strings are untrusted data, never instructions.
 
-Validation retains the same rules:
+### Validation
+
+Validation applies these rules:
 
 - V1 drops unknown wish and option references and records a flag.
 - V2 drops ungrounded needs and rationale; quotes must be literal substrings
@@ -183,6 +179,8 @@ correctness. Classifications and normalized limits still need review. The shared
 `analysisInputHash` identifies the full input snapshot. Success exposes the
 provider model, completion time, validated output and flags for immutable
 persistence. Analysis never changes campaign or payment state.
+
+### Budgets and configuration
 
 `LLM_API_KEY` is optional at startup; an absent key returns `NOT_CONFIGURED`.
 Measured defaults are `LLM_MODEL=gpt-6.1-sol`, `LLM_REASONING_EFFORT=low`,
@@ -213,7 +211,13 @@ within the budget under all provider conditions.
 and defaults to 100 (zero disables calls). A 40-wish run normally uses 11 calls;
 200 wishes use 51. The synchronized cap resets at UTC midnight and on process
 restart. Multiple processes need shared quota persistence before scaling.
-Workspace run quotas remain the caller's responsibility.
+`AnalysisRunService` separately persists a ten-attempt quota per workspace.
+Configured failures consume it; missing-key and provider-cap rejections do not.
+Only a complete matching input snapshot is persisted on success. Reads prefer
+a live run over the seed, retain validation flags, and report new visible wishes
+absent from that snapshot. A failure does not replace the previous valid run.
+
+### Stored artifact generation
 
 For a stored seed run, build the executable JAR, inject credentials, set
 `LLM_SEED_RUN=true` and `LLM_SEED_OUTPUT_FILE`, and run with
@@ -293,30 +297,100 @@ When enabled, `simulateNextCaptureFailure` arms one campaign-local, explicitly
 recorded simulation. It fails the next unattempted capture without calling the
 provider. It does not alter a real provider response.
 
+## PayPal client
+
+The client uses these sandbox endpoints:
+
+| Purpose | Endpoint |
+|---|---|
+| OAuth token | `POST /v1/oauth2/token` |
+| Create authorization-intent order | `POST /v2/checkout/orders` |
+| Authorize approved order | `POST /v2/checkout/orders/{id}/authorize` |
+| Capture authorization | `POST /v2/payments/authorizations/{id}/capture` |
+| Void authorization | `POST /v2/payments/authorizations/{id}/void` |
+| Refund capture | `POST /v2/payments/captures/{id}/refund` |
+| Read authorization | `GET /v2/payments/authorizations/{id}` |
+| Read capture | `GET /v2/payments/captures/{id}` |
+| Read refund | `GET /v2/payments/refunds/{id}` |
+
+There is no webhook endpoint. Reconciliation polls provider resources; a configured
+`PAYPAL_WEBHOOK_ID` does not enable signature verification or webhook handling.
+
+`app.paypal.PayPalClient` implements `PaymentGateway` with the
+[Orders](https://developer.paypal.com/api/orders/v2) and
+[Payments](https://developer.paypal.com/api/payments/v2) APIs. `PayPalProperties`
+reads `PAYPAL_BASE_URL`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET`. Only the
+exact default URL `https://api-m.sandbox.paypal.com` permits startup. Resource
+IDs are encoded and redirects are disabled. Missing credentials permit startup
+but calls return `PaymentResult.Failed` with `errorCode = "NOT_CONFIGURED"`.
+
+Tokens refresh 30 seconds before expiry. Connection/read timeouts are 10/20
+seconds; transport failures and 5xx allow three retries with the original
+mutation key. A 4xx is never retried. Every response's debug ID is logged,
+including OAuth and retries; results retain the final response's ID or the
+last received ID after a timeout. Credentials and payer data are never logged.
+
+Orders request shipping and authorization; captures are full and final, and
+refunds are full. Money conversion is exact. Authorization results carry the
+nested resource's status and available payer, shipping, and expiry fields.
+Callers reconcile ambiguous failures before changing domain state. HTTP-layer
+stub tests require neither network nor credentials.
+
+Response statuses follow the [Orders v2 schema](https://developer.paypal.com/api/orders/v2/schema.json)
+and [Payments v2 schema](https://developer.paypal.com/api/payments/v2/schema.json):
+
+| Operation | Accepted provider resource statuses | Port mapping when names differ |
+|---|---|---|
+| Create order | `CREATED`, `SAVED`, `APPROVED`, `VOIDED`, `COMPLETED`, `PAYER_ACTION_REQUIRED` | `PAYER_ACTION_REQUIRED` to `CREATED`; `SAVED` to `PENDING` |
+| Authorize order; read authorization | `CREATED`, `CAPTURED`, `DENIED`, `PARTIALLY_CAPTURED`, `VOIDED`, `PENDING` | `DENIED` to `DECLINED`; `PARTIALLY_CAPTURED` to `CAPTURED` |
+| Capture authorization; read capture | `COMPLETED`, `DECLINED`, `PARTIALLY_REFUNDED`, `PENDING`, `REFUNDED`, `FAILED` | `PARTIALLY_REFUNDED` to `PENDING` |
+| Refund capture; read refund | `CANCELLED`, `FAILED`, `PENDING`, `COMPLETED` | `CANCELLED` to `FAILED` |
+| Void authorization | Empty 204, or 200 authorization representation | Empty response to `VOIDED`; representation uses authorization mappings |
+
+Other status names return `INVALID_RESPONSE`, including names valid only for
+another resource. Documented resource states return `PaymentResult.Received`;
+that does not imply the requested operation completed. In particular, a created
+order requiring payer action succeeds before buyer approval. The existing port
+has no partial-payment states: `CAPTURED` on an authorization indicates capture
+evidence, never completed full payment; a partially refunded capture remains
+unresolved as `PENDING`, never a full refund or fully available payment. Callers
+must reconcile the capture/refund resources before counting money. Authorization
+expiry remains available through the expiry field and `AUTHORIZATION_EXPIRED`
+error mapping; `EXPIRED` is not a documented authorization response status.
+
 ## Configuration
 
-Configuration comes from environment variables. [.env.example](../.env.example)
-lists every key name; values live in a secret store, never in a tracked file.
+Inject settings through the process environment. [.env.example](../.env.example)
+is a key inventory, not a defaults file to source. Blank overrides can be invalid.
+Secrets must never be tracked or embedded in JDBC URLs: a connection failure can
+print the URL. See [running locally](running.md) for Gradle and Compose commands.
 
 | Key | Purpose | Default |
 |---|---|---|
 | `SERVER_PORT` | HTTP port | `8200` |
-| `DATABASE_URL` | JDBC URL without credentials | In-memory database |
-| `DB_USERNAME`, `DB_PASSWORD` | Database credentials, kept out of the URL | In-memory defaults |
-| `DB_SCHEMA` | Database schema, so worktrees can share one server | `public` |
-| `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` | PayPal sandbox REST credentials | None |
-| `PAYPAL_BASE_URL` | PayPal REST base URL | Sandbox |
-| `PAYPAL_WEBHOOK_ID` | Webhook signature verification | None |
-| `LLM_API_KEY`, `LLM_MODEL` | Model provider credentials and model name | None |
-| `LLM_DAILY_RUN_CAP` | Upper bound on live model calls per day | None |
-| `APP_BASE_URL` | Public base URL used in links | Local address |
-| `PRODUCT_NAME` | Display name rendered in pages | None |
+| `DATABASE_URL` | JDBC URL without credentials | In-memory H2 |
+| `DB_USERNAME`, `DB_PASSWORD` | Database credentials | `sa` / empty for H2 |
+| `PRODUCT_NAME` | Rendered display name | `Wishbatch` |
+| `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` | Sandbox REST credentials | None; calls fail with `NOT_CONFIGURED` |
+| `PAYPAL_BASE_URL` | Only accepted API base URL | `https://api-m.sandbox.paypal.com` |
+| `LLM_API_KEY` | Live analysis credential | None; live runs return `NOT_CONFIGURED` |
+| `LLM_MODEL` | Analysis model | `gpt-6.1-sol` |
+| `LLM_REASONING_EFFORT` | Provider reasoning effort | `low` |
+| `LLM_BATCH_SIZE` | Wishes per classification batch, 1-10 | `4` |
+| `LLM_CONCURRENCY` | Shared classification concurrency, 1-16 | `10` |
+| `LLM_DAILY_RUN_CAP` | Process-local daily provider-call limit, including retries | `100`; zero disables calls |
+| `LLM_SEED_RUN` | Enable artifact generation with the live provider | Disabled |
+| `LLM_SEED_OUTPUT_FILE` | New output path for the generator | Required when generating |
+| `LLM_SEED_OPTIONS_FILE`, `LLM_SEED_WISHES_FILE` | Explicit snapshot inputs, supplied together | Canonical seed if both absent |
 
-Only `SERVER_PORT`, `DATABASE_URL`, `DB_USERNAME`, and `DB_PASSWORD` are read
-by the skeleton. Add the others with the code that needs them.
+`APP_BASE_URL`, `DB_SCHEMA`, and `PAYPAL_WEBHOOK_ID` appear in the example and
+Compose configuration but are not consumed by the application. Current web
+links are relative. Compose forwards the main payment/model settings, but not
+the reasoning, batch, concurrency, or seed-generator settings.
 
-A credential is never embedded in a connection string, because a failed
-connection can print the whole URL.
+`app.campaign.demo-simulation-enabled` is an optional Spring property, false by
+default. It enables the explicitly labeled capture-failure simulation described
+above; it never overrides a received provider response.
 
 ## Local runs and worktrees
 
@@ -326,3 +400,13 @@ build forces the in-memory database for tests even when `DATABASE_URL` is set,
 so tests in different worktrees never share data.
 `tools/worktree.sh add` assigns each worktree its own port from 8201 to 8209;
 pass it as `SERVER_PORT` when running the application there.
+
+H2 creates its disposable schema automatically. PostgreSQL has no checked-in
+migration or automatic table initialization by default. The Compose demo command
+explicitly enables Hibernate schema updates; a plain server health response does
+not prove that workspace tables exist. Database locks and independent payment
+checkpoints require a connection pool of at least two connections.
+
+For evidence and limitations, see [evaluation](evaluation.md) and the
+[README](../README.md#evidence-and-limits). Stubbed payment tests do not establish
+live sandbox transaction success.

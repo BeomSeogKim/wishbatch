@@ -2,7 +2,8 @@
 
 Use `/styleguide` as the rendered component reference. Its content and counts
 are synthetic. The system uses local CSS, system fonts, and original inline
-SVG; no external assets or scripts are needed.
+SVG; the styleguide needs no external assets or scripts. Configured fan checkout
+loads the PayPal JavaScript SDK to display sandbox approval buttons.
 
 ## Page shell
 
