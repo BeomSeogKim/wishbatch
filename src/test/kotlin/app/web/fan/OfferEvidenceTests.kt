@@ -89,7 +89,7 @@ class OfferEvidenceTests @Autowired constructor(
         }
         assertEquals(listOf("Fan <0>", "Fan <1>", "Fan <2>"), evidence.quotes.map { it.displayName })
         val html = render(fixture)
-        for (text in listOf("Why this offer", "Stated interest:", "5", "stated interest, not orders",
+        for (text in listOf("Why this offer", "Compatible wishes:", "5", "stated interest, not orders",
             "AI grouped the wishes; the maker chose and confirmed this offer.", "Fan &lt;0&gt;")) {
             assertContains(html, text)
         }

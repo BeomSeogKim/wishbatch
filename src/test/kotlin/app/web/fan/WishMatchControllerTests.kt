@@ -62,7 +62,7 @@ class WishMatchControllerTests @Autowired constructor(
     fun `each verdict confirms the saved wish with its own quote and appropriate offer link`() {
         data class Case(val verdict: String, val text: String, val message: String, val link: Boolean)
         for ((verdict, text, message, link) in listOf(
-            Case("COMPATIBLE", "A postcard set please", "This matches the open offer", true),
+            Case("COMPATIBLE", "A postcard set please", "This matches the product format. Check the price, finish, and delivery terms in the offer.", true),
             Case("CONDITIONAL", "Only if the cards have a matte finish", "This may match, depending on", true),
             Case("INCOMPATIBLE", "I only want a wall poster",
                 "The open offer is not what you asked for; your wish is saved for a future batch", false),

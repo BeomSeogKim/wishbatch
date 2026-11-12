@@ -111,7 +111,7 @@ class WishController(
             evidence.maxOf { wish.text.indexOf(it.quote) + it.quote.length },
         )
         return when (verdict.verdict) {
-            CompatibilityVerdict.COMPATIBLE -> WishMatchNote("This matches the open offer", quote, true)
+            CompatibilityVerdict.COMPATIBLE -> WishMatchNote("This matches the product format. Check the price, finish, and delivery terms in the offer.", quote, true)
             CompatibilityVerdict.CONDITIONAL -> WishMatchNote(
                 "This may match, depending on whether the offer meets your condition:", quote, true)
             CompatibilityVerdict.INCOMPATIBLE -> WishMatchNote(
