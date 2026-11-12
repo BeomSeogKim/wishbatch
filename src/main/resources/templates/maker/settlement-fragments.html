@@ -109,6 +109,7 @@
         </div>
         <section th:fragment="attention(campaign)" class="preview-section" aria-labelledby="attention-heading">
             <h2 id="attention-heading">Needs attention</h2>
+            <p th:if="${campaign.state.name() == 'FUNDED' and campaign.counts.paid &lt; campaign.offer.minBatch}" class="notice notice-warning" role="alert">Completed payments are now below the minimum after settlement. The campaign retains its funded outcome; review the refunded payments and production commitments before proceeding.</p>
             <p th:if="${campaign.needsAttention.isEmpty()}">No unresolved payments reported.</p>
             <ul th:unless="${campaign.needsAttention.isEmpty()}">
                 <li th:each="item : ${campaign.needsAttention}">
@@ -120,6 +121,10 @@
                 </li>
             </ul>
             <p th:unless="${campaign.needsAttention.isEmpty()}">These payments remain unresolved even if the campaign has ended. A pending payment is not counted as paid.</p>
+            <form th:unless="${campaign.needsAttention.isEmpty()}" method="post" th:action="@{/w/{token}/maker/campaign(token=${token},action='retry')}">
+                <button type="submit" name="campaignId" th:value="${campaign.id}" class="button button-secondary">Retry unresolved payments</button>
+                <p>Recheck pending payments, refunds, and hold releases. Repeated provider errors delay retries from one minute up to one hour. Refreshing or retrying does not skip that wait.</p>
+            </form>
         </section>
         <section th:fragment="timeline(campaign)" class="preview-section" aria-labelledby="timeline-heading">
             <h2 id="timeline-heading">Campaign and payment timeline</h2>

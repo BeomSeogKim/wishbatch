@@ -188,6 +188,7 @@ class CampaignServiceTests @Autowired constructor(
         val approved = success(service.completePledge(PledgeRef(fixture.ref, created.id)))
         assertEquals(PledgeState.AUTHORIZED, approved.state)
         assertEquals("b***@example.test", approved.payerEmailMasked)
+        healthyAuthorization(pledges.findById(created.id).orElseThrow())
         val after = success(service.readCampaign(fixture.ref))
         assertEquals(CampaignCounts(1, 2, 0), after.counts)
         assertEquals(3L, after.capacityLeft)
@@ -237,6 +238,8 @@ class CampaignServiceTests @Autowired constructor(
             val rejected = assertIs<ServiceResult.Rejected>(results.single { it is ServiceResult.Rejected })
             assertEquals(Rejection.CAPACITY_EXCEEDED, rejected.reason)
             assertEquals(PledgeState.VOIDED, rejected.pledge?.state)
+            healthyAuthorization(pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(fixture.campaign.id)
+                .single { it.state == PledgeState.AUTHORIZED })
             assertEquals(1L, success(service.readCampaign(fixture.ref)).counts.authorizedHolds)
             assertEquals(1, gateway.fake.calls.filterIsInstance<PaymentCall.VoidAuthorization>().size)
         } finally {
@@ -250,6 +253,7 @@ class CampaignServiceTests @Autowired constructor(
         val pledge = authorized(fixture, 1)
         voidSuccess(pledge)
         clock.current = start.plusSeconds(901)
+        healthyAuthorization(pledge)
         val result = success(service.readCampaign(fixture.ref))
         assertEquals(CampaignState.NOT_FUNDED, result.state)
         assertEquals(CampaignReason.THRESHOLD_NOT_MET, result.reason)
@@ -262,10 +266,12 @@ class CampaignServiceTests @Autowired constructor(
         val fixture = fixture(minimum = 1)
         val pledge = authorized(fixture, 1)
         clock.current = start.plusSeconds(901)
+        healthyAuthorization(pledge)
         assertEquals(CampaignState.AWAITING_CONFIRMATION, success(service.reconcile(fixture.ref)).state)
-        assertTrue(gateway.fake.calls.isEmpty())
+        assertTrue(gateway.fake.calls.all { it is PaymentCall.ReadAuthorization })
         clock.current = start.plusSeconds(44_101)
         voidSuccess(pledge)
+        healthyAuthorization(pledge)
         val result = success(service.readCampaign(fixture.ref))
         assertEquals(CampaignState.NOT_FUNDED, result.state)
         assertEquals(CampaignReason.CONFIRMATION_EXPIRED, result.reason)
@@ -278,6 +284,7 @@ class CampaignServiceTests @Autowired constructor(
         val pledge = authorized(fixture, 1)
         clock.current = start.plusSeconds(44_101)
         voidSuccess(pledge)
+        healthyAuthorization(pledge)
         val result = success(service.readCampaign(fixture.ref))
         assertEquals(CampaignReason.CONFIRMATION_EXPIRED, result.reason)
         assertEquals(CampaignState.NOT_FUNDED, result.state)
@@ -373,6 +380,7 @@ class CampaignServiceTests @Autowired constructor(
         assertEquals(setOf(PledgeState.REFUND_PENDING, PledgeState.VOID_FAILED), result.needsAttention.map { it.state }.toSet())
         gateway.fake.readRefundResults.add(received(refundDetails(first), PaymentStatus.COMPLETED))
         voidSuccess(failed)
+        clock.current = start.plusSeconds(60)
         val reconciled = success(service.reconcile(fixture.ref))
         assertTrue(reconciled.needsAttention.isEmpty())
         assertEquals(setOf(PledgeState.REFUNDED, PledgeState.VOIDED), reconciled.pledges.map { it.state }.toSet())
@@ -407,7 +415,7 @@ class CampaignServiceTests @Autowired constructor(
     fun `ambiguous capture transport failures resolve provider evidence before deciding failure`() {
         val fixture = fixture(minimum = 1)
         val pledge = authorized(fixture, 1)
-        repeat(4) { gateway.fake.captureResults.add(PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE)) }
+        gateway.fake.captureResults.add(PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE))
         gateway.fake.readAuthorizationResults.add(received(AuthorizationDetails(
             AuthorizationId(pledge.authorizationId!!), Money(pledge.amount, pledge.currency), null,
             captureId = CaptureId("capture-${pledge.id}"),
@@ -417,7 +425,7 @@ class CampaignServiceTests @Autowired constructor(
         assertEquals(CampaignState.FUNDED, result.state)
         assertEquals(PledgeState.CAPTURED, result.pledges.single().state)
         val captures = gateway.fake.calls.filterIsInstance<PaymentCall.Capture>()
-        assertEquals(4, captures.size)
+        assertEquals(1, captures.size)
         assertEquals(setOf(idempotencyKey(pledge.id, PaymentAction.CAPTURE)), captures.map { it.idempotencyKey }.toSet())
         assertFalse(result.timeline.any { it.type == "PLEDGE_STATE" && it.detail?.endsWith("CAPTURE_FAILED") == true })
     }
@@ -565,6 +573,7 @@ class CampaignServiceTests @Autowired constructor(
         assertEquals(PledgeState.REFUND_FAILED, initial.needsAttention.single().state)
         gateway.fake.readRefundResults.add(received(refundDetails(first), PaymentStatus.FAILED))
         refundSuccess(first)
+        clock.current = start.plusSeconds(60)
         val result = success(service.reconcile(fixture.ref))
         assertEquals(PledgeState.REFUNDED, result.pledges.single { it.id == first.id }.state)
         assertTrue(result.needsAttention.isEmpty())
@@ -625,6 +634,7 @@ class CampaignServiceTests @Autowired constructor(
         val pledge = authorized(fixture, 1)
         clock.current = start.plusSeconds(901)
         voidSuccess(pledge)
+        healthyAuthorization(pledge)
         tick.tick()
         assertEquals(CampaignState.NOT_FUNDED, campaigns.findById(fixture.campaign.id).orElseThrow().state)
         assertEquals(CampaignReason.THRESHOLD_NOT_MET, campaigns.findById(fixture.campaign.id).orElseThrow().reason)
@@ -681,6 +691,8 @@ class CampaignServiceTests @Autowired constructor(
         val result = rejected(service.completePledge(PledgeRef(fixture.ref, pledge.id)))
         assertEquals(Rejection.PAYMENT_REJECTED, result.reason)
         assertEquals(PledgeState.CREATED, result.pledge?.state)
+        val retried = rejected(service.completePledge(PledgeRef(fixture.ref, pledge.id)))
+        assertEquals(PledgeState.CREATED, retried.pledge?.state)
         val persisted = pledges.findById(pledge.id).orElseThrow()
         assertEquals(PledgeState.CREATED, persisted.state)
         assertEquals("AUTHORIZATION_UNCONFIRMED", persisted.lastError)
@@ -865,6 +877,7 @@ class CampaignServiceTests @Autowired constructor(
         val fixture = fixture()
         val pledge = authorized(fixture, 2)
         val ref = PledgeRef(fixture.ref, pledge.id)
+        healthyAuthorization(pledge)
         assertTrue(success(queries.lookupPledge(fixture.workspace.token, pledge.id)).canWithdraw)
         voidSuccess(pledge)
 
@@ -1016,7 +1029,9 @@ class CampaignServiceTests @Autowired constructor(
         assertNull(batch.paid.last().shippingAddress)
         assertEquals(PledgeState.CAPTURED, batch.paid.first().state)
         assertEquals(listOf(incomplete.id), batch.incomplete.map { it.id })
+        listOf(saved, second).forEach(::healthyCapture)
         assertFalse(success(service.readCampaign(fixture.ref)).toString().contains("Sample Buyer"))
+        listOf(saved, second).forEach(::healthyCapture)
         assertFalse(success(queries.lookupPledge(fixture.workspace.token, pledge.id)).toString().contains("Example Road"))
     }
 
@@ -1082,6 +1097,14 @@ class CampaignServiceTests @Autowired constructor(
         Money(pledge.amount, pledge.currency), AuthorizationId(pledge.authorizationId!!))
     private fun refundDetails(pledge: Pledge) = RefundDetails(RefundId("refund-${pledge.id}"),
         Money(pledge.amount, pledge.currency), CaptureId("capture-${pledge.id}"))
+    private fun healthyAuthorization(pledge: Pledge) {
+        gateway.fake.readAuthorizationResults.add(received(AuthorizationDetails(
+            AuthorizationId(pledge.authorizationId!!), Money(pledge.amount, pledge.currency), pledge.authorizationExpiresAt,
+        ), PaymentStatus.CREATED))
+    }
+    private fun healthyCapture(pledge: Pledge) {
+        gateway.fake.readCaptureResults.add(received(captureDetails(pledge), PaymentStatus.COMPLETED))
+    }
     private fun captureSuccess(pledge: Pledge) {
         gateway.fake.captureResults.add(received(captureDetails(pledge), PaymentStatus.COMPLETED))
     }

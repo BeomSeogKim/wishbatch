@@ -4,6 +4,7 @@ import app.campaign.model.AnalysisRun
 import app.campaign.model.Campaign
 import app.campaign.model.CampaignReason
 import app.campaign.model.CampaignState
+import app.campaign.model.Event
 import app.campaign.model.Money
 import app.campaign.model.Offer
 import app.campaign.model.Option
@@ -101,6 +102,7 @@ class FanPaymentControllerTests @Autowired constructor(
         firstCall = gateway.calls.size
         gateway.createOrderResults.clear()
         gateway.authorizeOrderResults.clear()
+        gateway.readAuthorizationResults.clear()
         gateway.voidAuthorizationResults.clear()
     }
 
@@ -325,7 +327,8 @@ class FanPaymentControllerTests @Autowired constructor(
     fun `offer renders exact terms counts and server total with six terms above PayPal`() {
         val fixture = fixture()
         pledge(fixture, PledgeState.CREATED)
-        pledge(fixture, PledgeState.AUTHORIZED)
+        val hold = pledge(fixture, PledgeState.AUTHORIZED)
+        scriptHoldRead(hold)
         val html = mvc.get("${fixture.path}/offer") { param("quantity", "2") }.andExpect {
             status { isOk() }
             view { name("fan/offer") }
@@ -347,7 +350,7 @@ class FanPaymentControllerTests @Autowired constructor(
             assertTrue(position in 0 until buttonPosition, "Money term $number must appear before the PayPal action")
         }
         assertContains(mvc.get(fixture.path).andReturn().response.contentAsString, "href=\"${fixture.path}/offer\"")
-        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+        assertIs<PaymentCall.ReadAuthorization>(gateway.calls.drop(firstCall).single())
     }
 
     @Test
@@ -358,10 +361,11 @@ class FanPaymentControllerTests @Autowired constructor(
                 .andReturn().response.contentAsString
             assertFalse(html.contains("id=\"paypal-button-container\""))
         }
-        pledge(fixture, PledgeState.AUTHORIZED)
+        val hold = pledge(fixture, PledgeState.AUTHORIZED)
+        scriptHoldRead(hold)
         val html = mvc.get("${fixture.path}/offer").andReturn().response.contentAsString
         assertFalse(html.contains("id=\"paypal-button-container\""))
-        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+        assertIs<PaymentCall.ReadAuthorization>(gateway.calls.drop(firstCall).single())
     }
 
     @Test
@@ -410,6 +414,15 @@ class FanPaymentControllerTests @Autowired constructor(
         for (state in PledgeState.entries) {
             val fixture = fixture()
             val pledge = pledge(fixture, state, quantity = 2)
+            when (state) {
+                PledgeState.AUTHORIZED -> scriptHoldRead(pledge)
+                PledgeState.CAPTURE_PENDING -> gateway.readAuthorizationResults.add(received(AuthorizationDetails(
+                    AuthorizationId(pledge.authorizationId!!), Money(pledge.amount, pledge.currency), pledge.authorizationExpiresAt,
+                ), PaymentStatus.CAPTURED))
+                PledgeState.VOID_FAILED -> events.saveAndFlush(Event(fixture.campaign.id, "VOID_RESPONSE", pledge.id,
+                    paypalStatus = PaymentStatus.FAILED.name, createdAt = start))
+                else -> Unit
+            }
             val html = mvc.get("${fixture.path}/pledges/${pledge.id}").andExpect {
                 status { isOk() }
                 view { name("fan/pledge") }
@@ -444,7 +457,9 @@ class FanPaymentControllerTests @Autowired constructor(
             assertFalse(html.contains("??pledge."))
             assertEquals(state == PledgeState.AUTHORIZED, html.contains("Withdraw my pledge"))
         }
-        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+        val reads = gateway.calls.drop(firstCall)
+        assertEquals(2, reads.size)
+        assertTrue(reads.all { it is PaymentCall.ReadAuthorization })
     }
 
     @Test
@@ -452,17 +467,18 @@ class FanPaymentControllerTests @Autowired constructor(
         val fixture = fixture()
         val pledge = pledge(fixture, PledgeState.AUTHORIZED, quantity = 2)
         val path = "${fixture.path}/pledges/${pledge.id}"
+        scriptHoldRead(pledge)
         val html = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
         assertContains(html, "Withdraw my pledge")
         assertContains(html, "name=\"confirmed\"")
         assertContains(html, "When the amount reappears depends on your bank or card.")
-        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+        assertIs<PaymentCall.ReadAuthorization>(gateway.calls.drop(firstCall).single())
         val unconfirmed = mvc.securePost(path) { param("action", "withdraw") }.andExpect {
             status { is3xxRedirection() }; redirectedUrl(path)
         }.andReturn()
         assertContains(unconfirmed.flashMap["error"].toString(), "Confirm")
         assertEquals(PledgeState.AUTHORIZED, pledges.findById(pledge.id).orElseThrow().state)
-        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+        assertIs<PaymentCall.ReadAuthorization>(gateway.calls.drop(firstCall).single())
         gateway.voidAuthorizationResults.add(received(VoidDetails(AuthorizationId(pledge.authorizationId!!)), PaymentStatus.VOIDED))
         val withdrawn = mvc.securePost(path) {
             param("action", "withdraw"); param("confirmed", "true")
@@ -548,6 +564,12 @@ class FanPaymentControllerTests @Autowired constructor(
             paypalOrderId = "order-$id", authorizationId = if (state == PledgeState.CREATED) null else "authorization-$id",
             authorizationExpiresAt = start.plusSeconds(86_400), payerEmailMasked = "private-buyer@example.test",
             createdAt = start, id = id))
+    }
+
+    private fun scriptHoldRead(pledge: Pledge) {
+        gateway.readAuthorizationResults.add(received(AuthorizationDetails(
+            AuthorizationId(pledge.authorizationId!!), Money(pledge.amount, pledge.currency), pledge.authorizationExpiresAt,
+        ), PaymentStatus.CREATED))
     }
 
     private fun scriptAuthorization(pledge: Pledge, amount: Money = Money(pledge.amount, pledge.currency)) {

@@ -137,6 +137,7 @@ class CampaignController(
         val result = when (action) {
             "cancel" -> campaigns.cancel(ref)
             "simulate" -> campaigns.simulateNextCaptureFailure(ref)
+            "retry" -> campaigns.reconcile(ref)
             "confirm" -> {
                 val current = (campaigns.readCampaign(ref) as? ServiceResult.Success)?.value
                     ?: throw WorkspaceNotFoundException()
@@ -160,6 +161,7 @@ class CampaignController(
             }
             is ServiceResult.Success -> {
                 if (action == "simulate") redirect.addFlashAttribute("notice", "Simulation armed: the next capture will fail without a provider call.")
+                if (action == "retry") redirect.addFlashAttribute("notice", "Payment recheck requested. Unresolved payments stay visible; provider errors may delay the next attempt.")
                 "redirect:/w/$token/maker/${if (result.value.state in terminalStates) "result" else "campaign"}"
             }
         }

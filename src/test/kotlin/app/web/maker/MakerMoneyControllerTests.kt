@@ -304,6 +304,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         assertContains(blocked.andReturn().flashMap["error"].toString(), "threshold not met")
         assertEquals(CampaignState.OPEN, campaignRows.findById(ref(fixture).campaignId).orElseThrow().state)
         authorize(fixture, "masked", 1)
+        healthyProviderReads(fixture)
         val pledged = page(fixture.workspace.token, "campaign")
         assertContains(pledged, "m***@example.test")
         assertFalse(pledged.contains("maker-fan@example.test"))
@@ -323,19 +324,26 @@ class MakerMoneyControllerTests @Autowired constructor(
         authorize(fixture, "funded", 3)
         val review = action(fixture, "review").andReturn().response.redirectedUrl!!
         assertEquals("/w/${fixture.workspace.token}/maker/campaign?review=true", review)
+        healthyProviderReads(fixture)
         val html = page(fixture.workspace.token, "campaign?review=true")
         listOf("Review before confirming production", "authorized pledge</span>", "USD 30.00", "A capture can fail", "refunded", "released").forEach { assertContains(html, it) }
+        healthyProviderReads(fixture)
         assertContains(action(fixture, "confirm").andReturn().flashMap["error"].toString(), "Review")
+        healthyProviderReads(fixture)
         assertContains(action(fixture, "confirm", confirmation(1, 2, 2000)).andReturn().flashMap["error"].toString(), "Review")
         gateway.captureResults.add(PaymentResult.Received(CaptureDetails(CaptureId("cap-funded"), Money(3000, "USD")), PaymentStatus.COMPLETED))
+        healthyProviderReads(fixture)
         val result = action(fixture, "confirm", confirmation(1, 3, 3000)).andReturn()
         assertEquals("/w/${fixture.workspace.token}/maker/result", result.response.redirectedUrl)
+        healthyProviderReads(fixture)
         val settled = page(fixture.workspace.token, "result")
         shell(settled)
         listOf("Funded", "Production is released", "Paid.", "USD 30.00", "USD 0.00", "cap-funded",
             "Start a new offer from this proposal").forEach { assertContains(settled, it) }
+        healthyProviderReads(fixture)
         assertContains(page(fixture.workspace.token, ""), "View settlement result")
         val callCount = gateway.calls.count { it is PaymentCall.Capture }
+        healthyProviderReads(fixture)
         action(fixture, "confirm", confirmation(1, 3, 3000))
         assertEquals(callCount, gateway.calls.count { it is PaymentCall.Capture })
         val previous = ref(fixture)
@@ -356,11 +364,14 @@ class MakerMoneyControllerTests @Autowired constructor(
         rows[0].shippingAddress = ShippingAddress("Synthetic Buyer", "42 Sample Lane", "Unit 7", "CA", "Example City", "90001", "US")
         rows[1].shippingAddress = ShippingAddress("Excluded Buyer", "99 Unpaid Road", countryCode = "US")
         pledgeRows.saveAllAndFlush(rows)
+        healthyProviderReads(fixture)
         assertFalse(page(fixture.workspace.token, "result").contains("Batch to produce"))
         gateway.captureResults.add(PaymentResult.Received(CaptureDetails(CaptureId("cap-batch"), Money(3000, "USD")), PaymentStatus.COMPLETED))
         gateway.captureResults.add(PaymentResult.Failed(PaymentStatus.DECLINED))
         gateway.voidAuthorizationResults.add(PaymentResult.Received(VoidDetails(AuthorizationId("auth-batch-failed")), PaymentStatus.VOIDED))
+        healthyProviderReads(fixture)
         action(fixture, "confirm", confirmation(2, 4, 4000))
+        healthyProviderReads(fixture)
         val html = page(fixture.workspace.token, "result")
         val production = html.substringAfter("<h2 id=\"batch-heading\">").substringBefore("<h2 id=\"pledges-heading\">")
         for (text in listOf("Batch to produce", "3 units", "USD 30.00", "Synthetic Buyer", "42 Sample Lane", "Unit 7",
@@ -374,6 +385,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         assertFalse(html.contains("maker-fan@example.test"))
         val path = "/w/${fixture.workspace.token}"
         for (route in listOf("/result", "/offer", "/pledges/${rows[0].id}", "/pledges/${rows[1].id}")) {
+            healthyProviderReads(fixture)
             val publicHtml = mvc.get(path + route).andExpect { status { isOk() } }.andReturn().response.contentAsString
             for (detail in listOf("Synthetic Buyer", "Excluded Buyer", "42 Sample Lane", "99 Unpaid Road", "Unit 7", "90001",
                 "maker-fan@example.test", "m***@example.test", "Batch to produce")) assertFalse(publicHtml.contains(detail))
@@ -406,6 +418,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         gateway.captureResults.add(PaymentResult.Failed(PaymentStatus.DECLINED))
         gateway.refundCaptureResults.add(PaymentResult.Received(RefundDetails(RefundId("refund-shortfall"), Money(2000, "USD")), PaymentStatus.COMPLETED))
         gateway.voidAuthorizationResults.add(PaymentResult.Received(VoidDetails(AuthorizationId("auth-failed")), PaymentStatus.VOIDED))
+        healthyProviderReads(fixture)
         action(fixture, "confirm", confirmation(2, 3, 3000))
         val html = page(fixture.workspace.token, "result")
         listOf("Not funded", "Capture shortfall", "Refunded.", "Hold released by PayPal", "USD 20.00", "USD 0.00",
@@ -419,6 +432,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         authorize(fixture, "pending", 3)
         val capture = CaptureDetails(CaptureId("cap-pending"), Money(3000, "USD"))
         gateway.captureResults.add(PaymentResult.Received(capture, PaymentStatus.PENDING))
+        healthyProviderReads(fixture)
         action(fixture, "confirm", confirmation(1, 3, 3000))
         gateway.readCaptureResults.add(PaymentResult.Received(capture, PaymentStatus.PENDING))
         val pending = page(fixture.workspace.token, "result")
@@ -446,10 +460,41 @@ class MakerMoneyControllerTests @Autowired constructor(
         publish(ready)
         authorize(ready, "expiry", 3)
         clock.current = clock.current.plusSeconds(901)
+        healthyProviderReads(ready)
         assertContains(page(ready.workspace.token, "campaign"), "Awaiting confirmation")
         gateway.voidAuthorizationResults.add(PaymentResult.Received(VoidDetails(AuthorizationId("auth-expiry")), PaymentStatus.VOIDED))
         clock.current = clock.current.plusSeconds(12 * 3600)
+        healthyProviderReads(ready)
         assertContains(page(ready.workspace.token, "result"), "Confirmation expired")
+    }
+
+    @Test
+    fun `maker can retry a failed hold release after the provider backoff`() {
+        val fixture = fixture()
+        publish(fixture)
+        authorize(fixture, "retry-release", 2)
+        val before = gateway.calls.filterIsInstance<PaymentCall.VoidAuthorization>().size
+        gateway.voidAuthorizationResults.add(PaymentResult.Failed(PaymentStatus.FAILED))
+        action(fixture, "cancel")
+        val unresolved = page(fixture.workspace.token, "result")
+        assertContains(unresolved, "Retry unresolved payments")
+        assertContains(unresolved, "Hold release could not be confirmed")
+        action(fixture, "retry")
+        assertEquals(before + 1, gateway.calls.filterIsInstance<PaymentCall.VoidAuthorization>().size)
+        assertEquals(PledgeState.VOID_FAILED,
+            pledgeRows.findByCampaignIdOrderByCreatedAtAscIdAsc(ref(fixture).campaignId).single().state)
+
+        clock.current = clock.current.plusSeconds(60)
+        gateway.voidAuthorizationResults.add(PaymentResult.Received(
+            VoidDetails(AuthorizationId("auth-retry-release")), PaymentStatus.VOIDED,
+        ))
+        val retried = action(fixture, "retry").andReturn()
+        assertEquals("/w/${fixture.workspace.token}/maker/result", retried.response.redirectedUrl)
+        assertContains(retried.flashMap["notice"].toString(), "Payment recheck requested")
+        assertEquals(before + 2, gateway.calls.filterIsInstance<PaymentCall.VoidAuthorization>().size)
+        val resolved = page(fixture.workspace.token, "result")
+        assertContains(resolved, "Hold released by PayPal")
+        assertFalse(resolved.contains("Retry unresolved payments"))
     }
 
     @Test
@@ -526,6 +571,22 @@ class MakerMoneyControllerTests @Autowired constructor(
         }.andExpect { status { is3xxRedirection() } }
     private fun authorize(fixture: MoneyFixture, name: String, quantity: Int) {
         authorizeMoneyPledge(campaigns, gateway, ref(fixture), name, quantity, clock)
+    }
+    private fun healthyProviderReads(fixture: MoneyFixture) {
+        val ref = ref(fixture)
+        val state = campaignRows.findById(ref.campaignId).orElseThrow().state
+        pledgeRows.findByCampaignIdOrderByCreatedAtAscIdAsc(ref.campaignId).forEach { pledge ->
+            if (state in setOf(CampaignState.OPEN, CampaignState.AWAITING_CONFIRMATION) && pledge.state == PledgeState.AUTHORIZED) {
+                gateway.readAuthorizationResults.add(PaymentResult.Received(AuthorizationDetails(
+                    AuthorizationId(pledge.authorizationId!!), Money(pledge.amount, pledge.currency), pledge.authorizationExpiresAt,
+                ), PaymentStatus.CREATED))
+            }
+            if (state == CampaignState.FUNDED && pledge.state == PledgeState.CAPTURED) {
+                gateway.readCaptureResults.add(PaymentResult.Received(CaptureDetails(
+                    CaptureId(pledge.captureId!!), Money(pledge.amount, pledge.currency), AuthorizationId(pledge.authorizationId!!),
+                ), PaymentStatus.COMPLETED))
+            }
+        }
     }
     private fun confirmation(count: Int, units: Int, amount: Int) = mapOf("acknowledged" to "true", "pledgeCount" to "$count", "units" to "$units", "amount" to "$amount")
     private fun shell(html: String) {

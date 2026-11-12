@@ -36,6 +36,75 @@ class CampaignPayments(
 ) {
     fun save(pledge: Pledge) = persistence.checkpoint { pledges.saveAndFlush(pledge) }
 
+    fun recheckDue(pledge: Pledge, vararg actions: PaymentAction): Boolean = persistence.checkpoint {
+        // Use durable responses so page reads, scheduled ticks, and restarts share the same wait.
+        val timeline = events.findByCampaignIdOrderByCreatedAtAscIdAsc(pledge.campaignId)
+        actions.all { action ->
+            val results = timeline.filter { it.pledgeId == pledge.id && it.type == "${action.name}_RESPONSE" }
+            val latest = results.maxOfOrNull { it.createdAt } ?: return@all true
+            if (results.none { it.createdAt == latest && it.paypalStatus in retryStatuses }) return@all true
+            val lastSuccess = results.filter { it.paypalStatus !in retryStatuses }.maxOfOrNull { it.createdAt }
+            val streak = results.count { it.paypalStatus in retryStatuses && (lastSuccess == null || it.createdAt >= lastSuccess) }
+            val delay = (60L shl (streak - 1).coerceIn(0, 6)).coerceAtMost(3600L)
+            !clock.instant().isBefore(latest.plusSeconds(delay))
+        }
+    }
+
+    fun refreshAuthorization(pledge: Pledge) {
+        val result = readAuthorization(pledge)
+        if (result !is PaymentResult.Received || result.resource.authorizationId.value != pledge.authorizationId ||
+            result.resource.amount != money(pledge) ||
+            (result.resource.orderId != null && result.resource.orderId.value != pledge.paypalOrderId)) {
+            pledge.lastError = "AUTHORIZATION_UNCONFIRMED"
+            save(pledge)
+            return
+        }
+        pledge.authorizationExpiresAt = result.resource.expiresAt
+        when {
+            result.status in setOf(PaymentStatus.VOIDED, PaymentStatus.EXPIRED) -> {
+                pledge.lastError = null
+                move(pledge, PledgeState.VOIDED)
+            }
+            result.resource.captureId != null || result.status in setOf(PaymentStatus.CAPTURED, PaymentStatus.ALREADY_CAPTURED) -> {
+                result.resource.captureId?.let { pledge.captureId = it.value }
+                save(pledge)
+                if (pledge.captureId != null) applyCapture(pledge, readCapture(pledge), uncertainFailure = true)
+                else {
+                    pledge.lastError = "CAPTURE_UNCONFIRMED"
+                    move(pledge, PledgeState.CAPTURE_PENDING)
+                }
+            }
+            result.status == PaymentStatus.CREATED -> {
+                pledge.lastError = null
+                save(pledge)
+            }
+            else -> {
+                pledge.lastError = "AUTHORIZATION_UNCONFIRMED"
+                move(pledge, PledgeState.VOID_FAILED)
+            }
+        }
+    }
+
+    fun refreshPaidCapture(pledge: Pledge) {
+        if (pledge.captureId == null) {
+            pledge.lastError = "CAPTURE_UNCONFIRMED"
+            save(pledge)
+            return
+        }
+        val result = readCapture(pledge)
+        if (result is PaymentResult.Received && result.resource.captureId.value == pledge.captureId &&
+            result.resource.amount == money(pledge) &&
+            (result.resource.authorizationId == null || result.resource.authorizationId.value == pledge.authorizationId) &&
+            result.status in setOf(PaymentStatus.COMPLETED, PaymentStatus.REFUNDED)) {
+            pledge.lastError = null
+            if (result.status == PaymentStatus.REFUNDED) move(pledge, PledgeState.REFUNDED) else save(pledge)
+        } else {
+            // A failed read cannot erase a previously completed payment or prove a full refund.
+            pledge.lastError = "CAPTURE_UNCONFIRMED"
+            save(pledge)
+        }
+    }
+
     fun move(pledge: Pledge, state: PledgeState) {
         if (pledge.state == state) {
             save(pledge)
@@ -91,6 +160,12 @@ class CampaignPayments(
 
     private fun recoverCapture(pledge: Pledge, allowNewCapture: Boolean) {
         val authorization = readAuthorization(pledge)
+        if (authorization is PaymentResult.Received &&
+            (authorization.resource.authorizationId.value != pledge.authorizationId || authorization.resource.amount != money(pledge))) {
+            pledge.lastError = "AUTHORIZATION_EVIDENCE_MISMATCH"
+            move(pledge, PledgeState.CAPTURE_PENDING)
+            return
+        }
         if (authorization is PaymentResult.Received && authorization.resource.authorizationId.value == pledge.authorizationId) {
             if (authorization.status in setOf(PaymentStatus.VOIDED, PaymentStatus.EXPIRED)) {
                 if (pledge.state == PledgeState.CAPTURE_PENDING) move(pledge, PledgeState.CAPTURE_FAILED)
@@ -100,8 +175,10 @@ class CampaignPayments(
             }
             authorization.resource.captureId?.let { pledge.captureId = it.value; save(pledge) }
         }
-        if (!allowNewCapture && pledge.captureId == null &&
-            authorization.status !in setOf(PaymentStatus.CAPTURED, PaymentStatus.ALREADY_CAPTURED)) {
+        val captureAttempted = attempted(pledge, PaymentAction.CAPTURE)
+        val canReplay = captureAttempted &&
+            authorization.status in setOf(PaymentStatus.CAPTURED, PaymentStatus.ALREADY_CAPTURED)
+        if (pledge.captureId == null && (!captureAttempted || !allowNewCapture && !canReplay)) {
             pledge.lastError = "CAPTURE_UNCONFIRMED"
             if (authorization is PaymentResult.Received && authorization.status == PaymentStatus.CREATED &&
                 authorization.resource.authorizationId.value == pledge.authorizationId) captureFailed(pledge)
@@ -182,6 +259,7 @@ class CampaignPayments(
             result.resource.authorizationId.value == pledge.authorizationId &&
             result.status in setOf(PaymentStatus.VOIDED, PaymentStatus.COMPLETED)
         ) {
+            pledge.lastError = null
             move(pledge, PledgeState.VOIDED)
             return
         }
@@ -197,7 +275,14 @@ class CampaignPayments(
                     }
                     PaymentStatus.CAPTURED, PaymentStatus.ALREADY_CAPTURED -> {
                         authorization.resource.captureId?.let { pledge.captureId = it.value; save(pledge) }
-                        applyCapture(pledge, if (pledge.captureId != null) readCapture(pledge) else captureRequest(pledge), uncertainFailure = true)
+                        when {
+                            pledge.captureId != null -> applyCapture(pledge, readCapture(pledge), uncertainFailure = true)
+                            attempted(pledge, PaymentAction.CAPTURE) -> applyCapture(pledge, captureRequest(pledge), uncertainFailure = true)
+                            else -> {
+                                pledge.lastError = "CAPTURE_UNCONFIRMED"
+                                move(pledge, PledgeState.CAPTURE_PENDING)
+                            }
+                        }
                     }
                     else -> if (authorization.resource.captureId != null) {
                         pledge.captureId = authorization.resource.captureId.value
@@ -251,27 +336,24 @@ class CampaignPayments(
         providerId: String?,
         operation: (PaymentGateway, String) -> PaymentResult<T>,
     ): PaymentResult<T> {
-        var result: PaymentResult<T>
-        var retries = 0
-        do {
-            event(pledge, "${action.name}_REQUEST", endpoint, providerId, "REQUESTED")
-            result = try {
-                gateways.ifAvailable?.let { operation(it, idempotencyKey(pledge.id, action)) }
-                    ?: PaymentResult.Failed(PaymentStatus.FAILED, errorCode = "NOT_CONFIGURED")
-            } catch (exception: Exception) {
-                event(pledge, "${action.name}_INTERRUPTED", endpoint, providerId, "UNKNOWN")
-                throw exception
-            }
-            val resourceId = if (result is PaymentResult.Received) when (val resource = result.resource) {
-                is OrderDetails -> resource.orderId.value
-                is AuthorizationDetails -> resource.authorizationId.value
-                is CaptureDetails -> resource.captureId.value
-                is RefundDetails -> resource.refundId.value
-                is VoidDetails -> resource.authorizationId.value
-                else -> providerId
-            } else providerId
-            event(pledge, "${action.name}_RESPONSE", endpoint, resourceId, result.status.name, result.debugId)
-        } while (result.status == PaymentStatus.TRANSPORT_FAILURE && retries++ < 3)
+        event(pledge, "${action.name}_REQUEST", endpoint, providerId, "REQUESTED")
+        // The gateway bounds transport retries. Reconciliation waits before another attempt.
+        val result = try {
+            gateways.ifAvailable?.let { operation(it, idempotencyKey(pledge.id, action)) }
+                ?: PaymentResult.Failed(PaymentStatus.FAILED, errorCode = "NOT_CONFIGURED")
+        } catch (exception: Exception) {
+            event(pledge, "${action.name}_INTERRUPTED", endpoint, providerId, "UNKNOWN")
+            throw exception
+        }
+        val resourceId = if (result is PaymentResult.Received) when (val resource = result.resource) {
+            is OrderDetails -> resource.orderId.value
+            is AuthorizationDetails -> resource.authorizationId.value
+            is CaptureDetails -> resource.captureId.value
+            is RefundDetails -> resource.refundId.value
+            is VoidDetails -> resource.authorizationId.value
+            else -> providerId
+        } else providerId
+        event(pledge, "${action.name}_RESPONSE", endpoint, resourceId, result.status.name, result.debugId)
         return result
     }
 
@@ -283,6 +365,8 @@ class CampaignPayments(
     }
 
     private fun money(pledge: Pledge) = Money(pledge.amount, pledge.currency)
+
+    private val retryStatuses = setOf(PaymentStatus.TRANSPORT_FAILURE.name, PaymentStatus.FAILED.name, PaymentStatus.DECLINED.name)
 
     private val ambiguousOrConflict = setOf(
         PaymentStatus.TRANSPORT_FAILURE, PaymentStatus.ALREADY_CAPTURED, PaymentStatus.CAPTURED,

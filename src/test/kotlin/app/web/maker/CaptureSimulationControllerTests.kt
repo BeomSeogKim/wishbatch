@@ -1,5 +1,7 @@
 package app.web.maker
 
+import app.campaign.model.Money
+import app.campaign.port.AuthorizationDetails
 import app.campaign.port.AuthorizationId
 import app.campaign.port.PaymentResult
 import app.campaign.port.PaymentStatus
@@ -57,6 +59,11 @@ class CaptureSimulationControllerTests @Autowired constructor(
                 .andExpect { status { is3xxRedirection() }; redirectedUrl("$base/campaign") }
             val ref = MakerCampaignLookup(offers, campaignRows).current(fixture.workspace.id)!!
             authorizeMoneyPledge(campaigns, gateway, ref, "simulation", 3, clock)
+            val hold = pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(ref.campaignId).single()
+            val authorization = PaymentResult.Received(AuthorizationDetails(
+                AuthorizationId(hold.authorizationId!!), Money(hold.amount, hold.currency), hold.authorizationExpiresAt,
+            ), PaymentStatus.CREATED)
+            gateway.readAuthorizationResults.add(authorization)
             val html = mvc.get("$base/campaign").andExpect { status { isOk() } }.andReturn().response.contentAsString
             assertContains(html, "Demo simulation")
             assertContains(html, "Simulate next capture failure")
@@ -67,6 +74,7 @@ class CaptureSimulationControllerTests @Autowired constructor(
             }.andExpect { status { is3xxRedirection() } }
             assertEquals(1, events.findByCampaignIdOrderByCreatedAtAscIdAsc(ref.campaignId).count { it.type == "SIMULATION_ARMED" })
             gateway.voidAuthorizationResults.add(PaymentResult.Received(VoidDetails(AuthorizationId("auth-simulation")), PaymentStatus.VOIDED))
+            gateway.readAuthorizationResults.add(authorization)
             mvc.securePost("$base/campaign") {
                 mapOf("action" to "confirm", "campaignId" to ref.campaignId.toString(), "acknowledged" to "true",
                     "pledgeCount" to "1", "units" to "3", "amount" to "3000").forEach { (key, value) -> param(key, value) }

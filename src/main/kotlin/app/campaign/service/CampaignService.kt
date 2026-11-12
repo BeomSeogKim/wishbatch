@@ -194,6 +194,7 @@ class CampaignService(
     }
 
     fun reconcile(ref: CampaignRef): ServiceResult<CampaignView> = withCampaign(ref) { context ->
+        refreshProviderTruth(context)
         reconcileLocked(context)
         successView(context)
     }
@@ -258,14 +259,36 @@ class CampaignService(
 
     private fun reconcileLocked(context: Context) {
         applyDeadlines(context)
-        context.pledges.filter { it.state == PledgeState.CREATED && payments.attempted(it, PaymentAction.AUTHORIZE) }
+        context.pledges.filter { it.state == PledgeState.CREATED && payments.attempted(it, PaymentAction.AUTHORIZE) &&
+            payments.recheckDue(it, if (it.authorizationId == null) PaymentAction.AUTHORIZE else PaymentAction.READ_AUTHORIZATION) }
             .forEach { authorizeAndCheck(context, it) }
         applyDeadlines(context)
         when {
             context.campaign.state == CampaignState.SETTLING -> settle(context)
             context.campaign.state in terminalStates -> compensate(context, refreshPending = true)
         }
+        if (context.campaign.state in setOf(CampaignState.OPEN, CampaignState.AWAITING_CONFIRMATION)) {
+            context.pledges.filter { it.state == PledgeState.VOID_FAILED && payments.recheckDue(it, PaymentAction.VOID) }
+                .forEach(payments::void)
+        }
         updateAttention(context)
+    }
+
+    private fun refreshProviderTruth(context: Context) {
+        when (context.campaign.state) {
+            CampaignState.OPEN, CampaignState.AWAITING_CONFIRMATION -> context.pledges
+                .filter { it.state in setOf(PledgeState.AUTHORIZED, PledgeState.CAPTURE_PENDING) }
+                .forEach {
+                    if (payments.recheckDue(it, PaymentAction.READ_AUTHORIZATION, PaymentAction.READ_CAPTURE)) {
+                        if (it.state == PledgeState.AUTHORIZED) payments.refreshAuthorization(it)
+                        else payments.refreshCapture(it)
+                    }
+                }
+            CampaignState.FUNDED -> context.pledges
+                .filter { it.state == PledgeState.CAPTURED && payments.recheckDue(it, PaymentAction.READ_CAPTURE) }
+                .forEach(payments::refreshPaidCapture)
+            else -> Unit
+        }
     }
 
     private fun applyDeadlines(context: Context) {
@@ -282,7 +305,8 @@ class CampaignService(
     }
 
     private fun settle(context: Context) {
-        context.pledges.filter { it.state == PledgeState.CAPTURE_PENDING }.forEach {
+        context.pledges.filter { it.state == PledgeState.CAPTURE_PENDING &&
+            payments.recheckDue(it, PaymentAction.READ_CAPTURE, PaymentAction.READ_AUTHORIZATION) }.forEach {
             payments.refreshCapture(it, allowNewCapture = !clock.instant().isAfter(context.campaign.confirmDeadline))
         }
         for (pledge in context.pledges.filter { it.state == PledgeState.AUTHORIZED }) {
@@ -299,12 +323,17 @@ class CampaignService(
 
     private fun compensate(context: Context, refreshPending: Boolean) {
         for (pledge in context.pledges) {
-            if (refreshPending && pledge.state == PledgeState.CAPTURE_PENDING) payments.refreshCapture(pledge)
+            if (refreshPending && pledge.state == PledgeState.CAPTURE_PENDING &&
+                payments.recheckDue(pledge, PaymentAction.READ_CAPTURE, PaymentAction.READ_AUTHORIZATION)) payments.refreshCapture(pledge)
             if (pledge.state in setOf(PledgeState.AUTHORIZED, PledgeState.CAPTURE_FAILED, PledgeState.VOID_FAILED) ||
-                (pledge.state == PledgeState.CREATED && pledge.authorizationId != null)) payments.void(pledge)
-            if (pledge.state == PledgeState.CAPTURED && context.campaign.state == CampaignState.NOT_FUNDED) {
+                (pledge.state == PledgeState.CREATED && pledge.authorizationId != null)) {
+                if (payments.recheckDue(pledge, PaymentAction.VOID)) payments.void(pledge)
+            }
+            if (pledge.state == PledgeState.CAPTURED && context.campaign.state == CampaignState.NOT_FUNDED &&
+                payments.recheckDue(pledge, PaymentAction.REFUND)) {
                 payments.refund(pledge)
-            } else if (refreshPending && pledge.state in setOf(PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED)) {
+            } else if (refreshPending && pledge.state in setOf(PledgeState.REFUND_PENDING, PledgeState.REFUND_FAILED) &&
+                payments.recheckDue(pledge, PaymentAction.REFUND, PaymentAction.READ_REFUND)) {
                 payments.refund(pledge)
             }
             if (pledge.state == PledgeState.CREATED && !payments.attempted(pledge, PaymentAction.AUTHORIZE)) {
@@ -344,7 +373,7 @@ class CampaignService(
     }
 
     private fun updateAttention(context: Context) {
-        context.campaign.needsAttention = context.pledges.any(::needsAttention)
+        context.campaign.needsAttention = context.pledges.any(::needsAttention) || fundedShortfall(context)
         persistence.checkpoint { campaigns.saveAndFlush(context.campaign) }
     }
 
@@ -365,6 +394,7 @@ class CampaignService(
         val offer = context.offer
         val authorized = authorizedUnits(context.pledges)
         val captured = capturedUnits(context.pledges)
+        val shortfall = campaign.state == CampaignState.FUNDED && !funded(captured, offer.minBatch)
         val analysis = persistence.checkpoint { analyses.findByIdAndWorkspaceId(offer.analysisRunId, offer.workspaceId) }
         val interest = analysis?.let(::analysisOutput)?.let { interestCount(it.wishes) } ?: 0
         val timeline = persistence.checkpoint { events.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id) }
@@ -388,7 +418,9 @@ class CampaignService(
             ResultSummary(campaign.state, campaign.reason, campaign.state == CampaignState.FUNDED, captured,
                 context.pledges.filter { it.state == PledgeState.REFUNDED }.sumOf { it.qty.toLong() },
                 context.pledges.filter { it.state == PledgeState.VOIDED }.sumOf { it.qty.toLong() }),
-            context.pledges.filter(::needsAttention).map { AttentionItem(it.id, it.state, it.lastError) },
+            context.pledges.filter { needsAttention(it) || shortfall && it.state == PledgeState.REFUNDED }
+                .map { AttentionItem(it.id, it.state, if (shortfall && it.state == PledgeState.REFUNDED)
+                    "FUNDED_PAYMENT_SHORTFALL" else it.lastError) },
             timeline.map { TimelineEntry(it.type, it.pledgeId, it.paypalEndpoint, it.paypalId, it.paypalStatus, it.debugId, it.detail, it.createdAt) })
     }
 
@@ -404,7 +436,11 @@ class CampaignService(
         email.substringAfter('@', "***").ifBlank { "***" }
 
     private fun needsAttention(pledge: Pledge): Boolean = pledge.state in attentionStates ||
-        (pledge.state == PledgeState.CREATED && pledge.lastError == "AUTHORIZATION_UNCONFIRMED")
+        (pledge.state == PledgeState.CREATED && pledge.lastError == "AUTHORIZATION_UNCONFIRMED") ||
+        (pledge.state in setOf(PledgeState.AUTHORIZED, PledgeState.CAPTURED) && pledge.lastError != null)
+
+    private fun fundedShortfall(context: Context): Boolean = context.campaign.state == CampaignState.FUNDED &&
+        !funded(capturedUnits(context.pledges), context.offer.minBatch)
 
     private fun rejected(reason: Rejection) = ServiceResult.Rejected(reason)
     private data class Context(val campaign: Campaign, val offer: Offer, val pledges: List<Pledge>)
