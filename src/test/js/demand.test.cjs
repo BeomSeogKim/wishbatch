@@ -21,7 +21,12 @@ function render({ charts = true, workbench = true, gridActive = true, fail = fal
     ];
     const nodes = {
         'demand-price-chart': { hidden: true },
-        'demand-alternative-chart': { hidden: true },
+        'demand-alternative-chart': { hidden: true, dataset: {} },
+        'demand-exact-data': { open: true },
+        'demand-alternatives': {
+            open: false,
+            addEventListener(type, listener) { this[type] = () => listener.call(this); },
+        },
         'demand-chart-status': { textContent: 'Fallback data below' },
     };
     if (workbench) nodes['wish-workbench'] = { scrollIntoView() {} };
@@ -44,6 +49,10 @@ function render({ charts = true, workbench = true, gridActive = true, fail = fal
 
 test('chart points and alternatives emit exact wish IDs including empty selection', () => {
     const page = render();
+    assert.equal(page.configs.length, 1);
+    assert.equal(page.nodes['demand-exact-data'].open, false);
+    page.nodes['demand-alternatives'].open = true;
+    page.nodes['demand-alternatives'].toggle();
     assert.equal(page.configs.length, 2);
     assert.equal(page.configs[0].series[1].yKey, 'minimum');
     page.configs[0].series[0].listeners.seriesNodeClick({ datum: page.configs[0].data[0] });
@@ -59,6 +68,7 @@ test('chart points and alternatives emit exact wish IDs including empty selectio
 test('blocked CDN preserves fallback and workbench evidence buttons', () => {
     const page = render({ charts: false });
     assert.equal(page.configs.length, 0);
+    assert.equal(page.nodes['demand-exact-data'].open, true);
     assert.equal(page.nodes['demand-price-chart'].hidden, true);
     assert.equal(page.nodes['demand-chart-status'].textContent, 'Fallback data below');
     assert.equal(page.buttons[0].hidden, false);
@@ -71,6 +81,7 @@ test('offer without workbench hides filter buttons and chart failure preserves d
     assert.equal(page.buttons[0].hidden, true);
     assert.equal(page.nodes['demand-price-chart'].hidden, true);
     assert.equal(page.nodes['demand-alternative-chart'].hidden, true);
+    assert.equal(page.nodes['demand-exact-data'].open, true);
 });
 
 test('inactive grid fallback hides actions whose event listener is unavailable', () => {
