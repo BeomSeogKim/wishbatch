@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Something went wrong', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <header class="page-heading">
+        <p class="eyebrow">Something went wrong</p>
+        <h1>We could not show this page.</h1>
+        <p class="lead">Return home to start a new demo.</p>
+        <a class="button button-primary" th:href="@{/}">Return home</a>
+    </header>
+</main>
+</body>
+</html>
