@@ -3,31 +3,34 @@
 <body>
 <section th:fragment="map(step, status)" class="card" aria-labelledby="outcome-map-title">
     <h2 id="outcome-map-title">Where the money can go</h2>
-    <p>PayPal sandbox demo: no real money moves. PayPal places the hold; The product does not hold funds.</p>
-    <ol aria-label="Payment outcome map">
-        <li>Authorize with PayPal
-            <strong th:if="${step == 'AUTHORIZATION'}" aria-current="step" th:text="${'Current status: ' + status}"></strong>
-            <ul><li>Authorized hold: no payment has been captured yet.
-                <strong th:if="${step == 'HOLD'}" aria-current="step" th:text="${'Current status: ' + status}"></strong>
-                <ul>
-                    <li>Enough authorized holds and maker confirmation → attempt capture. Capture can fail.
-                        <strong th:if="${step == 'CAPTURE'}" aria-current="step" th:text="${'Current status: ' + status}"></strong>
-                        <ul>
-                            <li>Completed capture → paid. Only completed payments count toward the paid minimum.</li>
-                            <li>Capture shortfall → refund completed payments and release remaining holds.</li>
-                        </ul>
-                    </li>
-                    <li>Insufficient holds, maker cancellation, or an expired confirmation deadline → release remaining holds.</li>
-                </ul>
-            </li></ul>
-        </li>
-        <li>Release of a hold
-            <strong th:if="${step == 'RELEASE'}" aria-current="step" th:text="${'Current status: ' + status}"></strong>
-        </li>
-        <li>Refund of a completed payment
-            <strong th:if="${step == 'REFUND'}" aria-current="step" th:text="${'Current status: ' + status}"></strong>
-        </li>
-    </ol>
+    <p>PayPal sandbox demo: no real money moves. PayPal places the hold; the product does not hold funds.</p>
+    <svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="outcome-svg-title outcome-svg-desc"
+         viewBox="0 0 440 314" width="100%" style="max-width: 440px; height: auto">
+        <title id="outcome-svg-title">Payment outcome map</title>
+        <desc id="outcome-svg-desc">Authorize a PayPal hold. Enough authorized holds and maker confirmation lead to a capture attempt, which can fail. Only completed captures are paid. Insufficient holds, maker cancellation, or an expired confirmation deadline lead to hold release attempts. A capture shortfall leads to attempts to refund completed payments and release remaining holds. Pending or failed cleanup is not confirmed.</desc>
+        <g fill="none" stroke="#52616b" stroke-width="2" aria-hidden="true">
+            <path d="M220 44 V60 M220 104 V119 H100 V150 M220 119 H340 V150 M100 194 V262 M155 215 H340 V194"/>
+            <path d="M214 54 L220 60 L226 54 M94 144 L100 150 L106 144 M334 144 L340 150 L346 144 M94 256 L100 262 L106 256 M334 200 L340 194 L346 200"/>
+            <path d="M100 194 V215 H155"/>
+        </g>
+        <g font-family="sans-serif" font-size="14" text-anchor="middle" fill="#172b36" aria-hidden="true">
+            <rect data-step="AUTHORIZATION" x="145" y="0" width="150" height="44" rx="6" fill="#fff" th:attr="stroke=${step == 'AUTHORIZATION' ? '#005ea8' : '#52616b'},stroke-width=${step == 'AUTHORIZATION' ? 4 : 1}"/>
+            <text x="220" y="27">Authorize</text>
+            <rect data-step="HOLD" x="145" y="60" width="150" height="44" rx="6" fill="#fff" th:attr="stroke=${step == 'HOLD' ? '#005ea8' : '#52616b'},stroke-width=${step == 'HOLD' ? 4 : 1}"/>
+            <text x="220" y="87">Authorized hold</text>
+            <text x="100" y="130" font-size="12">Minimum holds +</text><text x="100" y="144" font-size="12">maker confirms</text>
+            <text x="340" y="130" font-size="12">Below minimum /</text><text x="340" y="144" font-size="12">cancelled / expired</text>
+            <rect data-step="CAPTURE" x="15" y="150" width="170" height="44" rx="6" fill="#fff" th:attr="stroke=${step == 'CAPTURE' ? '#005ea8' : '#52616b'},stroke-width=${step == 'CAPTURE' ? 4 : 1}"/>
+            <text x="100" y="169">Attempt capture</text><text x="100" y="185" font-size="12">Completed = paid</text>
+            <rect data-step="RELEASE" x="255" y="150" width="170" height="44" rx="6" fill="#fff" th:attr="stroke=${step == 'RELEASE' ? '#005ea8' : '#52616b'},stroke-width=${step == 'RELEASE' ? 4 : 1}"/>
+            <text x="340" y="176">Attempt release</text>
+            <text x="100" y="242" font-size="12">Capture shortfall</text>
+            <text x="245" y="207" font-size="12">Shortfall: remaining holds</text>
+            <rect data-step="REFUND" x="15" y="262" width="170" height="44" rx="6" fill="#fff" th:attr="stroke=${step == 'REFUND' ? '#005ea8' : '#52616b'},stroke-width=${step == 'REFUND' ? 4 : 1}"/>
+            <text x="100" y="281">Attempt refund</text><text x="100" y="297" font-size="12">Completed payments</text>
+        </g>
+    </svg>
+    <p th:if="${step != null}" aria-current="step"><strong th:text="${'Current status: ' + status}"></strong></p>
     <p>Pending or failed release and refund attempts are not confirmed. Release and refund timing depends on PayPal and your bank or card.</p>
 </section>
 </body>

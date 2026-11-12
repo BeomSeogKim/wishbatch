@@ -335,8 +335,9 @@ class FanPaymentControllerTests @Autowired constructor(
             "Sandbox demo. No real money moves.", "synthetic-client", "intent=authorize")) assertContains(html, text)
         assertFalse(html.contains("synthetic-secret"))
         assertFalse(html.contains("private-buyer"))
-        assertContains(html, "aria-label=\"Payment outcome map\"")
-        assertContains(html, "Capture shortfall → refund completed payments and release remaining holds.")
+        assertContains(html, "<svg")
+        assertContains(html, "<title id=\"outcome-svg-title\">Payment outcome map</title>")
+        assertContains(html, "attempts to refund completed payments and release remaining holds")
         assertFalse(html.contains("aria-current=\"step\""))
         val buttonPosition = html.indexOf("id=\"paypal-button-container\"")
         assertTrue(buttonPosition > 0)
@@ -393,17 +394,17 @@ class FanPaymentControllerTests @Autowired constructor(
     @Test
     fun `pledge page renders every state without payer details and uses shared money wording`() {
         val steps = mapOf(
-            PledgeState.CREATED to "Authorize with PayPal",
-            PledgeState.ABANDONED to "Authorize with PayPal",
-            PledgeState.AUTHORIZED to "Authorized hold: no payment has been captured yet.",
-            PledgeState.CAPTURED to "Enough authorized holds and maker confirmation",
-            PledgeState.CAPTURE_PENDING to "Enough authorized holds and maker confirmation",
-            PledgeState.CAPTURE_FAILED to "Enough authorized holds and maker confirmation",
-            PledgeState.VOIDED to "Release of a hold",
-            PledgeState.VOID_FAILED to "Release of a hold",
-            PledgeState.REFUNDED to "Refund of a completed payment",
-            PledgeState.REFUND_PENDING to "Refund of a completed payment",
-            PledgeState.REFUND_FAILED to "Refund of a completed payment",
+            PledgeState.CREATED to "AUTHORIZATION",
+            PledgeState.ABANDONED to "AUTHORIZATION",
+            PledgeState.AUTHORIZED to "HOLD",
+            PledgeState.CAPTURED to "CAPTURE",
+            PledgeState.CAPTURE_PENDING to "CAPTURE",
+            PledgeState.CAPTURE_FAILED to "CAPTURE",
+            PledgeState.VOIDED to "RELEASE",
+            PledgeState.VOID_FAILED to "RELEASE",
+            PledgeState.REFUNDED to "REFUND",
+            PledgeState.REFUND_PENDING to "REFUND",
+            PledgeState.REFUND_FAILED to "REFUND",
         )
         assertEquals(PledgeState.entries.toSet(), steps.keys)
         for (state in PledgeState.entries) {
@@ -415,9 +416,11 @@ class FanPaymentControllerTests @Autowired constructor(
             }.andReturn().response.contentAsString
             val sentence = messages.getMessage("pledge.$state", null, null, Locale.ENGLISH)
             if (sentence != null) assertContains(html, sentence)
-            val map = html.substringAfter("aria-label=\"Payment outcome map\"").substringBefore("</ol>")
+            val map = html.substringAfter("id=\"outcome-map-title\"").substringBefore("</section>")
             assertEquals(1, Regex("aria-current=\"step\"").findAll(map).count())
-            assertContains(map.substringAfter(steps.getValue(state)).substringBefore("</li>"), "aria-current=\"step\"")
+            val node = map.substringAfter("data-step=\"${steps.getValue(state)}\"").substringBefore("/>")
+            assertContains(node, "stroke-width=\"4\"")
+            assertEquals(1, Regex("stroke-width=\"4\"").findAll(map).count())
             val expectedStatus = when (state) {
                 PledgeState.CREATED -> "Authorization is not confirmed."
                 PledgeState.ABANDONED -> "This pledge was not completed"
