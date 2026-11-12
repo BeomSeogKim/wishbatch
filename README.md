@@ -110,16 +110,19 @@ server-rendered pages, and checkout JavaScript. Tests use fakes or stubs and no
 provider credentials. Local HTTP checks cover workspace creation, stored
 proposal review, offer publication, and missing-key behavior.
 
-On 2026-11-12, six browser paths were run by hand against the real PayPal sandbox
-on a local build, and all passed: the golden path, two buyers, cancel with void,
-the simulated capture failure with refund, a live re-analysis, and the edge
-states. This exercised sandbox authorization, capture, void, and refund. The
-golden path took about three and a half minutes. The last golden run's provider
-IDs were order `3Y176650HC8669634`, authorization `6YR87310UT316712E`, and capture
-`3M26718937950980C`.
+On 2026-11-12, local browser regression against the real PayPal sandbox passed
+for the golden path, fan withdrawal, maker cancellation, and simulated capture
+failure with refund and hold release. The three fan match notes, funded shipping
+list, and absence of buyer details from the public result were also checked.
+The final golden path ran from 09:27:25 to 09:28:51 UTC (86 seconds), including
+sandbox buyer login, the question checklist, price re-check, and one approval
+for three units. Provider IDs: order `9KP58052BW620264K`, authorization
+`7AD27064JG066074U`, and capture `0CL32219XT8853311`.
 
-This was a manual run, not an automated test in the repository. It was not
-repeated on a hosted deployment. Webhooks are not implemented.
+This was a local browser check, not an automated provider test in the repository
+or an independent first-time-user study. It was not repeated on a hosted
+deployment. Live reanalysis was not repeated in this regression; the golden path
+used the labeled stored analysis. Webhooks are not implemented.
 
 [Evaluation](docs/evaluation.md) scores forty synthetic wishes (35 requests,
 three options, 105 correlated request/option pairs), using one stored run and
