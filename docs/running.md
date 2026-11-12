@@ -27,6 +27,9 @@ Re-run analysis needs a model key. Without it, the page explains the missing
 configuration and keeps the previous result. The maker dashboard and fan offer
 show stated interest, authorized units, and completed payment units separately.
 
+The `/guide` page explains the maker and fan paths. Finish or cancel sandbox
+campaigns before stopping an in-memory run.
+
 Stop with Ctrl+C. In-memory data is lost when the process stops. Set
 `SERVER_PORT` to use a different port. Do not source `.env.example`: its empty
 values are a key inventory, not working defaults. Gradle does not load `.env`
@@ -76,11 +79,22 @@ is required, especially `PAYPAL_BASE_URL`, `LLM_MODEL`, and `LLM_DAILY_RUN_CAP`.
 | Persistent database outside Compose | `DATABASE_URL`, appropriate `DB_USERNAME` and `DB_PASSWORD` | Disposable PostgreSQL also needs explicit schema creation |
 
 Use sandbox REST application credentials and a sandbox buyer account. After
-publishing an offer, open its fan link, choose a quantity, and approve the PayPal
+publishing an offer, open its fan link, choose a quantity, select **Update total**,
+and approve the PayPal
 authorization. The maker can confirm production once authorized units reach
 the minimum, even before closing. Confirmation captures payments; enough
 completed units fund the batch. A shortfall refunds captures and voids remaining
 holds. This is the supported path, not a claim of live transaction verification.
+
+To expose the labeled capture-failure simulation on the maker dashboard:
+
+```sh
+./gradlew bootRun --args=--app.campaign.demo-simulation-enabled=true
+```
+
+The simulation fails one capture locally without sending that capture request.
+Other captures, refunds, and hold releases still use the PayPal sandbox.
+It is disabled by default.
 
 Live analysis uses a 60-second budget and preserves the last valid run on
 failure. The workspace permits ten configured analysis attempts. The daily
