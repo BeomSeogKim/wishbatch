@@ -1,5 +1,6 @@
 package app.web.maker
 
+import app.campaign.model.AnalysisRun
 import app.campaign.store.AnalysisRunRepository
 import app.campaign.store.OfferRepository
 import app.campaign.workspace.WorkspaceService
@@ -35,6 +36,7 @@ class OfferFormExperienceTests @Autowired constructor(
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.unitPrice") { value(amount) }
+                jsonPath("$.belowCost") { value(amount.toLong() < fixture.option.unitCost) }
                 jsonPath("$.formattedPrice") { value("USD ${amount / 100}.${(amount % 100).toString().padStart(2, '0')}") }
             }
         }
@@ -76,8 +78,8 @@ class OfferFormExperienceTests @Autowired constructor(
         val fixture = fixture()
         val html = mvc.get("/w/${fixture.workspace.token}/maker/offer") { param("run", fixture.run.id.toString()) }
             .andExpect { status { isOk() } }.andReturn().response.contentAsString
-        assertContains(html, "value=\"6.50\"")
-        assertContains(html, "USD 6.50 per unit")
+        assertContains(html, "value=\"16.00\"")
+        assertContains(html, "USD 16.00 per unit")
         assertContains(html, "inputmode=\"decimal\"")
         assertContains(html, "Checked unit price")
         assertContains(html, "What finish can you deliver?")
@@ -90,6 +92,24 @@ class OfferFormExperienceTests @Autowired constructor(
         assertEquals(1, Regex("id=\"demand-explorer\"").findAll(html).count())
         val firstSubmit = Regex("<button[^>]*type=\"submit\"[^>]*>").find(html)!!.value
         assertContains(firstSubmit, "value=\"check-price\"")
+    }
+
+    @Test
+    fun `published run and decimal price stay pinned after a newer analysis arrives`() {
+        val fixture = fixture()
+        mvc.securePost("/w/${fixture.workspace.token}/maker/offer") {
+            (validFields(fixture) + mapOf("action" to "publish", "unitPrice" to "6.00"))
+                .forEach { (key, value) -> param(key, value) }
+        }.andExpect { redirectedUrl("/w/${fixture.workspace.token}/maker/campaign") }
+        analyses.saveAndFlush(AnalysisRun(fixture.workspace.id, "test-model", "newer-hash", fixture.run.resultJson,
+            createdAt = fixture.run.createdAt.plusSeconds(1)))
+        val page = mvc.get("/w/${fixture.workspace.token}/maker/offer")
+            .andExpect { status { isOk() } }.andReturn()
+        assertEquals(fixture.run.id, (page.modelAndView!!.model["analysis"] as AnalysisRun).id)
+        assertEquals(true, page.modelAndView!!.model["priceBelowCost"])
+        assertContains(page.response.contentAsString, "value=\"6.00\"")
+        assertContains(page.response.contentAsString, "USD 6.00 per unit")
+        assertEquals(600L, offers.findByWorkspaceId(fixture.workspace.id).single().unitPrice)
     }
 
     private fun fixture() = createMoneyFixture(workspaces, analyses, mapper, Clock.systemUTC())
