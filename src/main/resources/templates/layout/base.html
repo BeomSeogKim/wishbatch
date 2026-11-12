@@ -29,6 +29,7 @@
     </nav>
 </header>
 <div class="sandbox-notice"><span class="sandbox-dot" aria-hidden="true"></span><span th:text="#{sandbox.notice}">Sandbox demo. No real money moves.</span></div>
+<th:block th:if="${demoGuide != null}"><div th:replace="~{fragments/demo-guide :: guide(${demoGuide})}"></div></th:block>
 <main th:replace="${content}"></main>
 <footer class="site-footer shell">
     <div><strong th:text="${productName}">Wishbatch</strong><span> A little clarity before you create.</span></div>

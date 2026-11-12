@@ -1,0 +1,5 @@
+<section th:fragment="guide(guide)" class="shell notice notice-info" aria-label="Demo guide">
+    <strong>Demo guide</strong> · <span th:text="${guide.location}">Maker home</span>
+    <p>Next: <a th:href="${guide.nextUrl}" th:text="${guide.next}">Review the options</a></p>
+    <a th:href="${guide.switchUrl}" th:text="${guide.switchLabel}">Switch view</a>
+</section>
