@@ -124,8 +124,8 @@ trims text and optional names, limits text to 500 characters and names to
 ones. `listWishes` includes hidden wishes by default; analysis callers use
 `includeHidden = false`.
 
-`SeedCatalog` loads and validates `seed/options.json` and `seed/wishes.json`
-at startup. The maker, characters, and fan comments are synthetic. Costs and
+`SeedCatalog` loads and validates the illustrator, ceramicist, and textile
+scenario options and wishes at startup. The makers and fan comments are synthetic. Costs and
 production limits are demo-scale, and the default maximum pledge quantity is
 three, available as `definition.defaultMaxQtyPerPledge`. Seed wishes are
 IMPORTED stated interest. Stable option and wish keys map to workspace-local
@@ -136,10 +136,22 @@ workspace, and persists the result as a labeled seed run. It makes no model call
 
 The maker can paste wishes one per line. Import considers at most 100 lines,
 skips blank or overlong text, and respects the workspace's 200-wish limit under
-the same lock. It reports added and skipped counts; imported wishes are IMPORTED.
-The seed catalog describes one maker, US shipping, and USD amounts. Shipping
+the same lock. Matching imported text is merged into an existing wish with an
+additional occurrence count; it does not add fans or payment units. The result
+reports added, merged, and skipped counts; new imported wishes are IMPORTED.
+Each scenario describes one maker, US shipping, and USD amounts. Shipping
 addresses are retained by payment handling, but their country is not validated
 against the catalog region.
+
+## Maker review workbench
+
+The proposal and dedicated wish review pages use AG Grid Community 36.3.0 for
+local filtering, sorting, and selection. Server-rendered forms remain available
+when JavaScript or the CDN is unavailable. Bulk changes are validated on the
+server and retain the original analysis. Displayed quotes must match the source
+text literally; otherwise evidence is unavailable. The Charts Community 14.3.0
+asset is available for page-specific use; the workbench does not require a chart.
+See [data tools](data-tools.md) for exact assets, scope, and behavior.
 
 ## Wish analysis
 
@@ -362,7 +374,7 @@ and [Payments v2 schema](https://developer.paypal.com/api/payments/v2/schema.jso
 |---|---|---|
 | Create order | `CREATED`, `SAVED`, `APPROVED`, `VOIDED`, `COMPLETED`, `PAYER_ACTION_REQUIRED` | `PAYER_ACTION_REQUIRED` to `CREATED`; `SAVED` to `PENDING` |
 | Authorize order; read authorization | `CREATED`, `CAPTURED`, `DENIED`, `PARTIALLY_CAPTURED`, `VOIDED`, `PENDING` | `DENIED` to `DECLINED`; `PARTIALLY_CAPTURED` to `CAPTURED` |
-| Capture authorization; read capture | `COMPLETED`, `DECLINED`, `PARTIALLY_REFUNDED`, `PENDING`, `REFUNDED`, `FAILED` | `PARTIALLY_REFUNDED` to `PENDING` |
+| Capture authorization; read capture | `COMPLETED`, `DECLINED`, `PARTIALLY_REFUNDED`, `PENDING`, `REFUNDED`, `FAILED` | None |
 | Refund capture; read refund | `CANCELLED`, `FAILED`, `PENDING`, `COMPLETED` | `CANCELLED` to `FAILED` |
 | Void authorization | Empty 204, or 200 authorization representation | Empty response to `VOIDED`; representation uses authorization mappings |
 
@@ -370,10 +382,10 @@ Other status names return `INVALID_RESPONSE`, including names valid only for
 another resource. Documented resource states return `PaymentResult.Received`;
 that does not imply the requested operation completed. In particular, a created
 order requiring payer action succeeds before buyer approval. The existing port
-has no partial-payment states: `CAPTURED` on an authorization indicates capture
-evidence, never completed full payment; a partially refunded capture remains
-unresolved as `PENDING`, never a full refund or fully available payment. Callers
-must reconcile the capture/refund resources before counting money. Authorization
+does not represent partial captures: `CAPTURED` on an authorization indicates
+capture evidence, never completed full payment. A partially refunded capture
+retains `PARTIALLY_REFUNDED` and remains unresolved, not a full refund or fully
+available payment. Callers must reconcile the capture/refund resources before counting money. Authorization
 expiry remains available through the expiry field and `AUTHORIZATION_EXPIRED`
 error mapping; `EXPIRED` is not a documented authorization response status.
 
@@ -421,11 +433,11 @@ so tests in different worktrees never share data.
 `tools/worktree.sh add` assigns each worktree its own port from 8201 to 8209;
 pass it as `SERVER_PORT` when running the application there.
 
-H2 creates its disposable schema automatically. PostgreSQL has no checked-in
-migration or automatic table initialization by default. The Compose demo command
-explicitly enables Hibernate schema updates; a plain server health response does
-not prove that workspace tables exist. Database locks and independent payment
-checkpoints require a connection pool of at least two connections.
+H2 and PostgreSQL run the compatibility upgrade before JPA initialization;
+Hibernate defaults to `update` and halts on schema errors. See
+[startup schema upgrades](schema-upgrades.md) for ordering, supported changes,
+and limitations. Database locks and independent payment checkpoints require at
+least two connections; enabled webhook processing requires at least three.
 
 For settlement invariants and decision records, see [reliability](reliability.md)
 and [provenance](provenance.md). For evidence and limitations, see [evaluation](evaluation.md) and the

@@ -21,8 +21,9 @@ provider or bank processing, production, or delivery.
 Payment intents, responses, and checkpoints are persisted independently of the
 coordinating transaction. Retries reuse stable per-pledge, per-operation
 idempotency keys. Provider resource reads resolve ambiguous results; pending
-captures are not counted as paid. Reads and a minute tick reconcile outstanding
-work. A verified sandbox webhook can trigger the same reconciliation, but its
+captures are not counted as paid. A partial refund remains a distinct unresolved
+state requiring attention, not a completed full refund. Reads and a minute
+tick reconcile outstanding work. A verified sandbox webhook can trigger the same reconciliation, but its
 payload does not set payment state. See the [webhook contract](../src/main/kotlin/app/paypal/README.md).
 
 The offline [sequence test](../src/test/kotlin/app/campaign/InvariantSequenceTest.kt)

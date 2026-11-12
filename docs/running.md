@@ -43,21 +43,18 @@ automatically. Inject any service credentials into the process environment.
 
 ## Docker Compose and PostgreSQL
 
-Install Docker with Compose and start its engine. For a fresh database, run:
+Install Docker with Compose and start its engine:
 
 ```sh
-docker compose run --build --rm --service-ports \
-  -e SPRING_JPA_HIBERNATE_DDL_AUTO=update app
+docker compose up --build
 ```
 
-This starts PostgreSQL, waits for its health check, builds the app, and runs it
-in the foreground on <http://localhost:8200/>. The explicit Hibernate setting
-creates/updates the disposable database tables. Pass it as an environment
-variable: the image's entrypoint does not forward command arguments to Java.
-The unmodified
-`docker compose up --build` starts the server but does not initialize PostgreSQL
-tables: on an empty volume, creating a demo fails. No schema migrations are
-provided. Do not use automatic schema updates as a production migration plan.
+This starts PostgreSQL, waits for its health check, builds the app, and serves
+it on <http://localhost:8200/>. The application performs a compatibility upgrade
+before JPA and defaults to Hibernate `update` on H2 and PostgreSQL. See
+[startup schema upgrades](schema-upgrades.md) for supported changes, explicit
+overrides, and mixed-version restrictions. Tests exercise disposable H2 and
+isolated PostgreSQL schemas; they do not establish a hosted database upgrade.
 
 In another terminal:
 
@@ -66,7 +63,7 @@ curl -i http://localhost:8200/
 ```
 
 Choose **Start a demo** in the browser and follow the same journey as the Gradle
-path. Stop the app with Ctrl+C, then stop the database with `docker compose stop`.
+path. Stop the app and database with Ctrl+C or `docker compose stop`.
 The named PostgreSQL volume survives stops and `docker compose down`. Run
 `docker compose down --volumes` only when deliberately discarding that demo data.
 
@@ -84,7 +81,7 @@ is required, especially `PAYPAL_BASE_URL`, `LLM_MODEL`, and `LLM_DAILY_RUN_CAP`.
 | Pages, wishes, stored analysis, offer publication | None | `SERVER_PORT`, `PRODUCT_NAME` |
 | Sandbox checkout and settlement | `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` | `PAYPAL_BASE_URL` defaults to the only accepted sandbox URL |
 | Fresh analysis | `LLM_API_KEY` | `LLM_MODEL` defaults to `gpt-6.1-sol`; `LLM_DAILY_RUN_CAP` defaults to 100 provider calls |
-| Persistent database outside Compose | `DATABASE_URL`, appropriate `DB_USERNAME` and `DB_PASSWORD` | Disposable PostgreSQL also needs explicit schema creation |
+| Persistent database outside Compose | `DATABASE_URL`, appropriate `DB_USERNAME` and `DB_PASSWORD` | See [schema upgrades](schema-upgrades.md) for supported databases and settings |
 
 Use sandbox REST application credentials and a sandbox buyer account. After
 publishing an offer, open its fan link, choose a quantity, select **Update total**,

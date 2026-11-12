@@ -59,8 +59,8 @@ without credentials. Reanalysis needs `LLM_API_KEY`; sandbox checkout needs
 `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` from a sandbox REST application,
 plus a sandbox buyer account for approval. Keep secret values outside Git.
 
-For PostgreSQL, use the [Compose path](docs/running.md#docker-compose-and-postgresql),
-including its explicit schema initialization setting. See the
+For PostgreSQL, use the [Compose path](docs/running.md#docker-compose-and-postgresql).
+See [startup schema upgrades](docs/schema-upgrades.md) and the
 [configuration reference](docs/architecture.md#configuration) for defaults and
 which advertised keys are currently unused. Do not source the blank example
 file as configuration.
@@ -81,7 +81,10 @@ Validation requires complete, unique coverage; removes unknown references and
 quotes absent from the source text; discards invented commercial terms and
 unsupported variants; rejects multiple proposals; and rebuilds unserved groups
 from the verdicts. Quote checks establish textual grounding, not correct
-interpretation. Failed runs preserve the last valid result.
+interpretation. Failed runs preserve the last valid result. The maker can review
+wishes in a filterable table and record corrections without rewriting the
+original analysis. Literal quotes that cannot be matched remain unavailable.
+See [data tools](docs/data-tools.md).
 
 **No offer price, cost, payment amount, or funding threshold comes from the
 model.** The maker sets commercial terms; server code computes money in integer
@@ -110,7 +113,8 @@ Pending captures, voids, and refunds remain visible and are reconciled on reads
 and a minute tick. Verified sandbox webhooks can also trigger reconciliation;
 registration and deployment are separate steps. See the
 [webhook contract](src/main/kotlin/app/paypal/README.md). Stable per-pledge,
-per-operation idempotency keys are reused on retries and recovery. The client rejects every API base URL except
+per-operation idempotency keys are reused on retries and recovery. The client
+rejects every API base URL except
 `https://api-m.sandbox.paypal.com` at startup.
 
 The client uses Orders v2 create/authorize and Payments v2 capture/void/refund
@@ -127,23 +131,23 @@ server-rendered pages, and checkout JavaScript. Tests use fakes or stubs and no
 provider credentials. On 2026-11-12, a fresh anonymous public clone at
 `24423a5` started
 without credentials using JDK 21 and `./gradlew bootRun`; a new workspace
-displayed the stored postcard proposal. The corrected Compose command in the
-[running guide](docs/running.md#docker-compose-and-postgresql) also created a
-PostgreSQL workspace with the stored proposal.
+displayed the stored postcard proposal. A Compose run at that historical
+baseline also created a PostgreSQL workspace with the stored proposal.
 
 An earlier hosted manual check on 2026-11-12 followed the guide through one
-sandbox authorization and completed capture. A separate local manual check
-also completed a sandbox capture. These checks do not establish that the current
-source is deployed or that the webhook is registered and receiving events.
-They were not automated provider tests or independent first-time-user studies.
+sandbox authorization and completed capture. A separate local manual check at
+the historical `24423a5` baseline also completed a sandbox capture. The current
+source has not completed that golden-path check. These checks do not establish
+that the current source is deployed or that the webhook is registered and
+receiving events. They were not automated provider tests or independent first-time-user studies.
 Cancellation, withdrawal, refund, live reanalysis, cold start after idle, and
 persistence across a service restart were not repeated in that verification.
 
 The offline deterministic settlement sequence test exercises 16 seeds with 64
 actions each using a fake gateway; it is not a provider or hosted test. The
-standalone decision-record service and read views exist, but lifecycle recording
-is not yet integrated, so existing pledges report unavailable records. A pledge
-is not linked to a particular wish by inference. See [reliability](docs/reliability.md)
+decision record captures analysis and offer snapshots and payment checkpoints.
+Earlier missing evidence remains unavailable; a pledge is not linked to a
+particular wish by inference. See [reliability](docs/reliability.md)
 and [provenance](docs/provenance.md).
 
 [Historical evaluation](docs/evaluation.md) covers a former illustrator seed
