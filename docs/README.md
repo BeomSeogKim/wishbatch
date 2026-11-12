@@ -13,6 +13,7 @@ Read the guide matching the task, rather than loading every policy at startup.
 | [CI guards](contributing/ci-guards.md) | Changing checks, hooks, workflows, or action dependencies |
 | [Architecture](architecture.md) | Adding or changing application code, configuration, or module interfaces |
 | [Running locally](running.md) | Starting the application or running tests |
+| [Design system](design.md) | Building pages with shared tokens, components, and payment wording |
 
 Keep this index current when adding or moving a guide. Rules apply equally to
 human and automated contributors. External references are supporting sources,

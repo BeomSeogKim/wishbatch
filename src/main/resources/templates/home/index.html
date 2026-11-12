@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: page('Make with a clearer picture', ~{::main})}">
+<body>
+<main id="main">
+    <section class="hero shell" aria-labelledby="hero-title">
+        <div class="hero-copy">
+            <p class="eyebrow"><span class="small-line" aria-hidden="true"></span> For makers &amp; their people</p>
+            <h1 id="hero-title">Many wishes.<br>One batch.<br><span>Made with clarity.</span></h1>
+            <p class="hero-promise">Shape your fans' wishes into one offer, then make the batch when enough payments complete.</p>
+            <form th:action="@{/demo}" method="post" class="hero-action">
+                <button class="button button-primary" type="submit">Start a demo <span aria-hidden="true">&#8599;</span></button>
+                <span class="action-note">Explore a sample maker workspace.</span>
+            </form>
+            <a class="quiet-link" href="#testing">Read the testing guide <span aria-hidden="true">&#8594;</span></a>
+        </div>
+        <div class="hero-visual" aria-label="Synthetic example: a desk print moving from wishes to a batch">
+            <div class="visual-caption"><span class="status-dot" aria-hidden="true"></span> A little idea, taking shape <span class="sample-label">Sample</span></div>
+            <div class="print-stage">
+                <span class="wish-note note-one">Something for my desk.</span>
+                <span class="wish-note note-two">Small print, please!</span>
+                <div class="art-print">
+                    <svg viewBox="0 0 220 260" role="img" aria-labelledby="art-title">
+                        <title id="art-title">Original illustration of a sun rising over layered hills</title>
+                        <rect width="220" height="260" fill="#f4ead8"/>
+                        <circle cx="143" cy="84" r="37" fill="#bd643f"/>
+                        <path d="M0 168Q65 82 129 165T260 161V260H0Z" fill="#83917a"/>
+                        <path d="M0 218Q76 118 149 196T260 183V260H0Z" fill="#365f51"/>
+                        <path d="M0 251Q104 185 220 239V260H0Z" fill="#183d34"/>
+                        <path d="M33 35h28M47 21v28" stroke="#baab8d" stroke-width="1.5"/>
+                    </svg>
+                    <span>THE SLOW MORNING / 01</span>
+                </div>
+                <span class="print-stamp">A5<br>desk print</span>
+            </div>
+            <div class="sample-offer"><div><p class="eyebrow">One clear offer</p><h2>The slow morning print</h2></div><span class="badge badge-neutral">Maker confirmed</span></div>
+            <div class="sample-counts"><div><span>Stated interest</span><strong>48</strong></div><div><span>Authorized holds</span><strong>24</strong></div><div><span>Paid</span><strong>0</strong></div></div>
+            <p class="visual-footnote">Illustrative counts. Wishes and holds are not payments.</p>
+        </div>
+    </section>
+    <section id="how-it-works" class="how-section shell" aria-labelledby="how-title">
+        <div class="section-heading"><p class="eyebrow">From listening to making</p><h2 id="how-title">A thoughtful path to a batch.</h2><p>Less guesswork. A clear offer everyone can understand.</p></div>
+        <ol class="journey-grid">
+            <li><span class="journey-number">01 / LISTEN</span><h3>Gather the wishes.</h3><p>Fans say what they would like. AI groups compatible requests around formats you can produce.</p></li>
+            <li><span class="journey-number">02 / SHAPE</span><h3>Make the offer yours.</h3><p>You choose the product, price, minimum batch, and delivery terms. Fans authorize that exact offer through PayPal.</p></li>
+            <li><span class="journey-number">03 / CONFIRM</span><h3>Make when payments complete.</h3><p>Confirm production once enough units have holds. Only completed payments count toward funding the batch.</p></li>
+        </ol>
+    </section>
+    <section class="clarity-section shell" aria-labelledby="clarity-title">
+        <div class="section-heading"><p class="eyebrow">Different numbers. Different meanings.</p><h2 id="clarity-title">Interest is a signal.<br>Payment is a commitment.</h2><p>Keep the whole picture in view, from the first wish to the final payment.</p></div>
+        <div><p class="sample-label example-label">Synthetic campaign example / minimum 30 units</p><div th:replace="~{fragments/components :: counts(48, 24, 0, 30)}"></div></div>
+        <p class="clarity-note">If too few payments complete, completed payments are refunded and remaining holds are released. Timing depends on PayPal and your bank or card.</p>
+    </section>
+    <section id="testing" class="testing-section shell" aria-labelledby="testing-title">
+        <div><p class="eyebrow">Take a closer look</p><h2 id="testing-title">A safe place to try the flow.</h2><p>This prototype uses the PayPal sandbox. Production and delivery are the maker's responsibility.</p></div>
+        <ol class="testing-list">
+            <li>Choose <strong>Start a demo</strong> to open a sample workspace.</li>
+            <li>Follow the maker steps to review wishes, shape an offer, and open a campaign.</li>
+            <li>When testing the payment flow, use a PayPal sandbox buyer account. A hold is not a completed payment.</li>
+        </ol>
+    </section>
+</main>
+</body>
+</html>
