@@ -59,9 +59,11 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
             } else {
                 assertContains(count, "value=\"$value\"")
                 assertContains(count, "max=\"30\"")
+                assertContains(count, ">$value of 30</progress>")
                 assertEquals(1, Regex("<progress\\b").findAll(count).count())
             }
         }
+        assertContains(counts, "Wishes classified as requests. These are not orders.")
         assertEquals(2, Regex("<progress\\b").findAll(counts).count())
         assertEquals(1, Regex("aria-current=\"step\"").findAll(html).count())
         val currentStep = Regex(

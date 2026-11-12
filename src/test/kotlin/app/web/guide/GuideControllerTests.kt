@@ -36,7 +36,7 @@ class GuideControllerTests(@Autowired private val mvc: MockMvc) {
         val actions = listOf(
             "Start a demo.",
             "Look at the wishes.",
-            "Run the analysis and read the evidence.",
+            "Read the stored analysis and evidence.",
             "Confirm the offer.",
             "Open the fan offer page.",
             "Authorize with PayPal: choose quantity 3.",
@@ -49,7 +49,9 @@ class GuideControllerTests(@Autowired private val mvc: MockMvc) {
         assertContains(steps, "Keep the demo minimum at 3 units")
         assertContains(steps, "in a new tab")
         assertContains(steps, "capture can still fail")
-        assertContains(html, "Stated interest counts wishes compatible with the offer")
+        assertContains(steps, "Update total")
+        assertContains(steps, "15 minutes")
+        assertContains(html, "Stated interest counts wishes classified as requests")
         assertContains(html, "Authorized holds count offer units with payment authorization")
         assertContains(html, "Paid counts units whose payments have completed")
         assertContains(html, "Start a fresh demo")

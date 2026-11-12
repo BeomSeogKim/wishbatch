@@ -5,20 +5,20 @@
     <div class="count count-interest">
         <p class="count-label">Stated interest</p>
         <p class="count-value" th:text="${interest}">48</p>
-        <p class="count-caption">Compatible wishes. These are not orders.</p>
+        <p class="count-caption">Wishes classified as requests. These are not orders.</p>
     </div>
     <div class="count count-authorized">
         <p class="count-label">Authorized holds</p>
         <p class="count-value" th:text="${authorized}">24</p>
         <p class="count-caption">Units with a payment hold. Not paid yet.</p>
-        <progress class="progress-authorized" th:value="${authorized}" th:max="${minimum}" aria-label="Authorized units toward minimum batch">24 of 30</progress>
+        <progress class="progress-authorized" th:value="${authorized}" th:max="${minimum}" th:text="|${authorized} of ${minimum}|" aria-label="Authorized units toward minimum batch">24 of 30</progress>
         <p class="count-target"><span th:text="${authorized}">24</span> / <span th:text="${minimum}">30</span> minimum units</p>
     </div>
     <div class="count count-paid">
         <p class="count-label">Paid</p>
         <p class="count-value" th:text="${paid}">0</p>
         <p class="count-caption">Units with completed payments.</p>
-        <progress class="progress-paid" th:value="${paid}" th:max="${minimum}" aria-label="Paid units toward minimum batch">0 of 30</progress>
+        <progress class="progress-paid" th:value="${paid}" th:max="${minimum}" th:text="|${paid} of ${minimum}|" aria-label="Paid units toward minimum batch">0 of 30</progress>
         <p class="count-target"><span th:text="${paid}">0</span> / <span th:text="${minimum}">30</span> minimum units</p>
     </div>
 </section>
