@@ -83,6 +83,28 @@ counts. They are stored, computed, and shown separately.
   `InMemoryWishAnalyzer`, and `fixedClock`. The fakes record calls and consume
   typed FIFO scripts without making external calls.
 
+## Workspaces and seed data
+
+`app.campaign.workspace.WorkspaceService.create()` atomically persists a new
+workspace and its options and wishes through `EntityManager`. Tokens contain
+256 secure random bits encoded as unpadded URL-safe Base64. `findByToken`
+returns null for an invalid or missing token; scoped operations reject it.
+`listOptions`, `listWishes`, `addWish`, and `setWishHidden` always resolve the
+workspace token before accessing its data. Intake creates ONSITE wishes,
+trims text and optional names, limits text to 500 characters and names to
+255, and locks the workspace to enforce 200 total wishes, including hidden
+ones. `listWishes` includes hidden wishes by default; analysis callers use
+`includeHidden = false`.
+
+`SeedCatalog` loads and validates `seed/options.json` and `seed/wishes.json`
+at startup. The maker, characters, and fan comments are synthetic. Costs and
+production limits are demo-scale, and the default maximum pledge quantity is
+three, available as `definition.defaultMaxQtyPerPledge`. Seed wishes are
+IMPORTED stated interest. Stable option and wish keys map to workspace-local
+UUIDs through `optionId` and `wishId`, so stored analysis can remap references
+without sharing records. Workspace creation seeds only options and wishes;
+analysis storage and payment reconciliation belong to their own services.
+
 ## Configuration
 
 Configuration comes from environment variables. [.env.example](../.env.example)
