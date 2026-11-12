@@ -48,6 +48,8 @@ class DecisionRecordService(private val entities: EntityManager, private val map
     /**
      * Call at pledge creation and every persisted payment checkpoint. No wish association
      * is inferred from offer evidence. Repeated unchanged checkpoints append nothing.
+     * Source drift is reported on reads without blocking payment evidence. Identity or
+     * chain corruption still throws and rolls back the caller's joined transaction.
      */
     fun recordPledge(pledge: Pledge) {
         entities.flush()
@@ -76,10 +78,11 @@ class DecisionRecordService(private val entities: EntityManager, private val map
                 "terms" to offerSnapshot?.let { mapper.readTree(it.payload) },
             )))
         }
-        check(record.workspaceId == offer.workspaceId && record.campaignId == campaign.id && record.offerId == offer.id)
+        check(record.workspaceId == offer.workspaceId && record.campaignId == campaign.id && record.offerId == offer.id) {
+            "Stored decision record identity changed"
+        }
         val entries = entries(pledge.id)
         check(chainValid(record, entries)) { "Stored decision record failed integrity verification" }
-        check(sourcesValid(record, entries)) { "Stored decision sources changed" }
         val payment = paymentPayload(pledge)
         if (entries.lastOrNull { it.kind == "PAYMENT" }?.payload != payment) append(record, "PAYMENT", payment)
     }

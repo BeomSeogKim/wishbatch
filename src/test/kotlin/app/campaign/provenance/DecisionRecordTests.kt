@@ -170,6 +170,11 @@ class DecisionRecordTests @Autowired constructor(
         assertEquals(3, changed.entries.size)
         assertEquals(original.lastHash, changed.lastHash)
         assertEquals("CHANGED", changed.integrity)
+        val pledge = entities.find(Pledge::class.java, fixture.pledge.id)
+        pledge.state = PledgeState.REFUNDED
+        pledge.refundId = "later-refund"
+        assertEquals("Stored decision record failed integrity verification",
+            assertFailsWith<IllegalStateException> { records.recordPledge(pledge) }.message)
     }
 
     @Test
@@ -183,10 +188,13 @@ class DecisionRecordTests @Autowired constructor(
             .setParameter("offer", replacement.id).setParameter("id", fixture.pledge.campaignId).executeUpdate()
         entities.clear()
         assertEquals("CHANGED", document(fixture).pledges.single().integrity)
+        assertEquals("Stored decision record identity changed", assertFailsWith<IllegalStateException> {
+            records.recordPledge(entities.find(Pledge::class.java, fixture.pledge.id))
+        }.message)
     }
 
     @Test
-    fun `deleted source is detected and immutable snapshots cannot be replaced`() {
+    fun `deleted source remains visible after later payment checkpoints`() {
         val fixture = fixture()
         snapshot(fixture)
         entities.createNativeQuery("delete from decision_source_snapshots where source_id = :id")
@@ -195,7 +203,49 @@ class DecisionRecordTests @Autowired constructor(
         assertEquals("CHANGED", document(fixture).pledges.single().integrity)
         val changed = entities.find(Pledge::class.java, fixture.pledge.id)
         changed.paypalOrderId = "new-order"
-        assertFailsWith<IllegalStateException> { records.recordPledge(changed) }
+        records.recordPledge(changed)
+        entities.flush()
+        entities.clear()
+        val saved = document(fixture).pledges.single()
+        assertEquals("CHANGED", saved.integrity)
+        assertEquals(5, saved.entries.size)
+        assertEquals("new-order", saved.entries.last().payload["orderId"].asString())
+        assertTrue(document(fixture).sources.none { it.sourceId == fixture.offer.id })
+    }
+
+    @Test
+    fun `edited wish text does not block later refund or release and reads still report source drift`() {
+        for (state in listOf(PledgeState.REFUNDED, PledgeState.VOIDED)) {
+            val fixture = fixture()
+            fixture.pledge.paypalOrderId = "sandbox-order"
+            fixture.pledge.authorizationId = "sandbox-authorization"
+            fixture.pledge.state = if (state == PledgeState.REFUNDED) PledgeState.CAPTURED else PledgeState.AUTHORIZED
+            if (state == PledgeState.REFUNDED) fixture.pledge.captureId = "sandbox-capture"
+            snapshot(fixture)
+            val baseline = document(fixture)
+            entities.createNativeQuery("update wishes set text = 'Edited wish after analysis' where id = :id")
+                .setParameter("id", fixture.wish.id).executeUpdate()
+            entities.clear()
+            val pledge = entities.find(Pledge::class.java, fixture.pledge.id)
+            pledge.state = state
+            if (state == PledgeState.REFUNDED) pledge.refundId = "sandbox-refund"
+            records.recordPledge(pledge)
+            entities.flush()
+            entities.clear()
+            assertEquals(state, entities.find(Pledge::class.java, fixture.pledge.id).state)
+            val saved = document(fixture)
+            assertEquals(baseline.sources, saved.sources)
+            assertEquals(baseline.pledges.single().entries, saved.pledges.single().entries.dropLast(1))
+            assertEquals(state.name, saved.pledges.single().entries.last().payload["state"].asString())
+            val expectedIssue = "Analysis input or offer differs from its recorded snapshot, or a source is missing."
+            assertEquals(listOf(expectedIssue), saved.pledges.single().issues)
+            val path = "/w/${fixture.workspace.token}/maker/decision-record"
+            val json = mapper.readTree(mvc.get("$path.json").andExpect { status { isOk() } }
+                .andReturn().response.contentAsString)
+            assertEquals("CHANGED", json["pledges"][0]["integrity"].asString())
+            assertEquals(listOf(expectedIssue), json["pledges"][0]["issues"].toList().map { it.asString() })
+            assertContains(mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString, expectedIssue)
+        }
     }
 
     @Test
