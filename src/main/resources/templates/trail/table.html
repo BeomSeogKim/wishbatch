@@ -4,10 +4,12 @@
 <section th:fragment="table(entries)" aria-label="Money trail" data-money-trail>
     <h2>Recorded payment checkpoints</h2>
     <p th:if="${#lists.isEmpty(entries)}">No payment checkpoints recorded.</p>
-    <table th:unless="${#lists.isEmpty(entries)}">
-        <thead><tr><th>Pledge ID</th><th>Checkpoint time (UTC)</th><th>Status</th><th>Provider ID</th><th>Amount</th></tr></thead>
-        <tbody><tr th:each="entry : ${entries}"><td th:text="${entry.pledgeId}"></td><td th:text="${entry.checkpoint}"></td><td th:text="${entry.status}"></td><td th:text="${entry.providerId ?: 'Unknown'}"></td><td th:text="${entry.amount}"></td></tr></tbody>
-    </table>
+    <div th:unless="${#lists.isEmpty(entries)}" class="table-scroll checkpoint-table-scroll" tabindex="0" role="region" aria-label="Recorded payment checkpoints">
+        <table>
+            <thead><tr><th>Pledge ID</th><th>Checkpoint time (UTC)</th><th>Status</th><th>Provider ID</th><th>Amount</th></tr></thead>
+            <tbody><tr th:each="entry : ${entries}"><td th:text="${entry.pledgeId}"></td><td th:text="${entry.checkpoint}"></td><td th:text="${entry.status}"></td><td th:text="${entry.providerId ?: 'Unknown'}"></td><td th:text="${entry.amount}"></td></tr></tbody>
+        </table>
+    </div>
 </section>
 </body>
 </html>

@@ -33,7 +33,7 @@
             <button id="books-fallback-toggle" class="button button-secondary" type="button" aria-controls="books-fallback" aria-expanded="false">Show accessible table</button>
         </div>
         <div id="books-grid" hidden aria-label="Pledge payment comparison"></div>
-        <div id="books-fallback" class="table-scroll">
+        <div id="books-fallback" class="table-scroll" tabindex="0" role="region" aria-label="Recorded pledge comparisons">
             <table id="books-table">
                 <caption>Recorded pledge comparisons. Money is formatted from integer minor units on the server.</caption>
                 <thead><tr><th scope="col">Pledge</th><th scope="col">Units</th><th scope="col">Amount</th><th scope="col">Local before</th><th scope="col">PayPal before</th><th scope="col">Match before</th><th scope="col">Local after</th><th scope="col">PayPal after</th><th scope="col">Match after</th></tr></thead>

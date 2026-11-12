@@ -87,6 +87,7 @@ class MoneyTrailWebTests @Autowired constructor(
                 string(org.hamcrest.Matchers.containsString("cap-1"))
                 string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("other-capture")))
                 string(org.hamcrest.Matchers.containsString("local recording checkpoints"))
+                string(org.hamcrest.Matchers.containsString("class=\"table-scroll checkpoint-table-scroll\" tabindex=\"0\" role=\"region\" aria-label=\"Recorded payment checkpoints\""))
             }
         }
         mvc.get("/w/${other.token}/pledges/${pledge.id}").andExpect { status { isNotFound() } }

@@ -210,6 +210,11 @@ input:disabled { background: var(--surface-soft); color: var(--muted); cursor: n
 .step-rail .is-complete { border-color: var(--accent); }
 .is-complete .step-number { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
 .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.checkpoint-table-scroll th, .checkpoint-table-scroll td { min-width: 140px; }
+.checkpoint-table-scroll th:nth-child(4), .checkpoint-table-scroll td:nth-child(4) { min-width: 240px; overflow-wrap: anywhere; }
+#books-table th, #books-table td { min-width: 130px; }
+#books-table th:nth-child(5), #books-table td:nth-child(5), #books-table th:nth-child(8), #books-table td:nth-child(8) { min-width: 300px; }
+.option-table-scroll th, .option-table-scroll td { min-width: 150px; }
 table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: .875rem; text-align: left; }
 caption { text-align: left; padding: 20px; font-weight: 650; }
 th, td { padding: 16px 20px; vertical-align: top; border-top: 1px solid var(--line); }

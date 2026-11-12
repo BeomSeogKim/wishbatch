@@ -201,6 +201,7 @@ class BooksCheckTests @Autowired constructor(
         val html = mvc.get(requireNotNull(response.redirectedUrl)).andExpect { status { isOk() } }
             .andReturn().response.contentAsString
         assertContains(html, "books-table")
+        assertContains(html, "id=\"books-fallback\" class=\"table-scroll\" tabindex=\"0\" role=\"region\" aria-label=\"Recorded pledge comparisons\"")
         assertContains(html, "USD 6.00")
         assertContains(html, "MATCH")
         assertContains(html, "Check history")
