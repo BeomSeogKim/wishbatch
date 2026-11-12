@@ -3,7 +3,7 @@ name: Keep warm
 on:
   workflow_dispatch:
   schedule:
-    - cron: '7-57/10 * * * *'
+    - cron: '3,13,23,33,43,53 * * * *'
 
 permissions:
   contents: read
