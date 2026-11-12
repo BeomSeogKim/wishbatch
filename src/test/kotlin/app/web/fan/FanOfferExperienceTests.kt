@@ -38,6 +38,7 @@ import java.util.Base64
 import java.util.Locale
 import java.util.UUID
 import kotlin.test.assertContains
+import kotlin.test.assertNotNull
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -70,6 +71,10 @@ class FanOfferExperienceTests @Autowired constructor(
         assertContains(html, "data-live-action=\"pledge\"")
         assertContains(html, "data-live-campaign")
         assertContains(html, "Terms SHA-256:")
+        assertContains(html, "1 Jan 2026, 00:15 UTC")
+        val hash = assertNotNull(Regex("title=\"([a-f0-9]{64})\"").find(html)).groupValues[1]
+        assertContains(html, hash.take(8) + "…")
+        assertFalse(html.contains(">$hash</code>"))
         assertContains(html, "A5 archival print")
         assertContains(html, "Shipping included; dispatched in two weeks")
         for (label in listOf("Stated interest", "Authorized holds", "Paid")) assertContains(html, label)

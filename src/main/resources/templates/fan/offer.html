@@ -22,13 +22,13 @@
                         <th:block th:each="variant : ${campaign.offer.chosenVariants}">
                             <dt th:text="${@makerDisplay.catalogLabel(variant.key)}"></dt><dd th:text="${@makerDisplay.catalogLabel(variant.value)}"></dd>
                         </th:block>
-                        <dt>Unit price</dt><dd th:text="${unitPrice}"></dd>
+                        <dt>Unit price</dt><dd th:text="${@humanDisplay.money(campaign.offer.unitPrice, campaign.offer.currency)}"></dd>
                         <dt>Delivery terms</dt><dd th:text="${campaign.offer.deliveryTerms}"></dd>
                         <dt>Shipping region</dt><dd th:text="${campaign.offer.shipRegion}"></dd>
                         <dt>Minimum batch</dt><dd th:text="${campaign.offer.minBatch + ' units'}"></dd>
                         <dt>Capacity left</dt><dd><span data-live-field="capacityLeft" th:text="${campaign.capacityLeft}"></span> units</dd>
-                        <dt>Close time (UTC)</dt><dd><time data-live-field="closesAt" th:datetime="${campaign.closesAt}" th:text="${@makerDisplay.time(campaign.closesAt)}"></time></dd>
-                        <dt>Confirmation deadline (UTC)</dt><dd><time data-live-field="confirmDeadline" th:datetime="${campaign.confirmDeadline}" th:text="${@makerDisplay.time(campaign.confirmDeadline)}"></time></dd>
+                        <dt>Close time (UTC)</dt><dd><time data-live-field="closesAt" th:datetime="${campaign.closesAt}" th:text="${@humanDisplay.time(campaign.closesAt)}"></time></dd>
+                        <dt>Confirmation deadline (UTC)</dt><dd><time data-live-field="confirmDeadline" th:datetime="${campaign.confirmDeadline}" th:text="${@humanDisplay.time(campaign.confirmDeadline)}"></time></dd>
                     </dl>
                 </section>
                 <th:block th:if="${offerEvidence != null}">
@@ -37,7 +37,7 @@
             </div>
             <aside id="offer-commitment" class="card offer-commitment" th:classappend="${campaign.state.name() == 'FUNDED' or campaign.state.name() == 'NOT_FUNDED' ? 'offer-settled' : ''}" tabindex="-1" aria-label="Your commitment">
                 <p class="eyebrow">Your commitment · PayPal sandbox</p>
-                <p class="offer-price"><strong th:text="${unitPrice}"></strong> <span>per unit</span></p>
+                <p class="offer-price"><strong th:text="${@humanDisplay.money(campaign.offer.unitPrice, campaign.offer.currency)}"></strong> <span>per unit</span></p>
                 <div data-live-action="pledge" th:if="${campaignOpen}" class="offer-pledge" aria-label="Authorize a pledge">
                     <p th:if="${quote != null and quote.allowed}" class="offer-hold-note">Authorize a hold now. You are not charged yet.</p>
                     <h2 class="h3">Choose your quantity</h2>
@@ -52,7 +52,7 @@
                         </div>
                         <button class="button button-secondary" type="submit">Update total</button>
                     </form>
-                    <p th:if="${total != null}">Total to authorize: <strong id="pledge-total" th:text="${total}"></strong>
+                    <p th:if="${total != null}">Total to authorize: <strong id="pledge-total" th:text="${@humanDisplay.money(quote.amount, quote.currency)}"></strong>
                         for <span th:text="${quantity}"></span> <span th:text="${quantity == 1 ? 'unit' : 'units'}"></span>.</p>
                     <p th:if="${quoteError != null}" class="notice notice-warning" role="alert" th:text="${quoteError}"></p>
                     <details class="offer-disclosure">
@@ -83,7 +83,14 @@
                 </div>
                 <details class="offer-disclosure">
                     <summary>Published terms · verify the sealed offer</summary>
-                    <section th:replace="~{terms/seal :: seal(${termsSeal})}"></section>
+                    <section class="card stack" aria-labelledby="terms-seal-title">
+                        <h2 id="terms-seal-title">Published terms</h2>
+                        <p th:if="${termsSeal == null || termsSeal.availability == 'UNAVAILABLE'}">Terms hash unavailable: no usable publication snapshot was recorded.</p>
+                        <p th:if="${termsSeal != null &amp;&amp; termsSeal.availability == 'MISMATCH'}">Terms hash unavailable: the offer differs from its publication snapshot.</p>
+                        <p th:if="${termsSeal != null &amp;&amp; termsSeal.termsHash != null}">Terms SHA-256: <code th:text="${@humanDisplay.shortId(termsSeal.termsHash)}" th:title="${termsSeal.termsHash}" tabindex="0"></code></p>
+                        <p>Published at <time th:datetime="${termsSeal?.publishedAt}" th:text="${@humanDisplay.time(termsSeal?.publishedAt)}"></time></p>
+                        <p>This hash detects changes to recorded terms. It is not a financial guarantee or digital signature.</p>
+                    </section>
                 </details>
                 <details class="offer-disclosure">
                     <summary>Campaign status &amp; payment outcomes</summary>
@@ -93,7 +100,7 @@
             </aside>
         </div>
         <nav th:if="${campaignOpen and total != null}" data-live-action="pledge" class="offer-mobile-bar" aria-label="Review your pledge">
-            <div><span>Reviewed total · <span th:text="${quantity}"></span> <span th:text="${quantity == 1 ? 'unit' : 'units'}"></span></span><strong th:text="${total}"></strong></div>
+            <div><span>Reviewed total · <span th:text="${quantity}"></span> <span th:text="${quantity == 1 ? 'unit' : 'units'}"></span></span><strong th:text="${@humanDisplay.money(quote.amount, quote.currency)}"></strong></div>
             <a class="button button-primary" href="#offer-commitment">Review checkout</a>
         </nav>
     </th:block>
