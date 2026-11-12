@@ -247,7 +247,7 @@ class ProposalControllerTests(
         assertContains(html, "120-second time limit")
         assertContains(html, "addEventListener('submit'")
         assertContains(html, "setAttribute('aria-busy', 'true')")
-        assertContains(html, "document.getElementById('analysis-submit').disabled = true")
+        assertContains(html, "analysisButton.disabled = true")
     }
 
     @Test
