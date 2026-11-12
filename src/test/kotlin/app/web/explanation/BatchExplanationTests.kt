@@ -7,6 +7,8 @@ import app.campaign.model.CampaignState
 import app.campaign.model.Offer
 import app.campaign.model.Pledge
 import app.campaign.model.PledgeState
+import app.campaign.explanation.BatchExplanationQuery
+import app.campaign.workspace.SeedCatalog
 import app.campaign.port.ProposalEvidence
 import app.campaign.workspace.WorkspaceService
 import app.testing.InMemoryPaymentGateway
@@ -27,6 +29,7 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import tools.jackson.databind.json.JsonMapper
 import java.time.Instant
+import java.util.UUID
 import kotlin.test.assertContains
 import kotlin.test.assertFalse
 
@@ -36,6 +39,8 @@ import kotlin.test.assertFalse
 class BatchExplanationTests @Autowired constructor(
     private val workspaces: WorkspaceService,
     private val runs: AnalysisRunService,
+    private val explanation: BatchExplanationQuery,
+    private val seeds: SeedCatalog,
     private val entityManager: EntityManager,
     private val mapper: JsonMapper,
     private val mvc: MockMvc,
@@ -93,6 +98,80 @@ class BatchExplanationTests @Autowired constructor(
         val hiddenHtml = mvc.get("/w/${workspace.token}/how-this-batch-was-chosen")
             .andExpect { status { isOk() } }.andReturn().response.contentAsString
         assertFalse(HtmlUtils.htmlUnescape(hiddenHtml).contains(validQuote))
+    }
+
+    @Test
+    fun `stable route selects historical campaign and rejects missing or foreign campaigns`() {
+        val workspace = workspaces.create()
+        val other = workspaces.create()
+        val stored = runs.latest(workspace.token)!!
+        val option = requireNotNull(stored.output.proposal).optionId
+        val ids = transactions.execute {
+            fun campaign(title: String, state: CampaignState, opened: Instant): UUID {
+                val offer = Offer(workspace.id, option, stored.run.id, title, "Cards", emptyMap(),
+                    200, "USD", "Ships later", "US", 2, 10)
+                entityManager.persist(offer)
+                return Campaign(offer.id, state, openedAt = opened, closesAt = now.plusSeconds(900),
+                    confirmDeadline = now.plusSeconds(44100)).also(entityManager::persist).id
+            }
+            listOf(campaign("Historical offer", CampaignState.NOT_FUNDED, now.minusSeconds(10)),
+                campaign("Current offer", CampaignState.OPEN, now))
+        }!!
+        val path = "/w/${workspace.token}/campaigns/${ids[0]}/how-this-batch-was-chosen"
+        val html = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "Historical offer")
+        assertFalse(html.contains("Current offer"))
+        assertContains(html, "refunds and hold releases are attempted")
+        assertContains(html, "may still be pending or need attention")
+        val current = mvc.get("/w/${workspace.token}/how-this-batch-was-chosen")
+            .andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(current, "Current offer")
+        mvc.get("/w/${other.token}/campaigns/${ids[0]}/how-this-batch-was-chosen")
+            .andExpect { status { isNotFound() } }
+        mvc.get("/w/${workspace.token}/campaigns/${UUID.randomUUID()}/how-this-batch-was-chosen")
+            .andExpect { status { isNotFound() } }
+        mvc.get("/w/unknown/campaigns/${ids[0]}/how-this-batch-was-chosen")
+            .andExpect { status { isNotFound() } }
+    }
+
+    @Test
+    fun `funded result with current paid shortfall reports attention without asserting production`() {
+        val workspace = workspaces.create()
+        val stored = runs.latest(workspace.token)!!
+        val campaignId = transactions.execute {
+            val offer = Offer(workspace.id, requireNotNull(stored.output.proposal).optionId, stored.run.id,
+                "Earlier funded offer", "Cards", emptyMap(), 200, "USD", "Ships later", "US", 2, 10)
+            entityManager.persist(offer)
+            val campaign = Campaign(offer.id, CampaignState.FUNDED, openedAt = now,
+                closesAt = now.plusSeconds(900), confirmDeadline = now.plusSeconds(44100))
+            entityManager.persist(campaign)
+            entityManager.persist(Pledge(campaign.id, 2, 400, "USD", PledgeState.REFUNDED, createdAt = now))
+            campaign.id
+        }!!
+        val html = mvc.get("/w/${workspace.token}/campaigns/$campaignId/how-this-batch-was-chosen")
+            .andExpect { status { isOk() } }.andReturn().response.contentAsString
+        assertContains(html, "previously reached its paid minimum")
+        assertContains(html, "Current completed payments are below the minimum")
+        assertFalse(html.contains("production to proceed"))
+    }
+
+    @Test
+    fun `quotes exact synthetic scenario wishes without exposing unverified free text`() {
+        val workspace = workspaces.create()
+        val stored = runs.latest(workspace.token)!!
+        val seedId = seeds.wishId(workspace.id, "w01")
+        val option = requireNotNull(stored.output.proposal).optionId
+        val quote = "cobalt bowl"
+        val output = stored.output.copy(proposal = requireNotNull(stored.output.proposal).copy(
+            rationale = listOf(ProposalEvidence("", seedId, quote)),
+        ))
+        val runId = transactions.execute {
+            entityManager.createQuery("update Wish w set w.text = :text where w.id = :id")
+                .setParameter("text", "Please make a cobalt bowl.").setParameter("id", seedId).executeUpdate()
+            AnalysisRun(workspace.id, "synthetic", "hash", mapper.writeValueAsString(output), createdAt = now)
+                .also(entityManager::persist).id
+        }!!
+        assertContains(requireNotNull(explanation.evidence(workspace.id, runId, option)).quotes, quote)
     }
 
     @TestConfiguration(proxyBeanMethods = false)

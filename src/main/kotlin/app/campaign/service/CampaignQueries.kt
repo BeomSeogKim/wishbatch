@@ -49,6 +49,11 @@ class CampaignQueries(
         return service.readCampaign(CampaignRef(workspace.id, campaign.id))
     }
 
+    fun campaignById(workspaceToken: String, campaignId: UUID): ServiceResult<CampaignView> {
+        val workspace = workspaces.findByToken(workspaceToken) ?: return notFound()
+        return service.readCampaign(CampaignRef(workspace.id, campaignId))
+    }
+
     /** Checks the pledge window without reconciliation or payment calls; capacity is checked by quote. */
     fun isOpenForPledges(workspaceToken: String): Boolean =
         campaigns.existsOpenByToken(workspaceToken, CampaignState.OPEN, clock.instant())

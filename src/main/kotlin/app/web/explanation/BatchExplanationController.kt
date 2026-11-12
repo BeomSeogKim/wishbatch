@@ -3,6 +3,7 @@ package app.web.explanation
 import app.campaign.explanation.BatchExplanationQuery
 import app.campaign.model.CampaignState
 import app.campaign.service.CampaignQueries
+import app.campaign.service.CampaignView
 import app.campaign.service.ServiceResult
 import app.campaign.workspace.WorkspaceService
 import jakarta.servlet.http.HttpServletResponse
@@ -11,6 +12,7 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import java.math.BigDecimal
+import java.util.UUID
 
 @Controller
 class BatchExplanationController(
@@ -25,6 +27,23 @@ class BatchExplanationController(
             is ServiceResult.Success -> result.value
             is ServiceResult.Rejected -> null
         } ?: return notFound(response)
+        return render(token, workspace.id, campaign, model)
+    }
+
+    @GetMapping("/w/{token}/campaigns/{campaignId}/how-this-batch-was-chosen")
+    fun showCampaign(
+        @PathVariable token: String, @PathVariable campaignId: UUID, model: Model, response: HttpServletResponse,
+    ): String {
+        val workspace = workspaces.findByToken(token) ?: return notFound(response)
+        val campaign = when (val result = campaigns.campaignById(token, campaignId)) {
+            is ServiceResult.Success -> result.value
+            is ServiceResult.Rejected -> return notFound(response)
+        }
+        if (campaign.state == CampaignState.DRAFT) return notFound(response)
+        return render(token, workspace.id, campaign, model)
+    }
+
+    private fun render(token: String, workspaceId: UUID, campaign: CampaignView, model: Model): String {
         val offer = campaign.offer
         model.addAttribute("token", token)
         model.addAttribute("offerTitle", offer.title)
@@ -41,10 +60,12 @@ class BatchExplanationController(
             CampaignState.OPEN -> "Open: fans can seek authorization holds while the offer is available."
             CampaignState.AWAITING_CONFIRMATION -> "Awaiting confirmation: the maker must confirm before capture."
             CampaignState.SETTLING -> "Settling: PayPal payments and any required reversals are being processed."
-            CampaignState.FUNDED -> "Funded: enough payments completed for production to proceed."
-            CampaignState.NOT_FUNDED -> "Not funded: completed payments are refunded and remaining holds are released."
+            CampaignState.FUNDED -> "Funded: the campaign previously reached its paid minimum."
+            CampaignState.NOT_FUNDED -> "Not funded: refunds and hold releases are attempted; some may still be pending or need attention."
         })
-        model.addAttribute("evidence", evidence.evidence(workspace.id, offer.analysisRunId, offer.optionId))
+        model.addAttribute("paidShortfall", campaign.state == CampaignState.FUNDED && campaign.counts.paid < offer.minBatch)
+        model.addAttribute("paymentAttention", campaign.needsAttention.isNotEmpty())
+        model.addAttribute("evidence", evidence.evidence(workspaceId, offer.analysisRunId, offer.optionId))
         return "explanation/index"
     }
 

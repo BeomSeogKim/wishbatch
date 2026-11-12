@@ -2,5 +2,6 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 <a th:fragment="link(token)" th:href="@{/w/{token}/how-this-batch-was-chosen(token=${token})}">How this batch was chosen</a>
+<a th:fragment="campaignLink(token, campaignId)" th:href="@{/w/{token}/campaigns/{campaignId}/how-this-batch-was-chosen(token=${token},campaignId=${campaignId})}">How this batch was chosen</a>
 </body>
 </html>

@@ -19,7 +19,8 @@
             <figure class="evidence" th:each="quote : ${evidence.quotes}">
                 <blockquote><p th:text="${quote}"></p></blockquote><figcaption>Anonymous synthetic wish</figcaption>
             </figure>
-            <p th:if="${#lists.isEmpty(evidence.quotes)}">No public quotes are available for this offer.</p>
+            <p>Personal free-text wishes are not quoted because they have not been verified for public sharing.</p>
+            <p th:if="${#lists.isEmpty(evidence.quotes)}">No public synthetic quotes are available for this offer.</p>
         </th:block>
         <p th:if="${evidence == null}">Analysis evidence is unavailable for this offer.</p>
     </section>
@@ -49,10 +50,12 @@
             <dt>Authorized holds</dt><dd><span th:text="${counts.authorizedHolds}"></span> units with PayPal authorization holds; these are not completed payments.</dd>
             <dt>Paid</dt><dd><span th:text="${counts.paid}"></span> units with completed captures.</dd>
         </dl>
-        <p>After the minimum is authorized and the maker confirms, PayPal attempts capture. Only completed captures count toward the paid minimum for production. A capture can fail or remain pending. If too few payments complete, completed payments are refunded and remaining holds are released; pending or failed actions may still need attention.</p>
+        <p th:if="${paidShortfall}" class="notice notice-warning">Current completed payments are below the minimum. This campaign needs attention.</p>
+        <p th:if="${paymentAttention}" class="notice notice-warning">Some payment actions still need attention.</p>
+        <p>After the minimum is authorized and the maker confirms, PayPal attempts capture. Only completed captures count toward the paid minimum for production. A capture can fail or remain pending. If too few payments complete, refunds and releases of remaining holds are attempted; pending or failed actions may still need attention.</p>
         <p>PayPal and your bank or card determine when refunds or releases become available. Wishbatch does not hold your funds. Check your pledge status for your own outcome.</p>
     </section>
-    <p><a th:href="@{/w/{token}/offer(token=${token})}">View offer</a></p>
+    <p><a th:href="@{/w/{token}/offer(token=${token})}">View current offer</a></p>
 </main>
 </body>
 </html>
