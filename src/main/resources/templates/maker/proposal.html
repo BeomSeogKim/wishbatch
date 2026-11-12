@@ -102,14 +102,19 @@
             <p id="analysis-working" class="notice notice-info" role="status" aria-live="polite" hidden>Reading wishes and checking evidence… Please keep this page open.</p>
         </form>
     </div>
+    <div th:replace="~{workbench/table :: workbench}"></div>
     <th:block th:if="${stored != null}">
         <nav class="proposal-nav" aria-label="Proposal sections">
+            <a href="#wish-workbench">Wish workbench</a>
             <a th:if="${proposedOption != null}" href="#rationale">Quoted evidence</a>
             <a href="#option-counts">All options</a>
             <a href="#maker-questions">Open questions</a>
             <a th:if="${proposedOption != null}" href="#wish-groups">Wish groups</a>
             <a href="#run-details">Analysis details</a>
         </nav>
+        <th:block th:if="${nextBatchAvailable}">
+            <div th:replace="~{nextbatch/link :: link(${token}, ${stored.run.id})}"></div>
+        </th:block>
         <section th:if="${proposedOption != null}" class="preview-section" aria-labelledby="rationale">
             <div class="section-heading"><p class="eyebrow">Why this batch</p><h2 id="rationale">A claim needs a fan's words.</h2>
                 <p>Each quote is checked against its source. The interpretation is still yours to judge.</p></div>

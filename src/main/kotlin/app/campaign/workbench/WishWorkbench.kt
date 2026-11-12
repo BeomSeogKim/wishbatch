@@ -5,6 +5,7 @@ import app.campaign.model.Wish
 import app.campaign.model.WishKind
 import app.campaign.port.AnalysisOutput
 import app.campaign.port.AnalysisValidationFlag
+import app.campaign.review.WishReviewOverride
 import java.util.UUID
 
 data class WorkbenchLabel(val optionId: UUID, val optionName: String, val label: String, val reason: String) {
@@ -62,6 +63,8 @@ fun wishWorkbenchRows(
     options: List<Option>,
     output: AnalysisOutput?,
     flags: List<AnalysisValidationFlag>,
+    overrides: List<WishReviewOverride> = emptyList(),
+    originalOutput: AnalysisOutput? = output,
 ): List<WorkbenchRow> {
     val analyzed = output?.wishes.orEmpty().associateBy { it.wishId }
     val verdicts = output?.verdicts.orEmpty().associateBy { it.wishId to it.optionId }
@@ -70,13 +73,16 @@ fun wishWorkbenchRows(
         val quotes = result?.needs.orEmpty().map { it.quote } + output?.proposal?.rationale.orEmpty()
             .filter { it.wishId == wish.id }.map { it.quote }
         val rowFlags = flags.filter { flag ->
-            flag.path.contains(wish.id.toString()) ||
-                output?.wishes?.withIndex()?.any { (index, item) ->
-                    item.wishId == wish.id && indexedPath(flag.path, "wishes", index)
-                } == true || output?.verdicts?.withIndex()?.any { (index, item) ->
-                    item.wishId == wish.id && indexedPath(flag.path, "verdicts", index)
-                } == true
+            flag.path == "wishes[${wish.id}]" || flag.path.startsWith("wishes[${wish.id}].")
         }.map { "${it.rule}: ${it.message}" }
+        val decisions = overrides.filter { it.wishId == wish.id }.sortedBy { it.createdAt }
+        val readingFlags = originalOutput?.secondReading?.comparisons.orEmpty()
+            .filter { it.wishId == wish.id && it.needsYourEyes }.map { comparison ->
+                val optionName = options.firstOrNull { it.id == comparison.optionId }?.name ?: "Unknown option"
+                val status = if (decisions.any { it.optionId == comparison.optionId }) "Review recorded" else "Needs your eyes"
+                "$status: $optionName. First reading: ${comparison.firstKind} / ${comparison.firstVerdict ?: "Unclassified"}; " +
+                    "second reading: ${comparison.secondKind} / ${comparison.secondVerdict ?: "Unclassified"}."
+            }
         WorkbenchRow(
             id = wish.id,
             text = wish.text,
@@ -89,11 +95,15 @@ fun wishWorkbenchRows(
                 }, verdict?.reason.orEmpty())
             },
             evidence = quotes.distinct().filter { it.isNotBlank() && normalized(wish.text).contains(normalized(it)) },
-            flags = rowFlags,
+            flags = rowFlags + readingFlags,
             source = wish.source.name,
             language = "Unknown",
             hidden = wish.hidden,
-            provenance = emptyList(),
+            provenance = decisions.map { decision ->
+                val optionName = options.firstOrNull { it.id == decision.optionId }?.name ?: "Unknown option"
+                "${decision.source} / $optionName / ${decision.verdict} / revision ${decision.revision} / " +
+                    "${decision.createdAt} / reason: ${decision.reason} / run ${decision.runId}"
+            },
         )
     }
 }
@@ -102,8 +112,5 @@ fun workbenchCounts(rows: List<WorkbenchRow>, optionId: UUID?): Map<String, Int>
     rows.distinctBy { it.id }.flatMap { row ->
         row.labels.filter { optionId == null || it.optionId == optionId }.map { it.label }.distinct()
     }.groupingBy { it }.eachCount()
-
-private fun indexedPath(path: String, collection: String, index: Int): Boolean =
-    path == "$collection[$index]" || path.startsWith("$collection[$index].")
 
 private fun normalized(value: String): String = value.replace(Regex("[\\s\\p{Z}]+"), " ").trim()

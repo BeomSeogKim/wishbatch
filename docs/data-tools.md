@@ -30,6 +30,32 @@ must create DOM nodes and assign `textContent`, never return content as HTML.
 External scripts are optional enhancements, never authorization boundaries.
 All bulk mutations are checked again by the server and require CSRF tokens.
 
+## Maker review
+
+The proposal page embeds the workbench; the same table is available at
+`GET /w/{token}/maker/proposal/wishes?run={runId}`. Both views retain the selected
+immutable analysis run. Label and option filters pair the verdict with its
+option; totals count distinct source wishes and never extracted quantities.
+Language is unknown when no language metadata was collected.
+Only flags with an explicit wish UUID are attached to a row. Batch-local numeric
+indices cannot identify a wish after merging or reshuffling; these flags remain
+visible in the run-level validation list.
+
+`POST /w/{token}/maker/proposal/wishes/review` accepts `run`, `optionId`, repeated
+`wishIds`, `verdict` (`COMPATIBLE` or `INCOMPATIBLE`), and `reason` (one to 500
+characters after trimming). The server validates the whole selection before
+recording any decision, deduplicates IDs, and records each decision through the
+review service within one transaction. History retains its source, option,
+reason, revision and time; effective labels and counts change without rewriting
+the original readings. An unresolved second-reading disagreement remains marked
+for attention until a decision for that wish and option is recorded.
+
+The adjacent hide action delegates to the workspace service, also after checking
+the entire workspace/run/option scope. New wishes outside the run remain visible
+as unanalyzed rows and cannot be selected for that run's bulk actions. Hiding does
+not rewrite an earlier analysis snapshot. Both actions support ordinary server
+forms when scripts are unavailable.
+
 The CSP adds only the two complete script URLs above to `script-src`. It does
 not allow the CDN origin generally or change PayPal, connection, frame or image
 permissions. Grid theme styles are generated under the existing inline

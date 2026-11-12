@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-<section th:fragment="workbench" data-wish-workbench aria-labelledby="wish-workbench-heading">
+<section id="wish-workbench" th:fragment="workbench" data-wish-workbench aria-labelledby="wish-workbench-heading">
     <style>
         [data-wish-workbench] { margin-block: var(--space-8); }
         [data-wish-workbench] [hidden] { display: none !important; }
@@ -58,8 +58,9 @@
         <p>Run flags may refer to removed evidence; only flags with an identifiable wish are also attached to its row.</p>
         <ul><li th:each="flag : ${workbench.stored.flags}" th:text="${flag.rule} + ' (' + ${flag.path} + '): ' + ${flag.message}"></li></ul>
     </details>
-    <form method="post" th:action="@{/w/{token}/maker/proposal/wishes/hide(token=${token})}" data-workbench-bulk>
+    <form method="post" th:action="@{/w/{token}/maker/proposal/wishes/review(token=${token})}" data-workbench-bulk>
         <input th:if="${workbench.stored != null}" type="hidden" name="run" th:value="${workbench.stored.run.id}">
+        <input type="hidden" name="returnTo" th:value="${workbenchReturnTo}">
         <div class="workbench-actions" th:if="${workbench.stored != null}">
             <label>Bulk action option
                 <select name="optionId" required>
@@ -67,13 +68,18 @@
                     <option th:each="option : ${workbench.options}" th:if="${workbench.stored.output.optionIds.contains(option.id)}" th:value="${option.id}" th:text="${option.name}" th:selected="${option.id == workbenchFilter.optionId}"></option>
                 </select>
             </label>
-            <button class="button button-secondary" type="submit">Hide selected wishes</button>
+            <label>Maker decision
+                <select name="verdict"><option value="COMPATIBLE">Compatible</option><option value="INCOMPATIBLE">Not served</option></select>
+            </label>
+            <label>Reason for the decision <input name="reason" required maxlength="500" placeholder="Required for a label override"></label>
+            <button class="button button-secondary" type="submit">Save selected decisions</button>
+            <button class="button button-secondary" type="submit" formnovalidate th:formaction="@{/w/{token}/maker/proposal/wishes/hide(token=${token})}">Hide selected wishes</button>
         </div>
         <div data-workbench-grid hidden aria-label="Wish review grid"></div>
         <div class="workbench-table-scroll">
             <table data-workbench-table>
                 <caption>Wish evidence and labels. Language remains unknown when no language metadata was collected.</caption>
-                <thead><tr><th>Select</th><th>Wish ID</th><th>Wish</th><th>Per-option labels and reasons</th><th>Grounded quotes</th><th>Needs your eyes / validation</th><th>Source</th><th>Language</th><th>Visibility</th><th>Review provenance</th></tr></thead>
+                <thead><tr><th>Select</th><th>Wish ID</th><th>Wish</th><th>Per-option labels and reasons</th><th>Grounded quotes</th><th>Review flags / validation</th><th>Source</th><th>Language</th><th>Visibility</th><th>Review provenance</th></tr></thead>
                 <tbody>
                 <tr th:each="row : ${workbenchRows}" th:attr="data-wish-id=${row.id}" th:hidden="${!visibleIds.contains(row.id)}">
                     <td><input type="checkbox" name="wishIds" th:value="${row.id}" th:attr="aria-label='Select wish ' + ${row.id}" th:disabled="${workbench.stored == null || !workbench.stored.output.wishes.![wishId].contains(row.id)}"></td>
@@ -85,7 +91,7 @@
                     <td data-field="source" th:text="${row.source}"></td>
                     <td data-field="language" th:text="${row.language}"></td>
                     <td data-field="hidden" th:text="${row.hidden ? 'Hidden' : 'Visible'}"></td>
-                    <td data-field="provenance"><span th:each="entry : ${row.provenance}" th:text="${entry} + ' '"></span><span th:if="${row.provenance.isEmpty()}">No maker override recorded</span></td>
+                    <td data-field="provenance"><span th:each="entry : ${row.provenance}" th:text="${entry} + ' '"></span><span th:if="${row.provenance.isEmpty()}">No review history available</span></td>
                 </tr>
                 </tbody>
             </table>

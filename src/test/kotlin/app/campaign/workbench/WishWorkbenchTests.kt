@@ -14,8 +14,12 @@ import app.campaign.port.AnalysisValidationRule
 import app.campaign.port.AnalyzedWish
 import app.campaign.port.Proposal
 import app.campaign.port.ProposalEvidence
+import app.campaign.port.SecondReading
 import app.campaign.port.WishNeed
+import app.campaign.port.WishReadingComparison
 import app.campaign.port.WishVerdict
+import app.campaign.review.WishReviewOverride
+import app.campaign.review.reviewedAnalysis
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.UUID
@@ -49,7 +53,7 @@ class WishWorkbenchTests {
     }
 
     @Test
-    fun `validation index paths and explicit ids attach only to their own wish`() {
+    fun `only explicit wish ids attach flags and ambiguous batch indices remain run level`() {
         val first = wish("A matte print")
         val second = wish("A card")
         val output = output(first).copy(wishes = listOf(
@@ -64,7 +68,7 @@ class WishWorkbenchTests {
             AnalysisValidationFlag(AnalysisValidationRule.V2, "wishes[10].needs", "Another index"),
         )
         val rows = wishWorkbenchRows(listOf(first, second), listOf(option), output, flags)
-        assertEquals(listOf("V2: Dropped quote", "V1: Dropped reason"), rows[0].flags)
+        assertTrue(rows[0].flags.isEmpty())
         assertEquals(listOf("UNANALYZED_WISH: Missing reading"), rows[1].flags)
     }
 
@@ -95,6 +99,44 @@ class WishWorkbenchTests {
         assertTrue(row.hidden)
         assertTrue(row.labels.all { it.label == "NOT_A_REQUEST" })
         assertEquals(mapOf("NOT_A_REQUEST" to 1), workbenchCounts(listOf(row), null))
+    }
+
+    @Test
+    fun `second reading disagreement stays unresolved per option until that option is reviewed`() {
+        val wish = wish("I want a matte print")
+        val runId = UUID.randomUUID()
+        val original = output(wish).copy(
+            verdicts = listOf(option, other).map {
+                WishVerdict(wish.id, it.id, CompatibilityVerdict.CONDITIONAL, "Two readings disagree")
+            },
+            optionIds = listOf(option.id, other.id),
+            secondReading = SecondReading(0, 1, listOf(option, other).map {
+                WishReadingComparison(wish.id, it.id, WishKind.REQUEST, WishKind.REQUEST,
+                    CompatibilityVerdict.COMPATIBLE, CompatibilityVerdict.INCOMPATIBLE)
+            }, batchCompositionChanged = true),
+        )
+        val before = wishWorkbenchRows(listOf(wish), listOf(option, other), original, emptyList()).single()
+        assertEquals(2, before.flags.count { it.startsWith("Needs your eyes:") })
+        assertEquals(mapOf("CONDITIONAL" to 1), workbenchCounts(listOf(before), option.id))
+        val first = WishReviewOverride(workspaceId, runId, wish.id, option.id, CompatibilityVerdict.COMPATIBLE,
+            CompatibilityVerdict.CONDITIONAL, "Reviewed the matte requirement", Instant.EPOCH, 1)
+        val second = WishReviewOverride(workspaceId, runId, wish.id, option.id, CompatibilityVerdict.INCOMPATIBLE,
+            CompatibilityVerdict.COMPATIBLE, "Corrected after checking the source", Instant.EPOCH.plusSeconds(1), 2,
+            source = "FAN_ANSWER")
+        val history = listOf(first, second)
+        val effective = reviewedAnalysis(original, history)
+        val after = wishWorkbenchRows(listOf(wish), listOf(option, other), effective, emptyList(), history, original).single()
+        assertEquals("INCOMPATIBLE", after.labels.single { it.optionId == option.id }.label)
+        assertEquals("CONDITIONAL", after.labels.single { it.optionId == other.id }.label)
+        assertEquals(1, after.flags.count { it.startsWith("Needs your eyes:") && it.contains(other.name) })
+        assertEquals(1, after.flags.count { it.startsWith("Review recorded:") && it.contains(option.name) })
+        assertEquals(2, after.provenance.size)
+        assertTrue(after.provenance.all { it.contains(option.name) && it.contains(runId.toString()) })
+        assertTrue(after.provenance.any { it.startsWith("MAKER / ") })
+        assertTrue(after.provenance.any { it.startsWith("FAN_ANSWER / ") })
+        assertTrue(after.provenance.any { it.contains("revision 1") && it.contains(first.reason) })
+        assertTrue(after.provenance.any { it.contains("revision 2") && it.contains(second.reason) })
+        assertEquals(CompatibilityVerdict.CONDITIONAL, original.verdicts.first().verdict)
     }
 
     private fun wish(text: String) = Wish(workspaceId, text, WishSource.IMPORTED, createdAt = Instant.EPOCH)

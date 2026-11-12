@@ -1,8 +1,10 @@
 package app.web.workbench
 
 import app.campaign.workbench.WishWorkbenchService
+import app.campaign.workbench.WishWorkbench
 import app.campaign.workbench.WorkbenchFilter
 import app.campaign.workbench.workbenchCounts
+import app.campaign.model.CompatibilityVerdict
 import app.campaign.workspace.WorkspaceNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Controller
@@ -30,17 +32,7 @@ class WishWorkbenchController(private val workbenches: WishWorkbenchService) {
     ): String {
         val workbench = workbenches.read(token, run)
         val filter = WorkbenchFilter(optionId, label, q.take(500), sort)
-        val rows = filter.sorted(workbench.rows)
-        model.addAttribute("workbench", workbench)
-        model.addAttribute("workbenchRows", rows)
-        model.addAttribute("workbenchFilter", filter)
-        model.addAttribute("visibleIds", rows.filter(filter::matches).map { it.id }.toSet())
-        model.addAttribute("workbenchCountGroups", workbench.options.filter { optionId == null || it.id == optionId }
-            .associate { option ->
-                option.name to workbenchCounts(rows.filter(filter::matches), option.id).mapKeys { (label, _) ->
-                    rows.flatMap { it.labels }.first { it.label == label }.displayLabel
-                }
-            })
+        addWorkbenchAttributes(model, workbench, filter)
         return "workbench/page"
     }
 
@@ -50,12 +42,35 @@ class WishWorkbenchController(private val workbenches: WishWorkbenchService) {
         @RequestParam run: UUID,
         @RequestParam optionId: UUID,
         @RequestParam wishIds: List<UUID>,
+        @RequestParam(defaultValue = "workbench") returnTo: String,
         redirect: RedirectAttributes,
     ): String {
+        require(returnTo in setOf("workbench", "proposal"))
         workbenches.hide(token, run, optionId, wishIds)
         redirect.addFlashAttribute("workbenchNotice", "Selected wishes hidden. The stored analysis remains a snapshot.")
-        return "redirect:/w/$token/maker/proposal/wishes?run=$run&optionId=$optionId"
+        return destination(token, run, optionId, returnTo)
     }
+
+    @PostMapping("/w/{token}/maker/proposal/wishes/review")
+    fun review(
+        @PathVariable token: String,
+        @RequestParam run: UUID,
+        @RequestParam optionId: UUID,
+        @RequestParam wishIds: List<UUID>,
+        @RequestParam verdict: CompatibilityVerdict,
+        @RequestParam reason: String,
+        @RequestParam(defaultValue = "workbench") returnTo: String,
+        redirect: RedirectAttributes,
+    ): String {
+        require(returnTo in setOf("workbench", "proposal"))
+        workbenches.review(token, run, optionId, wishIds, verdict, reason)
+        redirect.addFlashAttribute("workbenchNotice", "Maker decisions saved with reasons. Counts use your review; original readings are preserved.")
+        return destination(token, run, optionId, returnTo)
+    }
+
+    private fun destination(token: String, run: UUID, optionId: UUID, returnTo: String): String =
+        if (returnTo == "proposal") "redirect:/w/$token/maker/proposal?run=$run#wish-workbench"
+        else "redirect:/w/$token/maker/proposal/wishes?run=$run&optionId=$optionId"
 
     @ExceptionHandler(WorkspaceNotFoundException::class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -64,7 +79,23 @@ class WishWorkbenchController(private val workbenches: WishWorkbenchService) {
     @ExceptionHandler(IllegalArgumentException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun invalidSelection(model: Model): String {
-        model.addAttribute("message", "Invalid wish selection. Return to the workbench and select wishes from this run.")
+        model.addAttribute("message", "Select wishes and an option from this run. Label decisions need Compatible or Not served and a reason of one to 500 characters.")
         return "workbench/invalid"
     }
+}
+
+fun addWorkbenchAttributes(model: Model, workbench: WishWorkbench, filter: WorkbenchFilter = WorkbenchFilter()) {
+    val rows = filter.sorted(workbench.rows)
+    val visible = rows.filter(filter::matches)
+    model.addAttribute("workbench", workbench)
+    model.addAttribute("workbenchRows", rows)
+    model.addAttribute("workbenchFilter", filter)
+    model.addAttribute("visibleIds", visible.map { it.id }.toSet())
+    model.addAttribute("workbenchReturnTo", "workbench")
+    model.addAttribute("workbenchCountGroups", workbench.options.filter { filter.optionId == null || it.id == filter.optionId }
+        .associate { option ->
+            option.name to workbenchCounts(visible, option.id).mapKeys { (label, _) ->
+                rows.flatMap { it.labels }.first { it.label == label }.displayLabel
+            }
+        })
 }

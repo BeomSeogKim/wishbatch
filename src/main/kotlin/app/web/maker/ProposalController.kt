@@ -13,6 +13,11 @@ import app.campaign.review.WishReviewService
 import app.campaign.rules.optionWishCounts
 import app.campaign.workspace.WorkspaceNotFoundException
 import app.campaign.workspace.WorkspaceService
+import app.campaign.workbench.WishWorkbench
+import app.campaign.workbench.WorkbenchFilter
+import app.campaign.workbench.wishWorkbenchRows
+import app.web.workbench.addWorkbenchAttributes
+import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -60,6 +65,14 @@ class ProposalController(
         model.addAttribute("hasVisibleWishes", wishes.values.any { !it.hidden })
         model.addAttribute("proposalUnavailable", stored?.output?.proposal == null)
         model.addAttribute("liveRunCount", runs.liveRunCount(token))
+        val reviewRows = wishWorkbenchRows(
+            wishes.values.toList(), options.values.toList(), stored?.output, stored?.flags.orEmpty(),
+            stored?.overrides.orEmpty(), stored?.originalOutput,
+        ).map { row -> row.copy(labels = row.labels.map { it.copy(reason = catalogText(it.reason)) }) }
+        addWorkbenchAttributes(model, WishWorkbench(stored, options.values.toList(), reviewRows),
+            WorkbenchFilter(optionId = stored?.output?.proposal?.optionId))
+        model.addAttribute("workbenchReturnTo", "proposal")
+        model.addAttribute("nextBatchAvailable", ClassPathResource("templates/nextbatch/link.html").exists())
         if (stored != null) {
             val output = stored.output
             val secondReading = stored.originalOutput.secondReading
