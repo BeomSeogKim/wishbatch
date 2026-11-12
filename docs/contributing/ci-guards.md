@@ -56,6 +56,8 @@ and allow squash merging. Confirm the actual check name in that run when
 configuring protection. Branch protection is a server setting, not a property
 of this workflow file. No remote or protection rule has been configured yet.
 
+The separate `Keep warm` workflow requests the hosted landing page every ten minutes during judging; see [deployment](../deploying.md#keep-warm-workflow) for schedule limits and how to disable it.
+
 ## Source
 
 Adapted from [GitHub Actions secure-use guidance](https://docs.github.com/en/actions/reference/security/secure-use),

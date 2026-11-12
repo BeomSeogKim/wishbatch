@@ -22,6 +22,13 @@ class GuideControllerTests(@Autowired private val mvc: MockMvc) {
         }.andReturn().response.contentAsString
 
         assertContains(html, "Sandbox demo. No real money moves.")
+        assertContains(html, "href=\"https://wishbatch.onrender.com/\"")
+        assertContains(html, "no installation, account, or credentials are needed to browse")
+        assertContains(html, "Only the payment step needs a PayPal sandbox personal account")
+        assertContains(html, "first request after idle can take about a minute")
+        assertContains(html, "Local-run alternative")
+        assertContains(html, "href=\"https://github.com/BeomSeogKim/wishbatch/blob/main/docs/running.md\"")
+        assertContains(html, "Local payments require sandbox REST application credentials on the server")
         assertContains(html, "This product only talks to the PayPal sandbox.")
         assertContains(html, "sandbox buyer account given in the submission's testing instructions")
         assertContains(html, "your own PayPal sandbox personal account")

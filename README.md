@@ -19,10 +19,15 @@ Without PayPal, compatible wishes remain stated interest with no funded batch.
 ## Status
 
 A working **sandbox prototype**, with synthetic seed data, stored analysis,
-maker/fan pages, offer publication, and payment settlement code. No hosted build
-is documented. Try it locally with `./gradlew bootRun`, then open
-<http://localhost:8200/> and choose **Start a demo**. No key is needed except for
-live analysis and PayPal payments. [Full setup and Compose](docs/running.md).
+maker/fan pages, offer publication, and payment settlement code. The fastest
+way to try it is <https://wishbatch.onrender.com/>: choose **Start a demo** or
+read the [testing guide](https://wishbatch.onrender.com/guide). Browsing needs
+no account or credentials; the payment step needs a PayPal sandbox personal
+account. The free instance sleeps after 15 minutes without traffic, and the
+first request can then take about a minute. [Free-plan details and keep-warm
+workflow](docs/deploying.md#free-plan-limits). To run locally, use
+`./gradlew bootRun` and open <http://localhost:8200/>.
+[Full setup and Compose](docs/running.md).
 
 The product hypothesis is unvalidated: no customer demand, production, delivery,
 or advantage over manual sorting has been established. The demo has one maker,
@@ -119,10 +124,19 @@ sandbox buyer login, the question checklist, price re-check, and one approval
 for three units. Provider IDs: order `9KP58052BW620264K`, authorization
 `7AD27064JG066074U`, and capture `0CL32219XT8853311`.
 
-This was a local browser check, not an automated provider test in the repository
-or an independent first-time-user study. It was not repeated on a hosted
-deployment. Live reanalysis was not repeated in this regression; the golden path
-used the labeled stored analysis. Webhooks are not implemented.
+On 2026-11-12, the [hosted build](https://wishbatch.onrender.com/) also passed
+manual browser checks against the real PayPal sandbox: the testing guide's
+golden path in 3 minutes 57 seconds, with stated interest/authorized/paid counts
+of 35/0/0, then 35/3/0, then 35/0/3 (order `432219113X527942D`, authorization
+`20G563625P294205M`, capture `3A2814222C960462D`); cancellation with voided
+authorization `3UX98650262422353`; live reanalysis in about 25 seconds; and
+state retained across a page reload. Cold start after idle and persistence
+across a service restart were not checked.
+
+These were manual browser checks, not automated provider tests in the
+repository or independent first-time-user studies. Live reanalysis was not
+repeated in the local regression; its golden path used the labeled stored
+analysis. Webhooks are not implemented.
 
 [Evaluation](docs/evaluation.md) scores forty synthetic wishes (35 requests,
 three options, 105 correlated request/option pairs), using one stored run and

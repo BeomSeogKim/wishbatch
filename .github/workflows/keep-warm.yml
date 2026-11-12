@@ -1,0 +1,20 @@
+name: Keep warm
+
+on:
+  schedule:
+    - cron: '7-57/10 * * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: true
+
+jobs:
+  landing-page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Request the hosted landing page
+        run: curl --fail --silent --show-error --connect-timeout 10 --max-time 90 --output /dev/null https://wishbatch.onrender.com/

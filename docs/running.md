@@ -5,6 +5,12 @@ stored analysis, and publishes offers. It uses the PayPal sandbox only.
 External keys are needed only for live analysis and payments. Use synthetic
 data: workspace tokens grant access to both fan and maker routes.
 
+To try the hosted build instead, open <https://wishbatch.onrender.com/> and
+follow its [testing guide](https://wishbatch.onrender.com/guide). Browsing
+needs no setup or credentials; payments need a PayPal sandbox personal account.
+The free instance sleeps after 15 idle minutes, so the first request can take
+about a minute. See [hosting and keep-warm behavior](deploying.md).
+
 ## Gradle and the in-memory database
 
 Install JDK 21, then run from the repository root:
@@ -84,9 +90,9 @@ and approve the PayPal authorization. The maker can confirm production once
 authorized units reach the minimum, even before closing. Confirmation captures
 payments; enough completed units fund the batch. A shortfall refunds captures
 and voids remaining holds. The [README's sandbox evidence](../README.md#evidence-and-limits)
-records the six passing manual browser paths on a local build on 2026-11-12,
-including provider IDs from the last golden run. This was not an automated
-repository test or a run repeated on a hosted deployment.
+records local and hosted manual browser checks on 2026-11-12, including provider
+IDs and their separate timings and limits. These were not automated repository
+tests; hosted cold start and persistence across a service restart remain unchecked.
 
 To expose the labeled capture-failure simulation on the maker dashboard:
 

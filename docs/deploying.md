@@ -4,6 +4,11 @@ The root [Blueprint](../render.yaml) creates one free Docker web service and
 one free Render Postgres database. Both resources must be in the same region.
 The service uses the PayPal sandbox only.
 
+The hosted build is <https://wishbatch.onrender.com/>. Visitors can browse
+without credentials and follow the [testing guide](https://wishbatch.onrender.com/guide);
+the payment step requires a PayPal sandbox personal account. See the
+[manual hosted verification and its limits](../README.md#evidence-and-limits).
+
 ## Create the Blueprint
 
 1. Make the desired commit available on a Git provider that Render can access.
@@ -51,6 +56,26 @@ storage and expires 30 days after creation, becoming inaccessible. After a
 14-day grace period, Render deletes it and its data unless it is upgraded. Free
 Postgres has no backups. See [Deploy for Free](https://render.com/docs/free)
 for the current limits and details.
+
+## Keep-warm workflow
+
+The [Keep warm workflow](../.github/workflows/keep-warm.yml) requests the hosted
+landing page every ten minutes, at minutes 7, 17, 27, 37, 47, and 57 UTC, to
+keep the free instance awake during judging. Its single `curl` step has a
+90-second request limit; the job times out after two minutes and overlapping
+runs are cancelled. It needs no secrets, checkout, or third-party action and
+does not call payment or analysis endpoints. Running continuously consumes
+Render's free instance hours.
+
+GitHub schedules run only when the workflow exists on the default branch,
+using that branch's latest commit. The minimum supported interval is five
+minutes. Runs can be delayed or dropped under load, especially at the start
+of an hour, so this is not an uptime guarantee and a visitor may still see a
+cold start. Public repository schedules are disabled after 60 days without
+repository activity. See [GitHub's schedule documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
+
+After judging, turn it off in the repository's **Actions > Keep warm > ... >
+Disable workflow**, or remove the workflow file from the default branch.
 
 ## Check the deployment
 
