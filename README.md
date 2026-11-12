@@ -110,9 +110,16 @@ server-rendered pages, and checkout JavaScript. Tests use fakes or stubs and no
 provider credentials. Local HTTP checks cover workspace creation, stored
 proposal review, offer publication, and missing-key behavior.
 
-**Live PayPal sandbox authorization, capture, void, and refund are not verified
-by evidence in this repository.** Offline coverage of those paths is not a
-sandbox transaction receipt. Webhooks are not implemented.
+On 2026-11-12, six browser paths were run by hand against the real PayPal sandbox
+on a local build, and all passed: the golden path, two buyers, cancel with void,
+the simulated capture failure with refund, a live re-analysis, and the edge
+states. This exercised sandbox authorization, capture, void, and refund. The
+golden path took about three and a half minutes. The last golden run's provider
+IDs were order `3Y176650HC8669634`, authorization `6YR87310UT316712E`, and capture
+`3M26718937950980C`.
+
+This was a manual run, not an automated test in the repository. It was not
+repeated on a hosted deployment. Webhooks are not implemented.
 
 [Evaluation](docs/evaluation.md) scores forty synthetic wishes (35 requests,
 three options, 105 correlated request/option pairs), using one stored run and

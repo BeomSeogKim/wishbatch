@@ -80,11 +80,13 @@ is required, especially `PAYPAL_BASE_URL`, `LLM_MODEL`, and `LLM_DAILY_RUN_CAP`.
 
 Use sandbox REST application credentials and a sandbox buyer account. After
 publishing an offer, open its fan link, choose a quantity, select **Update total**,
-and approve the PayPal
-authorization. The maker can confirm production once authorized units reach
-the minimum, even before closing. Confirmation captures payments; enough
-completed units fund the batch. A shortfall refunds captures and voids remaining
-holds. This is the supported path, not a claim of live transaction verification.
+and approve the PayPal authorization. The maker can confirm production once
+authorized units reach the minimum, even before closing. Confirmation captures
+payments; enough completed units fund the batch. A shortfall refunds captures
+and voids remaining holds. The [README's sandbox evidence](../README.md#evidence-and-limits)
+records the six passing manual browser paths on a local build on 2026-11-12,
+including provider IDs from the last golden run. This was not an automated
+repository test or a run repeated on a hosted deployment.
 
 To expose the labeled capture-failure simulation on the maker dashboard:
 
