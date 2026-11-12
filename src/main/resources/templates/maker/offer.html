@@ -41,10 +41,10 @@
                             </div>
                             <div id="offer-price-check" role="status" aria-live="polite" th:attr="data-url=@{/w/{token}/maker/offer/price-check(token=${token},run=${analysis.id})}">
                                 <p id="price-check-amount" th:text="${priceCheck != null ? priceCheck.formattedPrice + ' per unit' : 'Check a valid price to preview the amount.'}"></p>
-                                <p id="price-check-summary" th:text="${priceCheck != null ? priceCheck.fit + ' wishes fit this price, ' + priceCheck.excludedByPrice.size() + ' are excluded by their stated limit' : 'Enter a positive price to check which wishes fit.'}"></p>
-                                <p id="price-check-categories" class="field-help" th:text="${priceCheck != null ? priceCheck.compatible + ' Compatible; ' + priceCheck.depends + ' Depends. Other conditions still need review. Wishes are stated interest, not orders.' : ''}"></p>
+                                <p id="price-check-summary" th:text="${priceCheck != null ? 'Interested in this offer: ' + priceCheck.interest + '; ' + priceCheck.excludedByPrice + ' excluded by price' : 'Enter a positive price to check which wishes fit.'}"></p>
+                                <p id="price-check-categories" class="field-help" th:text="${priceCheck != null ? priceCheck.conditional + ' more depend on a condition; ' + priceCheck.notServed + ' not served. Wishes are interest, not orders.' : ''}"></p>
                                 <details><summary>Wishes excluded by this price</summary><ul id="price-excluded">
-                                    <li th:each="wish : ${priceCheck != null ? priceCheck.excludedByPrice : null}">
+                                    <li th:each="wish : ${priceCheck != null ? priceCheck.excludedWishes : null}">
                                         <a th:href="${wish.sourceUrl}">View wish</a>
                                         <span th:text="${' — stated limit: ' + wish.limit}"></span>
                                         <q th:each="quote : ${wish.quotes}" th:text="${quote}"></q>
@@ -52,7 +52,7 @@
                                 </ul></details>
                             </div>
                             <button type="submit" name="action" value="check-price" formnovalidate class="button button-secondary">Check this price</button>
-                            <p class="field-help">Unit cost: <strong th:text="${@humanDisplay.money(option.unitCost, option.currency)}"></strong>. A price below cost is allowed.</p>
+                            <p class="field-help">Unit cost: <strong th:text="${@humanDisplay.money(option.unitCost, option.currency)}"></strong>.</p>
                             <p id="price-warning" class="notice notice-warning" role="status" th:hidden="${priceCheck == null or !priceCheck.belowCost}">The unit price is below the option's unit cost.</p>
                         </div>
                         <div><p id="offer-demand-pending" class="notice notice-warning" role="status" hidden>Price or minimum changed. The demand data below is from the previous check. Use Check this price to refresh.</p>

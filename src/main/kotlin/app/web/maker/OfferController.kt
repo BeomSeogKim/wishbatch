@@ -11,8 +11,10 @@ import app.campaign.review.WishReviewService
 import app.campaign.review.reviewedAnalysis
 import app.campaign.rules.MoneyInput
 import app.campaign.rules.OfferViolation
-import app.campaign.rules.offerPriceCheck
+import app.campaign.rules.offerInterest
+import app.campaign.rules.offerPriceLimit
 import app.campaign.service.CampaignRef
+import app.campaign.service.CampaignQueries
 import app.campaign.service.CampaignService
 import app.campaign.service.DraftOffer
 import app.campaign.service.ServiceResult
@@ -20,6 +22,7 @@ import app.campaign.store.AnalysisRunRepository
 import app.campaign.workspace.WorkspaceNotFoundException
 import app.campaign.workspace.WorkspaceService
 import app.web.layout.HumanDisplay
+import app.campaign.workspace.SeedCatalog
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -42,16 +45,20 @@ class OfferController(
     private val analyses: AnalysisRunRepository,
     private val mapper: ObjectMapper,
     private val campaigns: CampaignService,
+    private val queries: CampaignQueries,
     private val display: MakerDisplay,
     private val humanDisplay: HumanDisplay,
     private val reviews: WishReviewService,
     private val drafts: OfferDraftService,
+    private val catalog: SeedCatalog,
 ) {
     @GetMapping("/w/{token}/maker/offer")
     fun offer(@PathVariable token: String, @RequestParam(required = false) run: UUID?, model: Model): String {
         val workspace = workspaces.findByToken(token) ?: throw WorkspaceNotFoundException()
-        val analysis = if (run == null) analyses.findByWorkspaceId(workspace.id).maxByOrNull { it.createdAt }
-            else analyses.findByIdAndWorkspaceId(run, workspace.id) ?: throw WorkspaceNotFoundException()
+        val published = (queries.currentCampaign(token) as? ServiceResult.Success)?.value
+        val selectedRun = run ?: published?.offer?.analysisRunId
+        val analysis = if (selectedRun == null) analyses.findByWorkspaceId(workspace.id).maxByOrNull { it.createdAt }
+            else analyses.findByIdAndWorkspaceId(selectedRun, workspace.id) ?: throw WorkspaceNotFoundException()
         val output = analysis?.let(::output)
         val option = output?.proposal?.let { proposal -> workspaces.listOptions(token).find { it.id == proposal.optionId } }
         model.addAttribute("makerStep", if (option != null) 4 else if (analysis != null) 3 else 1)
@@ -59,7 +66,11 @@ class OfferController(
         model.addAttribute("output", output)
         model.addAttribute("option", option)
         if (option != null && !model.containsAttribute("fields")) {
-            model.addAttribute("fields", defaults(option, output!!, analysis!!))
+            model.addAttribute("fields", defaults(option, output!!, analysis!!).toMutableMap().apply {
+                if (published?.offer?.analysisRunId == analysis.id && published.offer.optionId == option.id) {
+                    put("unitPrice", MoneyInput.formatMinorUnits(published.offer.unitPrice))
+                }
+            })
         }
         if (option != null) {
             model.addAttribute("reviewedDraft", try {
@@ -76,6 +87,7 @@ class OfferController(
                 else -> "Check campaign duration"
             })
             val price = fields["unitPrice"]?.let(MoneyInput::parseMinorUnits)?.takeIf { it > 0 }
+            model.addAttribute("priceBelowCost", price != null && price < option.unitCost)
             model.addAttribute("priceCheck", price?.let { priceView(token, analysis!!, output!!, option, it) })
             model.addAttribute("demand", exploreDemand(output!!, workspaces.listOptions(token),
                 workspaces.listWishes(token), option.id, price, fields["minBatch"]?.toIntOrNull()))
@@ -188,11 +200,14 @@ class OfferController(
     } catch (_: tools.jackson.core.JacksonException) { null }
 
     private fun priceView(token: String, run: AnalysisRun, output: AnalysisOutput, option: Option, price: Long): OfferPriceView {
-        val check = offerPriceCheck(output, option, price)
-        return OfferPriceView(check.fit, check.compatible, check.depends, check.excludedByPrice.map { wish ->
-            val limit = wish.maxUnitPrice!!
+        val sources = workspaces.listWishes(token)
+        val check = offerInterest(output, option, sources, price)
+        return OfferPriceView(check.interest, check.conditional, check.excludedByPrice, check.notServed,
+            check.interestWishIds, check.conditionalWishIds, check.excludedByPriceWishIds, check.notServedWishIds,
+            output.wishes.filter { it.wishId in check.excludedByPriceWishIds }.map { wish ->
+            val limit = offerPriceLimit(wish, sources.single { it.id == wish.wishId }.text, option.currency)!!
             ExcludedPriceWish(wish.wishId, wish.needs.filter { it.attribute == NeedAttribute.PRICE }.map { it.quote },
-                humanDisplay.money(limit.minorUnits, limit.currency), "/w/$token/maker/proposal?run=${run.id}#wish-${wish.wishId}")
+                humanDisplay.money(limit, option.currency), "/w/$token/maker/proposal?run=${run.id}#wish-${wish.wishId}")
         }, price, humanDisplay.money(price, option.currency), price < option.unitCost)
     }
 
@@ -200,7 +215,7 @@ class OfferController(
         put("run", run.id.toString())
         put("title", option.name)
         put("specText", (listOf(display.catalogLabel(option.format)) + option.fixedAttributes.map { "${display.catalogLabel(it.key)}: ${it.value}" }).joinToString("\n"))
-        put("unitPrice", MoneyInput.formatMinorUnits(option.unitCost))
+        put("unitPrice", catalog.listPrice(option)?.let(MoneyInput::formatMinorUnits).orEmpty())
         put("deliveryTerms", option.leadTimeText)
         put("minBatch", option.minBatch.toString())
         put("capacity", option.maxCapacity.toString())
@@ -236,10 +251,15 @@ class OfferController(
 }
 
 data class OfferPriceView(
-    val fit: Int,
-    val compatible: Int,
-    val depends: Int,
-    val excludedByPrice: List<ExcludedPriceWish>,
+    val interest: Int,
+    val conditional: Int,
+    val excludedByPrice: Int,
+    val notServed: Int,
+    val interestWishIds: List<UUID>,
+    val conditionalWishIds: List<UUID>,
+    val excludedByPriceWishIds: List<UUID>,
+    val notServedWishIds: List<UUID>,
+    val excludedWishes: List<ExcludedPriceWish>,
     val unitPrice: Long,
     val formattedPrice: String,
     val belowCost: Boolean,

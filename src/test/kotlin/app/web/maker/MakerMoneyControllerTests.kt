@@ -144,9 +144,23 @@ class MakerMoneyControllerTests @Autowired constructor(
         assertFalse(html.contains("designCount"))
         assertFalse(html.contains("postcard-set"))
         assertContains(html, "value=\"glossy\" selected=\"selected\"")
-        assertTrue(Regex("id=\"unitPrice\"[^>]*value=\"6.50\"").containsMatchIn(html))
+        assertTrue(Regex("id=\"unitPrice\"[^>]*value=\"16.00\"").containsMatchIn(html))
         assertTrue(Regex("id=\"maxQtyPerPledge\"[^>]*value=\"3\"").containsMatchIn(html))
         assertContains(html, "aria-current=\"step\"")
+    }
+
+    @Test
+    fun `below cost offer price renders a warning before publishing`() {
+        val fixture = fixture()
+        val normal = page(fixture.workspace.token, "offer?run=${fixture.run.id}")
+        assertTrue(Regex("id=\"price-warning\"[^>]*hidden").containsMatchIn(normal))
+        assertFalse(normal.contains("A price below cost is allowed."))
+        val html = mvc.get("/w/${fixture.workspace.token}/maker/offer?run=${fixture.run.id}") {
+            flashAttr("fields", validFields(fixture) + ("unitPrice" to "1.00"))
+        }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+        val warning = Regex("<p id=\"price-warning\"[^>]*>").find(html)!!.value
+        assertFalse(warning.contains("hidden"))
+        assertContains(html, "The unit price is below the option's unit cost.")
     }
 
     @Test
@@ -182,27 +196,27 @@ class MakerMoneyControllerTests @Autowired constructor(
         mvc.get("$base&unitPrice=10.00").andExpect {
             status { isOk() }
             content { contentTypeCompatibleWith("application/json") }
-            jsonPath("$.fit") { value(3) }
-            jsonPath("$.compatible") { value(2) }
-            jsonPath("$.depends") { value(1) }
-            jsonPath("$.excludedByPrice.length()") { value(0) }
+            jsonPath("$.interest") { value(2) }
+            jsonPath("$.interest") { value(2) }
+            jsonPath("$.conditional") { value(1) }
+            jsonPath("$.excludedByPrice") { value(0) }
         }
         mvc.get("$base&unitPrice=10.01").andExpect {
             status { isOk() }
-            jsonPath("$.fit") { value(2) }
-            jsonPath("$.compatible") { value(1) }
-            jsonPath("$.depends") { value(1) }
-            jsonPath("$.excludedByPrice[0].wishId") { value(fixture.wishId.toString()) }
-            jsonPath("$.excludedByPrice[0].limit") { value("USD 10.00") }
-            jsonPath("$.excludedByPrice[0].quotes[0]") { value("At most USD 10.00 <please>") }
-            jsonPath("$.excludedByPrice[0].sourceUrl") {
+            jsonPath("$.interest") { value(1) }
+            jsonPath("$.interest") { value(1) }
+            jsonPath("$.conditional") { value(1) }
+            jsonPath("$.excludedWishes[0].wishId") { value(fixture.wishId.toString()) }
+            jsonPath("$.excludedWishes[0].limit") { value("USD 10.00") }
+            jsonPath("$.excludedWishes[0].quotes[0]") { value("At most USD 10.00") }
+            jsonPath("$.excludedWishes[0].sourceUrl") {
                 value("/w/${fixture.workspace.token}/maker/proposal?run=${fixture.run.id}#wish-${fixture.wishId}")
             }
         }
         mvc.get("$base&unitPrice=12.01").andExpect {
             status { isOk() }
-            jsonPath("$.fit") { value(1) }
-            jsonPath("$.excludedByPrice.length()") { value(2) }
+            jsonPath("$.interest") { value(1) }
+            jsonPath("$.excludedByPrice") { value(2) }
         }
         assertTrue(offers.findByWorkspaceId(fixture.workspace.id).isEmpty())
         assertEquals(original, analyses.findById(fixture.run.id).orElseThrow().resultJson)
@@ -233,15 +247,15 @@ class MakerMoneyControllerTests @Autowired constructor(
     fun `form renders price results and refreshes without javascript or publishing`() {
         val fixture = priceFixture()
         assertContains(page(fixture.workspace.token, "offer?run=${fixture.run.id}"),
-            "3 wishes fit this price, 0 are excluded by their stated limit")
+            "Interested in this offer: 1; 2 excluded by price")
         val response = postOffer(fixture, mapOf("action" to "check-price", "unitPrice" to "10.01",
             "specText" to "Keep these edited terms", "question.0" to "", "canDeliver" to "false")).andReturn()
         assertFalse(response.flashMap.containsKey("errors"))
         val html = mvc.get(response.response.redirectedUrl!!) {
             response.flashMap.forEach { (key, item) -> flashAttr(key, item) }
         }.andExpect { status { isOk() } }.andReturn().response.contentAsString
-        assertContains(html, "2 wishes fit this price, 1 are excluded by their stated limit")
-        assertContains(html, "At most USD 10.00 &lt;please&gt;")
+        assertContains(html, "Interested in this offer: 1; 1 excluded by price")
+        assertContains(html, "At most USD 10.00")
         assertContains(html, "Keep these edited terms")
         assertContains(html, "value=\"10.01\"")
         assertContains(html, "Check this price")
@@ -257,8 +271,8 @@ class MakerMoneyControllerTests @Autowired constructor(
             val response = postOffer(fixture, mapOf("question.1" to resolution, "unitPrice" to "10.01")).andReturn()
             assertContains(response.flashMap["errors"].toString(), "Resolve this question")
             val check = response.flashMap["priceCheck"] as OfferPriceView
-            assertEquals(2, check.fit)
-            assertEquals(1, check.excludedByPrice.size)
+            assertEquals(1, check.interest)
+            assertEquals(1, check.excludedByPrice)
             assertTrue(offers.findByWorkspaceId(fixture.workspace.id).isEmpty())
         }
         postOffer(fixture, mapOf("question.0" to "dismissed", "question.1" to "answered"))
@@ -293,7 +307,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         publish(fixture)
         val html = page(fixture.workspace.token, "campaign")
         shell(html)
-        listOf("Stated interest", "Authorized holds", "Paid", "Capacity left", "Time left", "2026-01-01T00:15:00Z",
+        listOf("Interested in this offer", "Authorized holds", "Paid", "Capacity left", "Time left", "2026-01-01T00:15:00Z",
             "2026-01-01T12:15:00Z", "Needs attention", "Campaign and payment timeline", "disabled=\"disabled\"",
             "Open fan offer page (new tab)", "Open public result (new tab)").forEach { assertContains(html, it) }
         assertContains(html, "1 Jan 2026, 00:15 UTC")
@@ -576,7 +590,7 @@ class MakerMoneyControllerTests @Autowired constructor(
         val base = fixture()
         val otherWishes = workspaces.listWishes(base.workspace.token).take(3)
         val wishes = listOf(
-            workspaces.addWish(base.workspace.token, "Postcards please. At most USD 10.00 <please>"),
+            workspaces.addWish(base.workspace.token, "Postcards please. At most USD 10.00"),
             workspaces.addWish(base.workspace.token, "Postcards if the designs fit. At most USD 12.00"),
         ) + otherWishes
         val output = AnalysisOutput(
@@ -584,7 +598,8 @@ class MakerMoneyControllerTests @Autowired constructor(
                 val limit = when (index) { 0 -> 1000L; 1 -> 1200L; else -> null }
                 AnalyzedWish(wish.id, if (index == 4) WishKind.NOT_A_REQUEST else WishKind.REQUEST,
                     if (limit == null) emptyList() else listOf(WishNeed(NeedStrength.HARD, NeedAttribute.PRICE,
-                        "Stated limit", if (index == 0) "At most USD 10.00 <please>" else "At most USD 12.00")),
+                        "Stated limit", if (index == 0) "At most USD 10.00" else "At most USD 12.00")) +
+                        if (index == 1) listOf(WishNeed(NeedStrength.UNKNOWN, NeedAttribute.OTHER, "Designs must fit", "if the designs fit")) else emptyList(),
                     limit?.let { Money(it, "USD") })
             },
             wishes.take(4).mapIndexed { index, wish -> WishVerdict(wish.id, base.option.id,
@@ -650,7 +665,8 @@ internal fun createMoneyFixture(workspaces: WorkspaceService, analyses: Analysis
     val workspace = workspaces.create()
     val option = workspaces.listOptions(workspace.token).single { it.format == "postcard-set" }
     val wish = workspaces.listWishes(workspace.token).first()
-    val output = AnalysisOutput(listOf(AnalyzedWish(wish.id, WishKind.REQUEST, emptyList())), emptyList(),
+    val output = AnalysisOutput(listOf(AnalyzedWish(wish.id, WishKind.REQUEST, emptyList())),
+        listOf(WishVerdict(wish.id, option.id, CompatibilityVerdict.COMPATIBLE, "The requested format fits.")),
         Proposal(option.id, mapOf("finish" to "glossy"), listOf(ProposalEvidence("Fan evidence", wish.id, wish.text))),
         null, emptyList(), listOf(MakerQuestion("What finish can you deliver?", listOf(wish.id))), emptyList(), listOf(option.id))
     val run = analyses.saveAndFlush(AnalysisRun(workspace.id, "test-model", "test-hash", mapper.writeValueAsString(output), createdAt = clock.instant()))

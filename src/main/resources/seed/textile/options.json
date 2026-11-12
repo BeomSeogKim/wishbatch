@@ -22,6 +22,7 @@
         ]
       },
       "unitCost": 900,
+      "listPrice": 2400,
       "currency": "USD",
       "minBatch": 3,
       "maxCapacity": 20,
@@ -42,6 +43,7 @@
         ]
       },
       "unitCost": 1200,
+      "listPrice": 3800,
       "currency": "USD",
       "minBatch": 3,
       "maxCapacity": 20,
@@ -62,6 +64,7 @@
         ]
       },
       "unitCost": 1500,
+      "listPrice": 5600,
       "currency": "USD",
       "minBatch": 3,
       "maxCapacity": 20,

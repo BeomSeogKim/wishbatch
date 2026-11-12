@@ -31,8 +31,9 @@
         </nav>
         <section th:fragment="settlementCounts(campaign)" class="counts" aria-label="Campaign counts">
             <div class="count count-interest">
-                <p class="count-label">Stated interest</p>
-                <p class="count-value" th:text="${campaign.counts.statedInterest}"></p>
+                <p class="count-label">Interested in this offer</p>
+                <p class="count-value" th:text="${campaign.counts.interest}"></p>
+                <p th:text="${campaign.counts.conditional + ' more depend on a condition'}"></p>
                 <p class="count-caption">Wishes classified as requests. These are not orders.</p>
             </div>
             <div class="count" th:classappend="${terminal ? '' : 'count-authorized'}">

@@ -48,8 +48,8 @@
             <div class="proposal-summary" aria-label="Wish groups for this proposal">
                 <div th:each="group : ${groupSummaries}">
                     <strong th:text="${group.count}">0</strong>
-                    <a th:href="@{/w/{token}/maker/proposal/wishes(token=${token},run=${stored.run.id},optionId=${proposedOption.id},label=${group.key})} + '#wish-workbench'"
-                       data-workbench-label-link th:attr="data-label=${group.key},data-option-id=${proposedOption.id}" th:text="${group.label}">Compatible</a>
+                    <a th:href="${group.representative != null ? '#wish-' + group.representative.wish.id : '#wish-workbench'}"
+                       data-interest-group-link th:attr="data-wish-ids=${#strings.listJoin(group.wishIds, ',')}" th:text="${group.label}">Interested in this offer</a>
                     <details th:if="${group.representative != null}">
                         <summary>Source wish</summary>
                         <blockquote><p th:text="${group.representative.wish.text}">Source wish</p></blockquote>
@@ -57,7 +57,7 @@
                     <p th:if="${group.representative == null}">No wishes in this group.</p>
                 </div>
             </div>
-            <p>Stated interest, not orders. The model compared each wish with every catalog option.</p>
+            <p th:if="${proposedCounts != null}" th:text="${proposedCounts.conditional + ' more depend on a condition. Interest at ' + interestPrice + ', not orders.'}"></p>
             <div class="button-row"><a class="button button-primary" th:href="@{/w/{token}/maker/offer(token=${token},run=${stored.run.id})}">Use this proposal</a></div>
             <p>You still set the price and confirm the exact product and delivery terms. This does not publish an offer.</p>
         </section>
@@ -104,14 +104,14 @@
         <details class="preview-section" aria-labelledby="option-counts">
             <summary id="option-counts">How every option compares.</summary>
             <div class="section-heading">
-                <p>These counts are stated interest, not orders. Not a request is shown separately and excluded from request totals.</p></div>
+                <p>Interest at the published price or the maker's list price for each option. Non-requests and hidden wishes are excluded.</p></div>
             <div class="table-scroll" tabindex="0" role="region" aria-label="Wish counts for every option">
                 <table><caption>Server-counted wishes from this analysis</caption>
-                    <thead><tr><th scope="col">Option</th><th scope="col">Compatible</th><th scope="col">Depends</th><th scope="col">Not served</th><th scope="col">Not a request</th></tr></thead>
+                    <thead><tr><th scope="col">Option</th><th scope="col">Interested in this offer</th><th scope="col">Conditional</th><th scope="col">Not served</th><th scope="col">Excluded by price</th></tr></thead>
                     <tbody><tr th:each="counts : ${optionCounts}">
                         <th scope="row" th:text="${options[counts.optionId].name}">Option</th>
-                        <td th:text="${counts.compatible}">0</td><td th:text="${counts.depends}">0</td>
-                        <td th:text="${counts.notServed}">0</td><td th:text="${counts.notARequest}">0</td>
+                        <td th:text="${counts.counts.interest}">0</td><td th:text="${counts.counts.conditional}">0</td>
+                        <td th:text="${counts.counts.notServed}">0</td><td th:text="${counts.counts.excludedByPrice}">0</td>
                     </tr></tbody>
                 </table>
             </div>
@@ -151,6 +151,14 @@
         </section>
     </th:block>
     <script>
+        document.addEventListener('click', event => {
+            const link = event.target.closest?.('[data-interest-group-link]');
+            if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            if (document.querySelector('#wish-workbench [data-workbench-grid]')?.hidden !== false) return;
+            event.preventDefault();
+            window.dispatchEvent(new CustomEvent('wishbatch:filter-wishes', { detail: { wishIds: link.dataset.wishIds ? link.dataset.wishIds.split(',') : [] } }));
+            document.getElementById('wish-workbench').scrollIntoView({block: 'start'});
+        });
         function revealSourceWish() {
             const target = document.getElementById(window.location.hash.slice(1));
             if (!target) return;

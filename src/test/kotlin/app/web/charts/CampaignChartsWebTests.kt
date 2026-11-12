@@ -55,6 +55,8 @@ class CampaignChartsWebTests @Autowired constructor(
     private val pledges: PledgeRepository,
     private val events: EventRepository,
     private val mapper: JsonMapper,
+    private val options: app.campaign.store.OptionRepository,
+    private val wishes: app.campaign.store.WishRepository,
     private val gateway: InMemoryPaymentGateway,
 ) {
     private val now = Instant.parse("2026-01-01T00:00:00Z")
@@ -62,13 +64,16 @@ class CampaignChartsWebTests @Autowired constructor(
 
     private fun fixture(state: CampaignState = CampaignState.FUNDED, validAnalysis: Boolean = true): Pair<Workspace, Campaign> {
         val owner = workspace()
-        val wish = UUID.randomUUID()
+        val option = options.save(app.campaign.model.Option(owner.id, "Cards", "cards", emptyMap(), emptyMap(),
+            100, "USD", 3, 10, "Two weeks", "US"))
+        val wish = wishes.save(app.campaign.model.Wish(owner.id, "Cards please", app.campaign.model.WishSource.ONSITE, createdAt = now)).id
         val output = AnalysisOutput(listOf(AnalyzedWish(wish, WishKind.REQUEST, emptyList()),
             AnalyzedWish(wish, WishKind.REQUEST, emptyList()), AnalyzedWish(UUID.randomUUID(), WishKind.NOT_A_REQUEST, emptyList())),
-            emptyList(), null, "No proposal", emptyList(), emptyList(), emptyList(), emptyList())
+            listOf(app.campaign.port.WishVerdict(wish, option.id, app.campaign.model.CompatibilityVerdict.COMPATIBLE, "Fits")),
+            null, "No proposal", emptyList(), emptyList(), emptyList(), listOf(option.id))
         val run = analyses.save(AnalysisRun(owner.id, "synthetic", "input", if (validAnalysis) mapper.writeValueAsString(output) else "invalid",
             createdAt = now.minusSeconds(1)))
-        val offer = offers.save(Offer(owner.id, UUID.randomUUID(), run.id, "Private title <script>unsafe</script>", "Spec",
+        val offer = offers.save(Offer(owner.id, option.id, run.id, "Private title <script>unsafe</script>", "Spec",
             emptyMap(), 500, "USD", "Delivery", "US", 3, 10))
         val campaign = campaigns.save(Campaign(offer.id, state, openedAt = now, closesAt = now.plusSeconds(60)))
         events.save(Event(campaign.id, "CAMPAIGN_STATE", detail = "DRAFT -> OPEN", createdAt = now))
@@ -95,9 +100,9 @@ class CampaignChartsWebTests @Autowired constructor(
         assertEquals(Instant.parse("2026-01-01T01:00:00Z"), view.observedAt)
         assertEquals(listOf(null, 0L, 3L, 0L, 0L), view.history.checkpoints.map { it.authorized })
         assertEquals(listOf(null, 0L, 0L, 0L, 3L), view.history.checkpoints.map { it.paid })
-        assertEquals(listOf(1, null, null, null, null), view.history.checkpoints.map { it.interest })
+        assertEquals(listOf(null, null, null, null, null), view.history.checkpoints.map { it.interest })
         val html = result.response.contentAsString
-        for (text in listOf("Current stages", "<table", "Historical stated interest is unavailable", "conversion rate",
+        for (text in listOf("Current stages", "<table", "Historical offer interest is unavailable", "conversion rate",
             "data-paid=\"3\"", "data-interest=\"1\"", "FUNDED is a historical", "different measures")) assertContains(html, text)
         records.forEach { assertContains(html, it.id.toString()); assertContains(html, it.createdAt.toString()) }
         for (privateValue in listOf("private-order", "private-auth", "private-capture", "private-email", "private-provider", "<script>unsafe")) {
@@ -163,7 +168,7 @@ class CampaignChartsWebTests @Autowired constructor(
         assertEquals(1, view.interest)
         assertEquals(3L, view.authorized)
         assertTrue(view.history.checkpoints.isEmpty())
-        assertContains(view.interestHistoryMessage, "no verified publication anchor")
+        assertContains(view.interestHistoryMessage, "visibility and reviewed conditions were not recorded")
         assertEquals(CampaignState.OPEN, campaigns.findById(campaign.id).orElseThrow().state)
         assertEquals(PledgeState.AUTHORIZED, pledges.findById(pledge.id).orElseThrow().state)
         assertEquals(beforeEvents, events.count())

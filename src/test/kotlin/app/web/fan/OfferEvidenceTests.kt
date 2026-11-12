@@ -74,7 +74,7 @@ class OfferEvidenceTests @Autowired constructor(
     }
 
     @Test
-    fun `offer uses its original run and at most three exact anonymous quotes`() {
+    fun `offer uses its original run and at most three exact quotes without wisher names`() {
         val fixture = fixture()
         transactions.executeWithoutResult {
             entityManager.persist(AnalysisRun(fixture.workspace.id, "synthetic", "newer",
@@ -82,22 +82,34 @@ class OfferEvidenceTests @Autowired constructor(
                 createdAt = now.plusSeconds(1)))
         }
         val evidence = assertNotNull(query.findByOffer(fixture.workspace.id, fixture.offer.id))
-        assertEquals(5, evidence.compatibleWishCount)
+        assertEquals(5, evidence.counts.interest)
         assertEquals(3, evidence.quotes.size)
         evidence.quotes.forEach { quote ->
             assertTrue(fixture.wishes.single { it.id == quote.wishId }.text.contains(quote.quote))
         }
-        assertEquals(listOf("Fan <0>", "Fan <1>", "Fan <2>"), evidence.quotes.map { it.displayName })
         val html = render(fixture)
-        for (text in listOf("Why this offer", "Compatible wishes:", "5", "stated interest, not orders",
+        for (text in listOf("Why this offer", "Interested in this offer:", "5", "stated interest, not orders",
             "AI grouped the wishes; the maker chose and confirmed this offer.", "Anonymous fan")) {
             assertContains(html, text)
         }
         assertEquals(3, Regex("<figure class=\"evidence\">").findAll(html).count())
         evidence.quotes.forEach { assertContains(html, it.quote) }
-        assertFalse(html.contains("Fan <0>"))
-        assertFalse(html.contains("Fan &lt;0&gt;"))
-        assertFalse(html.contains("Fan &lt;3&gt;"))
+        fixture.wishes.indices.forEach {
+            assertFalse(html.contains("Fan <$it>"))
+            assertFalse(html.contains("Fan &lt;$it&gt;"))
+        }
+    }
+
+    @Test
+    fun `the longest exact quote for each wish wins over a shorter or invented quote`() {
+        val fixture = fixture { output ->
+            output.copy(proposal = output.proposal!!.copy(rationale = output.proposal.rationale.flatMap { evidence ->
+                listOf(evidence, evidence.copy(quote = "Please make ${evidence.quote} for me."),
+                    evidence.copy(quote = "A much longer invented sentence that never appeared in the wish."))
+            }))
+        }
+        val evidence = assertNotNull(query.findByOffer(fixture.workspace.id, fixture.offer.id))
+        assertEquals(fixture.wishes.take(3).map { it.text }, evidence.quotes.map { it.quote })
     }
 
     @Test
@@ -105,7 +117,7 @@ class OfferEvidenceTests @Autowired constructor(
         val fixture = fixture()
         hide(fixture.wishes.take(2))
         val evidence = assertNotNull(query.findByOffer(fixture.workspace.id, fixture.offer.id))
-        assertEquals(5, evidence.compatibleWishCount)
+        assertEquals(3, evidence.counts.interest)
         assertEquals(fixture.wishes.drop(2).map { it.id }, evidence.quotes.map { it.wishId })
         val html = render(fixture)
         fixture.wishes.take(2).forEach {

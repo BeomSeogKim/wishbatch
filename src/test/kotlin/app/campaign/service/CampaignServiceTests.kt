@@ -94,6 +94,7 @@ class CampaignServiceTests @Autowired constructor(
     private val provenance: PledgeProvenanceCheckpoint,
     private val terms: TermsCheckService,
     private val wishes: WishRepository,
+    private val interestQuery: app.campaign.service.OfferInterestQuery,
 ) {
     private val start = Instant.parse("2026-01-01T00:00:00Z")
     private val ownedWorkspaces = mutableListOf<UUID>()
@@ -186,7 +187,7 @@ class CampaignServiceTests @Autowired constructor(
         assertEquals(Money(400, "USD"), call.request.amount)
         assertEquals(idempotencyKey(created.id, PaymentAction.CREATE_ORDER), call.idempotencyKey)
         val before = success(service.readCampaign(fixture.ref))
-        assertEquals(CampaignCounts(1, 0, 0), before.counts)
+        assertEquals(CampaignCounts(0, 0, 0), before.counts)
         assertEquals(5L, before.capacityLeft)
 
         gateway.fake.authorizeOrderResults.add(received(AuthorizationDetails(
@@ -198,7 +199,7 @@ class CampaignServiceTests @Autowired constructor(
         assertEquals("b***@example.test", approved.payerEmailMasked)
         healthyAuthorization(pledges.findById(created.id).orElseThrow())
         val after = success(service.readCampaign(fixture.ref))
-        assertEquals(CampaignCounts(1, 2, 0), after.counts)
+        assertEquals(CampaignCounts(0, 2, 0), after.counts)
         assertEquals(3L, after.capacityLeft)
         assertEquals(MinimumProgress(2, 2), after.progress)
         assertEquals(400L, after.confirmation.amount)
@@ -618,7 +619,7 @@ class CampaignServiceTests @Autowired constructor(
     @Test
     fun `enabled demo simulation fails only the next capture and records its synthetic source`() {
         val simulationService = CampaignService(persistence, offers, options, analyses, campaigns,
-            pledges, events, payments, mapper, clock, true, records, provenance, terms, wishes)
+            pledges, events, payments, mapper, clock, true, records, provenance, terms, wishes, interestQuery)
         val fixture = fixture(minimum = 2)
         val simulated = authorized(fixture, 1)
         val captured = authorized(fixture, 1)

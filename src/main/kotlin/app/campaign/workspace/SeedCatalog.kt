@@ -16,6 +16,7 @@ data class SeedOption(
     val fixedAttributes: Map<String, String>,
     val allowedVariants: Map<String, List<String>>,
     val unitCost: Long,
+    val listPrice: Long,
     val currency: String,
     val minBatch: Int,
     val maxCapacity: Int,
@@ -68,6 +69,11 @@ class SeedCatalog {
         return seedId(workspaceId, "wish", key)
     }
 
+    fun listPrice(option: app.campaign.model.Option): Long? = scenarios
+        .flatMap { it.definition.options }
+        .singleOrNull { seedId(option.workspaceId, "option", it.key) == option.id }
+        ?.listPrice
+
     private fun seedId(workspaceId: UUID, kind: String, key: String): UUID =
         UUID.nameUUIDFromBytes("$workspaceId:$kind:$key".toByteArray(UTF_8))
 
@@ -90,6 +96,7 @@ class SeedCatalog {
                 require(option.unitCost > 0 && option.currency.matches(Regex("[A-Z]{3}"))) {
                     "Invalid seed cost or currency"
                 }
+                require(option.listPrice > option.unitCost) { "Seed list price must exceed cost" }
                 require(option.minBatch > 0 && option.maxCapacity >= option.minBatch &&
                     definition.defaultMaxQtyPerPledge <= option.maxCapacity) { "Invalid seed production limits" }
                 require(option.fixedAttributes.all { (key, value) -> key.isNotBlank() && value.isNotBlank() }) {

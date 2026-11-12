@@ -4,13 +4,14 @@ import app.campaign.books.BooksPledgeRow
 import app.campaign.model.CampaignReason
 import app.campaign.model.CampaignState
 import app.campaign.model.PledgeState
-import app.campaign.service.CampaignCounts
 import java.util.UUID
+
+data class DrillCounts(val allRequests: Int, val authorizedHolds: Long, val paid: Long)
 
 data class DrillSnapshot(
     val campaignState: CampaignState,
     val reason: CampaignReason?,
-    val counts: CampaignCounts,
+    val counts: DrillCounts,
     val needsAttention: List<String>,
     val pledgeStates: Map<UUID, PledgeState>,
 )

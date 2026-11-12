@@ -11,10 +11,10 @@
             <p>These are classifications from the analysis used for this offer, not orders. Some wishes may have arrived later.</p>
             <p th:if="${evidence.isSeed}">This offer uses a stored analysis of synthetic demo wishes.</p>
             <dl class="term-list">
-                <dt>Compatible</dt><dd th:text="${evidence.counts.compatible}"></dd>
-                <dt>Depends</dt><dd th:text="${evidence.counts.depends}"></dd>
-                <dt>Not served</dt><dd th:text="${evidence.counts.notServed}"></dd>
-                <dt>Not a request</dt><dd th:text="${evidence.counts.notARequest}"></dd>
+                <dt>Interested in this offer</dt><dd th:text="${counts.interest}"></dd>
+                <dt>Depend on a condition</dt><dd th:text="${counts.conditional}"></dd>
+                <dt>Not served</dt><dd th:text="${counts.notServed}"></dd>
+                <dt>Excluded by price</dt><dd th:text="${counts.excludedByPrice}"></dd>
             </dl>
             <figure class="evidence" th:each="quote : ${evidence.quotes}">
                 <blockquote><p th:text="${quote}"></p></blockquote><figcaption>Anonymous synthetic wish</figcaption>
@@ -56,7 +56,7 @@
         <h2>What the money states mean</h2>
         <p>Current campaign state: <strong th:text="${state}"></strong></p>
         <dl class="term-list">
-            <dt>Stated interest</dt><dd><span th:text="${counts.statedInterest}"></span> wishes; these are not orders or payments.</dd>
+            <dt>Interested in this offer</dt><dd><span th:text="${counts.interest}"></span> wishes; these are not orders or payments.</dd>
             <dt>Authorized holds</dt><dd><span th:text="${counts.authorizedHolds}"></span> units with PayPal authorization holds; these are not completed payments.</dd>
             <dt>Paid</dt><dd><span th:text="${counts.paid}"></span> units with completed captures.</dd>
         </dl>

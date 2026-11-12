@@ -38,7 +38,7 @@ class ReliabilityDrillsTests {
                 }
             }
             snapshots.forEach { snapshot ->
-                assertEquals(4, snapshot.counts.statedInterest)
+                assertEquals(4, snapshot.counts.allRequests)
                 assertEquals(snapshot.pledgeStates.values.count { it == PledgeState.AUTHORIZED }.toLong(), snapshot.counts.authorizedHolds)
                 assertEquals(snapshot.pledgeStates.values.count { it == PledgeState.CAPTURED }.toLong(), snapshot.counts.paid)
             }

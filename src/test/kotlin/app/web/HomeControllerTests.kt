@@ -73,7 +73,7 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
         listOf(
             "Fans want different things",
             "01 / Listen", "02 / Shape", "03 / Confirm",
-            "Stated interest", "Authorized holds", "Paid",
+            "Interested in this offer", "Authorized holds", "Paid",
             "Wishes, not orders", "Units held, not paid", "Units with completed payments",
             "Synthetic example", "PayPal places the holds", "captures can fail",
             "refunds and hold releases are attempted", "Timing depends on PayPal and your bank or card"
@@ -91,7 +91,7 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
         val counts = Regex("<section[^>]*aria-label=\"Campaign counts\"[^>]*>(.*?)</section>", RegexOption.DOT_MATCHES_ALL)
             .find(html)!!.groupValues[1]
         val examples = listOf(
-            Triple("interest", "Stated interest", 48),
+            Triple("interest", "Interested in this offer", 48),
             Triple("authorized", "Authorized holds", 24),
             Triple("paid", "Paid", 12)
         )
@@ -109,7 +109,7 @@ class HomeControllerTests(@Autowired private val mvc: MockMvc) {
                 assertEquals(1, Regex("<progress\\b").findAll(count).count())
             }
         }
-        assertContains(counts, "Wishes classified as requests. These are not orders.")
+        assertContains(counts, "Visible requests compatible with this offer and price. These are not orders.")
         assertEquals(2, Regex("<progress\\b").findAll(counts).count())
         assertEquals(1, Regex("aria-current=\"step\"").findAll(html).count())
         val currentStep = Regex(

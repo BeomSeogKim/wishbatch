@@ -85,7 +85,7 @@ class LiveCampaignControllerTests @Autowired constructor(
     fun `separate counts follow fake authorization and capture with only existing reconciliation operations`() {
         val (token, ref) = published()
         var status = status(token)
-        assertEquals("1", status.at("/campaign/counts/statedInterest").asString())
+        assertEquals("1", status.at("/campaign/counts/interest").asString())
         assertEquals("0", status.at("/campaign/counts/authorizedHolds").asString())
         assertEquals("HOLDS", status.at("/campaign/progress/basis").asString())
         for (path in listOf("/maker/campaign?review=true", "/offer?quantity=2")) {

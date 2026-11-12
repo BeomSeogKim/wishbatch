@@ -38,13 +38,15 @@ class BatchExplanationQuery(
         }.map { it.wishId }.toSet()
         val seedTexts = seed.scenarios.flatMap { it.wishes }.groupBy({ seed.wishId(workspaceId, it.key) }, { it.text })
         val visible = wishes.findByWorkspaceId(workspaceId).filterNot { it.hidden }.associateBy { it.id }
-        val quotes = proposal?.rationale.orEmpty().mapNotNull { item ->
-            if (item.wishId !in compatible) return@mapNotNull null
-            val wish = visible[item.wishId] ?: return@mapNotNull null
-            val originals = seedTexts[item.wishId] ?: return@mapNotNull null
-            if (wish.text !in originals || item.quote.isBlank() || !wish.text.contains(item.quote)) return@mapNotNull null
-            item.quote
-        }.distinct().take(3)
+        val candidates = proposal?.rationale.orEmpty().map { it.wishId to it.quote } +
+            output.wishes.flatMap { wish -> wish.needs.map { wish.wishId to it.quote } }
+        val quotes = candidates.mapNotNull { (wishId, quote) ->
+            if (wishId !in compatible) return@mapNotNull null
+            val wish = visible[wishId] ?: return@mapNotNull null
+            val originals = seedTexts[wishId] ?: return@mapNotNull null
+            if (wish.text !in originals || quote.isBlank() || !wish.text.contains(quote)) return@mapNotNull null
+            wishId to quote
+        }.groupBy { it.first }.values.map { quotes -> quotes.maxBy { it.second.length }.second }.distinct().take(3)
         return BatchEvidence(counts, quotes, run.isSeed)
     }
 }

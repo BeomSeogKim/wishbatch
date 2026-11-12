@@ -17,11 +17,10 @@ import app.campaign.rules.authorizedUnits
 import app.campaign.rules.capturedUnits
 import app.campaign.rules.funded
 import app.campaign.rules.idempotencyKey
-import app.campaign.rules.interestCount
+import app.campaign.rules.allRequestCount
 import app.campaign.rules.requireCampaignTransition
 import app.campaign.rules.requirePledgeTransition
 import app.campaign.rules.thresholdMet
-import app.campaign.service.CampaignCounts
 import java.time.Instant
 import java.util.UUID
 
@@ -133,7 +132,7 @@ object ReliabilityDrills {
 
         fun snapshot(): DrillSnapshot {
             val wishes = (1..4).map { AnalyzedWish(sampleId("$id-wish-$it"), WishKind.REQUEST, emptyList()) }
-            return DrillSnapshot(campaign, reason, CampaignCounts(interestCount(wishes), authorizedUnits(pledges), capturedUnits(pledges)),
+            return DrillSnapshot(campaign, reason, DrillCounts(allRequestCount(wishes), authorizedUnits(pledges), capturedUnits(pledges)),
                 pledges.filter { it.state in setOf(PledgeState.CAPTURE_PENDING, PledgeState.REFUND_PENDING,
                     PledgeState.REFUND_FAILED, PledgeState.VOID_FAILED, PledgeState.CAPTURE_FAILED) ||
                     it.state == PledgeState.CREATED && provider.getValue(it.id).any { resource -> resource.status == null } ||

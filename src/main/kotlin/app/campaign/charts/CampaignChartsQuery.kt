@@ -2,10 +2,9 @@ package app.campaign.charts
 
 import app.campaign.model.CampaignState
 import app.campaign.model.PledgeState
-import app.campaign.port.AnalysisOutput
 import app.campaign.rules.authorizedUnits
 import app.campaign.rules.capturedUnits
-import app.campaign.rules.interestCount
+import app.campaign.service.OfferInterestQuery
 import app.campaign.store.AnalysisRunRepository
 import app.campaign.store.CampaignRepository
 import app.campaign.store.EventRepository
@@ -15,8 +14,6 @@ import app.campaign.store.WorkspaceRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
-import tools.jackson.core.JacksonException
-import tools.jackson.databind.json.JsonMapper
 import java.time.Clock
 import java.time.Instant
 import java.util.UUID
@@ -33,6 +30,13 @@ data class CampaignCharts(
     val attention: List<String>,
     val history: CountHistory,
     val interestHistoryMessage: String,
+    val conditional: Int?,
+    val excludedByPrice: Int?,
+    val notServed: Int?,
+    val interestWishIds: List<UUID>?,
+    val conditionalWishIds: List<UUID>?,
+    val excludedByPriceWishIds: List<UUID>?,
+    val notServedWishIds: List<UUID>?,
 )
 
 @Service
@@ -44,8 +48,8 @@ class CampaignChartsQuery(
     private val analyses: AnalysisRunRepository,
     private val pledges: PledgeRepository,
     private val events: EventRepository,
-    private val mapper: JsonMapper,
     private val clock: Clock,
+    private val interestQuery: OfferInterestQuery,
 ) {
     fun read(token: String, campaignId: UUID): CampaignCharts? {
         val workspace = workspaces.findByToken(token) ?: return null
@@ -54,14 +58,12 @@ class CampaignChartsQuery(
         val rows = pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id)
         val recorded = events.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id)
         val run = analyses.findByIdAndWorkspaceId(offer.analysisRunId, workspace.id)
-        val output = run?.let {
-            try { mapper.readValue(it.resultJson, AnalysisOutput::class.java) } catch (_: JacksonException) { null }
-        }
-        val interest = output?.let { interestCount(it.wishes) }
+        val counts = interestQuery.read(workspace.id, offer.analysisRunId, offer.optionId, offer.unitPrice)
+        val interest = counts?.interest
         val publication = recorded.filter { it.type == "CAMPAIGN_STATE" && it.detail == "DRAFT -> OPEN" }
             .singleOrNull()?.takeIf { event ->
                 val opened = campaign.openedAt
-                run != null && interest != null && opened != null && run.createdAt <= opened && event.createdAt >= opened
+                run != null && opened != null && run.createdAt <= opened && event.createdAt >= opened
             }
         val authorized = authorizedUnits(rows)
         val paid = capturedUnits(rows)
@@ -79,8 +81,9 @@ class CampaignChartsQuery(
             }
         }
         return CampaignCharts(campaign.id, campaign.state, clock.instant(), offer.minBatch, interest, authorized, paid,
-            run?.createdAt, attention, campaignCountHistory(campaign.id, rows, recorded, publication, interest),
-            if (publication == null) "Historical stated interest is unavailable: no verified publication anchor and immutable analysis pair is available."
-            else "Historical stated interest is unavailable except for one publication anchor from the offer's immutable analysis. Changing wish counts were not recorded.")
+            run?.createdAt, attention, campaignCountHistory(campaign.id, rows, recorded, publication),
+            "Historical offer interest is unavailable: visibility and reviewed conditions were not recorded at each checkpoint.",
+            counts?.conditional, counts?.excludedByPrice, counts?.notServed,
+            counts?.interestWishIds, counts?.conditionalWishIds, counts?.excludedByPriceWishIds, counts?.notServedWishIds)
     }
 }

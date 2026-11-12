@@ -33,12 +33,29 @@ class SeedCatalogTests {
         assertEquals(mapOf("cut" to "die-cut"), stickers.fixedAttributes)
         assertTrue(stickers.allowedVariants.isEmpty())
         assertEquals(listOf(650L, 400L, 250L), definition.options.map { it.unitCost })
+        assertEquals(listOf(1600L, 900L, 600L), definition.options.map { it.listPrice })
         assertEquals(listOf(3, 5, 5), definition.options.map { it.minBatch })
         assertEquals(listOf(10, 20, 30), definition.options.map { it.maxCapacity })
         assertEquals(listOf("2 weeks", "2 weeks", "3 weeks"), definition.options.map { it.leadTimeText })
         assertTrue(definition.options.all { it.currency == "USD" && it.shipRegion == "US" })
         assertEquals((1..40).map { "w%02d".format(it) }, catalog.wishes.map { it.key })
         assertEquals(39, catalog.wishes.map { it.text }.distinct().size)
+    }
+
+    @Test
+    fun `every maker has explicit list prices above cost`() {
+        assertEquals(listOf(2600L, 3600L, 4400L), catalog.scenario("ceramicist").definition.options.map { it.listPrice })
+        assertEquals(listOf(2400L, 3800L, 5600L), catalog.scenario("textile").definition.options.map { it.listPrice })
+        val workspaceId = UUID.randomUUID()
+        for (scenario in catalog.scenarios) {
+            for (seed in scenario.definition.options) {
+                val option = app.campaign.model.Option(workspaceId, seed.name, seed.format, seed.fixedAttributes,
+                    seed.allowedVariants, seed.unitCost, seed.currency, seed.minBatch, seed.maxCapacity,
+                    seed.leadTimeText, seed.shipRegion, catalog.optionId(workspaceId, seed.key))
+                assertTrue(seed.listPrice > seed.unitCost)
+                assertEquals(seed.listPrice, catalog.listPrice(option))
+            }
+        }
     }
 
     @Test
@@ -63,6 +80,8 @@ class SeedCatalogTests {
             original.copy(format = ""),
             original.copy(unitCost = 0),
             original.copy(unitCost = -1),
+            original.copy(listPrice = original.unitCost),
+            original.copy(listPrice = original.unitCost - 1),
             original.copy(currency = "usd"),
             original.copy(minBatch = 0),
             original.copy(maxCapacity = 2),

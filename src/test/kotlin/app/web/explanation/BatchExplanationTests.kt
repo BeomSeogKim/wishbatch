@@ -68,6 +68,10 @@ class BatchExplanationTests @Autowired constructor(
             }
         }
         val wish = evidence.wishId
+        val sourceText = workspaces.listWishes(workspace.token).single { it.id == wish }.text
+        val longestQuote = (proposal.rationale.filter { it.wishId == wish }.map { it.quote } +
+            stored.output.wishes.single { it.wishId == wish }.needs.map { it.quote })
+            .filter { it.isNotBlank() && sourceText.contains(it) }.maxBy { it.length }
         val (offer, campaignId) = transactions.execute {
             val offer = Offer(workspace.id, option, stored.run.id, "Reviewed offer", "Printed cards", emptyMap(),
                 200, "USD", "Ships later", "US", 2, 10).also(entityManager::persist)
@@ -78,7 +82,7 @@ class BatchExplanationTests @Autowired constructor(
         val originalTerms = mapper.writeValueAsString(offer)
         val path = "/w/${workspace.token}/campaigns/$campaignId/how-this-batch-was-chosen"
         val originalHtml = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
-        assertContains(HtmlUtils.htmlUnescape(originalHtml), evidence.quote)
+        assertContains(HtmlUtils.htmlUnescape(originalHtml), longestQuote)
         for ((verdict, compatible, notServed) in listOf(
             Triple("INCOMPATIBLE", counts.compatible - 1, counts.notServed + 1),
             Triple("COMPATIBLE", counts.compatible, counts.notServed),
@@ -93,12 +97,12 @@ class BatchExplanationTests @Autowired constructor(
             val html = mvc.get(path)
                 .andExpect { status { isOk() } }.andReturn().response.contentAsString
             if (verdict == "INCOMPATIBLE") {
-                assertFalse(HtmlUtils.htmlUnescape(html).contains(evidence.quote))
+                assertFalse(HtmlUtils.htmlUnescape(html).contains(longestQuote))
             } else {
-                assertContains(HtmlUtils.htmlUnescape(html), evidence.quote)
+                assertContains(HtmlUtils.htmlUnescape(html), longestQuote)
             }
-            assertContains(html, "<dt>Compatible</dt><dd>$compatible</dd>")
-            assertContains(html, "<dt>Depends</dt><dd>${counts.depends}</dd>")
+            assertContains(html, "<dt>Interested in this offer</dt>")
+            assertContains(html, "<dt>Depend on a condition</dt>")
             assertContains(html, "<dt>Not served</dt><dd>$notServed</dd>")
             assertContains(html, "Creating a workspace does not run a new analysis.")
             assertEquals(compatible, optionWishCounts(runs.find(workspace.token, stored.run.id)!!.output)
@@ -133,6 +137,7 @@ class BatchExplanationTests @Autowired constructor(
             ProposalEvidence("", privateWish.id, privateWish.text),
             ProposalEvidence("", seedWish.id, "invented words"),
             ProposalEvidence("", seedWish.id, validQuote),
+            ProposalEvidence("", seedWish.id, seedWish.text),
         )))
         val authorizationId = AuthorizationId("explanation-authorization-${workspace.id}")
         transactions.executeWithoutResult {
@@ -155,13 +160,13 @@ class BatchExplanationTests @Autowired constructor(
         payments.readAuthorizationResults.add(authorization)
         val html = mvc.get("/w/${workspace.token}/how-this-batch-was-chosen")
             .andExpect { status { isOk() } }.andReturn().response.contentAsString
-        assertContains(HtmlUtils.htmlUnescape(html), validQuote)
+        assertContains(HtmlUtils.htmlUnescape(html), seedWish.text)
         assertContains(html, "AI grouped wishes against the maker's feasible options")
         assertFalse(html.contains("Precomputed for this sample"))
         assertContains(html, "Production and delivery are the maker's responsibility.")
-        listOf("How this batch was chosen", "Example offer", "Printed cards", "<dt>Compatible</dt><dd>16</dd>",
-            "<dt>Depends</dt><dd>10</dd>", "<dt>Not served</dt><dd>9</dd>", "Authorized holds", ">2</span>",
-            "Paid", ">1</span>", "Compatible", "Not served").forEach { assertContains(html, it) }
+        listOf("How this batch was chosen", "Example offer", "Printed cards", "<dt>Interested in this offer</dt>",
+            "<dt>Depend on a condition</dt>", "<dt>Not served</dt><dd>9</dd>", "Authorized holds", ">2</span>",
+            "Paid", ">1</span>", "Interested in this offer", "Not served").forEach { assertContains(html, it) }
         listOf("private@example.com", "Private Name", "buyer-secret@example.com", "other-buyer@example.com",
             "invented words").forEach { assertFalse(html.contains(it)) }
         workspaces.setWishHidden(workspace.token, seedWish.id, true)

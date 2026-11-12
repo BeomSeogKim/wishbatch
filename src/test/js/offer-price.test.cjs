@@ -28,7 +28,7 @@ function browser(fetch) {
 }
 
 function response(fit, excludedByPrice = []) {
-    return {ok: true, json: async () => ({fit, compatible: fit, depends: 0, excludedByPrice})};
+    return {ok: true, json: async () => ({interest: fit, conditional: 0, excludedByPrice: excludedByPrice.length, notServed: 0, excludedWishes: excludedByPrice})};
 }
 
 test('requests exact input from the read-only endpoint and renders server counts and escaped evidence', async () => {
@@ -43,7 +43,7 @@ test('requests exact input from the read-only endpoint and renders server counts
     assert.equal(calls[0].url.searchParams.get('unitPrice'), '9223372036854775807');
     assert.equal(calls[0].url.searchParams.get('run'), 'run-id');
     assert.equal(calls[0].options.method, undefined);
-    assert.match(app.elements['price-check-summary'].textContent, /2 wishes fit this price, 1 are excluded/);
+    assert.match(app.elements['price-check-summary'].textContent, /Interested in this offer: 2; 1 excluded/);
     const item = app.elements['price-excluded'].children[0];
     assert.equal(item.children[0].href, '/w/token/maker/proposal?run=run-id#wish-wish-id');
     assert.equal(item.children[2].textContent, '<script>untrusted</script>');
@@ -59,7 +59,7 @@ test('late responses cannot overwrite the newest price check', async () => {
     await app.flush();
     completeFirst(response(9));
     await first;
-    assert.match(app.elements['price-check-summary'].textContent, /^1 wishes fit/);
+    assert.match(app.elements['price-check-summary'].textContent, /^Interested in this offer: 1;/);
 });
 
 test('failed checks clear outdated counts and point to the server-rendered fallback', async () => {

@@ -12,7 +12,7 @@ import app.campaign.rules.closesAt
 import app.campaign.rules.confirmDeadline
 import app.campaign.rules.funded
 import app.campaign.rules.idempotencyKey
-import app.campaign.rules.interestCount
+import app.campaign.rules.allRequestCount
 import app.campaign.rules.thresholdMet
 import org.junit.jupiter.api.Test
 import java.time.Duration
@@ -30,8 +30,8 @@ class CountAndTimingTests {
     fun `interest counts requests once regardless of requested quantity`() {
         val request = AnalyzedWish(UUID.randomUUID(), WishKind.REQUEST, emptyList(), quantity = 99)
         val noise = AnalyzedWish(UUID.randomUUID(), WishKind.NOT_A_REQUEST, emptyList())
-        assertEquals(1, interestCount(listOf(request, request, noise)))
-        assertEquals(0, interestCount(emptyList()))
+        assertEquals(1, allRequestCount(listOf(request, request, noise)))
+        assertEquals(0, allRequestCount(emptyList()))
     }
 
     @Test

@@ -38,12 +38,12 @@
         <div class="table-scroll drill-table" tabindex="0" role="region" aria-label="Simulated campaign checkpoints">
             <table>
                 <caption>Simulated campaign and counts before and after playback</caption>
-                <thead><tr><th scope="col">Checkpoint</th><th scope="col">Campaign</th><th scope="col">Stated interest</th><th scope="col">Authorized holds</th><th scope="col">Paid</th><th scope="col">Needs attention</th></tr></thead>
+                <thead><tr><th scope="col">Checkpoint</th><th scope="col">Campaign</th><th scope="col">All requests</th><th scope="col">Authorized holds</th><th scope="col">Paid</th><th scope="col">Needs attention</th></tr></thead>
                 <tbody>
                 <tr th:each="checkpoint : ${ {drill.before, drill.after} }">
                     <th scope="row" th:text="${checkpointStat.first ? 'Before' : 'After'}"></th>
                     <td><span th:title="${checkpoint.campaignState}" th:text="${@humanDisplay.state(checkpoint.campaignState)}"></span><span th:if="${checkpoint.reason != null}" th:text="${' / ' + checkpoint.reason}"></span></td>
-                    <td th:text="${checkpoint.counts.statedInterest}"></td>
+                    <td th:text="${checkpoint.counts.allRequests}"></td>
                     <td th:text="${checkpoint.counts.authorizedHolds}"></td>
                     <td th:text="${checkpoint.counts.paid}"></td>
                     <td><span th:if="${checkpoint.needsAttention.isEmpty()}">None in this simulation</span><ul th:unless="${checkpoint.needsAttention.isEmpty()}"><li th:each="attention : ${checkpoint.needsAttention}" th:text="${attention}"></li></ul></td>
@@ -64,7 +64,7 @@
                     <td><strong th:text="${step.operation}"></strong><p th:if="${step.endpoint != null}"><code th:text="${step.endpoint}"></code></p><p th:text="${step.detail}"></p></td>
                     <td><p th:if="${step.providerId != null}">Simulated ID: <code th:text="${step.providerId}"></code></p><p th:if="${step.key != null}">Original idempotency key: <code th:text="${step.key}"></code></p></td>
                     <td th:title="${step.status}" th:text="${@humanDisplay.state(step.status)}"></td>
-                    <td><p th:title="${step.snapshot.campaignState}" th:text="${@humanDisplay.state(step.snapshot.campaignState)}"></p><p>Stated interest: <span th:text="${step.snapshot.counts.statedInterest}"></span>; Authorized holds: <span th:text="${step.snapshot.counts.authorizedHolds}"></span>; Paid: <span th:text="${step.snapshot.counts.paid}"></span>.</p><ul><li th:each="attention : ${step.snapshot.needsAttention}" th:text="${attention}"></li></ul></td>
+                    <td><p th:title="${step.snapshot.campaignState}" th:text="${@humanDisplay.state(step.snapshot.campaignState)}"></p><p>All requests: <span th:text="${step.snapshot.counts.allRequests}"></span>; Authorized holds: <span th:text="${step.snapshot.counts.authorizedHolds}"></span>; Paid: <span th:text="${step.snapshot.counts.paid}"></span>.</p><ul><li th:each="attention : ${step.snapshot.needsAttention}" th:text="${attention}"></li></ul></td>
                 </tr>
                 </tbody>
             </table>

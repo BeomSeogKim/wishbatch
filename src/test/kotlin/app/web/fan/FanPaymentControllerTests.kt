@@ -414,7 +414,7 @@ class FanPaymentControllerTests @Autowired constructor(
             view { name("fan/offer") }
         }.andReturn().response.contentAsString
         for (text in listOf("Moon print", "A5 archival print", "Shipping included", "US", "USD", "4.00",
-            "2026-01-01T00:15:00Z", "2026-01-01T12:15:00Z", "Stated interest", "Authorized holds", "Paid",
+            "2026-01-01T00:15:00Z", "2026-01-01T12:15:00Z", "Interested in this offer", "Authorized holds", "Paid",
             "Sandbox demo. No real money moves.", "synthetic-client", "intent=authorize")) assertContains(html, text)
         assertFalse(html.contains("synthetic-secret"))
         assertFalse(html.contains("private-buyer"))
@@ -652,7 +652,7 @@ class FanPaymentControllerTests @Autowired constructor(
                 view { name("fan/result") }
             }.andReturn().response.contentAsString
             if (state == CampaignState.FUNDED || state == CampaignState.NOT_FUNDED) {
-                for (label in listOf("Stated interest", "Authorized holds", "Paid")) assertContains(html, label)
+                for (label in listOf("Interested in this offer", "Authorized holds", "Paid")) assertContains(html, label)
                 assertContains(html, "pledge-experience is-settled")
                 assertContains(html.lowercase(), if (state == CampaignState.FUNDED) "funded" else "not funded")
                 if (state == CampaignState.FUNDED) {

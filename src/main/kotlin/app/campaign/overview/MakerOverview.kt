@@ -10,7 +10,7 @@ import app.campaign.model.PledgeState
 import app.campaign.provenance.DecisionRecordQuery
 import app.campaign.rules.authorizedUnits
 import app.campaign.rules.capturedUnits
-import app.campaign.rules.interestCount
+import app.campaign.service.OfferInterestQuery
 import app.campaign.service.CampaignRef
 import app.campaign.service.ServiceResult
 import app.campaign.store.CampaignRepository
@@ -32,6 +32,7 @@ data class MakerOverview(
     val analysisAt: Instant?, val newWishes: Int?, val questionDrafts: Int,
     val booksAt: Instant?, val booksUnknown: Int?, val booksMismatch: Int?,
     val unavailableRecords: Int, val changedRecords: Int,
+    val conditional: Int? = null,
 )
 
 internal fun nextAction(state: CampaignState?, expired: Boolean, attention: Boolean, authorized: Long, minimum: Int?, hasAnalysis: Boolean): OverviewAction = when {
@@ -56,6 +57,7 @@ class MakerOverviewQuery(
     private val followups: FollowupService,
     private val decisions: DecisionRecordQuery,
     private val clock: Clock,
+    private val interestQuery: OfferInterestQuery,
 ) {
     fun read(token: String): MakerOverview {
         val workspace = workspaces.findByToken(token) ?: throw WorkspaceNotFoundException()
@@ -92,14 +94,15 @@ class MakerOverviewQuery(
         val check = campaign?.let { (books.history(CampaignRef(workspace.id, it.id)) as? ServiceResult.Success)?.value?.lastOrNull() }
         val decision = decisions.findByToken(token) ?: throw WorkspaceNotFoundException()
         val relevant = if (campaign == null) emptyList() else decision.pledges.filter { it.campaignId == campaign.id }
+        val interest = offer?.let { interestQuery.read(workspace.id, it.analysisRunId, it.optionId, it.unitPrice) }
         return MakerOverview(campaign?.id, offer?.title, campaign?.state, campaign?.reason?.name, deadline, expired,
-            offer?.minBatch, analysis?.let { interestCount(it.originalOutput.wishes) },
+            offer?.minBatch, interest?.interest,
             campaign?.let { authorized }, campaign?.let { paid }, attention,
             nextAction(campaign?.state, expired, attention.isNotEmpty(), authorized, offer?.minBatch, latest != null),
             analysis?.run?.createdAt, analysis?.newWishCount, followups.makerPage(token).questions.count { !it.approved },
             check?.checkedAt, check?.pledges?.count { it.after.match == BooksMatch.UNKNOWN },
             check?.pledges?.count { it.after.match == BooksMatch.MISMATCH },
-            relevant.count { it.integrity == "UNAVAILABLE" }, relevant.count { it.integrity == "CHANGED" })
+            relevant.count { it.integrity == "UNAVAILABLE" }, relevant.count { it.integrity == "CHANGED" }, interest?.conditional)
     }
 
     private val attentionStates = setOf(PledgeState.CAPTURE_PENDING, PledgeState.REFUND_PENDING,

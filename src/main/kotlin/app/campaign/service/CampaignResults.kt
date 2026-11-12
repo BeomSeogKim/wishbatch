@@ -88,7 +88,18 @@ data class TimelineEntry(
     val time: Instant,
 )
 
-data class CampaignCounts(val statedInterest: Int, val authorizedHolds: Long, val paid: Long)
+data class CampaignCounts(
+    val interest: Int,
+    val authorizedHolds: Long,
+    val paid: Long,
+    val conditional: Int = 0,
+    val excludedByPrice: Int = 0,
+    val notServed: Int = 0,
+    val interestWishIds: List<UUID> = emptyList(),
+    val conditionalWishIds: List<UUID> = emptyList(),
+    val excludedByPriceWishIds: List<UUID> = emptyList(),
+    val notServedWishIds: List<UUID> = emptyList(),
+)
 data class MinimumProgress(val units: Long, val minimum: Int)
 data class AttentionItem(val pledgeId: UUID, val state: PledgeState, val reason: String?)
 data class ResultSummary(

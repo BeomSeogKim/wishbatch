@@ -7,7 +7,7 @@ import app.campaign.model.*
 import app.campaign.port.*
 import app.campaign.rules.authorizedUnits
 import app.campaign.rules.capturedUnits
-import app.campaign.rules.interestCount
+import app.campaign.rules.allRequestCount
 import app.campaign.rules.PaymentAction
 import app.campaign.rules.idempotencyKey
 import app.campaign.service.*
@@ -75,7 +75,7 @@ class InvariantSequenceTest @Autowired constructor(
                 val authorized = rows.filter { it.state == PledgeState.AUTHORIZED }.sumOf { it.qty.toLong() }
                 val paidRows = rows.filter { it.state == PledgeState.CAPTURED }
                 val paid = paidRows.sumOf { it.qty.toLong() }
-                assertEquals(1, interestCount(output.wishes), "seed=$seed")
+                assertEquals(1, allRequestCount(output.wishes), "seed=$seed")
                 assertEquals(authorized, authorizedUnits(rows), "seed=$seed")
                 assertEquals(paid, capturedUnits(rows), "seed=$seed")
                 val capturedIds = paidRows.mapNotNull { it.captureId }.toSet()
@@ -85,7 +85,7 @@ class InvariantSequenceTest @Autowired constructor(
                 }
                 val view = (result as? ServiceResult.Success<*>)?.value as? CampaignView
                 if (view != null) {
-                    assertEquals(CampaignCounts(1, authorized, paid), view.counts, "seed=$seed")
+                    assertEquals(CampaignCounts(0, authorized, paid), view.counts, "seed=$seed")
                 }
                 assertTrue(gateway.captureEffects.values.all { it <= 1 }, "seed=$seed duplicate capture effect")
                 assertTrue(gateway.refundEffects.values.all { it <= 1 }, "seed=$seed duplicate refund effect")

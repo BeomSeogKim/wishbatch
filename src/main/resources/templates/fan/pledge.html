@@ -11,7 +11,7 @@
         <h2 th:text="${campaign.offer.title}"></h2>
         <p class="notice notice-info" th:text="${sentence}"></p>
         <p><strong th:text="${@humanDisplay.money(pledge.amount, pledge.currency)}"></strong> · Quantity <span th:text="${pledge.quantity}"></span></p>
-        <div th:replace="~{fragments/components :: counts(${campaign.counts.statedInterest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}"></div>
+        <div th:replace="~{fragments/components :: counts(${campaign.counts.interest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}"></div>
         <nav class="pledge-actions" aria-label="Next steps">
             <a class="button button-primary" th:href="@{/w/{token}/result(token=${token})}" th:text="${resultAvailable} ? 'See campaign result' : 'See campaign progress'">See campaign progress</a>
             <a class="button button-secondary" th:href="@{/w/{token}/pledges/{id}(token=${token},id=${pledge.id})}">Refresh status</a>

@@ -76,7 +76,7 @@
             const campaign = next.campaign;
             const counts = campaign.counts;
             const progress = campaign.progress;
-            const decimals = [counts.statedInterest, counts.authorizedHolds, counts.paid,
+            const decimals = [counts.interest, counts.conditional, counts.excludedByPrice, counts.notServed, counts.authorizedHolds, counts.paid,
                 progress.units, progress.minimum, campaign.capacityLeft];
             if (next.availability !== 'CAMPAIGN' || !Number.isFinite(Date.parse(next.observedAt)) ||
                 decimals.some(value => typeof value !== 'string' || !/^\d+$/.test(value)) ||
@@ -96,7 +96,8 @@
 
             snapshot = next;
             receivedAt = Date.now();
-            text('statedInterest', counts.statedInterest);
+            text('interest', counts.interest);
+            text('conditional', counts.conditional);
             text('authorizedHolds', counts.authorizedHolds);
             const terminal = campaign.state === 'FUNDED' || campaign.state === 'NOT_FUNDED';
             root.querySelectorAll('[data-live-hold-card]').forEach(node => {

@@ -17,7 +17,11 @@ import app.campaign.port.WishNeed
 import app.campaign.review.InvalidWishReviewException
 import app.campaign.review.WishReviewOverride
 import app.campaign.review.WishReviewService
-import app.campaign.rules.optionWishCounts
+import app.campaign.rules.offerInterest
+import app.campaign.rules.OfferInterest
+import app.campaign.service.CampaignQueries
+import app.campaign.service.ServiceResult
+import app.campaign.workspace.SeedCatalog
 import app.campaign.workspace.WorkspaceNotFoundException
 import app.campaign.workspace.WorkspaceService
 import app.campaign.workbench.WishWorkbench
@@ -49,7 +53,8 @@ data class ProposalWish(
     val decisions: List<WishReviewOverride> = emptyList(),
     val readingLabels: List<String> = emptyList(),
 )
-data class ProposalGroupSummary(val label: String, val key: String, val count: Int, val representative: ProposalWish?)
+data class ProposalGroupSummary(val label: String, val key: String, val count: Int, val representative: ProposalWish?, val wishIds: List<UUID> = emptyList())
+data class ProposalOptionInterest(val optionId: UUID, val unitPrice: Long, val counts: OfferInterest)
 
 data class ProposalHelper(val title: String, val state: String, val action: String, val url: String)
 
@@ -62,12 +67,16 @@ class ProposalController(
     private val followups: FollowupService,
     private val replies: ReplyService,
     private val glosses: WishGlossService,
+    private val campaigns: CampaignQueries,
+    private val seed: SeedCatalog,
 ) {
 
     @GetMapping("/w/{token}/maker/proposal")
     fun proposal(@PathVariable token: String, @RequestParam(required = false) run: UUID?, model: Model): String {
-        val stored = if (run == null) runs.latest(token)
-            else runs.find(token, run) ?: throw WorkspaceNotFoundException()
+        val published = (campaigns.currentCampaign(token) as? ServiceResult.Success)?.value
+        val selectedRun = run ?: published?.offer?.analysisRunId
+        val stored = if (selectedRun == null) runs.latest(token)
+            else runs.find(token, selectedRun) ?: throw WorkspaceNotFoundException()
         val options = workspaces.listOptions(token).associateBy { it.id }
         val wishes = workspaces.listWishes(token).associateBy { it.id }
         model.addAttribute("stored", stored)
@@ -96,10 +105,17 @@ class ProposalController(
             })
             val option = output.proposal?.let { options[it.optionId] }
             model.addAttribute("proposedOption", option)
-            model.addAttribute("optionCounts", optionWishCounts(output))
-            model.addAttribute("proposedCounts", optionWishCounts(output).singleOrNull { it.optionId == option?.id })
+            val optionCounts = options.values.mapNotNull { candidate ->
+                val price = published?.offer?.takeIf { it.analysisRunId == stored.run.id && it.optionId == candidate.id }
+                    ?.unitPrice ?: seed.listPrice(candidate) ?: return@mapNotNull null
+                ProposalOptionInterest(candidate.id, price, offerInterest(output, candidate, wishes.values.toList(), price))
+            }
+            val proposed = optionCounts.singleOrNull { it.optionId == option?.id }
+            model.addAttribute("optionCounts", optionCounts)
+            model.addAttribute("proposedCounts", proposed?.counts)
+            model.addAttribute("interestPrice", proposed?.let { display.money(it.unitPrice, option!!.currency) })
             if (option != null) {
-                model.addAttribute("demand", exploreDemand(output, options.values.toList(), wishes.values.toList(), option.id, unitPrice = option.unitCost))
+                model.addAttribute("demand", exploreDemand(output, options.values.toList(), wishes.values.toList(), option.id, proposed?.unitPrice))
                 model.addAttribute("optionFormat", display.catalogLabel(option.format))
                 model.addAttribute("optionAttributes", option.fixedAttributes.mapKeys { display.catalogLabel(it.key) }
                     .mapValues { display.catalogLabel(it.value) })
@@ -132,15 +148,13 @@ class ProposalController(
             }.toMap()
             model.addAttribute("allWishes", rows.values.toList())
             if (option != null) {
-                val counts = optionWishCounts(output).single { it.optionId == option.id }
-                fun representative(verdict: CompatibilityVerdict): ProposalWish? = output.verdicts
-                    .firstOrNull { it.optionId == option.id && it.verdict == verdict }?.let { rows[it.wishId] }
+                val counts = proposed?.counts ?: OfferInterest()
+                fun representative(ids: List<UUID>): ProposalWish? = ids.firstNotNullOfOrNull { rows[it] }
                 model.addAttribute("groupSummaries", listOf(
-                    ProposalGroupSummary("Compatible", "COMPATIBLE", counts.compatible, representative(CompatibilityVerdict.COMPATIBLE)),
-                    ProposalGroupSummary("Depends", "CONDITIONAL", counts.depends, representative(CompatibilityVerdict.CONDITIONAL)),
-                    ProposalGroupSummary("Not served", "INCOMPATIBLE", counts.notServed, representative(CompatibilityVerdict.INCOMPATIBLE)),
-                    ProposalGroupSummary("Not a request", "NOT_A_REQUEST", counts.notARequest,
-                        output.wishes.firstOrNull { it.kind == WishKind.NOT_A_REQUEST }?.let { rows[it.wishId] }),
+                    ProposalGroupSummary("Interested in this offer", "COMPATIBLE", counts.interest, representative(counts.interestWishIds), counts.interestWishIds),
+                    ProposalGroupSummary("Depend on a condition", "CONDITIONAL", counts.conditional, representative(counts.conditionalWishIds), counts.conditionalWishIds),
+                    ProposalGroupSummary("Excluded by price", "PRICE_EXCLUDED", counts.excludedByPrice, representative(counts.excludedByPriceWishIds), counts.excludedByPriceWishIds),
+                    ProposalGroupSummary("Not served", "INCOMPATIBLE", counts.notServed, representative(counts.notServedWishIds), counts.notServedWishIds),
                 ))
             }
 

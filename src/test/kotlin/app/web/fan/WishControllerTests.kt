@@ -72,6 +72,7 @@ class WishControllerTests @Autowired constructor(
         assertContains(html, "Thanks for sharing your wish!")
         assertContains(html, "nothing was charged")
         assertContains(html, "A moon moth postcard, please!")
+        assertFalse(html.contains("Fern"))
     }
 
     @Test
@@ -150,7 +151,7 @@ class WishControllerTests @Autowired constructor(
     }
 
     @Test
-    fun `recent wishes exclude hidden and other workspaces and escape fan text`() {
+    fun `recent wishes exclude hidden and other workspaces and escape fan text without names`() {
         val token = workspaces.create().token
         val otherToken = workspaces.create().token
         workspaces.addWish(otherToken, "Private to the other workspace")
@@ -162,7 +163,8 @@ class WishControllerTests @Autowired constructor(
         assertFalse(html.contains("Private to the other workspace"))
         assertFalse(html.contains("<script>alert('wish')</script>"))
         assertContains(html, "&lt;script&gt;")
-        assertContains(html, "&lt;b&gt;Fern&lt;/b&gt;")
+        assertFalse(html.contains("Fern"))
+        assertContains(html, "Anonymous fan")
     }
 
     @Test

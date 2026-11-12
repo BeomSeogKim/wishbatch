@@ -6,7 +6,7 @@ import app.campaign.model.WishKind
 import app.campaign.port.AnalyzedWish
 
 /** Count distinct requests in validated analysis, not requested quantities or payment records. */
-fun interestCount(wishes: Iterable<AnalyzedWish>): Int =
+fun allRequestCount(wishes: Iterable<AnalyzedWish>): Int =
     wishes.filter { it.kind == WishKind.REQUEST }.map { it.wishId }.distinct().size
 
 /** Callers supply pledges from one campaign. Pending and failed operations contribute no units. */

@@ -8,7 +8,7 @@
     <p th:text="${resultReason}"></p>
     <th:block th:if="${campaign != null}">
         <h2 th:text="${campaign.offer.title}"></h2>
-        <div th:replace="~{fragments/components :: counts(${campaign.counts.statedInterest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}"></div>
+        <div th:replace="~{fragments/components :: counts(${campaign.counts.interest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}"></div>
         <section th:if="${resultAvailable}" class="card">
             <h2>Payment outcomes</h2>
             <dl class="term-list">

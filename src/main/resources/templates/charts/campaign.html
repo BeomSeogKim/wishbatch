@@ -6,7 +6,7 @@
     <header class="page-heading">
         <p class="eyebrow">Maker workspace</p>
         <h1>Campaign counts</h1>
-        <p class="lead">Stated interest → authorized holds → completed payments are different measures, not a tracked conversion cohort.</p>
+        <p class="lead">Interested in this offer → authorized holds → completed payments are different measures, not a tracked conversion cohort.</p>
         <p>Wishes are distinct requests; payment counts are units. No personal wish-to-pledge association or conversion rate is recorded. Interest is not compatible demand.</p>
     </header>
     <div th:replace="~{charts/campaign :: charts(${charts})}"></div>
@@ -27,7 +27,8 @@
             <caption>Current values with distinct units</caption>
             <thead><tr><th scope="col">Measure</th><th scope="col">Count</th><th scope="col">Unit and source</th></tr></thead>
             <tbody>
-            <tr><th scope="row">Stated interest</th><td th:text="${charts.interest == null ? 'Unavailable' : charts.interest}"></td><td>Distinct requests in the offer's immutable analysis; not compatible demand</td></tr>
+            <tr><th scope="row">Interested in this offer</th><td th:text="${charts.interest == null ? 'Unavailable' : charts.interest}"></td><td>Visible requests compatible with this offer at its published price</td></tr>
+            <tr><th scope="row">Depend on a condition</th><td th:text="${charts.conditional == null ? 'Unavailable' : charts.conditional}"></td><td>More wishes with an unresolved condition</td></tr>
             <tr><th scope="row">Authorized holds</th><td th:text="${charts.authorized}"></td><td>Units in AUTHORIZED pledges; not completed payments</td></tr>
             <tr><th scope="row">Completed payments</th><td th:text="${charts.paid}"></td><td>Units in CAPTURED pledges only; pending, failed and refunded states excluded</td></tr>
             </tbody>
@@ -47,7 +48,7 @@
         <div class="table-scroll" role="region" aria-label="Recorded count history table" tabindex="0">
             <table id="count-history">
                 <caption>Recorded checkpoints; unavailable values are not zero</caption>
-                <thead><tr><th scope="col">Time (UTC)</th><th scope="col">Source events</th><th scope="col">Stated interest (requests)</th><th scope="col">Authorized holds (units)</th><th scope="col">Completed payments (units)</th><th scope="col">Coverage</th></tr></thead>
+                <thead><tr><th scope="col">Time (UTC)</th><th scope="col">Source events</th><th scope="col">Interested in this offer (requests)</th><th scope="col">Authorized holds (units)</th><th scope="col">Completed payments (units)</th><th scope="col">Coverage</th></tr></thead>
                 <tbody>
                 <tr th:each="point : ${charts.history.checkpoints}" th:id="${point.anchor}" tabindex="-1"
                     th:attr="data-recorded-at=${point.recordedAt},data-interest=${point.interest},data-authorized=${point.authorized},data-paid=${point.paid}">
@@ -56,7 +57,7 @@
                     <td th:text="${point.interest == null ? 'Unavailable' : point.interest}"></td>
                     <td th:text="${point.authorized == null ? 'Unavailable' : point.authorized}"></td>
                     <td th:text="${point.paid == null ? 'Unavailable' : point.paid}"></td>
-                    <td th:text="${point.gap ?: 'Recorded checkpoint; interest only at a verified publication anchor'}"></td>
+                    <td th:text="${point.gap ?: 'Recorded payment checkpoint; historical offer interest unavailable'}"></td>
                 </tr>
                 </tbody>
             </table>

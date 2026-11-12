@@ -66,12 +66,12 @@ class WishReviewOfferTests(
         review(fixture, limited, CompatibilityVerdict.COMPATIBLE)
         mvc.get("/w/${fixture.workspace.token}/maker/offer/price-check") {
             param("run", fixture.run.id.toString())
-            param("unitPrice", "1001")
+            param("unitPrice", "10.01")
         }.andExpect {
             status { isOk() }
-            jsonPath("$.compatible") { value(1) }
-            jsonPath("$.excludedByPrice[0].wishId") { value(limited.id.toString()) }
-            jsonPath("$.excludedByPrice[0].quotes[0]") { value("At most USD 10.00") }
+            jsonPath("$.interest") { value(1) }
+            jsonPath("$.excludedWishes[0].wishId") { value(limited.id.toString()) }
+            jsonPath("$.excludedWishes[0].quotes[0]") { value("At most USD 10.00") }
         }
         assertEquals(fixture.run.resultJson, entityManager.find(AnalysisRun::class.java, fixture.run.id).resultJson)
         assertEquals(0L, entityManager.createQuery(
@@ -113,27 +113,28 @@ class WishReviewOfferTests(
     private fun assertMakerCount(fixture: Fixture, compatible: Int) {
         val html = mvc.get("/w/${fixture.workspace.token}/maker/offer") {
             param("run", fixture.run.id.toString())
+            flashAttr("fields", mapOf("run" to fixture.run.id.toString(), "unitPrice" to "10.00"))
         }.andExpect { status { isOk() } }.andReturn().response.contentAsString
-        assertContains(html, "$compatible wishes fit this price, 0 are excluded by their stated limit")
-        assertContains(html, "$compatible Compatible; 0 Depends.")
+        assertContains(html, "Interested in this offer: $compatible; 0 excluded by price")
+        assertContains(html, "0 more depend on a condition")
     }
 
     private fun assertPriceCount(fixture: Fixture, price: Long, compatible: Int, excluded: Int) {
         mvc.get("/w/${fixture.workspace.token}/maker/offer/price-check") {
             param("run", fixture.run.id.toString())
-            param("unitPrice", price.toString())
+            param("unitPrice", app.campaign.rules.MoneyInput.formatMinorUnits(price))
         }.andExpect {
             status { isOk() }
-            jsonPath("$.fit") { value(compatible) }
-            jsonPath("$.compatible") { value(compatible) }
-            jsonPath("$.depends") { value(0) }
-            jsonPath("$.excludedByPrice.length()") { value(excluded) }
+            jsonPath("$.interest") { value(compatible) }
+            jsonPath("$.interest") { value(compatible) }
+            jsonPath("$.conditional") { value(0) }
+            jsonPath("$.excludedByPrice") { value(excluded) }
         }
     }
 
     private fun assertFanEvidence(fixture: Fixture, offer: Offer, included: List<Wish>) {
         val current = assertNotNull(evidence.findByOffer(fixture.workspace.id, offer.id))
-        assertEquals(included.size, current.compatibleWishCount)
+        assertEquals(included.size, current.counts.interest)
         assertPriceCount(fixture, 1000, compatible = included.size, excluded = 0)
         assertEquals(included.map { it.id }.toSet(), current.quotes.map { it.wishId }.toSet())
         current.quotes.forEach { quote ->

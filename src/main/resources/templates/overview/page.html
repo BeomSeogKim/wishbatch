@@ -27,7 +27,7 @@
             <p th:if="${overview.minimum != null}">Minimum: <span th:text="${overview.minimum}"></span> units.</p>
         </th:block>
         <ul>
-            <li>Stated interest: <strong th:text="${overview.interest == null ? 'Unknown (no analysis)' : overview.interest}"></strong> requests in the stored analysis.</li>
+            <li>Interested in this offer: <strong th:text="${overview.interest == null ? 'No offer interest available' : overview.interest}"></strong> wishes.<span th:if="${overview.conditional != null}" th:text="${' ' + overview.conditional + ' more depend on a condition.'}"></span></li>
             <li>Authorized holds: <strong th:text="${overview.authorized == null ? 'Unknown (no campaign)' : overview.authorized}"></strong> units.</li>
             <li>Completed payments: <strong th:text="${overview.paid == null ? 'Unknown (no campaign)' : overview.paid}"></strong> units.</li>
         </ul>

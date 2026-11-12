@@ -91,7 +91,7 @@ class ProposalControllerTests(
         assertContains(html, "2 weeks")
         assertContains(html, "Use this proposal")
         assertContains(html, "/w/${workspace.token}/maker/offer?run=${stored.run.id}")
-        assertContains(html, "stated interest, not orders")
+        assertContains(html, "Interested in this offer")
         assertContains(html, "Not a request")
         assertContains(html, "Original validation flags")
         assertEquals(1, Regex("<h1\\b").findAll(html).count())
@@ -105,13 +105,10 @@ class ProposalControllerTests(
             assertContains(html, "href=\"#wish-${evidence.wishId}\"")
             assertContains(html, "id=\"wish-${evidence.wishId}\"")
         }
-        val counts = optionWishCounts(stored.output).single { it.optionId == stored.output.proposal!!.optionId }
-        for ((label, count) in listOf("COMPATIBLE" to counts.compatible, "CONDITIONAL" to counts.depends,
-            "INCOMPATIBLE" to counts.notServed, "NOT_A_REQUEST" to counts.notARequest)) {
-            assertContains(html, "<strong>$count</strong>")
-            assertContains(html, "label=$label")
-            assertContains(html, "data-label=\"$label\"")
+        for (label in listOf("Interested in this offer", "Depend on a condition", "Excluded by price", "Not served")) {
+            assertContains(html, label)
         }
+        assertContains(html, "more depend on a condition")
         assertContains(html, "Live analysis progress")
         assertContains(html, "Review follow-up questions for the latest analysis")
         assertContains(html, "data-workbench-label-link")
@@ -325,7 +322,7 @@ class ProposalControllerTests(
     }
 
     @Test
-    fun `groups render one source wish per label with filtered workbench links`() {
+    fun `offer groups exclude non requests and link to source wishes`() {
         for (size in listOf(0, 3, 6)) {
             val token = workspaces.create().token
             val output = runs.latest(token)!!.output
@@ -343,11 +340,12 @@ class ProposalControllerTests(
                 notServed = emptyList(), questionsForMaker = emptyList(),
             ))
             val html = page(token)
-            val summary = html.substringAfter("aria-label=\"Wish groups for this proposal\"").substringBefore("Stated interest")
-            assertEquals(4, Regex("data-label=").findAll(summary).count())
-            assertEquals(if (size == 0) 0 else 4, Regex("<blockquote>").findAll(summary).count())
-            assertEquals(4, Regex("<strong>$size</strong>").findAll(summary).count())
-            groups.keys.forEach { assertContains(summary, "label=$it") }
+            val summary = html.substringAfter("aria-label=\"Wish groups for this proposal\"").substringBefore("<dl class=")
+            assertEquals(if (size == 0) 0 else 3, Regex("<blockquote>").findAll(summary).count())
+            assertEquals(if (size == 0) 4 else 3, Regex("<strong>$size</strong>").findAll(summary).count())
+            assertContains(summary, "Interested in this offer")
+            assertContains(summary, "Excluded by price")
+            assertContains(summary, "label=INCOMPATIBLE")
             assertContains(html, "aria-label=\"Proposal sections\"")
         }
     }

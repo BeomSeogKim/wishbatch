@@ -94,7 +94,7 @@ class DemandExplorerTests {
     }
 
     @Test
-    fun `unquoted clauses cannot change the currency or scope of quoted price evidence`() {
+    fun `strict whole-source parser leaves unquoted scope clauses unknown`() {
         val examples = listOf(
             "The following amounts are CAD. Up to $10." to "Up to $10.",
             "This is my shipping budget. No budget limit." to "No budget limit.",
@@ -106,34 +106,29 @@ class DemandExplorerTests {
             "No budget limit. Only for delivery." to "No budget limit.",
             "Cards please. Up to USD 10." to "Up to USD 10.",
         )
-        val sources = examples.map { wish(it.first) }
-        val requests = examples.mapIndexed { index, (source, quote) ->
-            analyzed(sources[index].id, listOf(quote)).also {
-                val parsed = quotedPriceLimit(it, source, "USD")
-                assertEquals(PriceEvidenceStatus.AMBIGUOUS, parsed.status, source)
-                assertNull(parsed.maximumMinor, source)
-                assertEquals(listOf(quote), parsed.quotes, source)
-            }
-        }
-        val verdicts = sources.map { WishVerdict(it.id, first.id, CompatibilityVerdict.COMPATIBLE, "Fits") }
-        val demand = assertNotNull(exploreDemand(output(requests, verdicts), listOf(first), sources, first.id, 1000))
-        assertEquals(sources.size, demand.compatible)
-        assertEquals(sources.size, demand.ambiguous)
-        assertEquals(0, demand.unbounded)
-        demand.points.forEach {
-            assertEquals(0, it.compatible)
-            assertEquals(emptyList(), it.wishIds)
+        for ((source, quote) in examples) {
+            val parsed = quotedPriceLimit(analyzed(UUID.randomUUID(), listOf(quote), normalized = null), source, "USD")
+            assertEquals(PriceEvidenceStatus.AMBIGUOUS, parsed.status, source)
+            assertNull(parsed.maximumMinor, source)
+            assertEquals(listOf(quote), parsed.quotes, source)
         }
     }
 
     @Test
-    fun `curve counts distinct visible compatible requests and excludes unknown budgets`() {
+    fun `curve uses offer interest including price-only conditions and unknown budgets`() {
         val sources = listOf("up to $10", "under $10", "No budget limit", "Cards please", "up to EUR 10",
             "up to $20", "up to $30", "up to $40", "up to $50").map(::wish)
         sources[0].duplicateCount = 99
         sources[7].hidden = true
         val requests = sources.mapIndexed { index, source ->
-            analyzed(source.id, if (index == 3) emptyList() else listOf(source.text))
+            analyzed(source.id, if (index == 3) emptyList() else listOf(source.text),
+                normalized = when (index) {
+                    0 -> Money(1, "USD")
+                    1 -> Money(999, "USD")
+                    4 -> Money(1000, "EUR")
+                    in 5..8 -> Money((index - 3) * 1000L, "USD")
+                    else -> null
+                })
                 .copy(kind = if (index == 6) WishKind.NOT_A_REQUEST else WishKind.REQUEST, quantity = 100)
         }
         val verdicts = sources.mapIndexed { index, source ->
@@ -145,13 +140,19 @@ class DemandExplorerTests {
         }
         val output = output(requests, verdicts + verdicts.first())
         val explorer = assertNotNull(exploreDemand(output, listOf(first, second), sources, first.id, 1500, 3))
-        assertEquals(5, explorer.compatible)
+        assertEquals(4, explorer.compatible)
         assertEquals(1, explorer.missing)
         assertEquals(1, explorer.ambiguous)
         assertEquals(1, explorer.unbounded)
-        assertEquals(listOf(1L, 999L, 1000L, 1001L, 1500L), explorer.points.map { it.priceMinor })
-        assertEquals(listOf(3, 3, 2, 1, 1), explorer.points.map { it.compatible })
-        assertEquals(listOf(sources[2].id), explorer.points.last().wishIds)
+        assertEquals(listOf(999L, 1000L, 1001L, 1500L, 2000L, 2001L), explorer.points.map { it.priceMinor })
+        assertEquals(listOf(6, 5, 4, 4, 4, 3), explorer.points.map { it.compatible })
+        assertEquals(setOf(sources[2].id, sources[3].id, sources[4].id), explorer.points.last().wishIds.toSet())
+        assertNull(explorer.noSeriesReason)
+        explorer.points.forEach { point ->
+            val interest = app.campaign.rules.offerInterest(output, first, sources, point.priceMinor)
+            assertEquals(interest.interestWishIds, point.wishIds)
+            assertEquals(interest.interest, point.compatible)
+        }
         assertEquals(setOf(3), explorer.points.map { it.minimum }.toSet())
     }
 
@@ -175,16 +176,17 @@ class DemandExplorerTests {
     @Test
     fun `empty and missing sources foreign options and extreme prices stay bounded`() {
         val source = wish("up to $92233720368547758.07")
-        val output = output(listOf(analyzed(source.id, listOf(source.text))), listOf(
+        val output = output(listOf(analyzed(source.id, listOf(source.text), normalized = Money(Long.MAX_VALUE, "USD"))), listOf(
             WishVerdict(source.id, first.id, CompatibilityVerdict.COMPATIBLE, "Fits"),
         ))
         val explorer = assertNotNull(exploreDemand(output, listOf(first), listOf(source), first.id, Long.MAX_VALUE, Int.MAX_VALUE))
-        assertEquals(listOf(1L, Long.MAX_VALUE), explorer.points.map { it.priceMinor })
+        assertEquals(emptyList(), explorer.points)
+        assertNotNull(explorer.noSeriesReason)
         assertEquals(first.minBatch, explorer.minimum)
         val empty = assertNotNull(exploreDemand(output, listOf(first), emptyList(), first.id))
         assertEquals(0, empty.compatible)
-        assertEquals(listOf(1L, first.unitCost), empty.points.map { it.priceMinor })
-        assertEquals(setOf(0), empty.points.map { it.compatible }.toSet())
+        assertEquals(emptyList(), empty.points)
+        assertNotNull(empty.noSeriesReason)
         assertNull(exploreDemand(output, listOf(first), listOf(source), UUID.randomUUID()))
         val foreign = option("Foreign", UUID.randomUUID())
         assertEquals(1, assertNotNull(exploreDemand(output, listOf(first, foreign), listOf(source), first.id)).alternatives.size)

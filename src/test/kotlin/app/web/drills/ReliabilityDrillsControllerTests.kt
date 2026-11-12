@@ -85,7 +85,7 @@ class ReliabilityDrillsControllerTests @Autowired constructor(
             val result = html.substringAfter("id=\"$id\"").substringBefore("</section>")
             assertContains(result, "Simulation — no PayPal calls or real campaign changes")
         }
-        for (label in listOf("Stated interest", "Authorized holds", "Paid", "Needs attention", "UNKNOWN",
+        for (label in listOf("All requests", "Authorized holds", "Paid", "Needs attention", "UNKNOWN",
             "Simulated time", "Original idempotency key", "Simulated local and provider books",
             "does not execute or verify production settlement, PayPal recovery, or webhook recovery",
             "does not prove that live books agree", "Sandbox demo. No real money moves.")) {

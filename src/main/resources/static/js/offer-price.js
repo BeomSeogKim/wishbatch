@@ -45,9 +45,9 @@
                 if (current.signal.aborted) return;
                 if (amount) amount.textContent = `${result.formattedPrice} per unit`;
                 if (warning && amount) warning.hidden = !result.belowCost;
-                summary.textContent = `${result.fit} wishes fit this price, ${result.excludedByPrice.length} are excluded by their stated limit`;
-                categories.textContent = `${result.compatible} Compatible; ${result.depends} Depends. Other conditions still need review. Wishes are stated interest, not orders.`;
-                for (const wish of result.excludedByPrice) {
+                summary.textContent = `Interested in this offer: ${result.interest}; ${result.excludedByPrice} excluded by price`;
+                categories.textContent = `${result.conditional} more depend on a condition; ${result.notServed} not served. Wishes are interest, not orders.`;
+                for (const wish of result.excludedWishes) {
                     const item = document.createElement('li');
                     const link = document.createElement('a');
                     link.href = wish.sourceUrl;

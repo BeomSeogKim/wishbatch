@@ -4,9 +4,10 @@
 <section th:fragment="counts(interest, authorized, paid, minimum)" class="counts"
          th:with="settled=${campaign != null and (campaign.state.name() == 'FUNDED' or campaign.state.name() == 'NOT_FUNDED')}" aria-label="Campaign counts">
     <div class="count count-interest">
-        <p class="count-label">Stated interest</p>
+        <p class="count-label">Interested in this offer</p>
         <p class="count-value" th:text="${interest}">48</p>
-        <p class="count-caption">Wishes classified as requests. These are not orders.</p>
+        <p th:if="${campaign != null}"><span data-live-field="conditional" th:text="${campaign.counts.conditional}"></span> more depend on a condition</p>
+        <p class="count-caption">Visible requests compatible with this offer and price. These are not orders.</p>
     </div>
     <div class="count" th:classappend="${settled ? '' : 'count-authorized'}">
         <p class="count-label">Authorized holds</p>

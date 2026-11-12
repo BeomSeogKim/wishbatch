@@ -113,8 +113,8 @@ class FanOfferExperienceTests @Autowired constructor(
     @Test
     fun `public evidence keeps exact quote text without a wisher name`() {
         val quote = "A small print for my desk would be lovely."
-        val context = Context(Locale.ENGLISH, mapOf("evidence" to OfferEvidenceView(1,
-            listOf(FanWishQuote(quote, "Synthetic named fan")))))
+        val context = Context(Locale.ENGLISH, mapOf("evidence" to OfferEvidenceView(app.campaign.rules.OfferInterest(interestWishIds = listOf(java.util.UUID.randomUUID())),
+            listOf(FanWishQuote(quote)))))
         val html = templates.process("fan/offer-evidence", context)
         assertContains(html, quote)
         assertContains(html, "Anonymous fan")

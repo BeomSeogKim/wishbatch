@@ -66,7 +66,7 @@ class DemandExplorerRenderTests(
         val run = AnalysisRun(workspace.id, "synthetic-model", "synthetic-input", mapper.writeValueAsString(output),
             createdAt = Instant.parse("2026-01-01T00:00:00Z")).also(entityManager::persist)
         entityManager.flush()
-        val response = mvc.get("/w/${workspace.token}/maker/offer") { param("run", run.id.toString()) }
+        val response = mvc.get("/w/${workspace.token}/maker/offer") { param("run", run.id.toString()); flashAttr("fields", mapOf("unitPrice" to "10.00", "minBatch" to "3")) }
             .andExpect { status { isOk() } }.andReturn()
         val html = response.response.contentAsString
         val demand = assertIs<DemandExplorer>(response.modelAndView!!.model["demand"])
@@ -74,8 +74,8 @@ class DemandExplorerRenderTests(
         assertEquals(1, demand.points.single { it.priceMinor == 1000L }.compatible)
         assertEquals(0, demand.points.single { it.priceMinor == 1001L }.compatible)
         assertEquals(wishes.map { it.id }.toSet(), demand.alternatives.flatMap { it.wishIds }.toSet())
-        assertContains(html, "Compatible wishes remaining at each unit price")
-        assertContains(html, "Simulation of stated interest")
+        assertContains(html, "Interested in this offer at each unit price")
+        assertContains(html, "Interest in this offer at each candidate price")
         assertContains(html, "At most USD 10.00")
         assertContains(html, "run=${run.id}#wish-${source.id}")
         assertContains(html, "demand-compact")

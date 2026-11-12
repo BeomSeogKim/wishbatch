@@ -16,7 +16,10 @@ import java.time.Instant
 import java.util.UUID
 
 data class LiveCampaignResponse(val availability: String, val observedAt: Instant, val campaign: LiveCampaign?)
-data class LiveCounts(val statedInterest: String, val authorizedHolds: String, val paid: String)
+data class LiveCounts(
+    val interest: String, val authorizedHolds: String, val paid: String,
+    val conditional: String, val excludedByPrice: String, val notServed: String,
+)
 data class LiveProgress(val units: String, val minimum: String, val basis: String)
 data class LiveCampaign(
     val id: UUID,
@@ -60,7 +63,8 @@ class LiveCampaignController(
             val shortfall = it.state == CampaignState.FUNDED && it.counts.paid < it.offer.minBatch
             LiveCampaign(
                 it.id, it.state,
-                LiveCounts(it.counts.statedInterest.toString(), it.counts.authorizedHolds.toString(), it.counts.paid.toString()),
+                LiveCounts(it.counts.interest.toString(), it.counts.authorizedHolds.toString(), it.counts.paid.toString(),
+                    it.counts.conditional.toString(), it.counts.excludedByPrice.toString(), it.counts.notServed.toString()),
                 LiveProgress(it.progress.units.toString(), it.progress.minimum.toString(), if (paidBasis) "PAID" else "HOLDS"),
                 it.capacityLeft.toString(), it.closesAt, it.confirmDeadline,
                 it.state == CampaignState.OPEN && it.closesAt?.isAfter(observedAt) == true,

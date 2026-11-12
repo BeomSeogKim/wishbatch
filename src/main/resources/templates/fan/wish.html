@@ -48,7 +48,7 @@
                         <label for="display-name">Display name (optional)</label>
                         <input id="display-name" name="displayName" maxlength="255" th:value="${wishForm.displayName}"
                                th:attr="aria-invalid=${nameError != null}" aria-describedby="name-help name-error">
-                        <p id="name-help" class="field-help">Shown beside your wish. Leave blank to appear as Anonymous.</p>
+                        <p id="name-help" class="field-help">Only shown to the maker. Public quotes are anonymous.</p>
                         <p id="name-error" class="field-error" th:text="${nameError}" th:attr="role=${nameError != null ? 'alert' : null}"></p>
                     </div>
                     <button class="button button-primary" type="submit">Share my wish</button>
@@ -61,7 +61,7 @@
                 <ul th:unless="${#lists.isEmpty(recentWishes)}">
                     <li th:each="wish : ${recentWishes}">
                         <p th:text="${wish.text}">A fan wish</p>
-                        <p class="field-help" th:text="${wish.displayName ?: 'Anonymous'}">Anonymous</p>
+                        <p class="field-help">Anonymous fan</p>
                     </li>
                 </ul>
             </section>

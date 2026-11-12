@@ -12,7 +12,7 @@ function status(changes = {}) {
         availability: 'CAMPAIGN', observedAt: new Date(origin).toISOString(),
         campaign: {
             id: 'campaign-a', state: 'OPEN',
-            counts: {statedInterest: '40', authorizedHolds: '3', paid: '0'},
+            counts: {conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: '3', paid: '0'},
             progress: {units: '3', minimum: '5', basis: 'HOLDS'},
             capacityLeft: '7', closesAt: new Date(origin + 60000).toISOString(),
             confirmDeadline: new Date(origin + 3600000).toISOString(),
@@ -27,7 +27,7 @@ function browser({hidden = false, readyState = 'complete', hasRoot = true} = {})
     let timerId = 0;
     const timers = new Map();
     const listeners = {};
-    const fields = Object.fromEntries(['statedInterest', 'authorizedHolds', 'paid', 'progressUnits',
+    const fields = Object.fromEntries(['interest', 'conditional', 'authorizedHolds', 'paid', 'progressUnits',
         'progressMinimum', 'progressBasis', 'capacityLeft', 'state', 'timeLeft', 'deadlineLabel',
         'closesAt', 'confirmDeadline', 'observedAt', 'message', 'warning', 'attention', 'holdCaption'].map(field =>
         [field, {textContent: 'server-' + field}]));
@@ -108,7 +108,7 @@ function browser({hidden = false, readyState = 'complete', hasRoot = true} = {})
 test('updates separate decimal counts losslessly using text and server-relative time', async () => {
     const page = browser();
     const large = '9007199254740993';
-    await page.respond(status({counts: {statedInterest: '40', authorizedHolds: large, paid: '0'},
+    await page.respond(status({counts: {conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: large, paid: '0'},
         progress: {units: large, minimum: '5', basis: 'HOLDS'}}));
     assert.equal(page.fields.authorizedHolds.textContent, large);
     assert.equal(page.fields.progressUnits.textContent, large);
@@ -178,7 +178,7 @@ test('identity and terminal changes hide money actions without ever re-enabling 
     const page = browser();
     page.buttons[0].disabled = true;
     await page.respond(status({id: 'campaign-b', state: 'FUNDED', pledgesOpen: false,
-        counts: {statedInterest: '40', authorizedHolds: '0', paid: '3'},
+        counts: {conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: '0', paid: '3'},
         progress: {units: '3', minimum: '5', basis: 'PAID'}, fundedPaidShortfall: true, needsAttention: true}));
     assert.ok(Object.values(page.actions).every(action => action.hidden));
     assert.ok(page.buttons.every(button => button.disabled));
@@ -282,7 +282,7 @@ test('no campaign is explicit and does not invent zero counts', async () => {
 
 test('invalid decimal payload retains the server fallback', async () => {
     const page = browser();
-    await page.respond(status({counts: {statedInterest: '40', authorizedHolds: 9007199254740992, paid: '0'}}));
+    await page.respond(status({counts: {conditional: '0', excludedByPrice: '0', notServed: '0', interest: '40', authorizedHolds: 9007199254740992, paid: '0'}}));
     assert.equal(page.fields.authorizedHolds.textContent, 'server-authorizedHolds');
     assert.match(page.fields.message.textContent, /stale/);
 });

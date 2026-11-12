@@ -22,7 +22,7 @@ import app.campaign.rules.checkCapacity
 import app.campaign.rules.closesAt
 import app.campaign.rules.confirmDeadline
 import app.campaign.rules.funded
-import app.campaign.rules.interestCount
+import app.campaign.rules.OfferInterest
 import app.campaign.rules.requireCampaignTransition
 import app.campaign.rules.thresholdMet
 import app.campaign.rules.validateOffer
@@ -61,6 +61,7 @@ class CampaignService(
     private val provenance: PledgeProvenanceCheckpoint,
     private val terms: TermsCheckService,
     private val wishes: WishRepository,
+    private val interestQuery: OfferInterestQuery,
 ) {
     fun createDraft(workspaceId: UUID, command: DraftOffer): ServiceResult<DraftCreated> = persistence.locked(workspaceId) {
         val option = persistence.checkpoint { options.findByIdAndWorkspaceId(command.optionId, workspaceId) }
@@ -441,8 +442,9 @@ class CampaignService(
         val authorized = authorizedUnits(context.pledges)
         val captured = capturedUnits(context.pledges)
         val shortfall = campaign.state == CampaignState.FUNDED && !funded(captured, offer.minBatch)
-        val analysis = persistence.checkpoint { analyses.findByIdAndWorkspaceId(offer.analysisRunId, offer.workspaceId) }
-        val interest = analysis?.let(::analysisOutput)?.let { interestCount(it.wishes) } ?: 0
+        val interest = persistence.checkpoint {
+            interestQuery.read(offer.workspaceId, offer.analysisRunId, offer.optionId, offer.unitPrice)
+        } ?: OfferInterest()
         val timeline = persistence.checkpoint { events.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id) }
         val deadline = when (campaign.state) {
             CampaignState.OPEN -> campaign.closesAt
@@ -456,7 +458,9 @@ class CampaignService(
                 offer.unitPrice, offer.currency, offer.deliveryTerms, offer.shipRegion, offer.minBatch, offer.capacity,
                 offer.maxQtyPerPledge, offer.supportingWishIds.toList()),
             campaign.state, campaign.reason, campaign.openedAt, campaign.closesAt, campaign.confirmDeadline,
-            CampaignCounts(interest, authorized, captured),
+            CampaignCounts(interest.interest, authorized, captured, interest.conditional, interest.excludedByPrice,
+                interest.notServed, interest.interestWishIds, interest.conditionalWishIds,
+                interest.excludedByPriceWishIds, interest.notServedWishIds),
             MinimumProgress(if (campaign.state in terminalStates || campaign.state == CampaignState.SETTLING) captured else authorized, offer.minBatch),
             (offer.capacity.toLong() - authorized - captured).coerceAtLeast(0), timeLeft,
             ConfirmationSummary(holds.size, authorized, holds.fold(0L) { sum, pledge -> Math.addExact(sum, pledge.amount) }, offer.currency),

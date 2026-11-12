@@ -3,9 +3,10 @@
 <body>
 <section th:fragment="counts(campaign)" class="counts" aria-label="Campaign counts">
     <div class="count count-interest">
-        <p class="count-label">Stated interest</p>
-        <p class="count-value" data-live-field="statedInterest" th:text="${campaign.counts.statedInterest}"></p>
-        <p class="count-caption">Wishes classified as requests. These are not orders.</p>
+        <p class="count-label">Interested in this offer</p>
+        <p class="count-value" data-live-field="interest" th:text="${campaign.counts.interest}"></p>
+        <p th:if="${campaign != null}"><span data-live-field="conditional" th:text="${campaign.counts.conditional}"></span> more depend on a condition</p>
+        <p class="count-caption">Visible requests compatible with this offer and price. These are not orders.</p>
     </div>
     <div class="count" data-live-hold-card th:classappend="${campaign.state.name() == 'FUNDED' or campaign.state.name() == 'NOT_FUNDED' ? '' : 'count-authorized'}">
         <p class="count-label">Authorized holds</p>
