@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Money trail', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <h1>Money trail</h1>
+    <p>Times are local recording checkpoints, not PayPal settlement times. Amounts use minor units.</p>
+    <a th:href="@{/w/{token}/maker/campaigns/{id}/trail.csv(token=${token},id=${campaignId})}">Download CSV</a>
+    <section th:if="${!#lists.isEmpty(booksChecks)}">
+        <h2>Books checks</h2>
+        <ul><li th:each="check : ${booksChecks}"><a th:href="@{/w/{token}/maker/books(token=${token},campaignId=${campaignId},checkId=${check.id})}" th:text="${check.checkpoint}"></a></li></ul>
+    </section>
+    <div th:replace="~{trail/table :: table(${entries})}"></div>
+    <script th:src="@{/js/money-trail.js}" defer></script>
+</main>
+</body>
+</html>
