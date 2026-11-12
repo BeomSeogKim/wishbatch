@@ -3,8 +3,10 @@ package app.web.fan
 import app.campaign.workspace.SeedCatalog
 import app.campaign.workspace.WishLimitReachedException
 import app.campaign.workspace.WorkspaceService
+import app.campaign.service.CampaignQueries
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.stereotype.Controller
+import org.springframework.stereotype.Component
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -14,6 +16,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes
 
 fun interface WishCampaignAvailability {
     fun isOpen(token: String): Boolean
+}
+
+@Component
+class OpenWishCampaign(private val campaigns: CampaignQueries) : WishCampaignAvailability {
+    override fun isOpen(token: String): Boolean = campaigns.isOpenForPledges(token)
 }
 
 data class WishForm(val text: String = "", val displayName: String = "")

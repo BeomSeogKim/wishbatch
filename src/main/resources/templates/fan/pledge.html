@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Pledge status', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <h1>Pledge status</h1>
+    <section class="card" aria-label="Your pledge">
+        <h2 th:text="${campaign.offer.title}"></h2>
+        <p class="notice notice-info" th:text="${sentence}"></p>
+        <dl>
+            <dt>Quantity</dt><dd th:text="${pledge.quantity}"></dd>
+            <dt>Amount</dt><dd th:text="${amount}"></dd>
+            <dt th:if="${pledge.authorizationExpiresAt != null}">Authorization expiry (UTC)</dt>
+            <dd th:if="${pledge.authorizationExpiresAt != null}" th:text="${pledge.authorizationExpiresAt}"></dd>
+        </dl>
+        <h2>What happens next</h2>
+        <p th:text="${next}"></p>
+        <p>Delivery terms: <span th:text="${campaign.offer.deliveryTerms}"></span></p>
+        <a th:href="@{/w/{token}/pledges/{id}(token=${token},id=${pledge.id})}">Refresh status</a>
+    </section>
+    <section th:if="${resultAvailable}" class="card" aria-label="Campaign result">
+        <h2 th:text="${resultTitle}"></h2>
+        <p th:text="${resultReason}"></p>
+        <p>The campaign outcome and your payment status are separate. Your payment status is shown above.</p>
+        <a th:href="@{/w/{token}/result(token=${token})}">View public result</a>
+    </section>
+    <p><a th:href="@{/w/{token}/offer(token=${token})}">Back to the offer</a></p>
+</main>
+</body>
+</html>

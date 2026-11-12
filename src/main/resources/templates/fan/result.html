@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Campaign result', ~{::main})}">
+<body>
+<main id="main" class="shell">
+    <h1 th:text="${resultTitle}">Campaign result</h1>
+    <p th:text="${resultReason}"></p>
+    <th:block th:if="${campaign != null}">
+        <h2 th:text="${campaign.offer.title}"></h2>
+        <div th:replace="~{fragments/components :: counts(${campaign.counts.statedInterest}, ${campaign.counts.authorizedHolds}, ${campaign.counts.paid}, ${campaign.offer.minBatch})}"></div>
+        <section th:if="${resultAvailable}" class="card">
+            <h2>Payment outcomes</h2>
+            <dl>
+                <dt>Paid units</dt><dd th:text="${campaign.result.paidUnits}"></dd>
+                <dt>Refunded units</dt><dd th:text="${campaign.result.refundedUnits}"></dd>
+                <dt>Released units</dt><dd th:text="${campaign.result.releasedUnits}"></dd>
+            </dl>
+            <p th:if="${not #lists.isEmpty(campaign.needsAttention)}" class="notice notice-warning">Some payments still need attention. Release or refund is not yet confirmed for every pledge.</p>
+            <p>Use your pledge status link for your own payment outcome. PayPal and your bank or card determine release and refund timing.</p>
+            <p>Delivery terms: <span th:text="${campaign.offer.deliveryTerms}"></span></p>
+        </section>
+    </th:block>
+    <p><a th:href="@{/w/{token}/offer(token=${token})}">View offer</a></p>
+    <p><a th:href="@{/w/{token}(token=${token})}">Back to wishes</a></p>
+</main>
+</body>
+</html>

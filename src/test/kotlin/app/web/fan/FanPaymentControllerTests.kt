@@ -1,0 +1,491 @@
+package app.web.fan
+
+import app.campaign.model.AnalysisRun
+import app.campaign.model.Campaign
+import app.campaign.model.CampaignReason
+import app.campaign.model.CampaignState
+import app.campaign.model.Money
+import app.campaign.model.Offer
+import app.campaign.model.Option
+import app.campaign.model.Pledge
+import app.campaign.model.PledgeState
+import app.campaign.model.WishKind
+import app.campaign.model.Workspace
+import app.campaign.port.AnalysisOutput
+import app.campaign.port.AnalyzedWish
+import app.campaign.port.AuthorizationDetails
+import app.campaign.port.AuthorizationId
+import app.campaign.port.OrderDetails
+import app.campaign.port.OrderId
+import app.campaign.port.PaymentResult
+import app.campaign.port.PaymentStatus
+import app.campaign.port.Proposal
+import app.campaign.port.VoidDetails
+import app.campaign.service.CampaignRef
+import app.campaign.service.CampaignQueries
+import app.campaign.service.PledgeRef
+import app.campaign.service.PledgeReferences
+import app.campaign.service.Rejection
+import app.campaign.service.ServiceResult
+import app.campaign.store.AnalysisRunRepository
+import app.campaign.store.CampaignRepository
+import app.campaign.store.EventRepository
+import app.campaign.store.OfferRepository
+import app.campaign.store.OptionRepository
+import app.campaign.store.PledgeRepository
+import app.campaign.store.WorkspaceRepository
+import app.campaign.workspace.WorkspaceService
+import app.paypal.PayPalProperties
+import app.testing.InMemoryPaymentGateway
+import app.testing.PaymentCall
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.context.MessageSource
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
+import org.springframework.http.MediaType
+import org.springframework.mock.web.MockHttpServletResponse
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
+import org.springframework.ui.ExtendedModelMap
+import tools.jackson.databind.ObjectMapper
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.util.Base64
+import java.util.Locale
+import java.util.UUID
+import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
+
+@SpringBootTest(properties = ["PAYPAL_CLIENT_ID=synthetic-client", "PAYPAL_CLIENT_SECRET=synthetic-secret"])
+@AutoConfigureMockMvc
+@Import(FanPaymentControllerTests.PaymentConfiguration::class)
+class FanPaymentControllerTests @Autowired constructor(
+    private val mvc: MockMvc,
+    private val workspaces: WorkspaceRepository,
+    private val options: OptionRepository,
+    private val analyses: AnalysisRunRepository,
+    private val offers: OfferRepository,
+    private val campaigns: CampaignRepository,
+    private val pledges: PledgeRepository,
+    private val events: EventRepository,
+    private val gateway: InMemoryPaymentGateway,
+    private val clock: FanPaymentClock,
+    private val mapper: ObjectMapper,
+    private val messages: MessageSource,
+    private val references: PledgeReferences,
+    private val workspaceService: WorkspaceService,
+    private val queries: CampaignQueries,
+) {
+    private val start = Instant.parse("2026-01-01T00:00:00Z")
+    private val ownedWorkspaces = mutableListOf<UUID>()
+    private var firstCall = 0
+
+    @BeforeEach
+    fun resetTimeAndScripts() {
+        clock.current = start
+        firstCall = gateway.calls.size
+        gateway.createOrderResults.clear()
+        gateway.authorizeOrderResults.clear()
+        gateway.voidAuthorizationResults.clear()
+    }
+
+    @AfterEach
+    fun removeFixtures() {
+        ownedWorkspaces.forEach { workspaceId ->
+            val workspaceOffers = offers.findByWorkspaceId(workspaceId)
+            campaigns.findByOfferIdIn(workspaceOffers.map { it.id }).forEach { campaign ->
+                events.deleteAll(events.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id))
+                pledges.deleteAll(pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(campaign.id))
+                campaigns.delete(campaign)
+            }
+            offers.deleteAll(workspaceOffers)
+            analyses.deleteAll(analyses.findByWorkspaceId(workspaceId))
+            options.deleteAll(options.findByWorkspaceId(workspaceId))
+            workspaces.deleteById(workspaceId)
+        }
+    }
+
+    @Test
+    fun `order ignores client amount and authorization returns an unguessable scoped status URL`() {
+        val fixture = fixture()
+        gateway.createOrderResults.add(received(OrderDetails(OrderId("synthetic-order")), PaymentStatus.CREATED))
+        val response = mvc.post("${fixture.path}/api/pledges") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"quantity":2,"amount":1,"currency":"EUR"}"""
+        }.andExpect {
+            status { isCreated() }
+            jsonPath("$.outcome") { value("CREATED") }
+            jsonPath("$.orderId") { value("synthetic-order") }
+            jsonPath("$.state") { value("CREATED") }
+        }.andReturn().response.contentAsString
+        val body = mapper.readTree(response)
+        val id = UUID.fromString(body["pledgeId"].asString())
+        assertEquals(4, id.version())
+        assertEquals("${fixture.path}/pledges/$id", body["statusUrl"].asString())
+        val call = gateway.calls.drop(firstCall).filterIsInstance<PaymentCall.CreateOrder>().single()
+        assertEquals(Money(400, "USD"), call.request.amount)
+        assertEquals(id, call.request.pledgeId)
+        assertEquals(PledgeState.CREATED, pledges.findById(id).orElseThrow().state)
+
+        gateway.authorizeOrderResults.add(received(AuthorizationDetails(
+            AuthorizationId("synthetic-authorization"), Money(400, "USD"), start.plusSeconds(86_400),
+            orderId = OrderId("synthetic-order"), payerEmail = "private-buyer@example.test",
+        ), PaymentStatus.CREATED))
+        val approved = mvc.post("${fixture.path}/api/pledges/$id/authorize").andExpect {
+            status { isOk() }
+            jsonPath("$.outcome") { value("AUTHORIZED") }
+            jsonPath("$.state") { value("AUTHORIZED") }
+            jsonPath("$.statusUrl") { value("${fixture.path}/pledges/$id") }
+        }.andReturn().response.contentAsString
+        assertFalse(approved.contains("private-buyer"))
+        assertFalse(approved.contains("example.test"))
+        assertEquals(PledgeState.AUTHORIZED, pledges.findById(id).orElseThrow().state)
+    }
+
+    @Test
+    fun `invalid quantity capacity and closed campaigns reject order creation before PayPal`() {
+        val fixture = fixture(capacity = 3)
+        for (quantity in listOf(0, -1, 4)) {
+            mvc.post("${fixture.path}/api/pledges") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"quantity":$quantity}"""
+            }.andExpect {
+                status { isBadRequest() }
+                jsonPath("$.reason") { value("INVALID_QUANTITY") }
+            }
+        }
+        pledge(fixture, PledgeState.AUTHORIZED, quantity = 3)
+        mvc.post("${fixture.path}/api/pledges") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"quantity":1}"""
+        }.andExpect {
+            status { isConflict() }
+            jsonPath("$.reason") { value("CAPACITY_EXCEEDED") }
+        }
+        val closed = fixture(state = CampaignState.NOT_FUNDED, reason = CampaignReason.CANCELLED_BY_MAKER)
+        mvc.post("${closed.path}/api/pledges") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"quantity":1}"""
+        }.andExpect {
+            status { isConflict() }
+            jsonPath("$.reason") { value("INVALID_STATE") }
+        }
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+    }
+
+    @Test
+    fun `stale and foreign campaign IDs cannot authorize a replacement offer`() {
+        val fixture = fixture()
+        val other = fixture()
+        val old = campaigns.saveAndFlush(Campaign(fixture.campaign.offerId, CampaignState.NOT_FUNDED,
+            CampaignReason.CANCELLED_BY_MAKER, openedAt = start.minusSeconds(900), closesAt = start,
+            confirmDeadline = start.plusSeconds(43_200)))
+        for ((id, reason, expectedStatus) in listOf(
+            Triple(old.id, "INVALID_STATE", 409), Triple(other.campaign.id, "NOT_FOUND", 404),
+        )) {
+            mvc.post("${fixture.path}/api/pledges") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"quantity":1,"campaignId":"$id"}"""
+            }.andExpect {
+                status { isEqualTo(expectedStatus) }
+                jsonPath("$.reason") { value(reason) }
+            }
+        }
+        assertTrue(pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(fixture.campaign.id).isEmpty())
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+    }
+
+    @Test
+    fun `capacity lost during approval releases the hold and reports the actual state`() {
+        val fixture = fixture(capacity = 1)
+        val pending = pledge(fixture, PledgeState.CREATED)
+        pledge(fixture, PledgeState.AUTHORIZED)
+        scriptAuthorization(pending)
+        gateway.voidAuthorizationResults.add(received(VoidDetails(AuthorizationId("authorization-${pending.id}")), PaymentStatus.VOIDED))
+        val response = mvc.post("${fixture.path}/api/pledges/${pending.id}/authorize").andExpect {
+            status { isConflict() }
+            jsonPath("$.reason") { value("CAPACITY_EXCEEDED") }
+            jsonPath("$.state") { value("VOIDED") }
+        }.andReturn().response.contentAsString
+        assertContains(response, "Hold released")
+        assertEquals(PledgeState.VOIDED, pledges.findById(pending.id).orElseThrow().state)
+        assertEquals(1, gateway.calls.drop(firstCall).filterIsInstance<PaymentCall.VoidAuthorization>().size)
+    }
+
+    @Test
+    fun `approval received after closing releases the authorization instead of counting it`() {
+        val fixture = fixture()
+        val pending = pledge(fixture, PledgeState.CREATED)
+        clock.current = start.plusSeconds(901)
+        scriptAuthorization(pending)
+        gateway.voidAuthorizationResults.add(received(VoidDetails(AuthorizationId("authorization-${pending.id}")), PaymentStatus.VOIDED))
+        mvc.post("${fixture.path}/api/pledges/${pending.id}/authorize").andExpect {
+            status { isConflict() }
+            jsonPath("$.reason") { value("INVALID_STATE") }
+            jsonPath("$.state") { value("VOIDED") }
+        }
+        assertEquals(PledgeState.VOIDED, pledges.findById(pending.id).orElseThrow().state)
+    }
+
+    @Test
+    fun `provider amount mismatch is released and failed release never claims success`() {
+        for (voidSucceeds in listOf(true, false)) {
+            val fixture = fixture()
+            val pending = pledge(fixture, PledgeState.CREATED)
+            scriptAuthorization(pending, amount = Money(1, "USD"))
+            gateway.voidAuthorizationResults.add(if (voidSucceeds) {
+                received(VoidDetails(AuthorizationId("authorization-${pending.id}")), PaymentStatus.VOIDED)
+            } else PaymentResult.Failed(PaymentStatus.FAILED))
+            val response = mvc.post("${fixture.path}/api/pledges/${pending.id}/authorize").andExpect {
+                status { isConflict() }
+                jsonPath("$.reason") { value("PAYMENT_MISMATCH") }
+                jsonPath("$.state") { value(if (voidSucceeds) "VOIDED" else "VOID_FAILED") }
+            }.andReturn().response.contentAsString
+            if (!voidSucceeds) assertFalse(response.contains("Hold released"))
+        }
+    }
+
+    @Test
+    fun `unavailable provider returns a typed error and leaves the pledge uncounted`() {
+        val fixture = fixture()
+        repeat(4) { gateway.createOrderResults.add(PaymentResult.Failed(PaymentStatus.TRANSPORT_FAILURE)) }
+        mvc.post("${fixture.path}/api/pledges") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"quantity":1}"""
+        }.andExpect {
+            status { isServiceUnavailable() }
+            jsonPath("$.outcome") { value("REJECTED") }
+            jsonPath("$.reason") { value("PAYMENT_UNAVAILABLE") }
+        }
+        assertEquals(PledgeState.CREATED, pledges.findByCampaignIdOrderByCreatedAtAscIdAsc(fixture.campaign.id).single().state)
+    }
+
+    @Test
+    fun `unknown workspaces and unknown foreign or malformed pledge IDs reveal no payment data`() {
+        val fixture = fixture()
+        val other = fixture()
+        val privatePledge = pledge(other, PledgeState.AUTHORIZED)
+        for (id in listOf(UUID.randomUUID().toString(), privatePledge.id.toString(), "not-a-uuid")) {
+            mvc.get("${fixture.path}/pledges/$id").andExpect {
+                status { isNotFound() }
+                view { name("error/not-found") }
+            }
+            mvc.post("${fixture.path}/api/pledges/$id/authorize").andExpect {
+                status { isNotFound() }
+                jsonPath("$.reason") { value("NOT_FOUND") }
+            }
+        }
+        for (suffix in listOf("offer", "result", "pledges/${privatePledge.id}")) {
+            mvc.get("/w/missing/$suffix").andExpect {
+                status { isNotFound() }
+                view { name("error/not-found") }
+            }
+        }
+        mvc.post("/w/missing/api/pledges") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"quantity":1}"""
+        }.andExpect { status { isNotFound() }; jsonPath("$.reason") { value("NOT_FOUND") } }
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+    }
+
+    @Test
+    fun `pledge reference checks ownership without reconciling an expired campaign`() {
+        val fixture = fixture()
+        val other = fixture()
+        val pending = pledge(fixture, PledgeState.CREATED)
+        clock.current = start.plusSeconds(901)
+        val ref = assertIs<ServiceResult.Success<*>>(references.find(fixture.workspace.token, pending.id)).value
+        assertEquals(PledgeRef(CampaignRef(fixture.workspace.id, fixture.campaign.id), pending.id), ref)
+        for ((token, id) in listOf(other.workspace.token to pending.id, "unknown" to pending.id,
+            fixture.workspace.token to UUID.randomUUID())) {
+            assertEquals(Rejection.NOT_FOUND, assertIs<ServiceResult.Rejected>(references.find(token, id)).reason)
+        }
+        assertEquals(CampaignState.OPEN, campaigns.findById(fixture.campaign.id).orElseThrow().state)
+        assertEquals(PledgeState.CREATED, pledges.findById(pending.id).orElseThrow().state)
+        assertTrue(events.findByCampaignIdOrderByCreatedAtAscIdAsc(fixture.campaign.id).isEmpty())
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+    }
+
+    @Test
+    fun `offer renders exact terms counts and server total with six terms above PayPal`() {
+        val fixture = fixture()
+        pledge(fixture, PledgeState.CREATED)
+        pledge(fixture, PledgeState.AUTHORIZED)
+        val html = mvc.get("${fixture.path}/offer") { param("quantity", "2") }.andExpect {
+            status { isOk() }
+            view { name("fan/offer") }
+        }.andReturn().response.contentAsString
+        for (text in listOf("Moon print", "A5 archival print", "Shipping included", "US", "USD", "4.00",
+            "2026-01-01T00:15:00Z", "2026-01-01T12:15:00Z", "Stated interest", "Authorized holds", "Paid",
+            "Sandbox demo. No real money moves.", "synthetic-client", "intent=authorize")) assertContains(html, text)
+        assertFalse(html.contains("synthetic-secret"))
+        assertFalse(html.contains("private-buyer"))
+        val buttonPosition = html.indexOf("id=\"paypal-button-container\"")
+        assertTrue(buttonPosition > 0)
+        for (number in 1..6) {
+            val term = messages.getMessage("money.term.$number", null, Locale.ENGLISH)
+            val position = html.indexOf(term)
+            assertTrue(position in 0 until buttonPosition, "Money term $number must appear before the PayPal action")
+        }
+        assertContains(mvc.get(fixture.path).andReturn().response.contentAsString, "href=\"${fixture.path}/offer\"")
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+    }
+
+    @Test
+    fun `invalid or unavailable quote renders no payment action`() {
+        val fixture = fixture(capacity = 1)
+        for (quantity in listOf("0", "2")) {
+            val html = mvc.get("${fixture.path}/offer") { param("quantity", quantity) }
+                .andReturn().response.contentAsString
+            assertFalse(html.contains("id=\"paypal-button-container\""))
+        }
+        pledge(fixture, PledgeState.AUTHORIZED)
+        val html = mvc.get("${fixture.path}/offer").andReturn().response.contentAsString
+        assertFalse(html.contains("id=\"paypal-button-container\""))
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+    }
+
+    @Test
+    fun `missing PayPal credentials keep the offer readable and checkout unavailable`() {
+        val fixture = fixture()
+        for (clientId in listOf("", "synthetic-client")) {
+            val controller = OfferController(workspaceService, queries,
+                PayPalProperties(PayPalProperties.SANDBOX_URL, clientId, ""))
+            val model = ExtendedModelMap()
+            assertEquals("fan/offer", controller.offer(fixture.workspace.token, 1, model, MockHttpServletResponse()))
+            assertEquals(false, model["paypalReady"])
+            assertEquals("", model["paypalClientId"])
+            assertEquals("USD 2.00", model["total"])
+        }
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+    }
+
+    @Test
+    fun `draft and ended offers have no button and terminal offers link to public result`() {
+        for (state in listOf(CampaignState.DRAFT, CampaignState.AWAITING_CONFIRMATION, CampaignState.NOT_FUNDED)) {
+            val fixture = fixture(state = state, reason = if (state == CampaignState.NOT_FUNDED) CampaignReason.CANCELLED_BY_MAKER else null)
+            val html = mvc.get("${fixture.path}/offer").andExpect { status { isOk() } }
+                .andReturn().response.contentAsString
+            assertFalse(html.contains("id=\"paypal-button-container\""))
+            assertFalse(html.contains("paypal.com/sdk/js"))
+            if (state == CampaignState.NOT_FUNDED) assertContains(html, "href=\"${fixture.path}/result\"")
+        }
+    }
+
+    @Test
+    fun `pledge page renders every state without payer details and uses shared money wording`() {
+        for (state in PledgeState.entries) {
+            val fixture = fixture()
+            val pledge = pledge(fixture, state, quantity = 2)
+            val html = mvc.get("${fixture.path}/pledges/${pledge.id}").andExpect {
+                status { isOk() }
+                view { name("fan/pledge") }
+            }.andReturn().response.contentAsString
+            val sentence = messages.getMessage("pledge.$state", null, null, Locale.ENGLISH)
+            if (sentence != null) assertContains(html, sentence)
+            assertContains(html, "4.00")
+            assertContains(html, "USD")
+            assertContains(html, "Sandbox demo. No real money moves.")
+            assertFalse(html.contains("private-buyer"))
+            assertFalse(html.contains("example.test"))
+            assertFalse(html.contains("authorization-${pledge.id}"))
+            assertFalse(html.contains("??pledge."))
+        }
+        assertTrue(gateway.calls.drop(firstCall).isEmpty())
+    }
+
+    @Test
+    fun `result presents funded not funded and unfinished states without individual pledges`() {
+        for (state in listOf(CampaignState.DRAFT, CampaignState.OPEN, CampaignState.FUNDED, CampaignState.NOT_FUNDED)) {
+            val fixture = fixture(state = state, reason = if (state == CampaignState.NOT_FUNDED) CampaignReason.CANCELLED_BY_MAKER else null)
+            val pledge = pledge(fixture, if (state == CampaignState.FUNDED) PledgeState.CAPTURED else PledgeState.VOIDED)
+            val html = mvc.get("${fixture.path}/result").andExpect {
+                status { isOk() }
+                view { name("fan/result") }
+            }.andReturn().response.contentAsString
+            if (state == CampaignState.FUNDED || state == CampaignState.NOT_FUNDED) {
+                for (label in listOf("Stated interest", "Authorized holds", "Paid")) assertContains(html, label)
+                assertContains(html.lowercase(), if (state == CampaignState.FUNDED) "funded" else "not funded")
+                val status = mvc.get("${fixture.path}/pledges/${pledge.id}").andReturn().response.contentAsString
+                assertContains(status, "href=\"${fixture.path}/result\"")
+            }
+            assertFalse(html.contains(pledge.id.toString()))
+            assertFalse(html.contains("example.test"))
+            assertFalse(html.contains("private-buyer"))
+            assertFalse(html.contains("paypal.com/sdk/js"))
+        }
+    }
+
+    private fun fixture(
+        capacity: Int = 5,
+        state: CampaignState = CampaignState.OPEN,
+        reason: CampaignReason? = null,
+    ): Fixture {
+        val token = Base64.getUrlEncoder().withoutPadding().encodeToString(UUID.randomUUID().toString().replace("-", "").toByteArray())
+        val workspace = workspaces.saveAndFlush(Workspace(token, start))
+        ownedWorkspaces.add(workspace.id)
+        val option = options.saveAndFlush(Option(workspace.id, "Print", "print", emptyMap(), emptyMap(),
+            100, "USD", 1, capacity, "Two weeks", "US"))
+        val wishId = UUID.randomUUID()
+        val output = AnalysisOutput(listOf(AnalyzedWish(wishId, WishKind.REQUEST, emptyList())), emptyList(),
+            Proposal(option.id, emptyMap(), emptyList()), null, emptyList(), emptyList(), emptyList(), listOf(option.id))
+        val analysis = analyses.saveAndFlush(AnalysisRun(workspace.id, "synthetic", "hash", mapper.writeValueAsString(output), createdAt = start))
+        val offer = offers.saveAndFlush(Offer(workspace.id, option.id, analysis.id, "Moon print", "A5 archival print",
+            emptyMap(), 200, "USD", "Shipping included", "US", 1, capacity, minOf(3, capacity), listOf(wishId)))
+        val campaign = campaigns.saveAndFlush(Campaign(offer.id, state, reason = reason,
+            openedAt = if (state == CampaignState.DRAFT) null else start,
+            closesAt = if (state == CampaignState.DRAFT) null else start.plusSeconds(900),
+            confirmDeadline = if (state == CampaignState.DRAFT) null else start.plusSeconds(44_100)))
+        return Fixture(workspace, campaign)
+    }
+
+    private fun pledge(fixture: Fixture, state: PledgeState, quantity: Int = 1): Pledge {
+        val id = UUID.randomUUID()
+        return pledges.saveAndFlush(Pledge(fixture.campaign.id, quantity, quantity * 200L, "USD", state,
+            paypalOrderId = "order-$id", authorizationId = if (state == PledgeState.CREATED) null else "authorization-$id",
+            authorizationExpiresAt = start.plusSeconds(86_400), payerEmailMasked = "private-buyer@example.test",
+            createdAt = start, id = id))
+    }
+
+    private fun scriptAuthorization(pledge: Pledge, amount: Money = Money(pledge.amount, pledge.currency)) {
+        gateway.authorizeOrderResults.add(received(AuthorizationDetails(AuthorizationId("authorization-${pledge.id}"),
+            amount, start.plusSeconds(86_400), orderId = OrderId(pledge.paypalOrderId!!)), PaymentStatus.CREATED))
+    }
+
+    private fun <T> received(value: T, status: PaymentStatus): PaymentResult<T> = PaymentResult.Received(value, status)
+
+    private data class Fixture(val workspace: Workspace, val campaign: Campaign) {
+        val path get() = "/w/${workspace.token}"
+    }
+
+    @TestConfiguration
+    class PaymentConfiguration {
+        @Bean
+        @Primary
+        fun fanPaymentGateway() = InMemoryPaymentGateway()
+
+        @Bean
+        @Primary
+        fun fanPaymentClock() = FanPaymentClock()
+    }
+}
+
+class FanPaymentClock : Clock() {
+    var current: Instant = Instant.parse("2026-01-01T00:00:00Z")
+    override fun instant(): Instant = current
+    override fun getZone(): ZoneId = ZoneOffset.UTC
+    override fun withZone(zone: ZoneId): Clock = Clock.fixed(current, zone)
+}
