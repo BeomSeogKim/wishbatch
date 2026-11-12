@@ -1,0 +1,14 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+.worktrees/
+__pycache__/
+.claude/settings.local.json
+.claude/worktrees/
+.gradle/
+.kotlin/
+build/
+out/
+.idea/
+*.iml

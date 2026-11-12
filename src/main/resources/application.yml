@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: app
+  datasource:
+    # Without DATABASE_URL the application uses an in-memory database, so a
+    # fresh clone and every worktree can build and test with no services.
+    url: ${DATABASE_URL:jdbc:h2:mem:app;DB_CLOSE_DELAY=-1}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+
+server:
+  port: ${SERVER_PORT:8200}
