@@ -43,6 +43,17 @@ renders the home page without accessing the database or an external service.
 See [Docker on Render](https://render.com/docs/docker) and [health
 checks](https://render.com/docs/health-checks).
 
+## Temporary database on startup
+
+When a configured PostgreSQL database is unreachable over the network at
+startup, the application uses a uniquely named, temporary in-memory H2 database
+and displays a notice. The startup connection probe has a five-second login
+timeout. Healthy or already running PostgreSQL and the default H2 configuration
+remain unchanged. Authentication, TLS, and schema errors still fail startup.
+
+Temporary data is lost on restart. There is no runtime failover, data copy or
+merge, or automatic migration back to PostgreSQL.
+
 ## Free plan limits
 
 An idle free web service spins down after 15 minutes without inbound traffic.
