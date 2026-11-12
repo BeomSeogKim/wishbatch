@@ -45,10 +45,17 @@ class DemoGuideTests @Autowired constructor(
         assertContains(maker, "Switch to fan view")
         assertContains(maker, "<form")
         assertContains(maker, "sandbox-notice")
+        assertContains(maker, "name=\"_csrf\"")
+        assertContains(maker, "name=\"_csrf_header\"")
+        assertContains(maker, "href=\"/w/$token/maker/decision-record\"")
+        assertContains(maker, "href=\"/w/$token/maker/decision-record.json\"")
+        assertFalse(maker.contains("href=\"/w/$token/how-this-batch-was-chosen\""))
         val fan = mvc.get("/w/$token").andExpect { status { isOk() } }.andReturn().response.contentAsString
         assertContains(fan, "Fan: wishes")
         assertContains(fan, "href=\"/w/$token/maker\"")
         assertContains(fan, "<form")
+        assertFalse(fan.contains("/maker/decision-record"))
+        assertFalse(fan.contains("href=\"/w/$token/how-this-batch-was-chosen\""))
         assertEquals(before, workspaces.listWishes(token).size)
         val home = mvc.get("/").andReturn().response.contentAsString
         assertFalse(home.contains("aria-label=\"Demo guide\""))
@@ -63,10 +70,17 @@ class DemoGuideTests @Autowired constructor(
             500, "USD", "Example", "US", 2, 10))
         val openedAt = Instant.parse("2030-01-01T00:00:00Z")
         val campaign = campaigns.save(Campaign(offer.id, CampaignState.OPEN, openedAt = openedAt,
-            closesAt = openedAt.plusSeconds(3600)))
+            closesAt = openedAt.plusSeconds(3600), confirmDeadline = openedAt.plusSeconds(46800)))
         val path = "/w/${workspace.token}/maker/options"
         fun html() = mvc.get(path).andExpect { status { isOk() } }.andReturn().response.contentAsString
-        assertContains(html(), "authorize a sandbox pledge")
+        val initial = html()
+        assertContains(initial, "authorize a sandbox pledge")
+        assertContains(initial, "href=\"/w/${workspace.token}/how-this-batch-was-chosen\"")
+        assertContains(initial, "href=\"/w/${workspace.token}/maker/decision-record\"")
+        val fan = mvc.get("/w/${workspace.token}").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        assertContains(fan, "href=\"/w/${workspace.token}/how-this-batch-was-chosen\"")
+        assertFalse(fan.contains("/maker/decision-record"))
         val pledge = pledges.save(Pledge(campaign.id, 2, 1000, "USD", PledgeState.CREATED, createdAt = openedAt))
         assertContains(html(), "authorize a sandbox pledge")
         pledge.state = PledgeState.AUTHORIZED
@@ -74,6 +88,11 @@ class DemoGuideTests @Autowired constructor(
         assertContains(html(), "Review the holds and confirm production")
         assertEquals(CampaignState.OPEN, campaigns.findById(campaign.id).orElseThrow().state)
         assertEquals(PledgeState.AUTHORIZED, pledges.findById(pledge.id).orElseThrow().state)
+        campaign.state = CampaignState.NOT_FUNDED
+        campaigns.saveAndFlush(campaign)
+        val terminal = html()
+        assertContains(terminal, "Review the settlement result")
+        assertContains(terminal, "href=\"/w/${workspace.token}/how-this-batch-was-chosen\"")
     }
 
     @Test
@@ -93,5 +112,7 @@ class DemoGuideTests @Autowired constructor(
             assertEquals("$base/result", guideFor(token, "offer", state, false).nextUrl)
         }
         assertEquals("$base/maker/campaign", guideFor(token, "pledges/id", CampaignState.OPEN, false).nextUrl)
+        assertEquals("Fan: batch explanation", guideFor(token, "how-this-batch-was-chosen", CampaignState.OPEN, false).location)
+        assertEquals("Maker: decision record", guideFor(token, "maker/decision-record", CampaignState.OPEN, false).location)
     }
 }

@@ -2,4 +2,9 @@
     <strong>Demo guide</strong> · <span th:text="${guide.location}">Maker home</span>
     <p>Next: <a th:href="${guide.nextUrl}" th:text="${guide.next}">Review the options</a></p>
     <a th:href="${guide.switchUrl}" th:text="${guide.switchLabel}">Switch view</a>
+    <p th:if="${guide.explanationUrl != null}"><a th:href="@{${guide.explanationUrl}}">How this batch was chosen</a></p>
+    <p th:if="${guide.decisionRecordUrl != null}">Decision record:
+        <a th:href="@{${guide.decisionRecordUrl}}">View</a> ·
+        <a th:href="@{${guide.decisionRecordUrl + '.json'}}">JSON</a>
+    </p>
 </section>

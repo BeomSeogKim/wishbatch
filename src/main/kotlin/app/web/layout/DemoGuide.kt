@@ -23,6 +23,8 @@ internal data class DemoGuide(
     val nextUrl: String,
     val switchLabel: String,
     val switchUrl: String,
+    val explanationUrl: String?,
+    val decisionRecordUrl: String?,
 )
 
 @Configuration
@@ -37,7 +39,7 @@ class DemoGuideConfiguration(
             override fun postHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any, modelAndView: ModelAndView?) {
                 if (request.method != "GET" || response.status != 200 || modelAndView == null ||
                     modelAndView.viewName?.startsWith("redirect:") != false) return
-                val match = Regex("^/w/([A-Za-z0-9_-]{43})(?:/(maker(?:/(?:options|wishes|proposal|offer|campaign|result))?|offer|result|pledges/[0-9a-fA-F-]+))?/?$")
+                val match = Regex("^/w/([A-Za-z0-9_-]{43})(?:/(maker(?:/(?:options|wishes|proposal|offer|campaign|result|decision-record))?|offer|result|how-this-batch-was-chosen|pledges/[0-9a-fA-F-]+))?/?$")
                     .matchEntire(request.requestURI.removePrefix(request.contextPath)) ?: return
                 val token = match.groupValues[1]
                 val path = match.groupValues[2]
@@ -73,8 +75,10 @@ internal fun guideFor(
         path == "maker/offer" -> "Maker: offer"
         path == "maker/campaign" -> "Maker: campaign"
         path == "maker/result" -> "Maker: result"
+        path == "maker/decision-record" -> "Maker: decision record"
         path == "offer" -> "Fan: offer"
         path == "result" -> "Fan: result"
+        path == "how-this-batch-was-chosen" -> "Fan: batch explanation"
         path.startsWith("pledges/") -> "Fan: pledge status"
         else -> "Fan: wishes"
     }
@@ -113,5 +117,7 @@ internal fun guideFor(
                 CampaignState.FUNDED, CampaignState.NOT_FUNDED -> "$base/result"
                 else -> base
             }
-        } else "$base/maker")
+        } else "$base/maker",
+        if (state != null && state != CampaignState.DRAFT) "$base/how-this-batch-was-chosen" else null,
+        if (maker) "$base/maker/decision-record" else null)
 }
