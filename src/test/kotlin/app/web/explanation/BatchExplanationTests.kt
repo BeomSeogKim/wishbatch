@@ -9,11 +9,13 @@ import app.campaign.model.Money
 import app.campaign.model.Offer
 import app.campaign.model.Pledge
 import app.campaign.model.PledgeState
+import app.campaign.model.WishKind
 import app.campaign.port.AuthorizationDetails
 import app.campaign.port.AuthorizationId
 import app.campaign.port.PaymentResult
 import app.campaign.port.PaymentStatus
 import app.campaign.port.ProposalEvidence
+import app.campaign.rules.offerInterest
 import app.campaign.rules.optionWishCounts
 import app.campaign.workspace.WorkspaceService
 import app.testing.InMemoryPaymentGateway
@@ -39,6 +41,7 @@ import java.util.UUID
 import kotlin.test.assertContains
 import kotlin.test.assertFalse
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -164,8 +167,13 @@ class BatchExplanationTests @Autowired constructor(
         assertContains(html, "AI grouped wishes against the maker's feasible options")
         assertFalse(html.contains("Precomputed for this sample"))
         assertContains(html, "Production and delivery are the maker's responsibility.")
-        listOf("How this batch was chosen", "Example offer", "Printed cards", "<dt>Interested in this offer</dt>",
-            "<dt>Depend on a condition</dt>", "<dt>Not served</dt><dd>9</dd>", "Authorized holds", ">2</span>",
+        val expected = offerInterest(output, workspaces.listOptions(workspace.token).single { it.id == option },
+            workspaces.listWishes(workspace.token), 200)
+        listOf("How this batch was chosen", "Example offer", "Printed cards",
+            "<dt>Interested in this offer</dt><dd>${expected.interest}</dd>",
+            "<dt>Depend on a condition</dt><dd>${expected.conditional}</dd>",
+            "<dt>Not served</dt><dd>${expected.notServed}</dd>",
+            "<dt>Excluded by price</dt><dd>${expected.excludedByPrice}</dd>", "Authorized holds", ">2</span>",
             "Paid", ">1</span>", "Interested in this offer", "Not served").forEach { assertContains(html, it) }
         listOf("private@example.com", "Private Name", "buyer-secret@example.com", "other-buyer@example.com",
             "invented words").forEach { assertFalse(html.contains(it)) }
@@ -289,13 +297,20 @@ class BatchExplanationTests @Autowired constructor(
 
     @Test
     fun `ceramicist and textile pages show their real scenario evidence`() {
-        for ((scenario, title, quote) in listOf(
-            Triple("ceramicist", "Stoneware cup", "I would buy the cup."),
-            Triple("textile", "Canvas pouch", "I would buy the pouch."),
-        )) {
+        for (scenario in listOf("ceramicist", "textile")) {
             val workspace = workspaces.create(scenario)
             val stored = requireNotNull(runs.latest(workspace.token))
             val proposal = requireNotNull(stored.output.proposal)
+            val title = workspaces.listOptions(workspace.token).single { it.id == proposal.optionId }.name
+            val sourceWishes = workspaces.listWishes(workspace.token).associateBy { it.id }
+            val requests = stored.output.wishes.filter { it.kind == WishKind.REQUEST }.map { it.wishId }.toSet()
+            val compatible = stored.output.verdicts.filter {
+                it.optionId == proposal.optionId && it.verdict == CompatibilityVerdict.COMPATIBLE && it.wishId in requests
+            }.map { it.wishId }.toSet()
+            val recordedQuotes = proposal.rationale.filter { it.wishId in compatible }.map { it.wishId to it.quote } +
+                stored.output.wishes.filter { it.wishId in compatible }.flatMap { wish ->
+                    wish.needs.map { wish.wishId to it.quote }
+                }
             val campaignId = transactions.execute {
                 val offer = Offer(workspace.id, proposal.optionId, stored.run.id, title, "Maker-confirmed terms",
                     emptyMap(), 200, "USD", "Ships later", "US", 2, 10)
@@ -304,9 +319,23 @@ class BatchExplanationTests @Autowired constructor(
                     confirmDeadline = now.plusSeconds(44100)).also(entityManager::persist).id
             }
             val html = mvc.get("/w/${workspace.token}/campaigns/$campaignId/how-this-batch-was-chosen")
-                .andExpect { status { isOk() } }.andReturn().response.contentAsString
-            assertContains(html, title)
-            assertContains(HtmlUtils.htmlUnescape(html), quote)
+                .andExpect {
+                    status { isOk() }
+                    model {
+                        attribute("analysisRecordedAt", stored.run.createdAt)
+                        attribute("analysisModel", stored.run.model)
+                    }
+                }.andReturn().response.contentAsString
+            assertContains(HtmlUtils.htmlUnescape(html), title)
+            val publicQuotes = Regex("<blockquote><p>(.*?)</p></blockquote>", RegexOption.DOT_MATCHES_ALL)
+                .findAll(html).map { HtmlUtils.htmlUnescape(it.groupValues[1]) }.toList()
+            assertTrue(publicQuotes.isNotEmpty(), "Expected source-backed public evidence for the stored proposal")
+            for (quote in publicQuotes) {
+                assertTrue(quote.isNotBlank())
+                assertTrue(recordedQuotes.any { (wishId, recorded) ->
+                    recorded == quote && sourceWishes.getValue(wishId).text.contains(quote)
+                }, "Public evidence must match a recorded quote and its compatible synthetic source wish")
+            }
             assertContains(html, "Anonymous synthetic wish")
             assertContains(html, "stored analysis of synthetic demo wishes")
             assertContains(html, "Creating a workspace does not run a new analysis.")
