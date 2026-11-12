@@ -103,16 +103,18 @@ class TemporaryDatabaseStartupTests {
             UnknownHostException("unknown"), SocketTimeoutException("timed out"))) {
             for (state in listOf("08001", "08006")) {
                 val startup = TemporaryDatabaseStartup()
+                val time = TestTime()
                 configured().use { original ->
                     original.schema = "postgres_only"
                     original.connectionInitSql = "set application_name = 'postgres_only'"
                     original.addDataSourceProperty("sslmode", "verify-full")
                     var probes = 0
-                    startup.select(original) { _, _ ->
+                    startup.select(original, { time.now }, time::sleep) { _, _ ->
                         probes++
                         throw SQLException("synthetic connection failure", state, cause)
                     }.use { selected ->
-                        assertEquals(1, probes)
+                        assertEquals(5, probes)
+                        assertEquals(24000L, time.now)
                         assertTrue(startup.temporary)
                         assertFalse(original.isClosed)
                         assertSame(original, selected)
@@ -160,10 +162,18 @@ class TemporaryDatabaseStartupTests {
         )
         for (failure in failures) {
             val startup = TemporaryDatabaseStartup()
+            val time = TestTime()
+            var attempts = 0
             configured().use { original ->
                 val thrown = assertFailsWith<IllegalStateException> {
-                    startup.select(original) { _, _ -> throw failure }
+                    startup.select(original, { time.now }, time::sleep) { _, _ ->
+                        attempts++
+                        throw failure
+                    }
                 }
+                assertEquals(1, attempts)
+                assertEquals(0L, time.now)
+                assertTrue(time.sleeps.isEmpty())
                 assertEquals("Configured database startup connection failed; temporary data was not enabled.", thrown.message)
                 assertNull(thrown.cause)
                 assertFalse(thrown.stackTraceToString().contains("synthetic-private-value"))
@@ -182,6 +192,111 @@ class TemporaryDatabaseStartupTests {
         assertEquals("jdbc:postgresql:example?connectTimeout=3&socketTimeout=3&loginTimeout=5",
             startup.probeUrl("jdbc:postgresql:example"))
     }
+
+    @Test
+    fun `transient failures recover on the scheduled attempt without changing the configured pool`() {
+        for (successAttempt in 1..5) {
+            val startup = TemporaryDatabaseStartup()
+            val time = TestTime()
+            val starts = mutableListOf<Long>()
+            configured().use { original ->
+                val url = original.jdbcUrl
+                original.maximumPoolSize = 7
+                val selected = startup.select(original, { time.now }, time::sleep) { _, _ ->
+                    starts.add(time.now)
+                    if (starts.size < successAttempt) throw unreachable()
+                }
+                assertSame(original, selected)
+                assertEquals(url, selected.jdbcUrl)
+                assertEquals(7, selected.maximumPoolSize)
+                assertFalse(startup.temporary)
+                assertEquals((0 until successAttempt).map { it * 6000L }, starts)
+                assertEquals((successAttempt - 1) * 6000L, time.now)
+            }
+        }
+    }
+
+    @Test
+    fun `five immediate or slow failures preserve scheduled starts and bounded exhaustion`() {
+        for (duration in listOf(0L, 5000L)) {
+            val startup = TemporaryDatabaseStartup()
+            val time = TestTime()
+            val starts = mutableListOf<Long>()
+            configured().use { original ->
+                startup.select(original, { time.now }, time::sleep) { _, _ ->
+                    starts.add(time.now)
+                    time.now += duration
+                    throw unreachable()
+                }
+                assertEquals(listOf(0L, 6000L, 12000L, 18000L, 24000L), starts)
+                assertEquals(List(4) { 6000L - duration }, time.sleeps)
+                assertEquals(24000L + duration, time.now)
+                assertTrue(startup.temporary)
+            }
+        }
+    }
+
+    @Test
+    fun `nonretryable failure after a transient failure stops immediately`() {
+        val startup = TemporaryDatabaseStartup()
+        val time = TestTime()
+        var attempts = 0
+        configured().use { original ->
+            assertFailsWith<IllegalStateException> {
+                startup.select(original, { time.now }, time::sleep) { _, _ ->
+                    attempts++
+                    if (attempts == 1) throw unreachable()
+                    throw SQLException("Authentication rejected", "28P01")
+                }
+            }
+            assertEquals(2, attempts)
+            assertEquals(6000L, time.now)
+            assertFalse(startup.temporary)
+        }
+    }
+
+    @Test
+    fun `interruption before a probe during waiting or in the driver stops without fallback`() {
+        for (phase in listOf("before", "wait", "driver", "direct")) {
+            val startup = TemporaryDatabaseStartup()
+            var attempts = 0
+            configured().use { original ->
+                try {
+                    if (phase == "before") Thread.currentThread().interrupt()
+                    assertFailsWith<InterruptedException> {
+                        startup.select(original, { 0L }, { throw InterruptedException("Wait interrupted") }) { _, _ ->
+                            attempts++
+                            when (phase) {
+                                "driver" -> {
+                                    Thread.currentThread().interrupt()
+                                    throw IllegalStateException("Driver interrupted")
+                                }
+                                "direct" -> throw InterruptedException("Probe interrupted")
+                                else -> throw unreachable()
+                            }
+                        }
+                    }
+                    assertTrue(Thread.currentThread().isInterrupted)
+                    assertEquals(if (phase == "before") 0 else 1, attempts)
+                    assertFalse(startup.temporary)
+                } finally {
+                    Thread.interrupted()
+                }
+            }
+        }
+    }
+
+    private class TestTime {
+        var now = 0L
+        val sleeps = mutableListOf<Long>()
+
+        fun sleep(duration: Long) {
+            sleeps.add(duration)
+            now += duration
+        }
+    }
+
+    private fun unreachable() = SQLException("Connection refused", "08001", ConnectException())
 
     private fun configured() = HikariDataSource().apply {
         jdbcUrl = "jdbc:postgresql://localhost:5432/example?ssl=true&connectTimeout=90&applicationName=demo&socketTimeout=0&loginTimeout=0"

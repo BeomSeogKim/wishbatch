@@ -15,6 +15,7 @@ import java.util.Locale
 import java.util.MissingResourceException
 import java.util.ResourceBundle
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
 
 @Component
@@ -32,6 +33,8 @@ class TemporaryDatabaseStartup : BeanPostProcessor {
 
     internal fun select(
         configured: HikariDataSource,
+        nowMillis: () -> Long = { TimeUnit.NANOSECONDS.toMillis(System.nanoTime()) },
+        sleepMillis: (Long) -> Unit = Thread::sleep,
         connect: (String, Properties) -> Unit,
     ): HikariDataSource {
         val url = configured.jdbcUrl ?: return configured
@@ -42,16 +45,29 @@ class TemporaryDatabaseStartup : BeanPostProcessor {
             configured.username?.let { setProperty("user", it) }
             configured.password?.let { setProperty("password", it) }
         }
-        try {
-            connect(probeUrl(url), properties)
-            return configured
-        } catch (failure: SQLException) {
-            if (!unreachable(failure)) {
-                // Driver messages may include connection settings or credentials.
+        val startedAt = nowMillis()
+        repeat(5) { attempt ->
+            try {
+                checkInterrupted()
+                val wait = attempt * 6000L - (nowMillis() - startedAt)
+                if (wait > 0) sleepMillis(wait)
+                checkInterrupted()
+                connect(probeUrl(url), properties)
+                checkInterrupted()
+                return configured
+            } catch (failure: InterruptedException) {
+                Thread.currentThread().interrupt()
+                throw failure
+            } catch (failure: SQLException) {
+                checkInterrupted()
+                if (!unreachable(failure)) {
+                    // Driver messages may include connection settings or credentials.
+                    throw connectionFailure()
+                }
+            } catch (failure: RuntimeException) {
+                checkInterrupted()
                 throw connectionFailure()
             }
-        } catch (failure: RuntimeException) {
-            throw connectionFailure()
         }
         HikariConfig().apply {
             jdbcUrl = "jdbc:h2:mem:temporary-${UUID.randomUUID()};DB_CLOSE_DELAY=0"
@@ -61,6 +77,10 @@ class TemporaryDatabaseStartup : BeanPostProcessor {
         }.copyStateTo(configured)
         temporary = true
         return configured
+    }
+
+    private fun checkInterrupted() {
+        if (Thread.currentThread().isInterrupted) throw InterruptedException("Database startup interrupted.")
     }
 
     private fun unreachable(failure: SQLException): Boolean {

@@ -49,9 +49,13 @@ class TemporaryDatabaseBootTests {
     @Test
     fun `unreachable PostgreSQL boots isolated usable temporary demo and closes pool`() {
         val port = ServerSocket(0).use { it.localPort }
+        val started = System.nanoTime()
         val context = application("jdbc:postgresql://127.0.0.1:$port/unreachable", "unavailable")
         val source = context.getBean(HikariDataSource::class.java)
         context.use {
+            val elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started)
+            assertTrue(elapsed in 24000..40000, "Startup took $elapsed milliseconds including application initialization")
+            println("Temporary database startup elapsed: $elapsed ms")
             assertTrue(context.getBean(TemporaryDatabaseStartup::class.java).temporary)
             assertTrue(source.jdbcUrl.startsWith("jdbc:h2:mem:temporary-"))
             assertContains(page(context, "/"), "Temporary demo data:")
@@ -101,7 +105,14 @@ class TemporaryDatabaseBootTests {
                 assertTrue(failure.stackTrace.any {
                     it.className == "org.postgresql.Driver\$ConnectTask" && it.methodName == "getResult"
                 })
-                startup.select(source) { _, _ -> throw failure }
+                var virtualNow = 0L
+                var attempts = 0
+                startup.select(source, { virtualNow }, { virtualNow += it }) { _, _ ->
+                    attempts++
+                    throw failure
+                }
+                assertEquals(5, attempts)
+                assertEquals(24000L, virtualNow)
                 assertTrue(startup.temporary)
                 assertTrue(source.jdbcUrl.startsWith("jdbc:h2:mem:temporary-"))
             } finally {
